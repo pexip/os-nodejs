@@ -1,3 +1,9 @@
+nodejs (0.10.29~dfsg-1pexip1) pexip; urgency=low
+
+  * Prepare Pexip packaging
+
+ -- Alan Ford <alan@pexip.com>  Fri, 01 Aug 2014 11:07:02 +0000
+
 nodejs (0.10.29~dfsg-1) unstable; urgency=medium
 
   * Upstream update.
