@@ -1,3 +1,9 @@
+nodejs (0.10.29~dfsg-1pexip2) pexip; urgency=low
+
+  * Bump version. No change.
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 04 Aug 2014 11:29:12 +0100
+
 nodejs (0.10.29~dfsg-1pexip1) pexip; urgency=low
 
   * Prepare Pexip packaging
