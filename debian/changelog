@@ -1,3 +1,12 @@
+nodejs (0.10.29~dfsg-1pexip3) pexip; urgency=low
+
+  * Rebuild against libssl1.0.2
+  * debian/patches/no_ssl3.patch:
+    Disable SSLv3 if OpenSSL does not support it.
+  * debian/patches/openssl_1.0.2.patch: Fix up for OpenSSL 1.0.2
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 12 Oct 2016 13:05:51 +0100
+
 nodejs (0.10.29~dfsg-1pexip2) pexip; urgency=low
 
   * Bump version. No change.

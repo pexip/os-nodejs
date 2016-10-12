@@ -13,3 +13,5 @@
 2014_donotinclude_root_certs.patch
 1006_relax_timeouts_in_tests.patch
 1007_revert_invalid_utf8_fix.patch
+no_ssl3.patch
+openssl_1.0.2.patch
