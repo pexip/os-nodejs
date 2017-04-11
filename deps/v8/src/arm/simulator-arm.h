@@ -1,29 +1,6 @@
 // Copyright 2012 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 
 // Declares a Simulator for ARM instructions if we are not generating a native
@@ -36,7 +13,7 @@
 #ifndef V8_ARM_SIMULATOR_ARM_H_
 #define V8_ARM_SIMULATOR_ARM_H_
 
-#include "allocation.h"
+#include "src/allocation.h"
 
 #if !defined(USE_SIMULATOR)
 // Running without a simulator on a native arm platform.
@@ -45,7 +22,7 @@ namespace v8 {
 namespace internal {
 
 // When running without a simulator we call the entry directly.
-#define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4) \
+#define CALL_GENERATED_CODE(isolate, entry, p0, p1, p2, p3, p4) \
   (entry(p0, p1, p2, p3, p4))
 
 typedef int (*arm_regexp_matcher)(String*, int, const byte*, const byte*,
@@ -56,12 +33,10 @@ typedef int (*arm_regexp_matcher)(String*, int, const byte*, const byte*,
 // should act as a function matching the type arm_regexp_matcher.
 // The fifth argument is a dummy that reserves the space used for
 // the return address added by the ExitFrame in native calls.
-#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7, p8) \
-  (FUNCTION_CAST<arm_regexp_matcher>(entry)(                              \
-      p0, p1, p2, p3, NULL, p4, p5, p6, p7, p8))
-
-#define TRY_CATCH_FROM_ADDRESS(try_catch_address) \
-  reinterpret_cast<TryCatch*>(try_catch_address)
+#define CALL_GENERATED_REGEXP_CODE(isolate, entry, p0, p1, p2, p3, p4, p5, p6, \
+                                   p7, p8)                                     \
+  (FUNCTION_CAST<arm_regexp_matcher>(entry)(p0, p1, p2, p3, NULL, p4, p5, p6,  \
+                                            p7, p8))
 
 // The stack limit beyond which we will throw stack overflow errors in
 // generated code. Because generated code on arm uses the C stack, we
@@ -74,21 +49,26 @@ class SimulatorStack : public v8::internal::AllStatic {
     return c_limit;
   }
 
-  static inline uintptr_t RegisterCTryCatch(uintptr_t try_catch_address) {
+  static inline uintptr_t RegisterCTryCatch(v8::internal::Isolate* isolate,
+                                            uintptr_t try_catch_address) {
+    USE(isolate);
     return try_catch_address;
   }
 
-  static inline void UnregisterCTryCatch() { }
+  static inline void UnregisterCTryCatch(v8::internal::Isolate* isolate) {
+    USE(isolate);
+  }
 };
 
-} }  // namespace v8::internal
+}  // namespace internal
+}  // namespace v8
 
 #else  // !defined(USE_SIMULATOR)
 // Running with a simulator.
 
-#include "constants-arm.h"
-#include "hashmap.h"
-#include "assembler.h"
+#include "src/arm/constants-arm.h"
+#include "src/assembler.h"
+#include "src/base/hashmap.h"
 
 namespace v8 {
 namespace internal {
@@ -142,7 +122,12 @@ class Simulator {
     num_s_registers = 32,
     d0 = 0, d1, d2, d3, d4, d5, d6, d7,
     d8, d9, d10, d11, d12, d13, d14, d15,
-    num_d_registers = 16
+    d16, d17, d18, d19, d20, d21, d22, d23,
+    d24, d25, d26, d27, d28, d29, d30, d31,
+    num_d_registers = 32,
+    q0 = 0, q1, q2, q3, q4, q5, q6, q7,
+    q8, q9, q10, q11, q12, q13, q14, q15,
+    num_q_registers = 16
   };
 
   explicit Simulator(Isolate* isolate);
@@ -158,9 +143,19 @@ class Simulator {
   void set_register(int reg, int32_t value);
   int32_t get_register(int reg) const;
   double get_double_from_register_pair(int reg);
+  void set_register_pair_from_double(int reg, double* value);
   void set_dw_register(int dreg, const int* dbl);
 
   // Support for VFP.
+  void get_d_register(int dreg, uint64_t* value);
+  void set_d_register(int dreg, const uint64_t* value);
+  void get_d_register(int dreg, uint32_t* value);
+  void set_d_register(int dreg, const uint32_t* value);
+  void get_q_register(int qreg, uint64_t* value);
+  void set_q_register(int qreg, const uint64_t* value);
+  void get_q_register(int qreg, uint32_t* value);
+  void set_q_register(int qreg, const uint32_t* value);
+
   void set_s_register(int reg, unsigned int value);
   unsigned int get_s_register(int reg) const;
 
@@ -192,8 +187,12 @@ class Simulator {
   void set_pc(int32_t value);
   int32_t get_pc() const;
 
+  Address get_sp() const {
+    return reinterpret_cast<Address>(static_cast<intptr_t>(get_register(sp)));
+  }
+
   // Accessor to the internal simulator stack area.
-  uintptr_t StackLimit() const;
+  uintptr_t StackLimit(uintptr_t c_limit) const;
 
   // Executes ARM instructions until the PC reaches end_sim_pc.
   void Execute();
@@ -201,10 +200,16 @@ class Simulator {
   // Call on program start.
   static void Initialize(Isolate* isolate);
 
+  static void TearDown(base::CustomMatcherHashMap* i_cache, Redirection* first);
+
   // V8 generally calls into generated JS code with 5 parameters and into
   // generated RegExp code with 7 parameters. This is a convenience function,
   // which sets up the simulator state and grabs the result on return.
   int32_t Call(byte* entry, int argument_count, ...);
+  // Alternative: call a 2-argument double function.
+  void CallFP(byte* entry, double d0, double d1);
+  int32_t CallFPReturnsInt(byte* entry, double d0, double d1);
+  double CallFPReturnsDouble(byte* entry, double d0, double d1);
 
   // Push an address onto the JS stack.
   uintptr_t PushAddress(uintptr_t address);
@@ -217,7 +222,7 @@ class Simulator {
   char* last_debugger_input() { return last_debugger_input_; }
 
   // ICache checking.
-  static void FlushICache(v8::internal::HashMap* i_cache, void* start,
+  static void FlushICache(base::CustomMatcherHashMap* i_cache, void* start,
                           size_t size);
 
   // Returns true if pc register contains one of the 'special_values' defined
@@ -250,14 +255,14 @@ class Simulator {
 
   // Checks if the current instruction should be executed based on its
   // condition bits.
-  bool ConditionallyExecute(Instruction* instr);
+  inline bool ConditionallyExecute(Instruction* instr);
 
   // Helper functions to set the conditional flags in the architecture state.
   void SetNZFlags(int32_t val);
   void SetCFlag(bool val);
   void SetVFlag(bool val);
   bool CarryFrom(int32_t left, int32_t right, int32_t carry = 0);
-  bool BorrowFrom(int32_t left, int32_t right);
+  bool BorrowFrom(int32_t left, int32_t right, int32_t carry = 1);
   bool OverflowFrom(int32_t alu_out,
                     int32_t left,
                     int32_t right,
@@ -265,20 +270,23 @@ class Simulator {
 
   inline int GetCarry() {
     return c_flag_ ? 1 : 0;
-  };
+  }
 
   // Support for VFP.
+  void Compute_FPSCR_Flags(float val1, float val2);
   void Compute_FPSCR_Flags(double val1, double val2);
   void Copy_FPSCR_to_APSR();
+  inline float canonicalizeNaN(float value);
+  inline double canonicalizeNaN(double value);
 
   // Helper functions to decode common "addressing" modes
   int32_t GetShiftRm(Instruction* instr, bool* carry_out);
   int32_t GetImm(Instruction* instr, bool* carry_out);
-  void ProcessPUW(Instruction* instr,
-                  int num_regs,
-                  int operand_size,
-                  intptr_t* start_address,
-                  intptr_t* end_address);
+  int32_t ProcessPU(Instruction* instr,
+                    int num_regs,
+                    int operand_size,
+                    intptr_t* start_address,
+                    intptr_t* end_address);
   void HandleRList(Instruction* instr, bool load);
   void HandleVList(Instruction* inst);
   void SoftwareInterrupt(Instruction* instr);
@@ -320,9 +328,13 @@ class Simulator {
   void DecodeType6(Instruction* instr);
   void DecodeType7(Instruction* instr);
 
+  // CP15 coprocessor instructions.
+  void DecodeTypeCP15(Instruction* instr);
+
   // Support for VFP.
   void DecodeTypeVFP(Instruction* instr);
   void DecodeType6CoprocessorIns(Instruction* instr);
+  void DecodeSpecialCondition(Instruction* instr);
 
   void DecodeVMOVBetweenCoreAndSinglePrecisionRegisters(Instruction* instr);
   void DecodeVCMP(Instruction* instr);
@@ -333,20 +345,20 @@ class Simulator {
   void InstructionDecode(Instruction* instr);
 
   // ICache.
-  static void CheckICache(v8::internal::HashMap* i_cache, Instruction* instr);
-  static void FlushOnePage(v8::internal::HashMap* i_cache, intptr_t start,
+  static void CheckICache(base::CustomMatcherHashMap* i_cache,
+                          Instruction* instr);
+  static void FlushOnePage(base::CustomMatcherHashMap* i_cache, intptr_t start,
                            int size);
-  static CachePage* GetCachePage(v8::internal::HashMap* i_cache, void* page);
+  static CachePage* GetCachePage(base::CustomMatcherHashMap* i_cache,
+                                 void* page);
 
   // Runtime call support.
   static void* RedirectExternalReference(
-      void* external_function,
+      Isolate* isolate, void* external_function,
       v8::internal::ExternalReference::Type type);
 
-  // For use in calls that take double value arguments.
-  void GetFpArgs(double* x, double* y);
-  void GetFpArgs(double* x);
-  void GetFpArgs(double* x, int32_t* y);
+  // Handle arguments and return value for runtime FP functions.
+  void GetFpArgs(double* x, double* y, int32_t* z);
   void SetFpResult(const double& result);
   void TrashCallerSaveRegisters();
 
@@ -355,6 +367,11 @@ class Simulator {
 
   template<class InputType, int register_size>
       void SetVFPRegister(int reg_index, const InputType& value);
+
+  void SetSpecialRegister(SRegisterFieldMask reg_and_mask, uint32_t value);
+  uint32_t GetFromSpecialRegister(SRegister reg);
+
+  void CallInternal(byte* entry);
 
   // Architecture state.
   // Saturating instructions require a Q flag to indicate saturation.
@@ -367,7 +384,7 @@ class Simulator {
   bool v_flag_;
 
   // VFP architecture state.
-  unsigned int vfp_register[num_s_registers];
+  unsigned int vfp_registers_[num_d_registers * 2];
   bool n_flag_FPSCR_;
   bool z_flag_FPSCR_;
   bool c_flag_FPSCR_;
@@ -375,6 +392,7 @@ class Simulator {
 
   // VFP rounding mode. See ARM DDI 0406B Page A2-29.
   VFPRoundingMode FPSCR_rounding_mode_;
+  bool FPSCR_default_NaN_mode_;
 
   // VFP FP exception flags architecture state.
   bool inv_op_vfp_flag_;
@@ -392,7 +410,7 @@ class Simulator {
   char* last_debugger_input_;
 
   // Icache simulation
-  v8::internal::HashMap* i_cache_;
+  base::CustomMatcherHashMap* i_cache_;
 
   // Registered breakpoints.
   Instruction* break_pc_;
@@ -408,55 +426,56 @@ class Simulator {
   static const uint32_t kStopDisabledBit = 1 << 31;
 
   // A stop is enabled, meaning the simulator will stop when meeting the
-  // instruction, if bit 31 of watched_stops[code].count is unset.
-  // The value watched_stops[code].count & ~(1 << 31) indicates how many times
+  // instruction, if bit 31 of watched_stops_[code].count is unset.
+  // The value watched_stops_[code].count & ~(1 << 31) indicates how many times
   // the breakpoint was hit or gone through.
   struct StopCountAndDesc {
     uint32_t count;
     char* desc;
   };
-  StopCountAndDesc watched_stops[kNumOfWatchedStops];
+  StopCountAndDesc watched_stops_[kNumOfWatchedStops];
 };
 
 
 // When running with the simulator transition into simulated execution at this
 // point.
-#define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4) \
-  reinterpret_cast<Object*>(Simulator::current(Isolate::Current())->Call( \
+#define CALL_GENERATED_CODE(isolate, entry, p0, p1, p2, p3, p4) \
+  reinterpret_cast<Object*>(Simulator::current(isolate)->Call(  \
       FUNCTION_ADDR(entry), 5, p0, p1, p2, p3, p4))
 
-#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7, p8) \
-  Simulator::current(Isolate::Current())->Call( \
-      entry, 10, p0, p1, p2, p3, NULL, p4, p5, p6, p7, p8)
+#define CALL_GENERATED_FP_INT(isolate, entry, p0, p1) \
+  Simulator::current(isolate)->CallFPReturnsInt(FUNCTION_ADDR(entry), p0, p1)
 
-#define TRY_CATCH_FROM_ADDRESS(try_catch_address)                              \
-  try_catch_address == NULL ?                                                  \
-      NULL : *(reinterpret_cast<TryCatch**>(try_catch_address))
+#define CALL_GENERATED_REGEXP_CODE(isolate, entry, p0, p1, p2, p3, p4, p5, p6, \
+                                   p7, p8)                                     \
+  Simulator::current(isolate)                                                  \
+      ->Call(entry, 10, p0, p1, p2, p3, NULL, p4, p5, p6, p7, p8)
 
 
 // The simulator has its own stack. Thus it has a different stack limit from
-// the C-based native code.  Setting the c_limit to indicate a very small
-// stack cause stack overflow errors, since the simulator ignores the input.
-// This is unlikely to be an issue in practice, though it might cause testing
-// trouble down the line.
+// the C-based native code.  The JS-based limit normally points near the end of
+// the simulator stack.  When the C-based limit is exhausted we reflect that by
+// lowering the JS-based limit as well, to make stack checks trigger.
 class SimulatorStack : public v8::internal::AllStatic {
  public:
   static inline uintptr_t JsLimitFromCLimit(v8::internal::Isolate* isolate,
                                             uintptr_t c_limit) {
-    return Simulator::current(isolate)->StackLimit();
+    return Simulator::current(isolate)->StackLimit(c_limit);
   }
 
-  static inline uintptr_t RegisterCTryCatch(uintptr_t try_catch_address) {
-    Simulator* sim = Simulator::current(Isolate::Current());
+  static inline uintptr_t RegisterCTryCatch(v8::internal::Isolate* isolate,
+                                            uintptr_t try_catch_address) {
+    Simulator* sim = Simulator::current(isolate);
     return sim->PushAddress(try_catch_address);
   }
 
-  static inline void UnregisterCTryCatch() {
-    Simulator::current(Isolate::Current())->PopAddress();
+  static inline void UnregisterCTryCatch(v8::internal::Isolate* isolate) {
+    Simulator::current(isolate)->PopAddress();
   }
 };
 
-} }  // namespace v8::internal
+}  // namespace internal
+}  // namespace v8
 
 #endif  // !defined(USE_SIMULATOR)
 #endif  // V8_ARM_SIMULATOR_ARM_H_

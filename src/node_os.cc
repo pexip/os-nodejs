@@ -1,273 +1,402 @@
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
 #include "node.h"
-#include "node_os.h"
-
 #include "v8.h"
+#include "env.h"
+#include "env-inl.h"
+#include "string_bytes.h"
 
 #include <errno.h>
 #include <string.h>
 
 #ifdef __MINGW32__
 # include <io.h>
-#endif
+#endif  // __MINGW32__
 
 #ifdef __POSIX__
+# include <limits.h>        // PATH_MAX on Solaris.
 # include <netdb.h>         // MAXHOSTNAMELEN on Solaris.
 # include <unistd.h>        // gethostname, sysconf
 # include <sys/param.h>     // MAXHOSTNAMELEN on Linux and the BSDs.
 # include <sys/utsname.h>
-#endif
+#endif  // __POSIX__
 
 // Add Windows fallback.
 #ifndef MAXHOSTNAMELEN
 # define MAXHOSTNAMELEN 256
-#endif
+#endif  // MAXHOSTNAMELEN
 
 namespace node {
+namespace os {
 
-using namespace v8;
+using v8::Array;
+using v8::ArrayBuffer;
+using v8::Boolean;
+using v8::Context;
+using v8::Float64Array;
+using v8::Function;
+using v8::FunctionCallbackInfo;
+using v8::Integer;
+using v8::Local;
+using v8::Null;
+using v8::Number;
+using v8::Object;
+using v8::String;
+using v8::Value;
 
-static Handle<Value> GetEndianness(const Arguments& args) {
-  HandleScope scope;
-  int i = 1;
-  bool big = (*(char *)&i) == 0;
-  Local<String> endianness = String::New(big ? "BE" : "LE");
-  return scope.Close(endianness);
-}
 
-static Handle<Value> GetHostname(const Arguments& args) {
-  HandleScope scope;
+static void GetHostname(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
   char buf[MAXHOSTNAMELEN + 1];
 
   if (gethostname(buf, sizeof(buf))) {
 #ifdef __POSIX__
-    return ThrowException(ErrnoException(errno, "gethostname"));
-#else // __MINGW32__
-    return ThrowException(ErrnoException(WSAGetLastError(), "gethostname"));
-#endif // __MINGW32__
+    int errorno = errno;
+#else  // __MINGW32__
+    int errorno = WSAGetLastError();
+#endif  // __POSIX__
+    return env->ThrowErrnoException(errorno, "gethostname");
   }
   buf[sizeof(buf) - 1] = '\0';
 
-  return scope.Close(String::New(buf));
+  args.GetReturnValue().Set(OneByteString(env->isolate(), buf));
 }
 
-static Handle<Value> GetOSType(const Arguments& args) {
-  HandleScope scope;
+
+static void GetOSType(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+  const char* rval;
 
 #ifdef __POSIX__
   struct utsname info;
   if (uname(&info) < 0) {
-    return ThrowException(ErrnoException(errno, "uname"));
+    return env->ThrowErrnoException(errno, "uname");
   }
-  return scope.Close(String::New(info.sysname));
-#else // __MINGW32__
-  return scope.Close(String::New("Windows_NT"));
-#endif
+  rval = info.sysname;
+#else  // __MINGW32__
+  rval = "Windows_NT";
+#endif  // __POSIX__
+
+  args.GetReturnValue().Set(OneByteString(env->isolate(), rval));
 }
 
-static Handle<Value> GetOSRelease(const Arguments& args) {
-  HandleScope scope;
+
+static void GetOSRelease(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+  const char* rval;
 
 #ifdef __POSIX__
   struct utsname info;
   if (uname(&info) < 0) {
-    return ThrowException(ErrnoException(errno, "uname"));
+    return env->ThrowErrnoException(errno, "uname");
   }
-  return scope.Close(String::New(info.release));
-#else // __MINGW32__
+# ifdef _AIX
   char release[256];
-  OSVERSIONINFO info;
+  snprintf(release, sizeof(release),
+           "%s.%s", info.version, info.release);
+  rval = release;
+# else
+  rval = info.release;
+# endif
+#else  // Windows
+  char release[256];
+  OSVERSIONINFOW info;
+
   info.dwOSVersionInfoSize = sizeof(info);
 
-  if (GetVersionEx(&info) == 0) {
-    return Undefined();
-  }
+  // Don't complain that GetVersionEx is deprecated; there is no alternative.
+  #pragma warning(suppress : 4996)
+  if (GetVersionExW(&info) == 0)
+    return;
 
-  sprintf(release, "%d.%d.%d", static_cast<int>(info.dwMajorVersion),
-      static_cast<int>(info.dwMinorVersion), static_cast<int>(info.dwBuildNumber));
-  return scope.Close(String::New(release));
-#endif
+  snprintf(release,
+           sizeof(release),
+           "%d.%d.%d",
+           static_cast<int>(info.dwMajorVersion),
+           static_cast<int>(info.dwMinorVersion),
+           static_cast<int>(info.dwBuildNumber));
+  rval = release;
+#endif  // __POSIX__
 
+  args.GetReturnValue().Set(OneByteString(env->isolate(), rval));
 }
 
-static Handle<Value> GetCPUInfo(const Arguments& args) {
-  HandleScope scope;
+
+static void GetCPUInfo(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
   uv_cpu_info_t* cpu_infos;
-  int count, i;
+  int count, i, field_idx;
 
-  uv_err_t err = uv_cpu_info(&cpu_infos, &count);
+  int err = uv_cpu_info(&cpu_infos, &count);
+  if (err)
+    return;
 
-  if (err.code != UV_OK) {
-    return Undefined();
-  }
+  CHECK(args[0]->IsFunction());
+  Local<Function> addfn = args[0].As<Function>();
 
-  Local<Array> cpus = Array::New();
+  CHECK(args[1]->IsFloat64Array());
+  Local<Float64Array> array = args[1].As<Float64Array>();
+  CHECK_EQ(array->Length(), 6 * NODE_PUSH_VAL_TO_ARRAY_MAX);
+  Local<ArrayBuffer> ab = array->Buffer();
+  double* fields = static_cast<double*>(ab->GetContents().Data());
 
-  for (i = 0; i < count; i++) {
+  CHECK(args[2]->IsArray());
+  Local<Array> cpus = args[2].As<Array>();
+
+  Local<Value> model_argv[NODE_PUSH_VAL_TO_ARRAY_MAX];
+  int model_idx = 0;
+
+  for (i = 0, field_idx = 0; i < count; i++) {
     uv_cpu_info_t* ci = cpu_infos + i;
 
-    Local<Object> times_info = Object::New();
-    times_info->Set(String::New("user"), Number::New(ci->cpu_times.user));
-    times_info->Set(String::New("nice"), Number::New(ci->cpu_times.nice));
-    times_info->Set(String::New("sys"), Number::New(ci->cpu_times.sys));
-    times_info->Set(String::New("idle"), Number::New(ci->cpu_times.idle));
-    times_info->Set(String::New("irq"), Number::New(ci->cpu_times.irq));
+    fields[field_idx++] = ci->speed;
+    fields[field_idx++] = ci->cpu_times.user;
+    fields[field_idx++] = ci->cpu_times.nice;
+    fields[field_idx++] = ci->cpu_times.sys;
+    fields[field_idx++] = ci->cpu_times.idle;
+    fields[field_idx++] = ci->cpu_times.irq;
+    model_argv[model_idx++] = OneByteString(env->isolate(), ci->model);
 
-    Local<Object> cpu_info = Object::New();
-    cpu_info->Set(String::New("model"), String::New(ci->model));
-    cpu_info->Set(String::New("speed"), Number::New(ci->speed));
-    cpu_info->Set(String::New("times"), times_info);
+    if (model_idx >= NODE_PUSH_VAL_TO_ARRAY_MAX) {
+      addfn->Call(env->context(), cpus, model_idx, model_argv).ToLocalChecked();
+      model_idx = 0;
+      field_idx = 0;
+    }
+  }
 
-    (*cpus)->Set(i, cpu_info);
+  if (model_idx > 0) {
+    addfn->Call(env->context(), cpus, model_idx, model_argv).ToLocalChecked();
   }
 
   uv_free_cpu_info(cpu_infos, count);
-
-  return scope.Close(cpus);
+  args.GetReturnValue().Set(cpus);
 }
 
-static Handle<Value> GetFreeMemory(const Arguments& args) {
-  HandleScope scope;
+
+static void GetFreeMemory(const FunctionCallbackInfo<Value>& args) {
   double amount = uv_get_free_memory();
-
-  if (amount < 0) {
-    return Undefined();
-  }
-
-  return scope.Close(Number::New(amount));
+  if (amount < 0)
+    return;
+  args.GetReturnValue().Set(amount);
 }
 
-static Handle<Value> GetTotalMemory(const Arguments& args) {
-  HandleScope scope;
+
+static void GetTotalMemory(const FunctionCallbackInfo<Value>& args) {
   double amount = uv_get_total_memory();
-
-  if (amount < 0) {
-    return Undefined();
-  }
-
-  return scope.Close(Number::New(amount));
+  if (amount < 0)
+    return;
+  args.GetReturnValue().Set(amount);
 }
 
-static Handle<Value> GetUptime(const Arguments& args) {
-  HandleScope scope;
+
+static void GetUptime(const FunctionCallbackInfo<Value>& args) {
   double uptime;
-
-  uv_err_t err = uv_uptime(&uptime);
-
-  if (err.code != UV_OK) {
-    return Undefined();
-  }
-
-  return scope.Close(Number::New(uptime));
+  int err = uv_uptime(&uptime);
+  if (err == 0)
+    args.GetReturnValue().Set(uptime);
 }
 
-static Handle<Value> GetLoadAvg(const Arguments& args) {
-  HandleScope scope;
-  double loadavg[3];
+
+static void GetLoadAvg(const FunctionCallbackInfo<Value>& args) {
+  CHECK(args[0]->IsFloat64Array());
+  Local<Float64Array> array = args[0].As<Float64Array>();
+  CHECK_EQ(array->Length(), 3);
+  Local<ArrayBuffer> ab = array->Buffer();
+  double* loadavg = static_cast<double*>(ab->GetContents().Data());
   uv_loadavg(loadavg);
-
-  Local<Array> loads = Array::New(3);
-  loads->Set(0, Number::New(loadavg[0]));
-  loads->Set(1, Number::New(loadavg[1]));
-  loads->Set(2, Number::New(loadavg[2]));
-
-  return scope.Close(loads);
 }
 
 
-static Handle<Value> GetInterfaceAddresses(const Arguments& args) {
-  HandleScope scope;
+static void GetInterfaceAddresses(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
   uv_interface_address_t* interfaces;
   int count, i;
   char ip[INET6_ADDRSTRLEN];
+  char netmask[INET6_ADDRSTRLEN];
+  char mac[18];
   Local<Object> ret, o;
   Local<String> name, family;
   Local<Array> ifarr;
 
-  uv_err_t err = uv_interface_addresses(&interfaces, &count);
+  int err = uv_interface_addresses(&interfaces, &count);
 
-  ret = Object::New();
+  ret = Object::New(env->isolate());
 
-  if (err.code == UV_ENOSYS)
-    return scope.Close(ret);
-
-  if (err.code != UV_OK)
-    return ThrowException(UVException(err.code, "uv_interface_addresses"));
+  if (err == UV_ENOSYS) {
+    return args.GetReturnValue().Set(ret);
+  } else if (err) {
+    return env->ThrowUVException(err, "uv_interface_addresses");
+  }
 
   for (i = 0; i < count; i++) {
-    name = String::New(interfaces[i].name);
-    if (ret->Has(name)) {
+    const char* const raw_name = interfaces[i].name;
+
+    // On Windows, the interface name is the UTF8-encoded friendly name and may
+    // contain non-ASCII characters.  On UNIX, it's just a binary string with
+    // no particular encoding but we treat it as a one-byte Latin-1 string.
+#ifdef _WIN32
+    name = String::NewFromUtf8(env->isolate(), raw_name);
+#else
+    name = OneByteString(env->isolate(), raw_name);
+#endif
+
+    if (ret->Has(env->context(), name).FromJust()) {
       ifarr = Local<Array>::Cast(ret->Get(name));
     } else {
-      ifarr = Array::New();
+      ifarr = Array::New(env->isolate());
       ret->Set(name, ifarr);
     }
 
+    snprintf(mac,
+             18,
+             "%02x:%02x:%02x:%02x:%02x:%02x",
+             static_cast<unsigned char>(interfaces[i].phys_addr[0]),
+             static_cast<unsigned char>(interfaces[i].phys_addr[1]),
+             static_cast<unsigned char>(interfaces[i].phys_addr[2]),
+             static_cast<unsigned char>(interfaces[i].phys_addr[3]),
+             static_cast<unsigned char>(interfaces[i].phys_addr[4]),
+             static_cast<unsigned char>(interfaces[i].phys_addr[5]));
+
     if (interfaces[i].address.address4.sin_family == AF_INET) {
-      uv_ip4_name(&interfaces[i].address.address4,ip, sizeof(ip));
-      family = String::New("IPv4");
+      uv_ip4_name(&interfaces[i].address.address4, ip, sizeof(ip));
+      uv_ip4_name(&interfaces[i].netmask.netmask4, netmask, sizeof(netmask));
+      family = env->ipv4_string();
     } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
       uv_ip6_name(&interfaces[i].address.address6, ip, sizeof(ip));
-      family = String::New("IPv6");
+      uv_ip6_name(&interfaces[i].netmask.netmask6, netmask, sizeof(netmask));
+      family = env->ipv6_string();
     } else {
       strncpy(ip, "<unknown sa family>", INET6_ADDRSTRLEN);
-      family = String::New("<unknown>");
+      family = env->unknown_string();
     }
 
-    o = Object::New();
-    o->Set(String::New("address"), String::New(ip));
-    o->Set(String::New("family"), family);
+    o = Object::New(env->isolate());
+    o->Set(env->address_string(), OneByteString(env->isolate(), ip));
+    o->Set(env->netmask_string(), OneByteString(env->isolate(), netmask));
+    o->Set(env->family_string(), family);
+    o->Set(env->mac_string(), FIXED_ONE_BYTE_STRING(env->isolate(), mac));
+
+    if (interfaces[i].address.address4.sin_family == AF_INET6) {
+      uint32_t scopeid = interfaces[i].address.address6.sin6_scope_id;
+      o->Set(env->scopeid_string(),
+             Integer::NewFromUnsigned(env->isolate(), scopeid));
+    }
 
     const bool internal = interfaces[i].is_internal;
-    o->Set(String::New("internal"),
-           internal ? True() : False());
+    o->Set(env->internal_string(),
+           internal ? True(env->isolate()) : False(env->isolate()));
 
     ifarr->Set(ifarr->Length(), o);
   }
 
   uv_free_interface_addresses(interfaces, count);
-
-  return scope.Close(ret);
+  args.GetReturnValue().Set(ret);
 }
 
 
-void OS::Initialize(v8::Handle<v8::Object> target) {
-  HandleScope scope;
+static void GetHomeDirectory(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+  char buf[PATH_MAX];
 
-  NODE_SET_METHOD(target, "getEndianness", GetEndianness);
-  NODE_SET_METHOD(target, "getHostname", GetHostname);
-  NODE_SET_METHOD(target, "getLoadAvg", GetLoadAvg);
-  NODE_SET_METHOD(target, "getUptime", GetUptime);
-  NODE_SET_METHOD(target, "getTotalMem", GetTotalMemory);
-  NODE_SET_METHOD(target, "getFreeMem", GetFreeMemory);
-  NODE_SET_METHOD(target, "getCPUs", GetCPUInfo);
-  NODE_SET_METHOD(target, "getOSType", GetOSType);
-  NODE_SET_METHOD(target, "getOSRelease", GetOSRelease);
-  NODE_SET_METHOD(target, "getInterfaceAddresses", GetInterfaceAddresses);
+  size_t len = sizeof(buf);
+  const int err = uv_os_homedir(buf, &len);
+
+  if (err) {
+    return env->ThrowUVException(err, "uv_os_homedir");
+  }
+
+  Local<String> home = String::NewFromUtf8(env->isolate(),
+                                           buf,
+                                           String::kNormalString,
+                                           len);
+  args.GetReturnValue().Set(home);
 }
 
 
+static void GetUserInfo(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+  uv_passwd_t pwd;
+  enum encoding encoding;
+
+  if (args[0]->IsObject()) {
+    Local<Object> options = args[0].As<Object>();
+    Local<Value> encoding_opt = options->Get(env->encoding_string());
+    encoding = ParseEncoding(env->isolate(), encoding_opt, UTF8);
+  } else {
+    encoding = UTF8;
+  }
+
+  const int err = uv_os_get_passwd(&pwd);
+
+  if (err) {
+    return env->ThrowUVException(err, "uv_os_get_passwd");
+  }
+
+  Local<Value> uid = Number::New(env->isolate(), pwd.uid);
+  Local<Value> gid = Number::New(env->isolate(), pwd.gid);
+  Local<Value> username = StringBytes::Encode(env->isolate(),
+                                              pwd.username,
+                                              encoding);
+  Local<Value> homedir = StringBytes::Encode(env->isolate(),
+                                             pwd.homedir,
+                                             encoding);
+  Local<Value> shell;
+
+  if (pwd.shell == NULL)
+    shell = Null(env->isolate());
+  else
+    shell = StringBytes::Encode(env->isolate(), pwd.shell, encoding);
+
+  uv_os_free_passwd(&pwd);
+
+  if (username.IsEmpty()) {
+    return env->ThrowUVException(UV_EINVAL,
+                                 "uv_os_get_passwd",
+                                 "Invalid character encoding for username");
+  }
+
+  if (homedir.IsEmpty()) {
+    return env->ThrowUVException(UV_EINVAL,
+                                 "uv_os_get_passwd",
+                                 "Invalid character encoding for homedir");
+  }
+
+  if (shell.IsEmpty()) {
+    return env->ThrowUVException(UV_EINVAL,
+                                 "uv_os_get_passwd",
+                                 "Invalid character encoding for shell");
+  }
+
+  Local<Object> entry = Object::New(env->isolate());
+
+  entry->Set(env->uid_string(), uid);
+  entry->Set(env->gid_string(), gid);
+  entry->Set(env->username_string(), username);
+  entry->Set(env->homedir_string(), homedir);
+  entry->Set(env->shell_string(), shell);
+
+  args.GetReturnValue().Set(entry);
+}
+
+
+void Initialize(Local<Object> target,
+                Local<Value> unused,
+                Local<Context> context) {
+  Environment* env = Environment::GetCurrent(context);
+  env->SetMethod(target, "getHostname", GetHostname);
+  env->SetMethod(target, "getLoadAvg", GetLoadAvg);
+  env->SetMethod(target, "getUptime", GetUptime);
+  env->SetMethod(target, "getTotalMem", GetTotalMemory);
+  env->SetMethod(target, "getFreeMem", GetFreeMemory);
+  env->SetMethod(target, "getCPUs", GetCPUInfo);
+  env->SetMethod(target, "getOSType", GetOSType);
+  env->SetMethod(target, "getOSRelease", GetOSRelease);
+  env->SetMethod(target, "getInterfaceAddresses", GetInterfaceAddresses);
+  env->SetMethod(target, "getHomeDirectory", GetHomeDirectory);
+  env->SetMethod(target, "getUserInfo", GetUserInfo);
+  target->Set(FIXED_ONE_BYTE_STRING(env->isolate(), "isBigEndian"),
+              Boolean::New(env->isolate(), IsBigEndian()));
+}
+
+}  // namespace os
 }  // namespace node
 
-NODE_MODULE(node_os, node::OS::Initialize)
+NODE_MODULE_CONTEXT_AWARE_BUILTIN(os, node::os::Initialize)

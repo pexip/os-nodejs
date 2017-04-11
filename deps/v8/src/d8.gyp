@@ -26,48 +26,75 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 {
-  'includes': ['../build/common.gypi'],
   'variables': {
-    'console%': '',
+    'v8_code': 1,
+    # Enable support for Intel VTune. Supported on ia32/x64 only
+    'v8_enable_vtunejit%': 0,
+    'v8_enable_i18n_support%': 1,
   },
+  'includes': ['../gypfiles/toolchain.gypi', '../gypfiles/features.gypi'],
   'targets': [
     {
       'target_name': 'd8',
       'type': 'executable',
       'dependencies': [
-        '../tools/gyp/v8.gyp:v8',
+        'v8.gyp:v8',
+        'v8.gyp:v8_libplatform',
       ],
       # Generated source files need this explicitly:
       'include_dirs+': [
-        '../src',
+        '..',
+        '<(DEPTH)',
       ],
       'sources': [
+        'd8.h',
         'd8.cc',
+        '<(SHARED_INTERMEDIATE_DIR)/d8-js.cc',
       ],
       'conditions': [
+        [ 'want_separate_host_toolset==1', {
+          'toolsets': [ 'target', ],
+          'dependencies': [
+            'd8_js2c#host',
+          ],
+        }, {
+          'dependencies': [
+            'd8_js2c',
+          ],
+        }],
+        ['(OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="netbsd" \
+           or OS=="openbsd" or OS=="solaris" or OS=="android" \
+           or OS=="qnx" or OS=="aix")', {
+             'sources': [ 'd8-posix.cc', ]
+           }],
+        [ 'OS=="win"', {
+          'sources': [ 'd8-windows.cc', ]
+        }],
         [ 'component!="shared_library"', {
-          'sources': [ 'd8-debug.cc', '<(SHARED_INTERMEDIATE_DIR)/d8-js.cc', ],
           'conditions': [
-            [ 'want_separate_host_toolset==1', {
-              'dependencies': [
-                'd8_js2c#host',
-              ],
-            }, {
-              'dependencies': [
-                'd8_js2c',
-              ],
+            [ 'v8_postmortem_support=="true"', {
+              'xcode_settings': {
+                'OTHER_LDFLAGS': [
+                   '-Wl,-force_load,<(PRODUCT_DIR)/libv8_base.a'
+                ],
+              },
             }],
-            [ 'console=="readline"', {
-              'libraries': [ '-lreadline', ],
-              'sources': [ 'd8-readline.cc' ],
-            }],
-            ['(OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="netbsd" \
-               or OS=="openbsd" or OS=="solaris" or OS=="android")', {
-              'sources': [ 'd8-posix.cc', ]
-            }],
-            [ 'OS=="win"', {
-              'sources': [ 'd8-windows.cc', ]
-            }],
+          ],
+        }],
+        ['v8_enable_vtunejit==1', {
+          'dependencies': [
+            '../src/third_party/vtune/v8vtune.gyp:v8_vtune',
+          ],
+        }],
+        ['v8_enable_i18n_support==1', {
+          'dependencies': [
+            '<(icu_gyp_path):icui18n',
+            '<(icu_gyp_path):icuuc',
+          ],
+        }],
+        ['OS=="win" and v8_enable_i18n_support==1', {
+          'dependencies': [
+            '<(icu_gyp_path):icudata',
           ],
         }],
       ],
@@ -78,7 +105,7 @@
       'variables': {
         'js_files': [
           'd8.js',
-          'macros.py',
+          'js/macros.py',
         ],
       },
       'conditions': [
@@ -103,11 +130,29 @@
             '../tools/js2c.py',
             '<@(_outputs)',
             'D8',
-            'off',  # compress startup data
             '<@(js_files)'
           ],
         },
       ],
-    }
+    },
+  ],
+  'conditions': [
+    ['test_isolation_mode != "noop"', {
+      'targets': [
+        {
+          'target_name': 'd8_run',
+          'type': 'none',
+          'dependencies': [
+            'd8',
+          ],
+          'includes': [
+            '../gypfiles/isolate.gypi',
+          ],
+          'sources': [
+            'd8.isolate',
+          ],
+        },
+      ],
+    }],
   ],
 }

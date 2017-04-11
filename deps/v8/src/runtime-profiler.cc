@@ -1,68 +1,28 @@
 // Copyright 2012 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-#include "v8.h"
+#include "src/runtime-profiler.h"
 
-#include "runtime-profiler.h"
-
-#include "assembler.h"
-#include "code-stubs.h"
-#include "compilation-cache.h"
-#include "deoptimizer.h"
-#include "execution.h"
-#include "full-codegen.h"
-#include "global-handles.h"
-#include "isolate-inl.h"
-#include "mark-compact.h"
-#include "platform.h"
-#include "scopeinfo.h"
+#include "src/assembler.h"
+#include "src/base/platform/platform.h"
+#include "src/bootstrapper.h"
+#include "src/code-stubs.h"
+#include "src/compilation-cache.h"
+#include "src/compiler.h"
+#include "src/execution.h"
+#include "src/frames-inl.h"
+#include "src/full-codegen/full-codegen.h"
+#include "src/global-handles.h"
+#include "src/interpreter/interpreter.h"
 
 namespace v8 {
 namespace internal {
 
 
-// Optimization sampler constants.
-static const int kSamplerFrameCount = 2;
-
-// Constants for statistical profiler.
-static const int kSamplerFrameWeight[kSamplerFrameCount] = { 2, 1 };
-
-static const int kSamplerTicksBetweenThresholdAdjustment = 32;
-
-static const int kSamplerThresholdInit = 3;
-static const int kSamplerThresholdMin = 1;
-static const int kSamplerThresholdDelta = 1;
-
-static const int kSamplerThresholdSizeFactorInit = 3;
-
-static const int kSizeLimit = 1500;
-
-// Constants for counter based profiler.
-
+// Number of times a function has to be seen on the stack before it is
+// compiled for baseline.
+static const int kProfilerTicksBeforeBaseline = 1;
 // Number of times a function has to be seen on the stack before it is
 // optimized.
 static const int kProfilerTicksBeforeOptimization = 2;
@@ -79,427 +39,439 @@ STATIC_ASSERT(kProfilerTicksBeforeOptimization < 256);
 STATIC_ASSERT(kProfilerTicksBeforeReenablingOptimization < 256);
 STATIC_ASSERT(kTicksWhenNotEnoughTypeInfo < 256);
 
+// Maximum size in bytes of generate code for a function to allow OSR.
+static const int kOSRCodeSizeAllowanceBase =
+    100 * FullCodeGenerator::kCodeSizeMultiplier;
+static const int kOSRCodeSizeAllowanceBaseIgnition =
+    100 * interpreter::Interpreter::kCodeSizeMultiplier;
+
+static const int kOSRCodeSizeAllowancePerTick =
+    4 * FullCodeGenerator::kCodeSizeMultiplier;
+static const int kOSRCodeSizeAllowancePerTickIgnition =
+    4 * interpreter::Interpreter::kCodeSizeMultiplier;
 
 // Maximum size in bytes of generated code for a function to be optimized
 // the very first time it is seen on the stack.
 static const int kMaxSizeEarlyOpt =
-    5 * FullCodeGenerator::kBackEdgeDistanceUnit;
+    5 * FullCodeGenerator::kCodeSizeMultiplier;
 
+#define OPTIMIZATION_REASON_LIST(V)                            \
+  V(DoNotOptimize, "do not optimize")                          \
+  V(HotAndStable, "hot and stable")                            \
+  V(HotEnoughForBaseline, "hot enough for baseline")           \
+  V(HotWithoutMuchTypeInfo, "not much type info but very hot") \
+  V(SmallFunction, "small function")
 
-Atomic32 RuntimeProfiler::state_ = 0;
+enum class OptimizationReason : uint8_t {
+#define OPTIMIZATION_REASON_CONSTANTS(Constant, message) k##Constant,
+  OPTIMIZATION_REASON_LIST(OPTIMIZATION_REASON_CONSTANTS)
+#undef OPTIMIZATION_REASON_CONSTANTS
+};
 
-// TODO(isolates): Clean up the semaphore when it is no longer required.
-static LazySemaphore<0>::type semaphore = LAZY_SEMAPHORE_INITIALIZER;
+char const* OptimizationReasonToString(OptimizationReason reason) {
+  static char const* reasons[] = {
+#define OPTIMIZATION_REASON_TEXTS(Constant, message) message,
+      OPTIMIZATION_REASON_LIST(OPTIMIZATION_REASON_TEXTS)
+#undef OPTIMIZATION_REASON_TEXTS
+  };
+  size_t const index = static_cast<size_t>(reason);
+  DCHECK_LT(index, arraysize(reasons));
+  return reasons[index];
+}
 
-#ifdef DEBUG
-bool RuntimeProfiler::has_been_globally_set_up_ = false;
-#endif
-bool RuntimeProfiler::enabled_ = false;
-
+std::ostream& operator<<(std::ostream& os, OptimizationReason reason) {
+  return os << OptimizationReasonToString(reason);
+}
 
 RuntimeProfiler::RuntimeProfiler(Isolate* isolate)
     : isolate_(isolate),
-      sampler_threshold_(kSamplerThresholdInit),
-      sampler_threshold_size_factor_(kSamplerThresholdSizeFactorInit),
-      sampler_ticks_until_threshold_adjustment_(
-          kSamplerTicksBetweenThresholdAdjustment),
-      sampler_window_position_(0),
-      any_ic_changed_(false),
-      code_generated_(false) {
-  ClearSampleBuffer();
+      any_ic_changed_(false) {
 }
 
-
-void RuntimeProfiler::GlobalSetUp() {
-  ASSERT(!has_been_globally_set_up_);
-  enabled_ = V8::UseCrankshaft() && FLAG_opt;
-#ifdef DEBUG
-  has_been_globally_set_up_ = true;
-#endif
-}
-
-
-static void GetICCounts(JSFunction* function,
-                        int* ic_with_type_info_count,
-                        int* ic_total_count,
-                        int* percentage) {
+static void GetICCounts(JSFunction* function, int* ic_with_type_info_count,
+                        int* ic_generic_count, int* ic_total_count,
+                        int* type_info_percentage, int* generic_percentage) {
   *ic_total_count = 0;
+  *ic_generic_count = 0;
   *ic_with_type_info_count = 0;
-  Object* raw_info =
-      function->shared()->code()->type_feedback_info();
-  if (raw_info->IsTypeFeedbackInfo()) {
-    TypeFeedbackInfo* info = TypeFeedbackInfo::cast(raw_info);
-    *ic_with_type_info_count = info->ic_with_type_info_count();
-    *ic_total_count = info->ic_total_count();
+  if (function->code()->kind() == Code::FUNCTION) {
+    Code* shared_code = function->shared()->code();
+    Object* raw_info = shared_code->type_feedback_info();
+    if (raw_info->IsTypeFeedbackInfo()) {
+      TypeFeedbackInfo* info = TypeFeedbackInfo::cast(raw_info);
+      *ic_with_type_info_count = info->ic_with_type_info_count();
+      *ic_generic_count = info->ic_generic_count();
+      *ic_total_count = info->ic_total_count();
+    }
   }
-  *percentage = *ic_total_count > 0
-      ? 100 * *ic_with_type_info_count / *ic_total_count
-      : 100;
+
+  // Harvest vector-ics as well
+  TypeFeedbackVector* vector = function->feedback_vector();
+  int with = 0, gen = 0, type_vector_ic_count = 0;
+  const bool is_interpreted =
+      function->shared()->code()->is_interpreter_trampoline_builtin();
+
+  vector->ComputeCounts(&with, &gen, &type_vector_ic_count, is_interpreted);
+  if (is_interpreted) {
+    DCHECK_EQ(*ic_total_count, 0);
+    *ic_total_count = type_vector_ic_count;
+  }
+  *ic_with_type_info_count += with;
+  *ic_generic_count += gen;
+
+  if (*ic_total_count > 0) {
+    *type_info_percentage = 100 * *ic_with_type_info_count / *ic_total_count;
+    *generic_percentage = 100 * *ic_generic_count / *ic_total_count;
+  } else {
+    *type_info_percentage = 100;  // Compared against lower bound.
+    *generic_percentage = 0;      // Compared against upper bound.
+  }
 }
 
-
-void RuntimeProfiler::Optimize(JSFunction* function, const char* reason) {
-  ASSERT(function->IsOptimizable());
-  if (FLAG_trace_opt) {
+static void TraceRecompile(JSFunction* function, const char* reason,
+                           const char* type) {
+  if (FLAG_trace_opt &&
+      function->shared()->PassesFilter(FLAG_hydrogen_filter)) {
     PrintF("[marking ");
-    function->PrintName();
-    PrintF(" 0x%" V8PRIxPTR, reinterpret_cast<intptr_t>(function->address()));
-    PrintF(" for recompilation, reason: %s", reason);
+    function->ShortPrint();
+    PrintF(" for %s recompilation, reason: %s", type, reason);
     if (FLAG_type_info_threshold > 0) {
-      int typeinfo, total, percentage;
-      GetICCounts(function, &typeinfo, &total, &percentage);
-      PrintF(", ICs with typeinfo: %d/%d (%d%%)", typeinfo, total, percentage);
+      int typeinfo, generic, total, type_percentage, generic_percentage;
+      GetICCounts(function, &typeinfo, &generic, &total, &type_percentage,
+                  &generic_percentage);
+      PrintF(", ICs with typeinfo: %d/%d (%d%%)", typeinfo, total,
+             type_percentage);
+      PrintF(", generic ICs: %d/%d (%d%%)", generic, total, generic_percentage);
     }
     PrintF("]\n");
   }
-
-  if (FLAG_parallel_recompilation) {
-    function->MarkForParallelRecompilation();
-  } else {
-    // The next call to the function will trigger optimization.
-    function->MarkForLazyRecompilation();
-  }
 }
 
+void RuntimeProfiler::Optimize(JSFunction* function,
+                               OptimizationReason reason) {
+  DCHECK_NE(reason, OptimizationReason::kDoNotOptimize);
+  TraceRecompile(function, OptimizationReasonToString(reason), "optimized");
+  function->AttemptConcurrentOptimization();
+}
 
-void RuntimeProfiler::AttemptOnStackReplacement(JSFunction* function) {
-  // See AlwaysFullCompiler (in compiler.cc) comment on why we need
-  // Debug::has_break_points().
-  ASSERT(function->IsMarkedForLazyRecompilation() ||
-         function->IsMarkedForParallelRecompilation());
-  if (!FLAG_use_osr ||
-      isolate_->DebuggerHasBreakPoints() ||
-      function->IsBuiltin()) {
+void RuntimeProfiler::Baseline(JSFunction* function,
+                               OptimizationReason reason) {
+  DCHECK_NE(reason, OptimizationReason::kDoNotOptimize);
+  TraceRecompile(function, OptimizationReasonToString(reason), "baseline");
+
+  // TODO(4280): Fix this to check function is compiled for the interpreter
+  // once we have a standard way to check that. For now function will only
+  // have a bytecode array if compiled for the interpreter.
+  DCHECK(function->shared()->HasBytecodeArray());
+  function->MarkForBaseline();
+}
+
+void RuntimeProfiler::AttemptOnStackReplacement(JavaScriptFrame* frame,
+                                                int loop_nesting_levels) {
+  JSFunction* function = frame->function();
+  SharedFunctionInfo* shared = function->shared();
+  if (!FLAG_use_osr || function->shared()->IsBuiltin()) {
     return;
   }
 
-  SharedFunctionInfo* shared = function->shared();
   // If the code is not optimizable, don't try OSR.
-  if (!shared->code()->optimizable()) return;
+  if (shared->optimization_disabled()) return;
 
   // We are not prepared to do OSR for a function that already has an
   // allocated arguments object.  The optimized code would bypass it for
   // arguments accesses, which is unsound.  Don't try OSR.
   if (shared->uses_arguments()) return;
 
-  // We're using on-stack replacement: patch the unoptimized code so that
-  // any back edge in any unoptimized frame will trigger on-stack
+  // We're using on-stack replacement: modify unoptimized code so that
+  // certain back edges in any unoptimized frame will trigger on-stack
   // replacement for that frame.
+  //  - Ignition: Store new loop nesting level in BytecodeArray header.
+  //  - FullCodegen: Patch back edges up to new level using BackEdgeTable.
   if (FLAG_trace_osr) {
-    PrintF("[patching stack checks in ");
+    PrintF("[OSR - arming back edges in ");
     function->PrintName();
-    PrintF(" for on-stack replacement]\n");
+    PrintF("]\n");
   }
 
-  // Get the stack check stub code object to match against.  We aren't
-  // prepared to generate it, but we don't expect to have to.
-  bool found_code = false;
-  Code* stack_check_code = NULL;
-  if (FLAG_count_based_interrupts) {
-    InterruptStub interrupt_stub;
-    found_code = interrupt_stub.FindCodeInCache(&stack_check_code);
-  } else  // NOLINT
-  {  // NOLINT
-    StackCheckStub check_stub;
-    found_code = check_stub.FindCodeInCache(&stack_check_code);
-  }
-  if (found_code) {
-    Code* replacement_code =
-        isolate_->builtins()->builtin(Builtins::kOnStackReplacement);
-    Code* unoptimized_code = shared->code();
-    Deoptimizer::PatchStackCheckCode(unoptimized_code,
-                                     stack_check_code,
-                                     replacement_code);
+  if (frame->type() == StackFrame::JAVA_SCRIPT) {
+    DCHECK(shared->HasBaselineCode());
+    DCHECK(BackEdgeTable::Verify(shared->GetIsolate(), shared->code()));
+    for (int i = 0; i < loop_nesting_levels; i++) {
+      BackEdgeTable::Patch(isolate_, shared->code());
+    }
+  } else if (frame->type() == StackFrame::INTERPRETED) {
+    DCHECK(shared->HasBytecodeArray());
+    if (!FLAG_ignition_osr) return;  // Only use this when enabled.
+    int level = shared->bytecode_array()->osr_loop_nesting_level();
+    shared->bytecode_array()->set_osr_loop_nesting_level(
+        Min(level + loop_nesting_levels, AbstractCode::kMaxLoopNestingMarker));
+  } else {
+    UNREACHABLE();
   }
 }
 
+void RuntimeProfiler::MaybeOptimizeFullCodegen(JSFunction* function,
+                                               JavaScriptFrame* frame,
+                                               int frame_count) {
+  SharedFunctionInfo* shared = function->shared();
+  Code* shared_code = shared->code();
+  if (shared_code->kind() != Code::FUNCTION) return;
+  if (function->IsInOptimizationQueue()) return;
 
-void RuntimeProfiler::ClearSampleBuffer() {
-  memset(sampler_window_, 0, sizeof(sampler_window_));
-  memset(sampler_window_weight_, 0, sizeof(sampler_window_weight_));
-}
-
-
-int RuntimeProfiler::LookupSample(JSFunction* function) {
-  int weight = 0;
-  for (int i = 0; i < kSamplerWindowSize; i++) {
-    Object* sample = sampler_window_[i];
-    if (sample != NULL) {
-      bool fits = FLAG_lookup_sample_by_shared
-          ? (function->shared() == JSFunction::cast(sample)->shared())
-          : (function == JSFunction::cast(sample));
-      if (fits) {
-        weight += sampler_window_weight_[i];
-      }
+  if (FLAG_always_osr) {
+    AttemptOnStackReplacement(frame, AbstractCode::kMaxLoopNestingMarker);
+    // Fall through and do a normal optimized compile as well.
+  } else if (!frame->is_optimized() &&
+             (function->IsMarkedForOptimization() ||
+              function->IsMarkedForConcurrentOptimization() ||
+              function->IsOptimized())) {
+    // Attempt OSR if we are still running unoptimized code even though the
+    // the function has long been marked or even already been optimized.
+    int ticks = shared_code->profiler_ticks();
+    int64_t allowance =
+        kOSRCodeSizeAllowanceBase +
+        static_cast<int64_t>(ticks) * kOSRCodeSizeAllowancePerTick;
+    if (shared_code->CodeSize() > allowance &&
+        ticks < Code::ProfilerTicksField::kMax) {
+      shared_code->set_profiler_ticks(ticks + 1);
+    } else {
+      AttemptOnStackReplacement(frame);
     }
+    return;
   }
-  return weight;
-}
 
+  // Only record top-level code on top of the execution stack and
+  // avoid optimizing excessively large scripts since top-level code
+  // will be executed only once.
+  const int kMaxToplevelSourceSize = 10 * 1024;
+  if (shared->is_toplevel() &&
+      (frame_count > 1 || shared->SourceSize() > kMaxToplevelSourceSize)) {
+    return;
+  }
 
-void RuntimeProfiler::AddSample(JSFunction* function, int weight) {
-  ASSERT(IsPowerOf2(kSamplerWindowSize));
-  sampler_window_[sampler_window_position_] = function;
-  sampler_window_weight_[sampler_window_position_] = weight;
-  sampler_window_position_ = (sampler_window_position_ + 1) &
-      (kSamplerWindowSize - 1);
-}
-
-
-void RuntimeProfiler::OptimizeNow() {
-  HandleScope scope(isolate_);
-
-  // Run through the JavaScript frames and collect them. If we already
-  // have a sample of the function, we mark it for optimizations
-  // (eagerly or lazily).
-  JSFunction* samples[kSamplerFrameCount];
-  int sample_count = 0;
-  int frame_count = 0;
-  int frame_count_limit = FLAG_watch_ic_patching ? FLAG_frame_count
-                                                 : kSamplerFrameCount;
-  for (JavaScriptFrameIterator it(isolate_);
-       frame_count++ < frame_count_limit && !it.done();
-       it.Advance()) {
-    JavaScriptFrame* frame = it.frame();
-    JSFunction* function = JSFunction::cast(frame->function());
-
-    if (!FLAG_watch_ic_patching) {
-      // Adjust threshold each time we have processed
-      // a certain number of ticks.
-      if (sampler_ticks_until_threshold_adjustment_ > 0) {
-        sampler_ticks_until_threshold_adjustment_--;
-        if (sampler_ticks_until_threshold_adjustment_ <= 0) {
-          // If the threshold is not already at the minimum
-          // modify and reset the ticks until next adjustment.
-          if (sampler_threshold_ > kSamplerThresholdMin) {
-            sampler_threshold_ -= kSamplerThresholdDelta;
-            sampler_ticks_until_threshold_adjustment_ =
-                kSamplerTicksBetweenThresholdAdjustment;
-          }
-        }
-      }
-    }
-
-    SharedFunctionInfo* shared = function->shared();
-    Code* shared_code = shared->code();
-
-    if (shared_code->kind() != Code::FUNCTION) continue;
-
-    if (function->IsMarkedForLazyRecompilation() ||
-        function->IsMarkedForParallelRecompilation()) {
-      int nesting = shared_code->allow_osr_at_loop_nesting_level();
-      if (nesting == 0) AttemptOnStackReplacement(function);
-      int new_nesting = Min(nesting + 1, Code::kMaxLoopNestingMarker);
-      shared_code->set_allow_osr_at_loop_nesting_level(new_nesting);
-    }
-
-    // Only record top-level code on top of the execution stack and
-    // avoid optimizing excessively large scripts since top-level code
-    // will be executed only once.
-    const int kMaxToplevelSourceSize = 10 * 1024;
-    if (shared->is_toplevel() &&
-        (frame_count > 1 || shared->SourceSize() > kMaxToplevelSourceSize)) {
-      continue;
-    }
-
-    // Do not record non-optimizable functions.
-    if (shared->optimization_disabled()) {
-      if (shared->deopt_count() >= FLAG_max_opt_count) {
-        // If optimization was disabled due to many deoptimizations,
-        // then check if the function is hot and try to reenable optimization.
-        int ticks = shared_code->profiler_ticks();
-        if (ticks >= kProfilerTicksBeforeReenablingOptimization) {
-          shared_code->set_profiler_ticks(0);
-          shared->TryReenableOptimization();
-        } else {
-          shared_code->set_profiler_ticks(ticks + 1);
-        }
-      }
-      continue;
-    }
-    if (!function->IsOptimizable()) continue;
-
-    if (FLAG_watch_ic_patching) {
+  // Do not record non-optimizable functions.
+  if (shared->optimization_disabled()) {
+    if (shared->deopt_count() >= FLAG_max_opt_count) {
+      // If optimization was disabled due to many deoptimizations,
+      // then check if the function is hot and try to reenable optimization.
       int ticks = shared_code->profiler_ticks();
-
-      if (ticks >= kProfilerTicksBeforeOptimization) {
-        int typeinfo, total, percentage;
-        GetICCounts(function, &typeinfo, &total, &percentage);
-        if (percentage >= FLAG_type_info_threshold) {
-          // If this particular function hasn't had any ICs patched for enough
-          // ticks, optimize it now.
-          Optimize(function, "hot and stable");
-        } else if (ticks >= kTicksWhenNotEnoughTypeInfo) {
-          Optimize(function, "not much type info but very hot");
-        } else {
-          shared_code->set_profiler_ticks(ticks + 1);
-          if (FLAG_trace_opt_verbose) {
-            PrintF("[not yet optimizing ");
-            function->PrintName();
-            PrintF(", not enough type info: %d/%d (%d%%)]\n",
-                   typeinfo, total, percentage);
-          }
-        }
-      } else if (!any_ic_changed_ &&
-                 shared_code->instruction_size() < kMaxSizeEarlyOpt) {
-        // If no IC was patched since the last tick and this function is very
-        // small, optimistically optimize it now.
-        Optimize(function, "small function");
+      if (ticks >= kProfilerTicksBeforeReenablingOptimization) {
+        shared_code->set_profiler_ticks(0);
+        shared->TryReenableOptimization();
       } else {
         shared_code->set_profiler_ticks(ticks + 1);
       }
-    } else {  // !FLAG_watch_ic_patching
-      samples[sample_count++] = function;
+    }
+    return;
+  }
+  if (function->IsOptimized()) return;
 
-      int function_size = function->shared()->SourceSize();
-      int threshold_size_factor = (function_size > kSizeLimit)
-          ? sampler_threshold_size_factor_
-          : 1;
+  int ticks = shared_code->profiler_ticks();
 
-      int threshold = sampler_threshold_ * threshold_size_factor;
-
-      if (LookupSample(function) >= threshold) {
-        Optimize(function, "sampler window lookup");
+  if (ticks >= kProfilerTicksBeforeOptimization) {
+    int typeinfo, generic, total, type_percentage, generic_percentage;
+    GetICCounts(function, &typeinfo, &generic, &total, &type_percentage,
+                &generic_percentage);
+    if (type_percentage >= FLAG_type_info_threshold &&
+        generic_percentage <= FLAG_generic_ic_threshold) {
+      // If this particular function hasn't had any ICs patched for enough
+      // ticks, optimize it now.
+      Optimize(function, OptimizationReason::kHotAndStable);
+    } else if (ticks >= kTicksWhenNotEnoughTypeInfo) {
+      Optimize(function, OptimizationReason::kHotWithoutMuchTypeInfo);
+    } else {
+      shared_code->set_profiler_ticks(ticks + 1);
+      if (FLAG_trace_opt_verbose) {
+        PrintF("[not yet optimizing ");
+        function->PrintName();
+        PrintF(", not enough type info: %d/%d (%d%%)]\n", typeinfo, total,
+               type_percentage);
       }
     }
-  }
-  if (FLAG_watch_ic_patching) {
-    any_ic_changed_ = false;
-  } else {  // !FLAG_watch_ic_patching
-    // Add the collected functions as samples. It's important not to do
-    // this as part of collecting them because this will interfere with
-    // the sample lookup in case of recursive functions.
-    for (int i = 0; i < sample_count; i++) {
-      AddSample(samples[i], kSamplerFrameWeight[i]);
+  } else if (!any_ic_changed_ &&
+             shared_code->instruction_size() < kMaxSizeEarlyOpt) {
+    // If no IC was patched since the last tick and this function is very
+    // small, optimistically optimize it now.
+    int typeinfo, generic, total, type_percentage, generic_percentage;
+    GetICCounts(function, &typeinfo, &generic, &total, &type_percentage,
+                &generic_percentage);
+    if (type_percentage >= FLAG_type_info_threshold &&
+        generic_percentage <= FLAG_generic_ic_threshold) {
+      Optimize(function, OptimizationReason::kSmallFunction);
+    } else {
+      shared_code->set_profiler_ticks(ticks + 1);
     }
+  } else {
+    shared_code->set_profiler_ticks(ticks + 1);
   }
 }
 
+void RuntimeProfiler::MaybeBaselineIgnition(JSFunction* function,
+                                            JavaScriptFrame* frame) {
+  if (function->IsInOptimizationQueue()) return;
 
-void RuntimeProfiler::NotifyTick() {
-  if (FLAG_count_based_interrupts) return;
-  isolate_->stack_guard()->RequestRuntimeProfilerTick();
-}
-
-
-void RuntimeProfiler::SetUp() {
-  ASSERT(has_been_globally_set_up_);
-  if (!FLAG_watch_ic_patching) {
-    ClearSampleBuffer();
+  if (FLAG_always_osr) {
+    AttemptOnStackReplacement(frame, AbstractCode::kMaxLoopNestingMarker);
+    // Fall through and do a normal baseline compile as well.
+  } else if (MaybeOSRIgnition(function, frame)) {
+    return;
   }
-  // If the ticker hasn't already started, make sure to do so to get
-  // the ticks for the runtime profiler.
-  if (IsEnabled()) isolate_->logger()->EnsureTickerStarted();
-}
 
+  SharedFunctionInfo* shared = function->shared();
+  int ticks = shared->profiler_ticks();
 
-void RuntimeProfiler::Reset() {
-  if (!FLAG_watch_ic_patching) {
-    sampler_threshold_ = kSamplerThresholdInit;
-    sampler_threshold_size_factor_ = kSamplerThresholdSizeFactorInit;
-    sampler_ticks_until_threshold_adjustment_ =
-        kSamplerTicksBetweenThresholdAdjustment;
+  if (shared->optimization_disabled() &&
+      shared->disable_optimization_reason() == kOptimizationDisabledForTest) {
+    // Don't baseline functions which have been marked by NeverOptimizeFunction
+    // in a test.
+    return;
+  }
+
+  if (ticks >= kProfilerTicksBeforeBaseline) {
+    Baseline(function, OptimizationReason::kHotEnoughForBaseline);
   }
 }
 
+void RuntimeProfiler::MaybeOptimizeIgnition(JSFunction* function,
+                                            JavaScriptFrame* frame) {
+  if (function->IsInOptimizationQueue()) return;
 
-void RuntimeProfiler::TearDown() {
-  // Nothing to do.
-}
+  if (FLAG_always_osr) {
+    AttemptOnStackReplacement(frame, AbstractCode::kMaxLoopNestingMarker);
+    // Fall through and do a normal optimized compile as well.
+  } else if (MaybeOSRIgnition(function, frame)) {
+    return;
+  }
 
+  SharedFunctionInfo* shared = function->shared();
+  int ticks = shared->profiler_ticks();
 
-int RuntimeProfiler::SamplerWindowSize() {
-  return kSamplerWindowSize;
-}
-
-
-// Update the pointers in the sampler window after a GC.
-void RuntimeProfiler::UpdateSamplesAfterScavenge() {
-  for (int i = 0; i < kSamplerWindowSize; i++) {
-    Object* function = sampler_window_[i];
-    if (function != NULL && isolate_->heap()->InNewSpace(function)) {
-      MapWord map_word = HeapObject::cast(function)->map_word();
-      if (map_word.IsForwardingAddress()) {
-        sampler_window_[i] = map_word.ToForwardingAddress();
-      } else {
-        sampler_window_[i] = NULL;
+  if (shared->optimization_disabled()) {
+    if (shared->deopt_count() >= FLAG_max_opt_count) {
+      // If optimization was disabled due to many deoptimizations,
+      // then check if the function is hot and try to reenable optimization.
+      if (ticks >= kProfilerTicksBeforeReenablingOptimization) {
+        shared->set_profiler_ticks(0);
+        shared->TryReenableOptimization();
       }
     }
+    return;
+  }
+
+  if (function->IsOptimized()) return;
+
+  OptimizationReason reason = ShouldOptimizeIgnition(function, frame);
+
+  if (reason != OptimizationReason::kDoNotOptimize) {
+    Optimize(function, reason);
   }
 }
 
+bool RuntimeProfiler::MaybeOSRIgnition(JSFunction* function,
+                                       JavaScriptFrame* frame) {
+  if (!FLAG_ignition_osr) return false;
 
-void RuntimeProfiler::HandleWakeUp(Isolate* isolate) {
-  // The profiler thread must still be waiting.
-  ASSERT(NoBarrier_Load(&state_) >= 0);
-  // In IsolateEnteredJS we have already incremented the counter and
-  // undid the decrement done by the profiler thread. Increment again
-  // to get the right count of active isolates.
-  NoBarrier_AtomicIncrement(&state_, 1);
-  semaphore.Pointer()->Signal();
-}
+  SharedFunctionInfo* shared = function->shared();
+  int ticks = shared->profiler_ticks();
 
+  // TODO(rmcilroy): Also ensure we only OSR top-level code if it is smaller
+  // than kMaxToplevelSourceSize.
 
-bool RuntimeProfiler::IsSomeIsolateInJS() {
-  return NoBarrier_Load(&state_) > 0;
-}
-
-
-bool RuntimeProfiler::WaitForSomeIsolateToEnterJS() {
-  Atomic32 old_state = NoBarrier_CompareAndSwap(&state_, 0, -1);
-  ASSERT(old_state >= -1);
-  if (old_state != 0) return false;
-  semaphore.Pointer()->Wait();
-  return true;
-}
-
-
-void RuntimeProfiler::StopRuntimeProfilerThreadBeforeShutdown(Thread* thread) {
-  // Do a fake increment. If the profiler is waiting on the semaphore,
-  // the returned state is 0, which can be left as an initial state in
-  // case profiling is restarted later. If the profiler is not
-  // waiting, the increment will prevent it from waiting, but has to
-  // be undone after the profiler is stopped.
-  Atomic32 new_state = NoBarrier_AtomicIncrement(&state_, 1);
-  ASSERT(new_state >= 0);
-  if (new_state == 0) {
-    // The profiler thread is waiting. Wake it up. It must check for
-    // stop conditions before attempting to wait again.
-    semaphore.Pointer()->Signal();
-  }
-  thread->Join();
-  // The profiler thread is now stopped. Undo the increment in case it
-  // was not waiting.
-  if (new_state != 0) {
-    NoBarrier_AtomicIncrement(&state_, -1);
-  }
-}
-
-
-void RuntimeProfiler::RemoveDeadSamples() {
-  for (int i = 0; i < kSamplerWindowSize; i++) {
-    Object* function = sampler_window_[i];
-    if (function != NULL &&
-        !Marking::MarkBitFrom(HeapObject::cast(function)).Get()) {
-      sampler_window_[i] = NULL;
+  bool osr_before_baselined = function->IsMarkedForBaseline() &&
+                              ShouldOptimizeIgnition(function, frame) !=
+                                  OptimizationReason::kDoNotOptimize;
+  if (!frame->is_optimized() &&
+      (osr_before_baselined || function->IsMarkedForOptimization() ||
+       function->IsMarkedForConcurrentOptimization() ||
+       function->IsOptimized())) {
+    // Attempt OSR if we are still running interpreted code even though the
+    // the function has long been marked or even already been optimized.
+    int64_t allowance =
+        kOSRCodeSizeAllowanceBaseIgnition +
+        static_cast<int64_t>(ticks) * kOSRCodeSizeAllowancePerTickIgnition;
+    if (shared->bytecode_array()->Size() <= allowance) {
+      AttemptOnStackReplacement(frame);
     }
-  }
-}
-
-
-void RuntimeProfiler::UpdateSamplesAfterCompact(ObjectVisitor* visitor) {
-  for (int i = 0; i < kSamplerWindowSize; i++) {
-    visitor->VisitPointer(&sampler_window_[i]);
-  }
-}
-
-
-bool RuntimeProfilerRateLimiter::SuspendIfNecessary() {
-  if (!RuntimeProfiler::IsSomeIsolateInJS()) {
-    return RuntimeProfiler::WaitForSomeIsolateToEnterJS();
+    return true;
   }
   return false;
 }
 
+OptimizationReason RuntimeProfiler::ShouldOptimizeIgnition(
+    JSFunction* function, JavaScriptFrame* frame) {
+  SharedFunctionInfo* shared = function->shared();
+  int ticks = shared->profiler_ticks();
 
-} }  // namespace v8::internal
+  if (ticks >= kProfilerTicksBeforeOptimization) {
+    int typeinfo, generic, total, type_percentage, generic_percentage;
+    GetICCounts(function, &typeinfo, &generic, &total, &type_percentage,
+                &generic_percentage);
+    if (type_percentage >= FLAG_type_info_threshold &&
+        generic_percentage <= FLAG_generic_ic_threshold) {
+      // If this particular function hasn't had any ICs patched for enough
+      // ticks, optimize it now.
+      return OptimizationReason::kHotAndStable;
+    } else if (ticks >= kTicksWhenNotEnoughTypeInfo) {
+      return OptimizationReason::kHotWithoutMuchTypeInfo;
+    } else {
+      if (FLAG_trace_opt_verbose) {
+        PrintF("[not yet optimizing ");
+        function->PrintName();
+        PrintF(", not enough type info: %d/%d (%d%%)]\n", typeinfo, total,
+               type_percentage);
+      }
+      return OptimizationReason::kDoNotOptimize;
+    }
+  }
+  // TODO(rmcilroy): Consider whether we should optimize small functions when
+  // they are first seen on the stack (e.g., kMaxSizeEarlyOpt).
+  return OptimizationReason::kDoNotOptimize;
+}
+
+void RuntimeProfiler::MarkCandidatesForOptimization() {
+  HandleScope scope(isolate_);
+
+  if (!isolate_->use_crankshaft()) return;
+
+  DisallowHeapAllocation no_gc;
+
+  // Run through the JavaScript frames and collect them. If we already
+  // have a sample of the function, we mark it for optimizations
+  // (eagerly or lazily).
+  int frame_count = 0;
+  int frame_count_limit = FLAG_frame_count;
+  for (JavaScriptFrameIterator it(isolate_);
+       frame_count++ < frame_count_limit && !it.done();
+       it.Advance()) {
+    JavaScriptFrame* frame = it.frame();
+    JSFunction* function = frame->function();
+
+    List<JSFunction*> functions(4);
+    frame->GetFunctions(&functions);
+    for (int i = functions.length(); --i >= 0; ) {
+      SharedFunctionInfo* shared_function_info = functions[i]->shared();
+      int ticks = shared_function_info->profiler_ticks();
+      if (ticks < Smi::kMaxValue) {
+        shared_function_info->set_profiler_ticks(ticks + 1);
+      }
+    }
+
+    Compiler::CompilationTier next_tier =
+        Compiler::NextCompilationTier(function);
+    if (function->shared()->code()->is_interpreter_trampoline_builtin()) {
+      if (next_tier == Compiler::BASELINE) {
+        MaybeBaselineIgnition(function, frame);
+      } else {
+        DCHECK_EQ(next_tier, Compiler::OPTIMIZED);
+        MaybeOptimizeIgnition(function, frame);
+      }
+    } else {
+      DCHECK_EQ(next_tier, Compiler::OPTIMIZED);
+      MaybeOptimizeFullCodegen(function, frame, frame_count);
+    }
+  }
+  any_ic_changed_ = false;
+}
+
+}  // namespace internal
+}  // namespace v8

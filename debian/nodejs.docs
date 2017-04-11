@@ -1,1 +1,4 @@
-doc/api
+*.md
+doc/*
+AUTHORS
+LICENSE
