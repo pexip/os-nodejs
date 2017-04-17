@@ -1,0 +1,16 @@
+Description: loosen error check in test-crypto-stream
+Origin: https://github.com/joyent/node/commit/9e387fb6
+Last-Update: 2015-04-12
+
+--- a/test/simple/test-crypto-stream.js
++++ b/test/simple/test-crypto-stream.js
+@@ -70,8 +70,7 @@
+ 
+ cipher.pipe(decipher)
+   .on('error', common.mustCall(function end(err) {
+-    // TypeError: error:06065064:digital envelope routines:EVP_DecryptFinal_ex:bad decrypt
+-    assert(/:06065064:/.test(err));
++    assert(/bad decrypt/.test(err));
+   }));
+ 
+ cipher.end('Papaya!');  // Should not cause an unhandled exception.
