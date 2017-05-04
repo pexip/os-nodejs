@@ -1,39 +1,28 @@
 // Copyright 2012 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef V8_LOG_H_
 #define V8_LOG_H_
 
-#include "allocation.h"
-#include "objects.h"
-#include "platform.h"
-#include "log-utils.h"
+#include <string>
+
+#include "src/allocation.h"
+#include "src/base/compiler-specific.h"
+#include "src/base/platform/elapsed-timer.h"
+#include "src/base/platform/platform.h"
+#include "src/code-events.h"
+#include "src/isolate.h"
+#include "src/objects.h"
 
 namespace v8 {
+
+struct TickSample;
+
+namespace sampler {
+class Sampler;
+}
+
 namespace internal {
 
 // Logger is used for collecting logging information from V8 during
@@ -71,111 +60,57 @@ namespace internal {
 // tick profiler requires code events, so --prof implies --log-code.
 
 // Forward declarations.
-class LogMessageBuilder;
+class CodeEventListener;
+class CpuProfiler;
+class Isolate;
+class JitLogger;
+class Log;
+class LowLevelLogger;
+class PerfBasicLogger;
+class PerfJitLogger;
 class Profiler;
-class Semaphore;
-class SlidingStateWindow;
+class ProfilerListener;
+class RuntimeCallTimer;
 class Ticker;
 
 #undef LOG
-#define LOG(isolate, Call)                          \
-  do {                                              \
-    v8::internal::Logger* logger =                  \
-        (isolate)->logger();                        \
-    if (logger->is_logging())                       \
-      logger->Call;                                 \
+#define LOG(isolate, Call)                              \
+  do {                                                  \
+    v8::internal::Logger* logger = (isolate)->logger(); \
+    if (logger->is_logging()) logger->Call;             \
   } while (false)
 
-#define LOG_CODE_EVENT(isolate, Call)               \
-  do {                                              \
-    v8::internal::Logger* logger =                  \
-        (isolate)->logger();                        \
-    if (logger->is_logging_code_events())           \
-      logger->Call;                                 \
+#define LOG_CODE_EVENT(isolate, Call)                   \
+  do {                                                  \
+    v8::internal::Logger* logger = (isolate)->logger(); \
+    if (logger->is_logging_code_events()) logger->Call; \
   } while (false)
 
-
-#define LOG_EVENTS_AND_TAGS_LIST(V)                                     \
-  V(CODE_CREATION_EVENT,            "code-creation")                    \
-  V(CODE_MOVE_EVENT,                "code-move")                        \
-  V(CODE_DELETE_EVENT,              "code-delete")                      \
-  V(CODE_MOVING_GC,                 "code-moving-gc")                   \
-  V(SHARED_FUNC_MOVE_EVENT,         "sfi-move")                         \
-  V(SNAPSHOT_POSITION_EVENT,        "snapshot-pos")                     \
-  V(SNAPSHOT_CODE_NAME_EVENT,       "snapshot-code-name")               \
-  V(TICK_EVENT,                     "tick")                             \
-  V(REPEAT_META_EVENT,              "repeat")                           \
-  V(BUILTIN_TAG,                    "Builtin")                          \
-  V(CALL_DEBUG_BREAK_TAG,           "CallDebugBreak")                   \
-  V(CALL_DEBUG_PREPARE_STEP_IN_TAG, "CallDebugPrepareStepIn")           \
-  V(CALL_IC_TAG,                    "CallIC")                           \
-  V(CALL_INITIALIZE_TAG,            "CallInitialize")                   \
-  V(CALL_MEGAMORPHIC_TAG,           "CallMegamorphic")                  \
-  V(CALL_MISS_TAG,                  "CallMiss")                         \
-  V(CALL_NORMAL_TAG,                "CallNormal")                       \
-  V(CALL_PRE_MONOMORPHIC_TAG,       "CallPreMonomorphic")               \
-  V(KEYED_CALL_DEBUG_BREAK_TAG,     "KeyedCallDebugBreak")              \
-  V(KEYED_CALL_DEBUG_PREPARE_STEP_IN_TAG,                               \
-    "KeyedCallDebugPrepareStepIn")                                      \
-  V(KEYED_CALL_IC_TAG,              "KeyedCallIC")                      \
-  V(KEYED_CALL_INITIALIZE_TAG,      "KeyedCallInitialize")              \
-  V(KEYED_CALL_MEGAMORPHIC_TAG,     "KeyedCallMegamorphic")             \
-  V(KEYED_CALL_MISS_TAG,            "KeyedCallMiss")                    \
-  V(KEYED_CALL_NORMAL_TAG,          "KeyedCallNormal")                  \
-  V(KEYED_CALL_PRE_MONOMORPHIC_TAG, "KeyedCallPreMonomorphic")          \
-  V(CALLBACK_TAG,                   "Callback")                         \
-  V(EVAL_TAG,                       "Eval")                             \
-  V(FUNCTION_TAG,                   "Function")                         \
-  V(KEYED_LOAD_IC_TAG,              "KeyedLoadIC")                      \
-  V(KEYED_LOAD_MEGAMORPHIC_IC_TAG,  "KeyedLoadMegamorphicIC")           \
-  V(KEYED_EXTERNAL_ARRAY_LOAD_IC_TAG, "KeyedExternalArrayLoadIC")       \
-  V(KEYED_STORE_IC_TAG,             "KeyedStoreIC")                     \
-  V(KEYED_STORE_MEGAMORPHIC_IC_TAG, "KeyedStoreMegamorphicIC")          \
-  V(KEYED_EXTERNAL_ARRAY_STORE_IC_TAG, "KeyedExternalArrayStoreIC")     \
-  V(LAZY_COMPILE_TAG,               "LazyCompile")                      \
-  V(LOAD_IC_TAG,                    "LoadIC")                           \
-  V(REG_EXP_TAG,                    "RegExp")                           \
-  V(SCRIPT_TAG,                     "Script")                           \
-  V(STORE_IC_TAG,                   "StoreIC")                          \
-  V(STUB_TAG,                       "Stub")                             \
-  V(NATIVE_FUNCTION_TAG,            "Function")                         \
-  V(NATIVE_LAZY_COMPILE_TAG,        "LazyCompile")                      \
-  V(NATIVE_SCRIPT_TAG,              "Script")
-// Note that 'NATIVE_' cases for functions and scripts are mapped onto
-// original tags when writing to the log.
-
-
-class Sampler;
-
-
-class Logger {
+class Logger : public CodeEventListener {
  public:
-#define DECLARE_ENUM(enum_item, ignore) enum_item,
-  enum LogEventsAndTags {
-    LOG_EVENTS_AND_TAGS_LIST(DECLARE_ENUM)
-    NUMBER_OF_LOG_EVENTS
-  };
-#undef DECLARE_ENUM
+  enum StartEnd { START = 0, END = 1 };
 
   // Acquires resources for logging if the right flags are set.
-  bool SetUp();
+  bool SetUp(Isolate* isolate);
 
   // Sets the current code event handler.
   void SetCodeEventHandler(uint32_t options,
                            JitCodeEventHandler event_handler);
 
-  void EnsureTickerStarted();
-  void EnsureTickerStopped();
+  // Sets up ProfilerListener.
+  void SetUpProfilerListener();
 
-  Sampler* sampler();
+  // Tear down ProfilerListener if it has no observers.
+  void TearDownProfilerListener();
+
+  sampler::Sampler* sampler();
+
+  ProfilerListener* profiler_listener() { return profiler_listener_.get(); }
 
   // Frees resources acquired in SetUp.
   // When a temporary file is used for the log, returns its stream descriptor,
   // leaving the file open.
   FILE* TearDown();
-
-  // Enable the computation of a sliding window of states.
-  void EnableSlidingStateWindow();
 
   // Emits an event with a string value -> (name, value).
   void StringEvent(const char* name, const char* value);
@@ -191,11 +126,6 @@ class Logger {
   void NewEvent(const char* name, void* object, size_t size);
   void DeleteEvent(const char* name, void* object);
 
-  // Static versions of the above, operate on current isolate's logger.
-  // Used in TRACK_MEMORY(TypeName) defined in globals.h
-  static void NewEventStatic(const char* name, void* object, size_t size);
-  static void DeleteEventStatic(const char* name, void* object);
-
   // Emits an event with a tag, and some resource usage information.
   // -> (name, tag, <rusage information>).
   // Currently, the resource usage information is a process time stamp
@@ -204,7 +134,7 @@ class Logger {
 
   // Emits an event that an undefined property was read from an
   // object.
-  void SuspectReadEvent(String* name, Object* obj);
+  void SuspectReadEvent(Name* name, Object* obj);
 
   // Emits an event when a message is put on or read from a debugging queue.
   // DebugTag lets us put a call-site specific label on the event.
@@ -213,8 +143,7 @@ class Logger {
 
 
   // ==== Events logged by --log-api. ====
-  void ApiNamedSecurityCheck(Object* key);
-  void ApiIndexedSecurityCheck(uint32_t index);
+  void ApiSecurityCheck();
   void ApiNamedPropertyAccess(const char* tag, JSObject* holder, Object* name);
   void ApiIndexedPropertyAccess(const char* tag,
                                 JSObject* holder,
@@ -222,37 +151,43 @@ class Logger {
   void ApiObjectAccess(const char* tag, JSObject* obj);
   void ApiEntryCall(const char* name);
 
-
   // ==== Events logged by --log-code. ====
+  void addCodeEventListener(CodeEventListener* listener);
+  void removeCodeEventListener(CodeEventListener* listener);
+
   // Emits a code event for a callback function.
-  void CallbackEvent(String* name, Address entry_point);
-  void GetterCallbackEvent(String* name, Address entry_point);
-  void SetterCallbackEvent(String* name, Address entry_point);
+  void CallbackEvent(Name* name, Address entry_point);
+  void GetterCallbackEvent(Name* name, Address entry_point);
+  void SetterCallbackEvent(Name* name, Address entry_point);
   // Emits a code create event.
-  void CodeCreateEvent(LogEventsAndTags tag,
-                       Code* code, const char* source);
-  void CodeCreateEvent(LogEventsAndTags tag,
-                       Code* code, String* name);
-  void CodeCreateEvent(LogEventsAndTags tag,
-                       Code* code,
-                       SharedFunctionInfo* shared,
-                       String* name);
-  void CodeCreateEvent(LogEventsAndTags tag,
-                       Code* code,
-                       SharedFunctionInfo* shared,
-                       String* source, int line);
-  void CodeCreateEvent(LogEventsAndTags tag, Code* code, int args_count);
+  void CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
+                       AbstractCode* code, const char* source);
+  void CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
+                       AbstractCode* code, Name* name);
+  void CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
+                       AbstractCode* code, SharedFunctionInfo* shared,
+                       Name* name);
+  void CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
+                       AbstractCode* code, SharedFunctionInfo* shared,
+                       Name* source, int line, int column);
+  void CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
+                       AbstractCode* code, int args_count);
+  // Emits a code deoptimization event.
+  void CodeDisableOptEvent(AbstractCode* code, SharedFunctionInfo* shared);
   void CodeMovingGCEvent();
   // Emits a code create event for a RegExp.
-  void RegExpCodeCreateEvent(Code* code, String* source);
+  void RegExpCodeCreateEvent(AbstractCode* code, String* source);
   // Emits a code move event.
-  void CodeMoveEvent(Address from, Address to);
-  // Emits a code delete event.
-  void CodeDeleteEvent(Address from);
+  void CodeMoveEvent(AbstractCode* from, Address to);
+  // Emits a code line info record event.
+  void CodeLinePosInfoRecordEvent(AbstractCode* code,
+                                  ByteArray* source_position_table);
 
   void SharedFunctionInfoMoveEvent(Address from, Address to);
 
-  void SnapshotPositionEvent(Address addr, int pos);
+  void CodeNameEvent(Address addr, int pos, const char* code_name);
+
+  void CodeDeoptEvent(Code* code, Address pc, int fp_to_sp_delta);
 
   // ==== Events logged by --log-gc. ====
   // Heap sampling events: start, end, and individual types.
@@ -268,47 +203,52 @@ class Logger {
   void HeapSampleStats(const char* space, const char* kind,
                        intptr_t capacity, intptr_t used);
 
-  void SharedLibraryEvent(const char* library_path,
-                          uintptr_t start,
-                          uintptr_t end);
-  void SharedLibraryEvent(const wchar_t* library_path,
-                          uintptr_t start,
-                          uintptr_t end);
+  void SharedLibraryEvent(const std::string& library_path, uintptr_t start,
+                          uintptr_t end, intptr_t aslr_slide);
+
+  void CurrentTimeEvent();
+
+  void TimerEvent(StartEnd se, const char* name);
+
+  static void EnterExternal(Isolate* isolate);
+  static void LeaveExternal(Isolate* isolate);
+
+  static void DefaultEventLoggerSentinel(const char* name, int event) {}
+
+  INLINE(static void CallEventLogger(Isolate* isolate, const char* name,
+                                     StartEnd se, bool expose_to_api));
 
   // ==== Events logged by --log-regexp ====
   // Regexp compilation and execution events.
 
   void RegExpCompileEvent(Handle<JSRegExp> regexp, bool in_cache);
 
-  // Log an event reported from generated code
-  void LogRuntime(Vector<const char> format, JSArray* args);
-
   bool is_logging() {
-    return logging_nesting_ > 0;
+    return is_logging_;
   }
 
   bool is_logging_code_events() {
-    return is_logging() || code_event_handler_ != NULL;
+    return is_logging() || jit_logger_ != NULL;
   }
 
-  // Pause/Resume collection of profiling data.
-  // When data collection is paused, CPU Tick events are discarded until
-  // data collection is Resumed.
-  void PauseProfiler();
-  void ResumeProfiler();
-  bool IsProfilerPaused();
+  // Stop collection of profiling data.
+  // When data collection is paused, CPU Tick events are discarded.
+  void StopProfiler();
 
   void LogExistingFunction(Handle<SharedFunctionInfo> shared,
-                           Handle<Code> code);
+                           Handle<AbstractCode> code);
   // Logs all compiled functions found in the heap.
   void LogCompiledFunctions();
   // Logs all accessor callbacks found in the heap.
   void LogAccessorCallbacks();
   // Used for logging stubs found in the snapshot.
   void LogCodeObjects();
+  // Used for logging bytecode handlers found in the snapshot.
+  void LogBytecodeHandlers();
 
   // Converts tag to a corresponding NATIVE_... if the script is native.
-  INLINE(static LogEventsAndTags ToNativeByScript(LogEventsAndTags, Script*));
+  INLINE(static CodeEventListener::LogEventsAndTags ToNativeByScript(
+      CodeEventListener::LogEventsAndTags, Script*));
 
   // Profiler's sampling interval (in milliseconds).
 #if defined(ANDROID)
@@ -323,65 +263,32 @@ class Logger {
   void LogFailure();
 
  private:
-  class NameBuffer;
-  class NameMap;
-
-  Logger();
+  explicit Logger(Isolate* isolate);
   ~Logger();
-
-  // Issue code notifications.
-  void IssueCodeAddedEvent(Code* code, const char* name, size_t name_len);
-  void IssueCodeMovedEvent(Address from, Address to);
-  void IssueCodeRemovedEvent(Address from);
 
   // Emits the profiler's first message.
   void ProfilerBeginEvent();
 
   // Emits callback event messages.
   void CallbackEventInternal(const char* prefix,
-                             const char* name,
+                             Name* name,
                              Address entry_point);
 
   // Internal configurable move event.
-  void MoveEventInternal(LogEventsAndTags event, Address from, Address to);
-
-  // Internal configurable move event.
-  void DeleteEventInternal(LogEventsAndTags event, Address from);
-
-  // Emits the source code of a regexp. Used by regexp events.
-  void LogRegExpSource(Handle<JSRegExp> regexp);
+  void MoveEventInternal(CodeEventListener::LogEventsAndTags event,
+                         Address from, Address to);
 
   // Used for logging stubs found in the snapshot.
   void LogCodeObject(Object* code_object);
 
-  // Emits general information about generated code.
-  void LogCodeInfo();
-
-  void RegisterSnapshotCodeName(Code* code, const char* name, int name_size);
-
-  // Low-level logging support.
-
-  void LowLevelCodeCreateEvent(Code* code, const char* name, int name_size);
-
-  void LowLevelCodeMoveEvent(Address from, Address to);
-
-  void LowLevelCodeDeleteEvent(Address from);
-
-  void LowLevelSnapshotPositionEvent(Address addr, int pos);
-
-  void LowLevelLogWriteBytes(const char* bytes, int size);
-
-  template <typename T>
-  void LowLevelLogWriteStruct(const T& s) {
-    char tag = T::kTag;
-    LowLevelLogWriteBytes(reinterpret_cast<const char*>(&tag), sizeof(tag));
-    LowLevelLogWriteBytes(reinterpret_cast<const char*>(&s), sizeof(s));
-  }
+  // Helper method. It resets name_buffer_ and add tag name into it.
+  void InitNameBuffer(CodeEventListener::LogEventsAndTags tag);
 
   // Emits a profiler tick event. Used by the profiler thread.
   void TickEvent(TickSample* sample, bool overflow);
+  void RuntimeCallTimerEvent();
 
-  void ApiEvent(const char* name, ...);
+  PRINTF_FORMAT(2, 3) void ApiEvent(const char* format, ...);
 
   // Logs a StringEvent regardless of whether FLAG_log is true.
   void UncheckedStringEvent(const char* name, const char* value);
@@ -390,8 +297,7 @@ class Logger {
   void UncheckedIntEvent(const char* name, int value);
   void UncheckedIntPtrTEvent(const char* name, intptr_t value);
 
-  // Returns whether profiler's sampler is active.
-  bool IsProfilerSamplerActive();
+  Isolate* isolate_;
 
   // The sampler used by the profiler and the sliding state window.
   Ticker* ticker_;
@@ -401,10 +307,6 @@ class Logger {
   // of samples.
   Profiler* profiler_;
 
-  // SlidingStateWindow instance keeping a sliding window of the most
-  // recent VM states.
-  SlidingStateWindow* sliding_state_window_;
-
   // An array of log events names.
   const char* const* log_events_;
 
@@ -412,88 +314,102 @@ class Logger {
   // private members.
   friend class EventLog;
   friend class Isolate;
-  friend class LogMessageBuilder;
   friend class TimeLog;
   friend class Profiler;
-  friend class SlidingStateWindow;
-  friend class StackTracer;
-  friend class VMState;
-
+  template <StateTag Tag> friend class VMState;
   friend class LoggerTestHelper;
 
-
-  int logging_nesting_;
-  int cpu_profiler_nesting_;
-
+  bool is_logging_;
   Log* log_;
-
-  NameBuffer* name_buffer_;
-
-  NameMap* address_to_name_map_;
+  PerfBasicLogger* perf_basic_logger_;
+  PerfJitLogger* perf_jit_logger_;
+  LowLevelLogger* ll_logger_;
+  JitLogger* jit_logger_;
+  std::unique_ptr<ProfilerListener> profiler_listener_;
+  List<CodeEventListener*> listeners_;
 
   // Guards against multiple calls to TearDown() that can happen in some tests.
   // 'true' between SetUp() and TearDown().
   bool is_initialized_;
 
-  // The code event handler - if any.
-  JitCodeEventHandler code_event_handler_;
-
-  // Support for 'incremental addresses' in compressed logs:
-  //  LogMessageBuilder::AppendAddress(Address addr)
-  Address last_address_;
-  //  Logger::TickEvent(...)
-  Address prev_sp_;
-  Address prev_function_;
-  //  Logger::MoveEventInternal(...)
-  Address prev_to_;
-  //  Logger::FunctionCreateEvent(...)
-  Address prev_code_;
+  base::ElapsedTimer timer_;
 
   friend class CpuProfiler;
 };
 
+#define TIMER_EVENTS_LIST(V)    \
+  V(RecompileSynchronous, true) \
+  V(RecompileConcurrent, true)  \
+  V(CompileIgnition, true)      \
+  V(CompileFullCode, true)      \
+  V(OptimizeCode, true)         \
+  V(CompileCode, true)          \
+  V(DeoptimizeCode, true)       \
+  V(Execute, true)              \
+  V(External, true)             \
+  V(IcMiss, false)
 
-// Process wide registry of samplers.
-class SamplerRegistry : public AllStatic {
- public:
-  enum State {
-    HAS_NO_SAMPLERS,
-    HAS_SAMPLERS,
-    HAS_CPU_PROFILING_SAMPLERS
+#define V(TimerName, expose)                                                  \
+  class TimerEvent##TimerName : public AllStatic {                            \
+   public:                                                                    \
+    static const char* name(void* unused = NULL) { return "V8." #TimerName; } \
+    static bool expose_to_api() { return expose; }                            \
   };
+TIMER_EVENTS_LIST(V)
+#undef V
 
-  static void SetUp();
 
-  typedef void (*VisitSampler)(Sampler*, void*);
-
-  static State GetState();
-
-  // Iterates over all active samplers keeping the internal lock held.
-  // Returns whether there are any active samplers.
-  static bool IterateActiveSamplers(VisitSampler func, void* param);
-
-  // Adds/Removes an active sampler.
-  static void AddActiveSampler(Sampler* sampler);
-  static void RemoveActiveSampler(Sampler* sampler);
-
- private:
-  static bool ActiveSamplersExist() {
-    return active_samplers_ != NULL && !active_samplers_->is_empty();
+template <class TimerEvent>
+class TimerEventScope {
+ public:
+  explicit TimerEventScope(Isolate* isolate) : isolate_(isolate) {
+    LogTimerEvent(Logger::START);
   }
 
-  static List<Sampler*>* active_samplers_;
+  ~TimerEventScope() { LogTimerEvent(Logger::END); }
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(SamplerRegistry);
+ private:
+  void LogTimerEvent(Logger::StartEnd se);
+  Isolate* isolate_;
 };
 
-
-// Class that extracts stack trace, used for profiling.
-class StackTracer : public AllStatic {
+class CodeEventLogger : public CodeEventListener {
  public:
-  static void Trace(Isolate* isolate, TickSample* sample);
+  CodeEventLogger();
+  ~CodeEventLogger() override;
+
+  void CodeCreateEvent(LogEventsAndTags tag, AbstractCode* code,
+                       const char* comment) override;
+  void CodeCreateEvent(LogEventsAndTags tag, AbstractCode* code,
+                       Name* name) override;
+  void CodeCreateEvent(LogEventsAndTags tag, AbstractCode* code,
+                       int args_count) override;
+  void CodeCreateEvent(LogEventsAndTags tag, AbstractCode* code,
+                       SharedFunctionInfo* shared, Name* name) override;
+  void CodeCreateEvent(LogEventsAndTags tag, AbstractCode* code,
+                       SharedFunctionInfo* shared, Name* source, int line,
+                       int column) override;
+  void RegExpCodeCreateEvent(AbstractCode* code, String* source) override;
+
+  void CallbackEvent(Name* name, Address entry_point) override {}
+  void GetterCallbackEvent(Name* name, Address entry_point) override {}
+  void SetterCallbackEvent(Name* name, Address entry_point) override {}
+  void SharedFunctionInfoMoveEvent(Address from, Address to) override {}
+  void CodeMovingGCEvent() override {}
+  void CodeDeoptEvent(Code* code, Address pc, int fp_to_sp_delta) override {}
+
+ private:
+  class NameBuffer;
+
+  virtual void LogRecordedBuffer(AbstractCode* code, SharedFunctionInfo* shared,
+                                 const char* name, int length) = 0;
+
+  NameBuffer* name_buffer_;
 };
 
-} }  // namespace v8::internal
+
+}  // namespace internal
+}  // namespace v8
 
 
 #endif  // V8_LOG_H_

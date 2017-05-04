@@ -1,32 +1,12 @@
 // Copyright 2011 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef V8_STRING_SEARCH_H_
 #define V8_STRING_SEARCH_H_
+
+#include "src/isolate.h"
+#include "src/vector.h"
 
 namespace v8 {
 namespace internal {
@@ -53,7 +33,7 @@ class StringSearchBase {
   // a potentially less efficient searching, but is a safe approximation.
   // For needles using only characters in the same Unicode 256-code point page,
   // there is no search speed degradation.
-  static const int kAsciiAlphabetSize = 128;
+  static const int kLatin1AlphabetSize = 256;
   static const int kUC16AlphabetSize = Isolate::kUC16AlphabetSize;
 
   // Bad-char shift table stored in the state. It's length is the alphabet size.
@@ -61,12 +41,12 @@ class StringSearchBase {
   // to compensate for the algorithmic overhead compared to simple brute force.
   static const int kBMMinPatternLength = 7;
 
-  static inline bool IsAsciiString(Vector<const char>) {
+  static inline bool IsOneByteString(Vector<const uint8_t> string) {
     return true;
   }
 
-  static inline bool IsAsciiString(Vector<const uc16> string) {
-    return String::IsAscii(string.start(), string.length());
+  static inline bool IsOneByteString(Vector<const uc16> string) {
+    return String::IsOneByte(string.start(), string.length());
   }
 
   friend class Isolate;
@@ -81,7 +61,7 @@ class StringSearch : private StringSearchBase {
         pattern_(pattern),
         start_(Max(0, pattern.length() - kBMMaxShift)) {
     if (sizeof(PatternChar) > sizeof(SubjectChar)) {
-      if (!IsAsciiString(pattern_)) {
+      if (!IsOneByteString(pattern_)) {
         strategy_ = &FailSearch;
         return;
       }
@@ -104,10 +84,10 @@ class StringSearch : private StringSearchBase {
 
   static inline int AlphabetSize() {
     if (sizeof(PatternChar) == 1) {
-      // ASCII needle.
-      return kAsciiAlphabetSize;
+      // Latin1 needle.
+      return kLatin1AlphabetSize;
     } else {
-      ASSERT(sizeof(PatternChar) == 2);
+      DCHECK(sizeof(PatternChar) == 2);
       // UC16 needle.
       return kUC16AlphabetSize;
     }
@@ -150,13 +130,21 @@ class StringSearch : private StringSearchBase {
 
   void PopulateBoyerMooreTable();
 
+  static inline bool exceedsOneByte(uint8_t c) {
+    return false;
+  }
+
+  static inline bool exceedsOneByte(uint16_t c) {
+    return c > String::kMaxOneByteCharCodeU;
+  }
+
   static inline int CharOccurrence(int* bad_char_occurrence,
                                    SubjectChar char_code) {
     if (sizeof(SubjectChar) == 1) {
       return bad_char_occurrence[static_cast<int>(char_code)];
     }
     if (sizeof(PatternChar) == 1) {
-      if (static_cast<unsigned int>(char_code) > String::kMaxAsciiCharCodeU) {
+      if (exceedsOneByte(char_code)) {
         return -1;
       }
       return bad_char_occurrence[static_cast<unsigned int>(char_code)];
@@ -202,6 +190,46 @@ class StringSearch : private StringSearchBase {
 };
 
 
+template <typename T, typename U>
+inline T AlignDown(T value, U alignment) {
+  return reinterpret_cast<T>(
+      (reinterpret_cast<uintptr_t>(value) & ~(alignment - 1)));
+}
+
+
+inline uint8_t GetHighestValueByte(uc16 character) {
+  return Max(static_cast<uint8_t>(character & 0xFF),
+             static_cast<uint8_t>(character >> 8));
+}
+
+
+inline uint8_t GetHighestValueByte(uint8_t character) { return character; }
+
+
+template <typename PatternChar, typename SubjectChar>
+inline int FindFirstCharacter(Vector<const PatternChar> pattern,
+                              Vector<const SubjectChar> subject, int index) {
+  const PatternChar pattern_first_char = pattern[0];
+  const int max_n = (subject.length() - pattern.length() + 1);
+
+  const uint8_t search_byte = GetHighestValueByte(pattern_first_char);
+  const SubjectChar search_char = static_cast<SubjectChar>(pattern_first_char);
+  int pos = index;
+  do {
+    DCHECK_GE(max_n - pos, 0);
+    const SubjectChar* char_pos = reinterpret_cast<const SubjectChar*>(
+        memchr(subject.start() + pos, search_byte,
+               (max_n - pos) * sizeof(SubjectChar)));
+    if (char_pos == NULL) return -1;
+    char_pos = AlignDown(char_pos, sizeof(SubjectChar));
+    pos = static_cast<int>(char_pos - subject.start());
+    if (subject[pos] == search_char) return pos;
+  } while (++pos < max_n);
+
+  return -1;
+}
+
+
 //---------------------------------------------------------------------
 // Single Character Pattern Search Strategy
 //---------------------------------------------------------------------
@@ -211,29 +239,14 @@ int StringSearch<PatternChar, SubjectChar>::SingleCharSearch(
     StringSearch<PatternChar, SubjectChar>* search,
     Vector<const SubjectChar> subject,
     int index) {
-  ASSERT_EQ(1, search->pattern_.length());
+  DCHECK_EQ(1, search->pattern_.length());
   PatternChar pattern_first_char = search->pattern_[0];
-  int i = index;
-  if (sizeof(SubjectChar) == 1 && sizeof(PatternChar) == 1) {
-    const SubjectChar* pos = reinterpret_cast<const SubjectChar*>(
-        memchr(subject.start() + i,
-               pattern_first_char,
-               subject.length() - i));
-    if (pos == NULL) return -1;
-    return static_cast<int>(pos - subject.start());
-  } else {
-    if (sizeof(PatternChar) > sizeof(SubjectChar)) {
-      if (static_cast<uc16>(pattern_first_char) > String::kMaxAsciiCharCodeU) {
-        return -1;
-      }
+  if (sizeof(PatternChar) > sizeof(SubjectChar)) {
+    if (exceedsOneByte(pattern_first_char)) {
+      return -1;
     }
-    SubjectChar search_char = static_cast<SubjectChar>(pattern_first_char);
-    int n = subject.length();
-    while (i < n) {
-      if (subject[i++] == search_char) return i - 1;
-    }
-    return -1;
   }
+  return FindFirstCharacter(search->pattern_, subject, index);
 }
 
 //---------------------------------------------------------------------
@@ -245,7 +258,7 @@ template <typename PatternChar, typename SubjectChar>
 inline bool CharCompare(const PatternChar* pattern,
                         const SubjectChar* subject,
                         int length) {
-  ASSERT(length > 0);
+  DCHECK(length > 0);
   int pos = 0;
   do {
     if (pattern[pos] != subject[pos]) {
@@ -264,22 +277,15 @@ int StringSearch<PatternChar, SubjectChar>::LinearSearch(
     Vector<const SubjectChar> subject,
     int index) {
   Vector<const PatternChar> pattern = search->pattern_;
-  ASSERT(pattern.length() > 1);
+  DCHECK(pattern.length() > 1);
   int pattern_length = pattern.length();
-  PatternChar pattern_first_char = pattern[0];
   int i = index;
   int n = subject.length() - pattern_length;
   while (i <= n) {
-    if (sizeof(SubjectChar) == 1 && sizeof(PatternChar) == 1) {
-      const SubjectChar* pos = reinterpret_cast<const SubjectChar*>(
-          memchr(subject.start() + i,
-                 pattern_first_char,
-                 n - i + 1));
-      if (pos == NULL) return -1;
-      i = static_cast<int>(pos - subject.start()) + 1;
-    } else {
-      if (subject[i++] != pattern_first_char) continue;
-    }
+    i = FindFirstCharacter(pattern, subject, i);
+    if (i == -1) return -1;
+    DCHECK_LE(i, n);
+    i++;
     // Loop extracted to separate function to allow using return to do
     // a deeper break.
     if (CharCompare(pattern.start() + 1,
@@ -517,22 +523,12 @@ int StringSearch<PatternChar, SubjectChar>::InitialSearch(
 
   // We know our pattern is at least 2 characters, we cache the first so
   // the common case of the first character not matching is faster.
-  PatternChar pattern_first_char = pattern[0];
   for (int i = index, n = subject.length() - pattern_length; i <= n; i++) {
     badness++;
     if (badness <= 0) {
-      if (sizeof(SubjectChar) == 1 && sizeof(PatternChar) == 1) {
-        const SubjectChar* pos = reinterpret_cast<const SubjectChar*>(
-            memchr(subject.start() + i,
-                   pattern_first_char,
-                   n - i + 1));
-        if (pos == NULL) {
-          return -1;
-        }
-        i = static_cast<int>(pos - subject.start());
-      } else {
-        if (subject[i] != pattern_first_char) continue;
-      }
+      i = FindFirstCharacter(pattern, subject, i);
+      if (i == -1) return -1;
+      DCHECK_LE(i, n);
       int j = 1;
       do {
         if (pattern[j] != subject[i + j]) {
@@ -567,6 +563,7 @@ int SearchString(Isolate* isolate,
   return search.Search(subject, start_index);
 }
 
-}}  // namespace v8::internal
+}  // namespace internal
+}  // namespace v8
 
 #endif  // V8_STRING_SEARCH_H_

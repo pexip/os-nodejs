@@ -1,14 +1,13 @@
 #include <node.h>
 #include <v8.h>
 
-using namespace v8;
-
-Handle<Value> Method(const Arguments& args) {
-  HandleScope scope;
-  return scope.Close(String::New("world"));
+void Method(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  v8::Isolate* isolate = args.GetIsolate();
+  v8::HandleScope scope(isolate);
+  args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, "world"));
 }
 
-void init(Handle<Object> exports, Handle<Object> module) {
+void init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module) {
   NODE_SET_METHOD(module, "exports", Method);
 }
 
