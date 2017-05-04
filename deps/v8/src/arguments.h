@@ -1,34 +1,13 @@
 // Copyright 2012 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef V8_ARGUMENTS_H_
 #define V8_ARGUMENTS_H_
 
-#include "allocation.h"
+#include "src/allocation.h"
+#include "src/objects-inl.h"
+#include "src/tracing/trace-event.h"
 
 namespace v8 {
 namespace internal {
@@ -44,15 +23,22 @@ namespace internal {
 //   Object* Runtime_function(Arguments args) {
 //     ... use args[i] here ...
 //   }
+//
+// Note that length_ (whose value is in the integer range) is defined
+// as intptr_t to provide endian-neutrality on 64-bit archs.
 
 class Arguments BASE_EMBEDDED {
  public:
   Arguments(int length, Object** arguments)
-      : length_(length), arguments_(arguments) { }
+      : length_(length), arguments_(arguments) {
+    DCHECK_GE(length_, 0);
+  }
 
   Object*& operator[] (int index) {
-    ASSERT(0 <= index && index < length_);
-    return arguments_[-index];
+    DCHECK_GE(index, 0);
+    DCHECK_LT(static_cast<uint32_t>(index), static_cast<uint32_t>(length_));
+    return *(reinterpret_cast<Object**>(reinterpret_cast<intptr_t>(arguments_) -
+                                        index * kPointerSize));
   }
 
   template <class S> Handle<S> at(int index) {
@@ -72,59 +58,61 @@ class Arguments BASE_EMBEDDED {
   }
 
   // Get the total number of arguments including the receiver.
-  int length() const { return length_; }
+  int length() const { return static_cast<int>(length_); }
 
   Object** arguments() { return arguments_; }
 
+  Object** lowest_address() { return &this->operator[](length() - 1); }
+
+  Object** highest_address() { return &this->operator[](0); }
+
  private:
-  int length_;
+  intptr_t length_;
   Object** arguments_;
 };
 
+double ClobberDoubleRegisters(double x1, double x2, double x3, double x4);
 
-// Custom arguments replicate a small segment of stack that can be
-// accessed through an Arguments object the same way the actual stack
-// can.
-class CustomArguments : public Relocatable {
- public:
-  inline CustomArguments(Isolate* isolate,
-                         Object* data,
-                         Object* self,
-                         JSObject* holder) : Relocatable(isolate) {
-    ASSERT(reinterpret_cast<Object*>(isolate)->IsSmi());
-    values_[3] = self;
-    values_[2] = holder;
-    values_[1] = data;
-    values_[0] = reinterpret_cast<Object*>(isolate);
-  }
-
-  inline explicit CustomArguments(Isolate* isolate) : Relocatable(isolate) {
 #ifdef DEBUG
-    for (size_t i = 0; i < ARRAY_SIZE(values_); i++) {
-      values_[i] = reinterpret_cast<Object*>(kZapValue);
-    }
+#define CLOBBER_DOUBLE_REGISTERS() ClobberDoubleRegisters(1, 2, 3, 4);
+#else
+#define CLOBBER_DOUBLE_REGISTERS()
 #endif
-  }
 
-  void IterateInstance(ObjectVisitor* v);
-  Object** end() { return values_ + ARRAY_SIZE(values_) - 1; }
+// TODO(cbruni): add global flag to check whether any tracing events have been
+// enabled.
+#define RUNTIME_FUNCTION_RETURNS_TYPE(Type, Name)                             \
+  static INLINE(Type __RT_impl_##Name(Arguments args, Isolate* isolate));     \
+                                                                              \
+  V8_NOINLINE static Type Stats_##Name(int args_length, Object** args_object, \
+                                       Isolate* isolate) {                    \
+    RuntimeCallTimerScope timer(isolate, &RuntimeCallStats::Name);            \
+    TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("v8.runtime"),                     \
+                 "V8.Runtime_" #Name);                                        \
+    Arguments args(args_length, args_object);                                 \
+    return __RT_impl_##Name(args, isolate);                                   \
+  }                                                                           \
+                                                                              \
+  Type Name(int args_length, Object** args_object, Isolate* isolate) {        \
+    DCHECK(isolate->context() == nullptr || isolate->context()->IsContext()); \
+    CLOBBER_DOUBLE_REGISTERS();                                               \
+    if (V8_UNLIKELY(TRACE_EVENT_RUNTIME_CALL_STATS_TRACING_ENABLED() ||       \
+                    FLAG_runtime_call_stats)) {                               \
+      return Stats_##Name(args_length, args_object, isolate);                 \
+    }                                                                         \
+    Arguments args(args_length, args_object);                                 \
+    return __RT_impl_##Name(args, isolate);                                   \
+  }                                                                           \
+                                                                              \
+  static Type __RT_impl_##Name(Arguments args, Isolate* isolate)
 
- private:
-  Object* values_[4];
-};
+#define RUNTIME_FUNCTION(Name) RUNTIME_FUNCTION_RETURNS_TYPE(Object*, Name)
+#define RUNTIME_FUNCTION_RETURN_PAIR(Name) \
+    RUNTIME_FUNCTION_RETURNS_TYPE(ObjectPair, Name)
+#define RUNTIME_FUNCTION_RETURN_TRIPLE(Name) \
+    RUNTIME_FUNCTION_RETURNS_TYPE(ObjectTriple, Name)
 
-
-#define DECLARE_RUNTIME_FUNCTION(Type, Name)    \
-Type Name(Arguments args, Isolate* isolate)
-
-
-#define RUNTIME_FUNCTION(Type, Name)            \
-Type Name(Arguments args, Isolate* isolate)
-
-
-#define RUNTIME_ARGUMENTS(isolate, args) args, isolate
-
-
-} }  // namespace v8::internal
+}  // namespace internal
+}  // namespace v8
 
 #endif  // V8_ARGUMENTS_H_

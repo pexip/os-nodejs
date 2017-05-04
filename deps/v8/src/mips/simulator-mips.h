@@ -1,29 +1,6 @@
 // Copyright 2011 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 
 // Declares a Simulator for MIPS instructions if we are not generating a native
@@ -36,8 +13,8 @@
 #ifndef V8_MIPS_SIMULATOR_MIPS_H_
 #define V8_MIPS_SIMULATOR_MIPS_H_
 
-#include "allocation.h"
-#include "constants-mips.h"
+#include "src/allocation.h"
+#include "src/mips/constants-mips.h"
 
 #if !defined(USE_SIMULATOR)
 // Running without a simulator on a native mips platform.
@@ -46,7 +23,7 @@ namespace v8 {
 namespace internal {
 
 // When running without a simulator we call the entry directly.
-#define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4) \
+#define CALL_GENERATED_CODE(isolate, entry, p0, p1, p2, p3, p4) \
   entry(p0, p1, p2, p3, p4)
 
 typedef int (*mips_regexp_matcher)(String*, int, const byte*, const byte*,
@@ -57,12 +34,10 @@ typedef int (*mips_regexp_matcher)(String*, int, const byte*, const byte*,
 // should act as a function matching the type arm_regexp_matcher.
 // The fifth argument is a dummy that reserves the space used for
 // the return address added by the ExitFrame in native calls.
-#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7, p8) \
-  (FUNCTION_CAST<mips_regexp_matcher>(entry)( \
-      p0, p1, p2, p3, NULL, p4, p5, p6, p7, p8))
-
-#define TRY_CATCH_FROM_ADDRESS(try_catch_address) \
-  reinterpret_cast<TryCatch*>(try_catch_address)
+#define CALL_GENERATED_REGEXP_CODE(isolate, entry, p0, p1, p2, p3, p4, p5, p6, \
+                                   p7, p8)                                     \
+  (FUNCTION_CAST<mips_regexp_matcher>(entry)(p0, p1, p2, p3, NULL, p4, p5, p6, \
+                                             p7, p8))
 
 // The stack limit beyond which we will throw stack overflow errors in
 // generated code. Because generated code on mips uses the C stack, we
@@ -74,14 +49,17 @@ class SimulatorStack : public v8::internal::AllStatic {
     return c_limit;
   }
 
-  static inline uintptr_t RegisterCTryCatch(uintptr_t try_catch_address) {
+  static inline uintptr_t RegisterCTryCatch(Isolate* isolate,
+                                            uintptr_t try_catch_address) {
+    USE(isolate);
     return try_catch_address;
   }
 
-  static inline void UnregisterCTryCatch() { }
+  static inline void UnregisterCTryCatch(Isolate* isolate) { USE(isolate); }
 };
 
-} }  // namespace v8::internal
+}  // namespace internal
+}  // namespace v8
 
 // Calculated the stack limit beyond which we will throw stack overflow errors.
 // This macro must be called from a C++ method. It relies on being able to take
@@ -96,8 +74,8 @@ class SimulatorStack : public v8::internal::AllStatic {
 #else  // !defined(USE_SIMULATOR)
 // Running with a simulator.
 
-#include "hashmap.h"
-#include "assembler.h"
+#include "src/assembler.h"
+#include "src/base/hashmap.h"
 
 namespace v8 {
 namespace internal {
@@ -133,6 +111,39 @@ class CachePage {
   char data_[kPageSize];   // The cached data.
   static const int kValidityMapSize = kPageSize >> kLineShift;
   char validity_map_[kValidityMapSize];  // One byte per line.
+};
+
+class SimInstructionBase : public InstructionBase {
+ public:
+  Type InstructionType() const { return type_; }
+  inline Instruction* instr() const { return instr_; }
+  inline int32_t operand() const { return operand_; }
+
+ protected:
+  SimInstructionBase() : operand_(-1), instr_(nullptr), type_(kUnsupported) {}
+  explicit SimInstructionBase(Instruction* instr) {}
+
+  int32_t operand_;
+  Instruction* instr_;
+  Type type_;
+
+ private:
+  DISALLOW_ASSIGN(SimInstructionBase);
+};
+
+class SimInstruction : public InstructionGetters<SimInstructionBase> {
+ public:
+  SimInstruction() {}
+
+  explicit SimInstruction(Instruction* instr) { *this = instr; }
+
+  SimInstruction& operator=(Instruction* instr) {
+    operand_ = *reinterpret_cast<const int32_t*>(instr);
+    instr_ = instr;
+    type_ = InstructionBase::InstructionType();
+    DCHECK(reinterpret_cast<void*>(&operand_) == this);
+    return *this;
+  }
 };
 
 class Simulator {
@@ -184,25 +195,53 @@ class Simulator {
   // architecture specification and is off by a 8 from the currently executing
   // instruction.
   void set_register(int reg, int32_t value);
+  void set_dw_register(int dreg, const int* dbl);
   int32_t get_register(int reg) const;
+  double get_double_from_register_pair(int reg);
   // Same for FPURegisters.
-  void set_fpu_register(int fpureg, int32_t value);
+  void set_fpu_register(int fpureg, int64_t value);
+  void set_fpu_register_word(int fpureg, int32_t value);
+  void set_fpu_register_hi_word(int fpureg, int32_t value);
   void set_fpu_register_float(int fpureg, float value);
   void set_fpu_register_double(int fpureg, double value);
-  int32_t get_fpu_register(int fpureg) const;
-  int64_t get_fpu_register_long(int fpureg) const;
+  void set_fpu_register_invalid_result64(float original, float rounded);
+  void set_fpu_register_invalid_result(float original, float rounded);
+  void set_fpu_register_word_invalid_result(float original, float rounded);
+  void set_fpu_register_invalid_result64(double original, double rounded);
+  void set_fpu_register_invalid_result(double original, double rounded);
+  void set_fpu_register_word_invalid_result(double original, double rounded);
+  int64_t get_fpu_register(int fpureg) const;
+  int32_t get_fpu_register_word(int fpureg) const;
+  int32_t get_fpu_register_signed_word(int fpureg) const;
+  int32_t get_fpu_register_hi_word(int fpureg) const;
   float get_fpu_register_float(int fpureg) const;
   double get_fpu_register_double(int fpureg) const;
   void set_fcsr_bit(uint32_t cc, bool value);
   bool test_fcsr_bit(uint32_t cc);
+  void set_fcsr_rounding_mode(FPURoundingMode mode);
+  unsigned int get_fcsr_rounding_mode();
   bool set_fcsr_round_error(double original, double rounded);
-
+  bool set_fcsr_round_error(float original, float rounded);
+  bool set_fcsr_round64_error(double original, double rounded);
+  bool set_fcsr_round64_error(float original, float rounded);
+  void round_according_to_fcsr(double toRound, double& rounded,
+                               int32_t& rounded_int, double fs);
+  void round_according_to_fcsr(float toRound, float& rounded,
+                               int32_t& rounded_int, float fs);
+  void round64_according_to_fcsr(double toRound, double& rounded,
+                                 int64_t& rounded_int, double fs);
+  void round64_according_to_fcsr(float toRound, float& rounded,
+                                 int64_t& rounded_int, float fs);
   // Special case of set_register and get_register to access the raw PC value.
   void set_pc(int32_t value);
   int32_t get_pc() const;
 
+  Address get_sp() const {
+    return reinterpret_cast<Address>(static_cast<intptr_t>(get_register(sp)));
+  }
+
   // Accessor to the internal simulator stack area.
-  uintptr_t StackLimit() const;
+  uintptr_t StackLimit(uintptr_t c_limit) const;
 
   // Executes MIPS instructions until the PC reaches end_sim_pc.
   void Execute();
@@ -210,10 +249,14 @@ class Simulator {
   // Call on program start.
   static void Initialize(Isolate* isolate);
 
+  static void TearDown(base::CustomMatcherHashMap* i_cache, Redirection* first);
+
   // V8 generally calls into generated JS code with 5 parameters and into
   // generated RegExp code with 7 parameters. This is a convenience function,
   // which sets up the simulator state and grabs the result on return.
   int32_t Call(byte* entry, int argument_count, ...);
+  // Alternative: call a 2-argument double function.
+  double CallFP(byte* entry, double d0, double d1);
 
   // Push an address onto the JS stack.
   uintptr_t PushAddress(uintptr_t address);
@@ -226,7 +269,7 @@ class Simulator {
   char* last_debugger_input() { return last_debugger_input_; }
 
   // ICache checking.
-  static void FlushICache(v8::internal::HashMap* i_cache, void* start,
+  static void FlushICache(base::CustomMatcherHashMap* i_cache, void* start,
                           size_t size);
 
   // Returns true if pc register contains one of the 'special_values' defined
@@ -268,6 +311,20 @@ class Simulator {
   inline double ReadD(int32_t addr, Instruction* instr);
   inline void WriteD(int32_t addr, double value, Instruction* instr);
 
+  // Helpers for data value tracing.
+  enum TraceType {
+    BYTE,
+    HALF,
+    WORD
+    // DWORD,
+    // DFLOAT - Floats may have printing issues due to paired lwc1's
+  };
+
+  void TraceRegWr(int32_t value);
+  void TraceMemWr(int32_t addr, int32_t value, TraceType t);
+  void TraceMemRd(int32_t addr, int32_t value);
+  EmbeddedVector<char, 128> trace_buf_;
+
   // Operations depending on endianness.
   // Get Double Higher / Lower word.
   inline int32_t GetDoubleHIW(double* addr);
@@ -276,22 +333,71 @@ class Simulator {
   inline int32_t SetDoubleHIW(double* addr);
   inline int32_t SetDoubleLOW(double* addr);
 
+  SimInstruction instr_;
+
   // Executing is handled based on the instruction type.
-  void DecodeTypeRegister(Instruction* instr);
+  void DecodeTypeRegister();
 
-  // Helper function for DecodeTypeRegister.
-  void ConfigureTypeRegister(Instruction* instr,
-                             int32_t& alu_out,
-                             int64_t& i64hilo,
-                             uint64_t& u64hilo,
-                             int32_t& next_pc,
-                             bool& do_interrupt);
+  // Functions called from DecodeTypeRegister.
+  void DecodeTypeRegisterCOP1();
 
-  void DecodeTypeImmediate(Instruction* instr);
-  void DecodeTypeJump(Instruction* instr);
+  void DecodeTypeRegisterCOP1X();
+
+  void DecodeTypeRegisterSPECIAL();
+
+  void DecodeTypeRegisterSPECIAL2();
+
+  void DecodeTypeRegisterSPECIAL3();
+
+  // Called from DecodeTypeRegisterCOP1.
+  void DecodeTypeRegisterSRsType();
+
+  void DecodeTypeRegisterDRsType();
+
+  void DecodeTypeRegisterWRsType();
+
+  void DecodeTypeRegisterLRsType();
+
+  inline int32_t rs_reg() const { return instr_.RsValue(); }
+  inline int32_t rs() const { return get_register(rs_reg()); }
+  inline uint32_t rs_u() const {
+    return static_cast<uint32_t>(get_register(rs_reg()));
+  }
+  inline int32_t rt_reg() const { return instr_.RtValue(); }
+  inline int32_t rt() const { return get_register(rt_reg()); }
+  inline uint32_t rt_u() const {
+    return static_cast<uint32_t>(get_register(rt_reg()));
+  }
+  inline int32_t rd_reg() const { return instr_.RdValue(); }
+  inline int32_t fr_reg() const { return instr_.FrValue(); }
+  inline int32_t fs_reg() const { return instr_.FsValue(); }
+  inline int32_t ft_reg() const { return instr_.FtValue(); }
+  inline int32_t fd_reg() const { return instr_.FdValue(); }
+  inline int32_t sa() const { return instr_.SaValue(); }
+  inline int32_t lsa_sa() const { return instr_.LsaSaValue(); }
+
+  inline void SetResult(int32_t rd_reg, int32_t alu_out) {
+    set_register(rd_reg, alu_out);
+    TraceRegWr(alu_out);
+  }
+
+  void DecodeTypeImmediate();
+  void DecodeTypeJump();
 
   // Used for breakpoints and traps.
-  void SoftwareInterrupt(Instruction* instr);
+  void SoftwareInterrupt();
+
+  // Compact branch guard.
+  void CheckForbiddenSlot(int32_t current_pc) {
+    Instruction* instr_after_compact_branch =
+        reinterpret_cast<Instruction*>(current_pc + Instruction::kInstrSize);
+    if (instr_after_compact_branch->IsForbiddenAfterBranch()) {
+      V8_Fatal(__FILE__, __LINE__,
+               "Error: Unexpected instruction 0x%08x immediately after a "
+               "compact branch instruction.",
+               *reinterpret_cast<uint32_t*>(instr_after_compact_branch));
+    }
+  }
 
   // Stop helper functions.
   bool IsWatchpoint(uint32_t code);
@@ -312,8 +418,6 @@ class Simulator {
     if (instr->InstructionBits() == nopInstr) {
       // Short-cut generic nop instructions. They are always valid and they
       // never change the simulator state.
-      set_register(pc, reinterpret_cast<int32_t>(instr) +
-                       Instruction::kInstrSize);
       return;
     }
 
@@ -323,13 +427,16 @@ class Simulator {
                instr->OpcodeValue());
     }
     InstructionDecode(instr);
+    SNPrintF(trace_buf_, " ");
   }
 
   // ICache.
-  static void CheckICache(v8::internal::HashMap* i_cache, Instruction* instr);
-  static void FlushOnePage(v8::internal::HashMap* i_cache, intptr_t start,
+  static void CheckICache(base::CustomMatcherHashMap* i_cache,
+                          Instruction* instr);
+  static void FlushOnePage(base::CustomMatcherHashMap* i_cache, intptr_t start,
                            int size);
-  static CachePage* GetCachePage(v8::internal::HashMap* i_cache, void* page);
+  static CachePage* GetCachePage(base::CustomMatcherHashMap* i_cache,
+                                 void* page);
 
   enum Exception {
     none,
@@ -338,27 +445,28 @@ class Simulator {
     kDivideByZero,
     kNumExceptions
   };
-  int16_t exceptions[kNumExceptions];
 
   // Exceptions.
-  void SignalExceptions();
+  void SignalException(Exception e);
 
   // Runtime call support.
-  static void* RedirectExternalReference(void* external_function,
+  static void* RedirectExternalReference(Isolate* isolate,
+                                         void* external_function,
                                          ExternalReference::Type type);
 
-  // For use in calls that take double value arguments.
-  void GetFpArgs(double* x, double* y);
-  void GetFpArgs(double* x);
-  void GetFpArgs(double* x, int32_t* y);
+  // Handle arguments and return value for runtime FP functions.
+  void GetFpArgs(double* x, double* y, int32_t* z);
   void SetFpResult(const double& result);
 
+  void CallInternal(byte* entry);
 
   // Architecture state.
   // Registers.
   int32_t registers_[kNumSimuRegisters];
   // Coprocessor Registers.
-  int32_t FPUregisters_[kNumFPURegisters];
+  // Note: FP32 mode uses only the lower 32-bit part of each element,
+  // the upper 32-bit is unpredictable.
+  int64_t FPUregisters_[kNumFPURegisters];
   // FPU control register.
   uint32_t FCSR_;
 
@@ -367,14 +475,14 @@ class Simulator {
   static const size_t stack_size_ = 1 * 1024*1024;
   char* stack_;
   bool pc_modified_;
-  int icount_;
+  uint64_t icount_;
   int break_count_;
 
   // Debugger input.
   char* last_debugger_input_;
 
   // Icache simulation.
-  v8::internal::HashMap* i_cache_;
+  base::CustomMatcherHashMap* i_cache_;
 
   v8::internal::Isolate* isolate_;
 
@@ -386,55 +494,53 @@ class Simulator {
   static const uint32_t kStopDisabledBit = 1 << 31;
 
   // A stop is enabled, meaning the simulator will stop when meeting the
-  // instruction, if bit 31 of watched_stops[code].count is unset.
-  // The value watched_stops[code].count & ~(1 << 31) indicates how many times
+  // instruction, if bit 31 of watched_stops_[code].count is unset.
+  // The value watched_stops_[code].count & ~(1 << 31) indicates how many times
   // the breakpoint was hit or gone through.
   struct StopCountAndDesc {
     uint32_t count;
     char* desc;
   };
-  StopCountAndDesc watched_stops[kMaxStopCode + 1];
+  StopCountAndDesc watched_stops_[kMaxStopCode + 1];
 };
 
 
 // When running with the simulator transition into simulated execution at this
 // point.
-#define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4) \
-    reinterpret_cast<Object*>(Simulator::current(Isolate::Current())->Call( \
+#define CALL_GENERATED_CODE(isolate, entry, p0, p1, p2, p3, p4) \
+  reinterpret_cast<Object*>(Simulator::current(isolate)->Call(  \
       FUNCTION_ADDR(entry), 5, p0, p1, p2, p3, p4))
 
-#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7, p8) \
-    Simulator::current(Isolate::Current())->Call( \
-        entry, 10, p0, p1, p2, p3, NULL, p4, p5, p6, p7, p8)
-
-#define TRY_CATCH_FROM_ADDRESS(try_catch_address)                              \
-  try_catch_address == NULL ?                                                  \
-      NULL : *(reinterpret_cast<TryCatch**>(try_catch_address))
+#define CALL_GENERATED_REGEXP_CODE(isolate, entry, p0, p1, p2, p3, p4, p5, p6, \
+                                   p7, p8)                                     \
+  Simulator::current(isolate)                                                  \
+      ->Call(entry, 10, p0, p1, p2, p3, NULL, p4, p5, p6, p7, p8)
 
 
 // The simulator has its own stack. Thus it has a different stack limit from
-// the C-based native code.  Setting the c_limit to indicate a very small
-// stack cause stack overflow errors, since the simulator ignores the input.
-// This is unlikely to be an issue in practice, though it might cause testing
-// trouble down the line.
+// the C-based native code.  The JS-based limit normally points near the end of
+// the simulator stack.  When the C-based limit is exhausted we reflect that by
+// lowering the JS-based limit as well, to make stack checks trigger.
 class SimulatorStack : public v8::internal::AllStatic {
  public:
   static inline uintptr_t JsLimitFromCLimit(Isolate* isolate,
                                             uintptr_t c_limit) {
-    return Simulator::current(isolate)->StackLimit();
+    return Simulator::current(isolate)->StackLimit(c_limit);
   }
 
-  static inline uintptr_t RegisterCTryCatch(uintptr_t try_catch_address) {
-    Simulator* sim = Simulator::current(Isolate::Current());
+  static inline uintptr_t RegisterCTryCatch(Isolate* isolate,
+                                            uintptr_t try_catch_address) {
+    Simulator* sim = Simulator::current(isolate);
     return sim->PushAddress(try_catch_address);
   }
 
-  static inline void UnregisterCTryCatch() {
-    Simulator::current(Isolate::Current())->PopAddress();
+  static inline void UnregisterCTryCatch(Isolate* isolate) {
+    Simulator::current(isolate)->PopAddress();
   }
 };
 
-} }  // namespace v8::internal
+}  // namespace internal
+}  // namespace v8
 
 #endif  // !defined(USE_SIMULATOR)
 #endif  // V8_MIPS_SIMULATOR_MIPS_H_

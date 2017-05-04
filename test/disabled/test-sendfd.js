@@ -1,27 +1,4 @@
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-
+'use strict';
 // Test sending and receiving a file descriptor.
 //
 // This test is pretty complex. It ends up spawning test/fixtures/recvfd.js
@@ -34,7 +11,7 @@
 //     path, they are sent the write end of the pipe from above.
 //  3. The client is sent n JSON representations of the DATA variable, each
 //     with a different ordinal. We send these delimited by '\n' strings
-//     so that the receiving end can avoid any coalescing that hapepns
+//     so that the receiving end can avoid any coalescing that happens
 //     due to the stream nature of the socket (e.g. '{}{}' is not a valid
 //     JSON string).
 //  4. The child process receives file descriptors and JSON blobs and,
@@ -49,15 +26,15 @@
 //     seen in a response yet. This is intended to ensure that all blobs
 //     sent out have been relayed back to us.
 
-var common = require('../common');
-var assert = require('assert');
+const common = require('../common');
+const assert = require('assert');
 
-var buffer = require('buffer');
-var child_process = require('child_process');
-var fs = require('fs');
-var net = require('net');
+const buffer = require('buffer');
+const child_process = require('child_process');
+const fs = require('fs');
+const net = require('net');
 var netBinding = process.binding('net');
-var path = require('path');
+const path = require('path');
 
 var DATA = {
   'ppid' : process.pid,
@@ -75,7 +52,7 @@ var logChild = function(d) {
 
   d.split('\n').forEach(function(l) {
     if (l.length > 0) {
-      common.debug('CHILD: ' + l);
+      console.error('CHILD: ' + l);
     }
   });
 };
@@ -86,7 +63,7 @@ var logChild = function(d) {
 // validate any data sent back by the child. We send the write end of the
 // pipe to the child and close it off in our process.
 var pipeFDs = netBinding.pipe();
-assert.equal(pipeFDs.length, 2);
+assert.strictEqual(pipeFDs.length, 2);
 
 var seenOrdinals = [];
 
@@ -95,8 +72,8 @@ pipeReadStream.on('data', function(data) {
   data.toString('utf8').trim().split('\n').forEach(function(d) {
     var rd = JSON.parse(d);
 
-    assert.equal(rd.pid, cpp);
-    assert.equal(seenOrdinals.indexOf(rd.ord), -1);
+    assert.strictEqual(rd.pid, cpp);
+    assert.strictEqual(seenOrdinals.indexOf(rd.ord), -1);
 
     seenOrdinals.unshift(rd.ord);
   });
@@ -114,7 +91,7 @@ var srv = net.createServer(function(s) {
   var str = JSON.stringify(DATA) + '\n';
 
   DATA.ord = DATA.ord + 1;
-  var buf = new buffer.Buffer(str.length);
+  var buf = buffer.Buffer.allocUnsafe(str.length);
   buf.write(JSON.stringify(DATA) + '\n', 'utf8');
 
   s.write(str, 'utf8', pipeFDs[1]);
@@ -142,8 +119,8 @@ cp.on('exit', function(code, signal) {
   srv.close();
   // fs.unlinkSync(SOCK_PATH);
 
-  assert.equal(code, 0);
-  assert.equal(seenOrdinals.length, 2);
+  assert.strictEqual(code, 0);
+  assert.strictEqual(seenOrdinals.length, 2);
 });
 
 // vim:ts=2 sw=2 et

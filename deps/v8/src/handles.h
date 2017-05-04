@@ -1,104 +1,254 @@
 // Copyright 2011 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef V8_HANDLES_H_
 #define V8_HANDLES_H_
 
-#include "allocation.h"
-#include "apiutils.h"
+#include "include/v8.h"
+#include "src/base/functional.h"
+#include "src/base/macros.h"
+#include "src/checks.h"
+#include "src/globals.h"
+#include "src/zone/zone.h"
 
 namespace v8 {
 namespace internal {
 
+// Forward declarations.
+class DeferredHandles;
+class HandleScopeImplementer;
+class Isolate;
+class Object;
+
+
 // ----------------------------------------------------------------------------
-// A Handle provides a reference to an object that survives relocation by
-// the garbage collector.
-// Handles are only valid within a HandleScope.
-// When a handle is created for an object a cell is allocated in the heap.
-
-template<typename T>
-class Handle {
+// Base class for Handle instantiations.  Don't use directly.
+class HandleBase {
  public:
-  INLINE(explicit Handle(T** location)) { location_ = location; }
-  INLINE(explicit Handle(T* obj));
-  INLINE(Handle(T* obj, Isolate* isolate));
-
-  INLINE(Handle()) : location_(NULL) {}
-
-  // Constructor for handling automatic up casting.
-  // Ex. Handle<JSFunction> can be passed when Handle<Object> is expected.
-  template <class S> Handle(Handle<S> handle) {
-#ifdef DEBUG
-    T* a = NULL;
-    S* b = NULL;
-    a = b;  // Fake assignment to enforce type checks.
-    USE(a);
-#endif
-    location_ = reinterpret_cast<T**>(handle.location());
-  }
-
-  INLINE(T* operator ->() const) { return operator*(); }
+  V8_INLINE explicit HandleBase(Object** location) : location_(location) {}
+  V8_INLINE explicit HandleBase(Object* object, Isolate* isolate);
 
   // Check if this handle refers to the exact same object as the other handle.
-  bool is_identical_to(const Handle<T> other) const {
-    return operator*() == *other;
+  V8_INLINE bool is_identical_to(const HandleBase that) const {
+    // Dereferencing deferred handles to check object equality is safe.
+    SLOW_DCHECK((this->location_ == nullptr ||
+                 this->IsDereferenceAllowed(NO_DEFERRED_CHECK)) &&
+                (that.location_ == nullptr ||
+                 that.IsDereferenceAllowed(NO_DEFERRED_CHECK)));
+    if (this->location_ == that.location_) return true;
+    if (this->location_ == NULL || that.location_ == NULL) return false;
+    return *this->location_ == *that.location_;
   }
 
+  V8_INLINE bool is_null() const { return location_ == nullptr; }
+
+  // Returns the raw address where this handle is stored. This should only be
+  // used for hashing handles; do not ever try to dereference it.
+  V8_INLINE Address address() const { return bit_cast<Address>(location_); }
+
+ protected:
   // Provides the C++ dereference operator.
-  INLINE(T* operator*() const);
+  V8_INLINE Object* operator*() const {
+    SLOW_DCHECK(IsDereferenceAllowed(INCLUDE_DEFERRED_CHECK));
+    return *location_;
+  }
 
   // Returns the address to where the raw pointer is stored.
-  T** location() const {
-    ASSERT(location_ == NULL ||
-           reinterpret_cast<Address>(*location_) != kZapValue);
+  V8_INLINE Object** location() const {
+    SLOW_DCHECK(location_ == nullptr ||
+                IsDereferenceAllowed(INCLUDE_DEFERRED_CHECK));
     return location_;
   }
 
-  template <class S> static Handle<T> cast(Handle<S> that) {
-    T::cast(*that);
-    return Handle<T>(reinterpret_cast<T**>(that.location()));
+  enum DereferenceCheckMode { INCLUDE_DEFERRED_CHECK, NO_DEFERRED_CHECK };
+#ifdef DEBUG
+  bool V8_EXPORT_PRIVATE IsDereferenceAllowed(DereferenceCheckMode mode) const;
+#else
+  V8_INLINE
+  bool V8_EXPORT_PRIVATE IsDereferenceAllowed(DereferenceCheckMode mode) const {
+    return true;
   }
+#endif  // DEBUG
 
-  static Handle<T> null() { return Handle<T>(); }
-  bool is_null() const { return location_ == NULL; }
-
-  // Closes the given scope, but lets this handle escape. See
-  // implementation in api.h.
-  inline Handle<T> EscapeFrom(v8::HandleScope* scope);
-
- private:
-  T** location_;
+  Object** location_;
 };
 
 
-class DeferredHandles;
-class HandleScopeImplementer;
+// ----------------------------------------------------------------------------
+// A Handle provides a reference to an object that survives relocation by
+// the garbage collector.
+//
+// Handles are only valid within a HandleScope. When a handle is created
+// for an object a cell is allocated in the current HandleScope.
+//
+// Also note that Handles do not provide default equality comparison or hashing
+// operators on purpose. Such operators would be misleading, because intended
+// semantics is ambiguous between Handle location and object identity. Instead
+// use either {is_identical_to} or {location} explicitly.
+template <typename T>
+class Handle final : public HandleBase {
+ public:
+  V8_INLINE explicit Handle(T** location = nullptr)
+      : HandleBase(reinterpret_cast<Object**>(location)) {
+    Object* a = nullptr;
+    T* b = nullptr;
+    a = b;  // Fake assignment to enforce type checks.
+    USE(a);
+  }
+  V8_INLINE explicit Handle(T* object) : Handle(object, object->GetIsolate()) {}
+  V8_INLINE Handle(T* object, Isolate* isolate) : HandleBase(object, isolate) {}
+
+  // Allocate a new handle for the object, do not canonicalize.
+  V8_INLINE static Handle<T> New(T* object, Isolate* isolate);
+
+  // Constructor for handling automatic up casting.
+  // Ex. Handle<JSFunction> can be passed when Handle<Object> is expected.
+  template <typename S>
+  V8_INLINE Handle(Handle<S> handle)
+      : HandleBase(handle) {
+    T* a = nullptr;
+    S* b = nullptr;
+    a = b;  // Fake assignment to enforce type checks.
+    USE(a);
+  }
+
+  V8_INLINE T* operator->() const { return operator*(); }
+
+  // Provides the C++ dereference operator.
+  V8_INLINE T* operator*() const {
+    return reinterpret_cast<T*>(HandleBase::operator*());
+  }
+
+  // Returns the address to where the raw pointer is stored.
+  V8_INLINE T** location() const {
+    return reinterpret_cast<T**>(HandleBase::location());
+  }
+
+  template <typename S>
+  static const Handle<T> cast(Handle<S> that) {
+    T::cast(*reinterpret_cast<T**>(that.location_));
+    return Handle<T>(reinterpret_cast<T**>(that.location_));
+  }
+
+  // TODO(yangguo): Values that contain empty handles should be declared as
+  // MaybeHandle to force validation before being used as handles.
+  static const Handle<T> null() { return Handle<T>(); }
+
+  // Provide function object for location equality comparison.
+  struct equal_to : public std::binary_function<Handle<T>, Handle<T>, bool> {
+    V8_INLINE bool operator()(Handle<T> lhs, Handle<T> rhs) const {
+      return lhs.address() == rhs.address();
+    }
+  };
+
+  // Provide function object for location hashing.
+  struct hash : public std::unary_function<Handle<T>, size_t> {
+    V8_INLINE size_t operator()(Handle<T> const& handle) const {
+      return base::hash<void*>()(handle.address());
+    }
+  };
+
+ private:
+  // Handles of different classes are allowed to access each other's location_.
+  template <typename>
+  friend class Handle;
+  // MaybeHandle is allowed to access location_.
+  template <typename>
+  friend class MaybeHandle;
+};
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os, Handle<T> handle);
+
+template <typename T>
+V8_INLINE Handle<T> handle(T* object, Isolate* isolate) {
+  return Handle<T>(object, isolate);
+}
+
+template <typename T>
+V8_INLINE Handle<T> handle(T* object) {
+  return Handle<T>(object);
+}
 
 
+// ----------------------------------------------------------------------------
+// A Handle can be converted into a MaybeHandle. Converting a MaybeHandle
+// into a Handle requires checking that it does not point to NULL.  This
+// ensures NULL checks before use.
+//
+// Also note that Handles do not provide default equality comparison or hashing
+// operators on purpose. Such operators would be misleading, because intended
+// semantics is ambiguous between Handle location and object identity.
+template <typename T>
+class MaybeHandle final {
+ public:
+  V8_INLINE MaybeHandle() {}
+  V8_INLINE ~MaybeHandle() {}
+
+  // Constructor for handling automatic up casting from Handle.
+  // Ex. Handle<JSArray> can be passed when MaybeHandle<Object> is expected.
+  template <typename S>
+  V8_INLINE MaybeHandle(Handle<S> handle)
+      : location_(reinterpret_cast<T**>(handle.location_)) {
+    T* a = nullptr;
+    S* b = nullptr;
+    a = b;  // Fake assignment to enforce type checks.
+    USE(a);
+  }
+
+  // Constructor for handling automatic up casting.
+  // Ex. MaybeHandle<JSArray> can be passed when Handle<Object> is expected.
+  template <typename S>
+  V8_INLINE MaybeHandle(MaybeHandle<S> maybe_handle)
+      : location_(reinterpret_cast<T**>(maybe_handle.location_)) {
+    T* a = nullptr;
+    S* b = nullptr;
+    a = b;  // Fake assignment to enforce type checks.
+    USE(a);
+  }
+
+  template <typename S>
+  V8_INLINE MaybeHandle(S* object, Isolate* isolate)
+      : MaybeHandle(handle(object, isolate)) {}
+
+  V8_INLINE void Assert() const { DCHECK_NOT_NULL(location_); }
+  V8_INLINE void Check() const { CHECK_NOT_NULL(location_); }
+
+  V8_INLINE Handle<T> ToHandleChecked() const {
+    Check();
+    return Handle<T>(location_);
+  }
+
+  // Convert to a Handle with a type that can be upcasted to.
+  template <typename S>
+  V8_INLINE bool ToHandle(Handle<S>* out) const {
+    if (location_ == nullptr) {
+      *out = Handle<T>::null();
+      return false;
+    } else {
+      *out = Handle<T>(location_);
+      return true;
+    }
+  }
+
+  // Returns the raw address where this handle is stored. This should only be
+  // used for hashing handles; do not ever try to dereference it.
+  V8_INLINE Address address() const { return bit_cast<Address>(location_); }
+
+  bool is_null() const { return location_ == nullptr; }
+
+ protected:
+  T** location_ = nullptr;
+
+  // MaybeHandles of different classes are allowed to access each
+  // other's location_.
+  template <typename>
+  friend class MaybeHandle;
+};
+
+
+// ----------------------------------------------------------------------------
 // A stack-allocated class that governs a number of local handles.
 // After a handle scope has been created, all local handles will be
 // allocated within that handle scope until either the handle scope is
@@ -113,24 +263,25 @@ class HandleScopeImplementer;
 // for which the handle scope has been deleted is undefined.
 class HandleScope {
  public:
-  inline HandleScope();
   explicit inline HandleScope(Isolate* isolate);
 
   inline ~HandleScope();
 
   // Counts the number of allocated handles.
-  static int NumberOfHandles();
+  V8_EXPORT_PRIVATE static int NumberOfHandles(Isolate* isolate);
+
+  // Create a new handle or lookup a canonical handle.
+  V8_INLINE static Object** GetHandle(Isolate* isolate, Object* value);
 
   // Creates a new handle with the given value.
-  template <typename T>
-  static inline T** CreateHandle(T* value, Isolate* isolate);
+  V8_INLINE static Object** CreateHandle(Isolate* isolate, Object* value);
 
   // Deallocates any extensions used by the current scope.
-  static void DeleteExtensions(Isolate* isolate);
+  V8_EXPORT_PRIVATE static void DeleteExtensions(Isolate* isolate);
 
-  static Address current_next_address();
-  static Address current_limit_address();
-  static Address current_level_address();
+  static Address current_next_address(Isolate* isolate);
+  static Address current_limit_address(Isolate* isolate);
+  static Address current_level_address(Isolate* isolate);
 
   // Closes the HandleScope (invalidating all handles
   // created in the scope of the HandleScope) and returns
@@ -141,37 +292,76 @@ class HandleScope {
 
   Isolate* isolate() { return isolate_; }
 
+  // Limit for number of handles with --check-handle-count. This is
+  // large enough to compile natives and pass unit tests with some
+  // slack for future changes to natives.
+  static const int kCheckHandleThreshold = 30 * 1024;
+
  private:
   // Prevent heap allocation or illegal handle scopes.
-  HandleScope(const HandleScope&);
-  void operator=(const HandleScope&);
   void* operator new(size_t size);
   void operator delete(void* size_t);
-
-  inline void CloseScope();
 
   Isolate* isolate_;
   Object** prev_next_;
   Object** prev_limit_;
 
+  // Close the handle scope resetting limits to a previous state.
+  static inline void CloseScope(Isolate* isolate,
+                                Object** prev_next,
+                                Object** prev_limit);
+
   // Extend the handle scope making room for more handles.
-  static internal::Object** Extend();
+  V8_EXPORT_PRIVATE static Object** Extend(Isolate* isolate);
 
+#ifdef ENABLE_HANDLE_ZAPPING
   // Zaps the handles in the half-open interval [start, end).
-  static void ZapRange(internal::Object** start, internal::Object** end);
+  V8_EXPORT_PRIVATE static void ZapRange(Object** start, Object** end);
+#endif
 
-  friend class v8::internal::DeferredHandles;
   friend class v8::HandleScope;
-  friend class v8::internal::HandleScopeImplementer;
-  friend class v8::ImplementationUtilities;
-  friend class v8::internal::Isolate;
+  friend class DeferredHandles;
+  friend class DeferredHandleScope;
+  friend class HandleScopeImplementer;
+  friend class Isolate;
+
+  DISALLOW_COPY_AND_ASSIGN(HandleScope);
 };
 
 
-class DeferredHandles;
+// Forward declarations for CanonicalHandleScope.
+template <typename V>
+class IdentityMap;
+class RootIndexMap;
 
 
-class DeferredHandleScope {
+// A CanonicalHandleScope does not open a new HandleScope. It changes the
+// existing HandleScope so that Handles created within are canonicalized.
+// This does not apply to nested inner HandleScopes unless a nested
+// CanonicalHandleScope is introduced. Handles are only canonicalized within
+// the same CanonicalHandleScope, but not across nested ones.
+class CanonicalHandleScope final {
+ public:
+  explicit CanonicalHandleScope(Isolate* isolate);
+  ~CanonicalHandleScope();
+
+ private:
+  V8_EXPORT_PRIVATE Object** Lookup(Object* object);
+
+  Isolate* isolate_;
+  Zone zone_;
+  RootIndexMap* root_index_map_;
+  IdentityMap<Object**>* identity_map_;
+  // Ordinary nested handle scopes within the current one are not canonical.
+  int canonical_level_;
+  // We may have nested canonical scopes. Handles are canonical within each one.
+  CanonicalHandleScope* prev_canonical_scope_;
+
+  friend class HandleScope;
+};
+
+
+class DeferredHandleScope final {
  public:
   explicit DeferredHandleScope(Isolate* isolate);
   // The DeferredHandles object returned stores the Handles created
@@ -194,144 +384,39 @@ class DeferredHandleScope {
 };
 
 
-// ----------------------------------------------------------------------------
-// Handle operations.
-// They might invoke garbage collection. The result is an handle to
-// an object of expected type, or the handle is an error if running out
-// of space or encountering an internal error.
-
-// Flattens a string.
-void FlattenString(Handle<String> str);
-
-// Flattens a string and returns the underlying external or sequential
-// string.
-Handle<String> FlattenGetString(Handle<String> str);
-
-int Utf8Length(Handle<String> str);
-
-Handle<Object> SetProperty(Handle<Object> object,
-                           Handle<Object> key,
-                           Handle<Object> value,
-                           PropertyAttributes attributes,
-                           StrictModeFlag strict_mode);
-
-Handle<Object> ForceSetProperty(Handle<JSObject> object,
-                                Handle<Object> key,
-                                Handle<Object> value,
-                                PropertyAttributes attributes);
-
-Handle<Object> ForceDeleteProperty(Handle<JSObject> object,
-                                   Handle<Object> key);
-
-Handle<Object> GetProperty(Handle<JSReceiver> obj,
-                           const char* name);
-
-Handle<Object> GetProperty(Handle<Object> obj,
-                           Handle<Object> key);
-
-Handle<Object> GetPropertyWithInterceptor(Handle<JSObject> receiver,
-                                          Handle<JSObject> holder,
-                                          Handle<String> name,
-                                          PropertyAttributes* attributes);
-
-Handle<Object> SetPrototype(Handle<JSObject> obj, Handle<Object> value);
-
-Handle<Object> LookupSingleCharacterStringFromCode(uint32_t index);
-
-Handle<JSObject> Copy(Handle<JSObject> obj);
-
-Handle<Object> SetAccessor(Handle<JSObject> obj, Handle<AccessorInfo> info);
-
-Handle<FixedArray> AddKeysFromJSArray(Handle<FixedArray>,
-                                      Handle<JSArray> array);
-
-// Get the JS object corresponding to the given script; create it
-// if none exists.
-Handle<JSValue> GetScriptWrapper(Handle<Script> script);
-
-// Script line number computations. Note that the line number is zero-based.
-void InitScriptLineEnds(Handle<Script> script);
-// For string calculates an array of line end positions. If the string
-// does not end with a new line character, this character may optionally be
-// imagined.
-Handle<FixedArray> CalculateLineEnds(Handle<String> string,
-                                     bool with_imaginary_last_new_line);
-int GetScriptLineNumber(Handle<Script> script, int code_position);
-// The safe version does not make heap allocations but may work much slower.
-int GetScriptLineNumberSafe(Handle<Script> script, int code_position);
-int GetScriptColumnNumber(Handle<Script> script, int code_position);
-
-// Computes the enumerable keys from interceptors. Used for debug mirrors and
-// by GetKeysInFixedArrayFor below.
-v8::Handle<v8::Array> GetKeysForNamedInterceptor(Handle<JSReceiver> receiver,
-                                                 Handle<JSObject> object);
-v8::Handle<v8::Array> GetKeysForIndexedInterceptor(Handle<JSReceiver> receiver,
-                                                   Handle<JSObject> object);
-
-enum KeyCollectionType { LOCAL_ONLY, INCLUDE_PROTOS };
-
-// Computes the enumerable keys for a JSObject. Used for implementing
-// "for (n in object) { }".
-Handle<FixedArray> GetKeysInFixedArrayFor(Handle<JSReceiver> object,
-                                          KeyCollectionType type,
-                                          bool* threw);
-Handle<JSArray> GetKeysFor(Handle<JSReceiver> object, bool* threw);
-Handle<FixedArray> ReduceFixedArrayTo(Handle<FixedArray> array, int length);
-Handle<FixedArray> GetEnumPropertyKeys(Handle<JSObject> object,
-                                       bool cache_result);
-
-// Computes the union of keys and return the result.
-// Used for implementing "for (n in object) { }"
-Handle<FixedArray> UnionOfKeys(Handle<FixedArray> first,
-                               Handle<FixedArray> second);
-
-Handle<String> SubString(Handle<String> str,
-                         int start,
-                         int end,
-                         PretenureFlag pretenure = NOT_TENURED);
-
-// Sets the expected number of properties for the function's instances.
-void SetExpectedNofProperties(Handle<JSFunction> func, int nof);
-
-// Sets the prototype property for a function instance.
-void SetPrototypeProperty(Handle<JSFunction> func, Handle<JSObject> value);
-
-// Sets the expected number of properties based on estimate from compiler.
-void SetExpectedNofPropertiesFromEstimate(Handle<SharedFunctionInfo> shared,
-                                          int estimate);
-
-
-Handle<JSGlobalProxy> ReinitializeJSGlobalProxy(
-    Handle<JSFunction> constructor,
-    Handle<JSGlobalProxy> global);
-
-Handle<Object> SetPrototype(Handle<JSFunction> function,
-                            Handle<Object> prototype);
-
-Handle<ObjectHashSet> ObjectHashSetAdd(Handle<ObjectHashSet> table,
-                                       Handle<Object> key);
-
-Handle<ObjectHashSet> ObjectHashSetRemove(Handle<ObjectHashSet> table,
-                                          Handle<Object> key);
-
-Handle<ObjectHashTable> PutIntoObjectHashTable(Handle<ObjectHashTable> table,
-                                               Handle<Object> key,
-                                               Handle<Object> value);
-
-class NoHandleAllocation BASE_EMBEDDED {
+// Seal off the current HandleScope so that new handles can only be created
+// if a new HandleScope is entered.
+class SealHandleScope final {
  public:
 #ifndef DEBUG
-  NoHandleAllocation() {}
-  ~NoHandleAllocation() {}
+  explicit SealHandleScope(Isolate* isolate) {}
+  ~SealHandleScope() {}
 #else
-  inline NoHandleAllocation();
-  inline ~NoHandleAllocation();
+  explicit inline SealHandleScope(Isolate* isolate);
+  inline ~SealHandleScope();
  private:
-  int level_;
-  bool active_;
+  Isolate* isolate_;
+  Object** prev_limit_;
+  int prev_sealed_level_;
 #endif
 };
 
-} }  // namespace v8::internal
+
+struct HandleScopeData final {
+  Object** next;
+  Object** limit;
+  int level;
+  int sealed_level;
+  CanonicalHandleScope* canonical_scope;
+
+  void Initialize() {
+    next = limit = NULL;
+    sealed_level = level = 0;
+    canonical_scope = NULL;
+  }
+};
+
+}  // namespace internal
+}  // namespace v8
 
 #endif  // V8_HANDLES_H_

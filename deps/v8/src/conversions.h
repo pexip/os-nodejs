@@ -1,34 +1,15 @@
 // Copyright 2011 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef V8_CONVERSIONS_H_
 #define V8_CONVERSIONS_H_
 
-#include "utils.h"
+#include <limits>
+
+#include "src/base/logging.h"
+#include "src/handles.h"
+#include "src/utils.h"
 
 namespace v8 {
 namespace internal {
@@ -52,9 +33,15 @@ inline bool isDigit(int x, int radix) {
 }
 
 
+inline bool isBinaryDigit(int x) {
+  return x == '0' || x == '1';
+}
+
+
 // The fast double-to-(unsigned-)int conversion routine does not guarantee
 // rounding towards zero.
-// For NaN and values outside the int range, return INT_MIN or INT_MAX.
+// If x is NaN, the result is INT_MIN.  Otherwise the result is the argument x,
+// clamped to [INT_MIN, INT_MAX] and then rounded to an integer.
 inline int FastD2IChecked(double x) {
   if (!(x >= INT_MIN)) return INT_MIN;  // Negation to catch NaNs.
   if (x > INT_MAX) return INT_MAX;
@@ -67,7 +54,7 @@ inline int FastD2IChecked(double x) {
 // The result is unspecified if x is infinite or NaN, or if the rounded
 // integer value is outside the range of type int.
 inline int FastD2I(double x) {
-  return static_cast<int>(x);
+  return static_cast<int32_t>(x);
 }
 
 inline unsigned int FastD2UI(double x);
@@ -89,6 +76,10 @@ inline double FastUI2D(unsigned x) {
 }
 
 
+// This function should match the exact semantics of ECMA-262 20.2.2.17.
+inline float DoubleToFloat32(double x);
+
+
 // This function should match the exact semantics of ECMA-262 9.4.
 inline double DoubleToInteger(double x);
 
@@ -98,9 +89,7 @@ inline int32_t DoubleToInt32(double x);
 
 
 // This function should match the exact semantics of ECMA-262 9.6.
-inline uint32_t DoubleToUint32(double x) {
-  return static_cast<uint32_t>(DoubleToInt32(x));
-}
+inline uint32_t DoubleToUint32(double x);
 
 
 // Enumeration for allowing octals and ignoring junk when converting
@@ -108,14 +97,16 @@ inline uint32_t DoubleToUint32(double x) {
 enum ConversionFlags {
   NO_FLAGS = 0,
   ALLOW_HEX = 1,
-  ALLOW_OCTALS = 2,
-  ALLOW_TRAILING_JUNK = 4
+  ALLOW_OCTAL = 2,
+  ALLOW_IMPLICIT_OCTAL = 4,
+  ALLOW_BINARY = 8,
+  ALLOW_TRAILING_JUNK = 16
 };
 
 
 // Converts a string into a double value according to ECMA-262 9.3.1
 double StringToDouble(UnicodeCache* unicode_cache,
-                      Vector<const char> str,
+                      Vector<const uint8_t> str,
                       int flags,
                       double empty_string_val = 0);
 double StringToDouble(UnicodeCache* unicode_cache,
@@ -127,6 +118,16 @@ double StringToDouble(UnicodeCache* unicode_cache,
                       const char* str,
                       int flags,
                       double empty_string_val = 0);
+
+// Converts a string into an integer.
+double StringToInt(UnicodeCache* unicode_cache,
+                   Vector<const uint8_t> vector,
+                   int radix);
+
+
+double StringToInt(UnicodeCache* unicode_cache,
+                   Vector<const uc16> vector,
+                   int radix);
 
 const int kDoubleToCStringMinBufferSize = 100;
 
@@ -146,6 +147,43 @@ char* DoubleToExponentialCString(double value, int f);
 char* DoubleToPrecisionCString(double value, int f);
 char* DoubleToRadixCString(double value, int radix);
 
-} }  // namespace v8::internal
+static inline bool IsMinusZero(double value) {
+  return bit_cast<int64_t>(value) == bit_cast<int64_t>(-0.0);
+}
+
+// Returns true if value can be converted to a SMI, and returns the resulting
+// integer value of the SMI in |smi_int_value|.
+inline bool DoubleToSmiInteger(double value, int* smi_int_value);
+
+inline bool IsSmiDouble(double value);
+
+// Integer32 is an integer that can be represented as a signed 32-bit
+// integer. It has to be in the range [-2^31, 2^31 - 1].
+// We also have to check for negative 0 as it is not an Integer32.
+inline bool IsInt32Double(double value);
+
+// UInteger32 is an integer that can be represented as an unsigned 32-bit
+// integer. It has to be in the range [0, 2^32 - 1].
+// We also have to check for negative 0 as it is not a UInteger32.
+inline bool IsUint32Double(double value);
+
+// Convert from Number object to C integer.
+inline int32_t NumberToInt32(Object* number);
+inline uint32_t NumberToUint32(Object* number);
+inline int64_t NumberToInt64(Object* number);
+
+double StringToDouble(UnicodeCache* unicode_cache, Handle<String> string,
+                      int flags, double empty_string_val = 0.0);
+
+inline bool TryNumberToSize(Object* number, size_t* result);
+
+// Converts a number into size_t.
+inline size_t NumberToSize(Object* number);
+
+// returns DoubleToString(StringToDouble(string)) == string
+bool IsSpecialIndex(UnicodeCache* unicode_cache, String* string);
+
+}  // namespace internal
+}  // namespace v8
 
 #endif  // V8_CONVERSIONS_H_

@@ -37,6 +37,18 @@ function processArguments(args) {
   }
 }
 
+function initSourceMapSupport() {
+  // Pull dev tools source maps  into our name space.
+  SourceMap = WebInspector.SourceMap;
+
+  // Overwrite the load function to load scripts synchronously.
+  SourceMap.load = function(sourceMapURL) {
+    var content = readFile(sourceMapURL);
+    var sourceMapObject = (JSON.parse(content));
+    return new SourceMap(sourceMapURL, sourceMapObject);
+  };
+}
+
 var entriesProviders = {
   'unix': UnixCppEntriesProvider,
   'windows': WindowsCppEntriesProvider,
@@ -44,10 +56,10 @@ var entriesProviders = {
 };
 
 var params = processArguments(arguments);
-var snapshotLogProcessor;
-if (params.snapshotLogFileName) {
-  snapshotLogProcessor = new SnapshotLogProcessor();
-  snapshotLogProcessor.processLogFile(params.snapshotLogFileName);
+var sourceMap = null;
+if (params.sourceMap) {
+  initSourceMapSupport();
+  sourceMap = SourceMap.load(params.sourceMap);
 }
 var tickProcessor = new TickProcessor(
   new (entriesProviders[params.platform])(params.nm, params.targetRootFS),
@@ -55,6 +67,12 @@ var tickProcessor = new TickProcessor(
   params.callGraphSize,
   params.ignoreUnknown,
   params.stateFilter,
-  snapshotLogProcessor);
+  params.distortion,
+  params.range,
+  sourceMap,
+  params.timedRange,
+  params.pairwiseTimedRange,
+  params.onlySummary,
+  params.runtimeTimerFilter);
 tickProcessor.processLogFile(params.logFileName);
 tickProcessor.printStatistics();

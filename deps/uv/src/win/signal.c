@@ -30,12 +30,14 @@
 RB_HEAD(uv_signal_tree_s, uv_signal_s);
 
 static struct uv_signal_tree_s uv__signal_tree = RB_INITIALIZER(uv__signal_tree);
-static ssize_t volatile uv__signal_control_handler_refs = 0;
 static CRITICAL_SECTION uv__signal_lock;
 
+static BOOL WINAPI uv__signal_control_handler(DWORD type);
 
 void uv_signals_init() {
   InitializeCriticalSection(&uv__signal_lock);
+  if (!SetConsoleCtrlHandler(uv__signal_control_handler, TRUE))
+    abort();
 }
 
 
@@ -78,7 +80,8 @@ int uv__signal_dispatch(int signum) {
   for (handle = RB_NFIND(uv_signal_tree_s, &uv__signal_tree, &lookup);
        handle != NULL && handle->signum == signum;
        handle = RB_NEXT(uv_signal_tree_s, &uv__signal_tree, handle)) {
-    unsigned long previous = InterlockedExchange(&handle->pending_signum, signum);
+    unsigned long previous = InterlockedExchange(
+            (volatile LONG*) &handle->pending_signum, signum);
 
     if (!previous) {
       POST_COMPLETION_FOR_REQ(handle->loop, &handle->signal_req);
@@ -124,102 +127,6 @@ static BOOL WINAPI uv__signal_control_handler(DWORD type) {
 }
 
 
-static uv_err_t uv__signal_register_control_handler() {
-  /* When this function is called, the uv__signal_lock must be held. */
-
-  /* If the console control handler has already been hooked, just add a */
-  /* reference. */
-  if (uv__signal_control_handler_refs > 0) {
-    uv__signal_control_handler_refs++;
-    return uv_ok_;
-  }
-
-  if (!SetConsoleCtrlHandler(uv__signal_control_handler, TRUE))
-    return uv__new_sys_error(GetLastError());
-
-  uv__signal_control_handler_refs++;
-
-  return uv_ok_;
-}
-
-
-static void uv__signal_unregister_control_handler() {
-  /* When this function is called, the uv__signal_lock must be held. */
-  BOOL r;
-
-  /* Don't unregister if the number of console control handlers exceeds one. */
-  /* Just remove a reference in that case. */
-  if (uv__signal_control_handler_refs > 1) {
-    uv__signal_control_handler_refs--;
-    return;
-  }
-
-  assert(uv__signal_control_handler_refs == 1);
-
-  r = SetConsoleCtrlHandler(uv__signal_control_handler, FALSE);
-  /* This should never fail; if it does it is probably a bug in libuv. */
-  assert(r);
-
-  uv__signal_control_handler_refs--;
-}
-
-
-static uv_err_t uv__signal_register(int signum) {
-  switch (signum) {
-    case SIGINT:
-    case SIGBREAK:
-    case SIGHUP:
-      return uv__signal_register_control_handler();
-
-    case SIGWINCH:
-      /* SIGWINCH is generated in tty.c. No need to register anything. */
-      return uv_ok_;
-
-    case SIGILL:
-    case SIGABRT_COMPAT:
-    case SIGFPE:
-    case SIGSEGV:
-    case SIGTERM:
-    case SIGABRT:
-      /* Signal is never raised. */
-      return uv_ok_;
-
-    default:
-      /* Invalid signal. */
-      return uv__new_artificial_error(UV_EINVAL);
-  }
-}
-
-
-static void uv__signal_unregister(int signum) {
-  switch (signum) {
-    case SIGINT:
-    case SIGBREAK:
-    case SIGHUP:
-      uv__signal_unregister_control_handler();
-      return;
-
-    case SIGWINCH:
-      /* SIGWINCH is generated in tty.c. No need to unregister anything. */
-      return;
-
-    case SIGILL:
-    case SIGABRT_COMPAT:
-    case SIGFPE:
-    case SIGSEGV:
-    case SIGTERM:
-    case SIGABRT:
-      /* Nothing is registered for this signal. */
-      return;
-
-    default:
-      /* Libuv bug. */
-      assert(0 && "Invalid signum");
-      return;
-  }
-}
-
-
 int uv_signal_init(uv_loop_t* loop, uv_signal_t* handle) {
   uv_req_t* req;
 
@@ -246,8 +153,6 @@ int uv_signal_stop(uv_signal_t* handle) {
 
   EnterCriticalSection(&uv__signal_lock);
 
-  uv__signal_unregister(handle->signum);
-
   removed_handle = RB_REMOVE(uv_signal_tree_s, &uv__signal_tree, handle);
   assert(removed_handle == handle);
 
@@ -261,15 +166,9 @@ int uv_signal_stop(uv_signal_t* handle) {
 
 
 int uv_signal_start(uv_signal_t* handle, uv_signal_cb signal_cb, int signum) {
-  uv_err_t err;
-
-  /* If the user supplies signum == 0, then return an error already. If the */
-  /* signum is otherwise invalid then uv__signal_register will find out */
-  /* eventually. */
-  if (signum == 0) {
-    uv__set_artificial_error(handle->loop, UV_EINVAL);
-    return -1;
-  }
+  /* Test for invalid signal values. */
+  if (signum != SIGWINCH && (signum <= 0 || signum >= NSIG))
+    return UV_EINVAL;
 
   /* Short circuit: if the signal watcher is already watching {signum} don't */
   /* go through the process of deregistering and registering the handler. */
@@ -289,14 +188,6 @@ int uv_signal_start(uv_signal_t* handle, uv_signal_cb signal_cb, int signum) {
 
   EnterCriticalSection(&uv__signal_lock);
 
-  err = uv__signal_register(signum);
-  if (err.code != UV_OK) {
-    /* Uh-oh, didn't work. */
-    handle->loop->last_err = err;
-    LeaveCriticalSection(&uv__signal_lock);
-    return -1;
-  }
-
   handle->signum = signum;
   RB_INSERT(uv_signal_tree_s, &uv__signal_tree, handle);
 
@@ -311,12 +202,13 @@ int uv_signal_start(uv_signal_t* handle, uv_signal_cb signal_cb, int signum) {
 
 void uv_process_signal_req(uv_loop_t* loop, uv_signal_t* handle,
     uv_req_t* req) {
-  unsigned long dispatched_signum;
+  long dispatched_signum;
 
   assert(handle->type == UV_SIGNAL);
   assert(req->type == UV_SIGNAL_REQ);
 
-  dispatched_signum = InterlockedExchange(&handle->pending_signum, 0);
+  dispatched_signum = InterlockedExchange(
+          (volatile LONG*) &handle->pending_signum, 0);
   assert(dispatched_signum != 0);
 
   /* Check if the pending signal equals the signum that we are watching for. */

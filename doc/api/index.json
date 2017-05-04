@@ -1,6 +1,14 @@
 {
-  "source": "doc/api/index.markdown",
+  "source": "doc/api/index.md",
   "desc": [
+    {
+      "type": "html",
+      "pre": false,
+      "text": "<!-- [start-include:_toc.md] -->\n"
+    },
+    {
+      "type": "space"
+    },
     {
       "type": "list_start",
       "ordered": false
@@ -20,10 +28,25 @@
     },
     {
       "type": "text",
-      "text": "[Synopsis](synopsis.html)"
+      "text": "[Usage & Example](synopsis.html)"
+    },
+    {
+      "type": "space"
     },
     {
       "type": "list_item_end"
+    },
+    {
+      "type": "list_end"
+    },
+    {
+      "type": "html",
+      "pre": false,
+      "text": "<div class=\"line\"></div>\n\n"
+    },
+    {
+      "type": "list_start",
+      "ordered": false
     },
     {
       "type": "list_item_start"
@@ -80,6 +103,16 @@
     },
     {
       "type": "text",
+      "text": "[Command Line Options](cli.html)"
+    },
+    {
+      "type": "list_item_end"
+    },
+    {
+      "type": "list_item_start"
+    },
+    {
+      "type": "text",
       "text": "[Console](console.html)"
     },
     {
@@ -110,6 +143,16 @@
     },
     {
       "type": "text",
+      "text": "[Deprecated APIs](deprecations.html)"
+    },
+    {
+      "type": "list_item_end"
+    },
+    {
+      "type": "list_item_start"
+    },
+    {
+      "type": "text",
       "text": "[DNS](dns.html)"
     },
     {
@@ -121,6 +164,16 @@
     {
       "type": "text",
       "text": "[Domain](domain.html)"
+    },
+    {
+      "type": "list_item_end"
+    },
+    {
+      "type": "list_item_start"
+    },
+    {
+      "type": "text",
+      "text": "[Errors](errors.html)"
     },
     {
       "type": "list_item_end"
@@ -310,6 +363,16 @@
     },
     {
       "type": "text",
+      "text": "[Tracing](tracing.html)"
+    },
+    {
+      "type": "list_item_end"
+    },
+    {
+      "type": "list_item_start"
+    },
+    {
+      "type": "text",
       "text": "[TTY](tty.html)"
     },
     {
@@ -350,6 +413,16 @@
     },
     {
       "type": "text",
+      "text": "[V8](v8.html)"
+    },
+    {
+      "type": "list_item_end"
+    },
+    {
+      "type": "list_item_start"
+    },
+    {
+      "type": "text",
       "text": "[VM](vm.html)"
     },
     {
@@ -370,6 +443,46 @@
     },
     {
       "type": "list_end"
+    },
+    {
+      "type": "html",
+      "pre": false,
+      "text": "<div class=\"line\"></div>\n\n"
+    },
+    {
+      "type": "list_start",
+      "ordered": false
+    },
+    {
+      "type": "list_item_start"
+    },
+    {
+      "type": "text",
+      "text": "[GitHub Repo & Issue Tracker](https://github.com/nodejs/node)"
+    },
+    {
+      "type": "list_item_end"
+    },
+    {
+      "type": "list_item_start"
+    },
+    {
+      "type": "text",
+      "text": "[Mailing List](http://groups.google.com/group/nodejs)"
+    },
+    {
+      "type": "space"
+    },
+    {
+      "type": "list_item_end"
+    },
+    {
+      "type": "list_end"
+    },
+    {
+      "type": "html",
+      "pre": false,
+      "text": "<!-- [end-include:_toc.md] -->\n"
     }
   ]
 }
