@@ -4,15 +4,17 @@ const common = require('../common');
 const assert = require('assert');
 const URLSearchParams = require('url').URLSearchParams;
 const {
-  test, assert_equals, assert_true, assert_false
-} = common.WPT;
+  test, assert_equals, assert_true,
+  assert_false, assert_throws, assert_array_equals
+} = require('../common/wpt');
 
-/* eslint-disable */
-var params;  // Strict mode fix for WPT.
-/* WPT Refs:
-   https://github.com/w3c/web-platform-tests/blob/405394a/url/urlsearchparams-constructor.html
+/* The following tests are copied from WPT. Modifications to them should be
+   upstreamed first. Refs:
+   https://github.com/w3c/web-platform-tests/blob/54c3502d7b/url/urlsearchparams-constructor.html
    License: http://www.w3.org/Consortium/Legal/2008/04-testsuite-copyright.html
 */
+/* eslint-disable */
+var params;  // Strict mode fix for WPT.
 test(function() {
     var params = new URLSearchParams();
     assert_equals(params + '', '');
@@ -40,10 +42,10 @@ test(() => {
     assert_equals(params.__proto__, URLSearchParams.prototype, 'expected URLSearchParams.prototype as prototype.');
 }, "URLSearchParams constructor, empty string as argument")
 
-// test(() => {
-//     params = new URLSearchParams({});
-//     assert_equals(params + '', "");
-// }, 'URLSearchParams constructor, {} as argument');
+test(() => {
+    params = new URLSearchParams({});
+    assert_equals(params + '', "");
+}, 'URLSearchParams constructor, {} as argument');
 
 test(function() {
     var params = new URLSearchParams('a=b');
@@ -85,6 +87,17 @@ test(function() {
     params = new URLSearchParams('a+b=c');
     assert_equals(params.get('a b'), 'c');
 }, 'Parse +');
+
+test(function() {
+    const testValue = '+15555555555';
+    const params = new URLSearchParams();
+    params.set('query', testValue);
+    var newParams = new URLSearchParams(params.toString());
+
+    assert_equals(params.toString(), 'query=%2B15555555555');
+    assert_equals(params.get('query'), testValue);
+    assert_equals(newParams.get('query'), testValue);
+}, 'Parse encoded +');
 
 test(function() {
     var params = new URLSearchParams('a=b c');
@@ -142,55 +155,101 @@ test(function() {
     assert_equals(params.get('a\uD83D\uDCA9b'), 'c');
 }, 'Parse %f0%9f%92%a9');  // Unicode Character 'PILE OF POO' (U+1F4A9)
 
-// test(function() {
-//     var params = new URLSearchParams([]);
-//     assert_true(params != null, 'constructor returned non-null value.');
-//     params = new URLSearchParams([['a', 'b'], ['c', 'd']]);
-//     assert_equals(params.get("a"), "b");
-//     assert_equals(params.get("c"), "d");
-//     assert_throws(new TypeError(), function() { new URLSearchParams([[1]]); });
-//     assert_throws(new TypeError(), function() { new URLSearchParams([[1,2,3]]); });
-// }, "Constructor with sequence of sequences of strings");
+test(function() {
+    var params = new URLSearchParams([]);
+    assert_true(params != null, 'constructor returned non-null value.');
+    params = new URLSearchParams([['a', 'b'], ['c', 'd']]);
+    assert_equals(params.get("a"), "b");
+    assert_equals(params.get("c"), "d");
+    assert_throws(new TypeError(), function() { new URLSearchParams([[1]]); });
+    assert_throws(new TypeError(), function() { new URLSearchParams([[1,2,3]]); });
+}, "Constructor with sequence of sequences of strings");
 
-// [
-//   { "input": {"+": "%C2"}, "output": [[" ", "\uFFFD"]], "name": "object with +" },
-//   { "input": {c: "x", a: "?"}, "output": [["c", "x"], ["a", "?"]], "name": "object with two keys" },
-//   { "input": [["c", "x"], ["a", "?"]], "output": [["c", "x"], ["a", "?"]], "name": "array with two keys" }
-// ].forEach((val) => {
-//     test(() => {
-//         let params = new URLSearchParams(val.input),
-//             i = 0
-//         for (let param of params) {
-//             assert_array_equals(param, val.output[i])
-//             i++
-//         }
-//     }, "Construct with " + val.name)
-// })
+[
+  { "input": {"+": "%C2"}, "output": [["+", "%C2"]], "name": "object with +" },
+  { "input": {c: "x", a: "?"}, "output": [["c", "x"], ["a", "?"]], "name": "object with two keys" },
+  { "input": [["c", "x"], ["a", "?"]], "output": [["c", "x"], ["a", "?"]], "name": "array with two keys" },
+  { "input": {"a\0b": "42", "c\uD83D": "23", "d\u1234": "foo"}, "output": [["a\0b", "42"], ["c\uFFFD", "23"], ["d\u1234", "foo"]], "name": "object with NULL, non-ASCII, and surrogate keys" }
+].forEach((val) => {
+    test(() => {
+        let params = new URLSearchParams(val.input),
+            i = 0
+        for (let param of params) {
+            assert_array_equals(param, val.output[i])
+            i++
+        }
+    }, "Construct with " + val.name)
+})
 
-// test(() => {
-//   params = new URLSearchParams()
-//   params[Symbol.iterator] = function *() {
-//     yield ["a", "b"]
-//   }
-//   let params2 = new URLSearchParams(params)
-//   assert_equals(params2.get("a"), "b")
-// }, "Custom [Symbol.iterator]")
+test(() => {
+  params = new URLSearchParams()
+  params[Symbol.iterator] = function *() {
+    yield ["a", "b"]
+  }
+  let params2 = new URLSearchParams(params)
+  assert_equals(params2.get("a"), "b")
+}, "Custom [Symbol.iterator]")
 /* eslint-enable */
 
 // Tests below are not from WPT.
-{
-//   assert.throws(() => {
-//     new URLSearchParams({
-//         toString() { throw new TypeError('Illegal invocation'); }
-//     });
-//   }, TypeError);
+function makeIterableFunc(array) {
+  return Object.assign(() => {}, {
+    [Symbol.iterator]() {
+      return array[Symbol.iterator]();
+    }
+  });
 }
 
 {
+  const iterableError = common.expectsError({
+    code: 'ERR_ARG_NOT_ITERABLE',
+    type: TypeError,
+    message: 'Query pairs must be iterable'
+  });
+  const tupleError = common.expectsError({
+    code: 'ERR_INVALID_TUPLE',
+    type: TypeError,
+    message: 'Each query pair must be an iterable [name, value] tuple'
+  }, 6);
+
   let params;
-  // URLSearchParams constructor, undefined and null as argument
   params = new URLSearchParams(undefined);
   assert.strictEqual(params.toString(), '');
   params = new URLSearchParams(null);
-  assert.strictEqual(params.toString(), 'null=');
+  assert.strictEqual(params.toString(), '');
+  params = new URLSearchParams(
+    makeIterableFunc([['key', 'val'], ['key2', 'val2']])
+  );
+  assert.strictEqual(params.toString(), 'key=val&key2=val2');
+  params = new URLSearchParams(
+    makeIterableFunc([['key', 'val'], ['key2', 'val2']].map(makeIterableFunc))
+  );
+  assert.strictEqual(params.toString(), 'key=val&key2=val2');
+  assert.throws(() => new URLSearchParams([[1]]), tupleError);
+  assert.throws(() => new URLSearchParams([[1, 2, 3]]), tupleError);
+  assert.throws(() => new URLSearchParams({ [Symbol.iterator]: 42 }),
+                iterableError);
+  assert.throws(() => new URLSearchParams([{}]), tupleError);
+  assert.throws(() => new URLSearchParams(['a']), tupleError);
+  assert.throws(() => new URLSearchParams([null]), tupleError);
+  assert.throws(() => new URLSearchParams([{ [Symbol.iterator]: 42 }]),
+                tupleError);
+}
+
+{
+  const obj = {
+    toString() { throw new Error('toString'); },
+    valueOf() { throw new Error('valueOf'); }
+  };
+  const sym = Symbol();
+  const toStringError = /^Error: toString$/;
+  const symbolError = /^TypeError: Cannot convert a Symbol value to a string$/;
+
+  assert.throws(() => new URLSearchParams({ a: obj }), toStringError);
+  assert.throws(() => new URLSearchParams([['a', obj]]), toStringError);
+  assert.throws(() => new URLSearchParams(sym), symbolError);
+  assert.throws(() => new URLSearchParams({ [sym]: 'a' }), symbolError);
+  assert.throws(() => new URLSearchParams({ a: sym }), symbolError);
+  assert.throws(() => new URLSearchParams([[sym, 'a']]), symbolError);
+  assert.throws(() => new URLSearchParams([['a', sym]]), symbolError);
 }

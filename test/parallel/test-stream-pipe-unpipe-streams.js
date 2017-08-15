@@ -11,8 +11,8 @@ const dest2 = Writable({write: () => {}});
 source.pipe(dest1);
 source.pipe(dest2);
 
-dest1.on('unpipe', common.mustCall(() => {}));
-dest2.on('unpipe', common.mustCall(() => {}));
+dest1.on('unpipe', common.mustCall());
+dest2.on('unpipe', common.mustCall());
 
 assert.strictEqual(source._readableState.pipes[0], dest1);
 assert.strictEqual(source._readableState.pipes[1], dest2);
