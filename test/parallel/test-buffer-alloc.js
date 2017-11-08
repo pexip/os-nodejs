@@ -3,8 +3,8 @@ const common = require('../common');
 const assert = require('assert');
 const vm = require('vm');
 
-const Buffer = require('buffer').Buffer;
 const SlowBuffer = require('buffer').SlowBuffer;
+
 
 const b = Buffer.allocUnsafe(1024);
 assert.strictEqual(1024, b.length);
@@ -466,6 +466,10 @@ assert.strictEqual(Buffer.from('=bad'.repeat(1e4), 'base64').length, 0);
 assert.deepStrictEqual(Buffer.from('w0  ', 'base64'),
                        Buffer.from('w0', 'base64'));
 
+// Regression test for https://github.com/nodejs/node/issues/13657.
+assert.deepStrictEqual(Buffer.from(' YWJvcnVtLg', 'base64'),
+                       Buffer.from('YWJvcnVtLg', 'base64'));
+
 {
   // Creating buffers larger than pool size.
   const l = Buffer.poolSize + 5;
@@ -512,11 +516,13 @@ assert.deepStrictEqual(Buffer.from('w0  ', 'base64'),
   }
 }
 
-// Test single hex character throws TypeError
-// - https://github.com/nodejs/node/issues/6770
-assert.throws(() => Buffer.from('A', 'hex'), TypeError);
+// Test single hex character is discarded.
+assert.strictEqual(Buffer.from('A', 'hex').length, 0);
 
-// Test single base64 char encodes as 0
+// Test that if a trailing character is discarded, rest of string is processed.
+assert.deepStrictEqual(Buffer.from('Abx', 'hex'), Buffer.from('Ab', 'hex'));
+
+// Test single base64 char encodes as 0.
 assert.strictEqual(Buffer.from('A', 'base64').length, 0);
 
 
@@ -744,7 +750,7 @@ assert.strictEqual('<Buffer 81 a3 66 6f 6f a3 62 61 72>', x.inspect());
 
 // Call .fill() first, stops valgrind warning about uninitialized memory reads.
 Buffer.allocUnsafe(3.3).fill().toString();
-  // throws bad argument error in commit 43cb4ec
+// throws bad argument error in commit 43cb4ec
 Buffer.alloc(3.3).fill().toString();
 assert.strictEqual(Buffer.allocUnsafe(NaN).length, 0);
 assert.strictEqual(Buffer.allocUnsafe(3.3).length, 3);
@@ -770,10 +776,6 @@ assert.strictEqual(Buffer.from('13.37').length, 5);
 
 // issue GH-3416
 Buffer.from(Buffer.allocUnsafe(0), 0, 0);
-
-// issue GH-4331
-assert.throws(() => Buffer.allocUnsafe(0xFFFFFFFF), RangeError);
-assert.throws(() => Buffer.allocUnsafe(0xFFFFFFFFF), RangeError);
 
 // issue GH-5587
 assert.throws(() => Buffer.alloc(8).writeFloatLE(0, 5), RangeError);
@@ -885,7 +887,8 @@ assert.throws(() => Buffer.allocUnsafe(8).writeFloatLE(0.0, -1), RangeError);
 }
 
 // Regression test for #5482: should throw but not assert in C++ land.
-assert.throws(() => Buffer.from('', 'buffer'), TypeError);
+assert.throws(() => Buffer.from('', 'buffer'),
+              /^TypeError: "encoding" must be a valid string encoding$/);
 
 // Regression test for #6111. Constructing a buffer from another buffer
 // should a) work, and b) not corrupt the source buffer.
@@ -902,10 +905,6 @@ assert.throws(() => Buffer.from('', 'buffer'), TypeError);
   }
 }
 
-assert.throws(() => Buffer.allocUnsafe((-1 >>> 0) + 1), RangeError);
-assert.throws(() => Buffer.allocUnsafeSlow((-1 >>> 0) + 1), RangeError);
-assert.throws(() => SlowBuffer((-1 >>> 0) + 1), RangeError);
-
 if (common.hasCrypto) {
   // Test truncation after decode
   const crypto = require('crypto');
@@ -918,7 +917,7 @@ if (common.hasCrypto) {
     crypto.createHash('sha1').update(b2).digest('hex')
   );
 } else {
-  common.skip('missing crypto');
+  common.printSkipMessage('missing crypto');
 }
 
 const ps = Buffer.poolSize;
@@ -930,8 +929,8 @@ Buffer.poolSize = ps;
 assert.throws(() => Buffer.allocUnsafe(10).copy(),
               /TypeError: argument should be a Buffer/);
 
-const regErrorMsg = new RegExp('First argument must be a string, Buffer, ' +
-                               'ArrayBuffer, Array, or array-like object.');
+const regErrorMsg =
+  /First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object\./;
 
 assert.throws(() => Buffer.from(), regErrorMsg);
 assert.throws(() => Buffer.from(null), regErrorMsg);

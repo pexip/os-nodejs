@@ -4,20 +4,15 @@
 'use strict';
 
 const common = require('../common');
+// Check if Node was compiled --without-ssl and if so exit early
+// as the require of tls will otherwise throw an Error.
+if (!common.hasCrypto)
+  common.skip('missing crypto');
+
 const fs = require('fs');
 const join = require('path').join;
 const tls = require('tls');
 const util = require('util');
-
-module.exports = exports = checkCrypto;
-
-function checkCrypto() {
-  if (!common.hasCrypto) {
-    common.skip('missing crypto');
-    process.exit(0);
-  }
-  return exports;
-}
 
 exports.assert = require('assert');
 exports.debug = util.debuglog('test');

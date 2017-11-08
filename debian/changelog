@@ -1,3 +1,15 @@
+nodejs (8.4.0-1nodesource1~jessie1pexip1) pexip; urgency=low
+
+  * New upstream release.
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 08 Nov 2017 13:12:52 +0000
+
+nodejs (8.4.0-1nodesource1~jessie1) jessie; urgency=low
+
+  * https://nodejs.org/en/blog/release/v8.4.0/
+
+ -- NodeSource <gpg@nodesource.com>  Tue, 15 Aug 2017 22:33:18 +0000
+
 nodejs (7.9.0-1nodesource1~jessie1pexip1) pexip; urgency=low
 
   * New upstream release.

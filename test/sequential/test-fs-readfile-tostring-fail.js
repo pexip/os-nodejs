@@ -2,11 +2,8 @@
 
 const common = require('../common');
 
-if (!common.enoughTestMem) {
-  const skipMessage = 'intensive toString tests due to memory confinements';
-  common.skip(skipMessage);
-  return;
-}
+if (!common.enoughTestMem)
+  common.skip('intensive toString tests due to memory confinements');
 
 const assert = require('assert');
 const fs = require('fs');
@@ -33,6 +30,7 @@ stream.on('finish', common.mustCall(function() {
   fs.readFile(file, 'utf8', common.mustCall(function(err, buf) {
     assert.ok(err instanceof Error);
     assert.strictEqual('"toString()" failed', err.message);
+    assert.strictEqual(buf, undefined);
   }));
 }));
 

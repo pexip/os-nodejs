@@ -1,11 +1,9 @@
 'use strict';
 const common = require('../common');
-const assert = require('assert');
-
-if (!common.hasCrypto) {
+if (!common.hasCrypto)
   common.skip('missing crypto');
-  return;
-}
+
+const assert = require('assert');
 const crypto = require('crypto');
 
 //
@@ -96,3 +94,11 @@ assert.doesNotThrow(() => {
     assert.ifError(e);
   }));
 });
+
+assert.throws(() => {
+  crypto.pbkdf2('password', 'salt', 8, 8, common.mustNotCall());
+}, /^TypeError: The "digest" argument is required and must not be undefined$/);
+
+assert.throws(() => {
+  crypto.pbkdf2Sync('password', 'salt', 8, 8);
+}, /^TypeError: The "digest" argument is required and must not be undefined$/);

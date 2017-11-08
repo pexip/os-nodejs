@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "src/assembler.h"
+#include "src/globals.h"
 #include "src/macro-assembler.h"
 
 namespace v8 {
@@ -15,85 +16,78 @@ namespace internal {
 
 class PlatformInterfaceDescriptor;
 
-#define INTERFACE_DESCRIPTOR_LIST(V)      \
-  V(Void)                                 \
-  V(ContextOnly)                          \
-  V(Load)                                 \
-  V(LoadWithVector)                       \
-  V(LoadGlobal)                           \
-  V(LoadGlobalWithVector)                 \
-  V(Store)                                \
-  V(StoreWithVector)                      \
-  V(StoreNamedTransition)                 \
-  V(StoreTransition)                      \
-  V(VarArgFunction)                       \
-  V(FastNewClosure)                       \
-  V(FastNewFunctionContext)               \
-  V(FastNewObject)                        \
-  V(FastNewRestParameter)                 \
-  V(FastNewSloppyArguments)               \
-  V(FastNewStrictArguments)               \
-  V(TypeConversion)                       \
-  V(Typeof)                               \
-  V(FastCloneRegExp)                      \
-  V(FastCloneShallowArray)                \
-  V(FastCloneShallowObject)               \
-  V(CreateAllocationSite)                 \
-  V(CreateWeakCell)                       \
-  V(CallFunction)                         \
-  V(CallFunctionWithFeedback)             \
-  V(CallFunctionWithFeedbackAndVector)    \
-  V(CallConstruct)                        \
-  V(CallTrampoline)                       \
-  V(ConstructStub)                        \
-  V(ConstructTrampoline)                  \
-  V(RegExpExec)                           \
-  V(RegExpConstructResult)                \
-  V(CopyFastSmiOrObjectElements)          \
-  V(TransitionElementsKind)               \
-  V(AllocateHeapNumber)                   \
-  V(AllocateFloat32x4)                    \
-  V(AllocateInt32x4)                      \
-  V(AllocateUint32x4)                     \
-  V(AllocateBool32x4)                     \
-  V(AllocateInt16x8)                      \
-  V(AllocateUint16x8)                     \
-  V(AllocateBool16x8)                     \
-  V(AllocateInt8x16)                      \
-  V(AllocateUint8x16)                     \
-  V(AllocateBool8x16)                     \
-  V(ArrayNoArgumentConstructor)           \
-  V(ArraySingleArgumentConstructor)       \
-  V(ArrayNArgumentsConstructor)           \
-  V(Compare)                              \
-  V(BinaryOp)                             \
-  V(BinaryOpWithAllocationSite)           \
-  V(BinaryOpWithVector)                   \
-  V(CountOp)                              \
-  V(StringAdd)                            \
-  V(StringCompare)                        \
-  V(SubString)                            \
-  V(Keyed)                                \
-  V(Named)                                \
-  V(HasProperty)                          \
-  V(ForInFilter)                          \
-  V(GetProperty)                          \
-  V(CallHandler)                          \
-  V(ArgumentAdaptor)                      \
-  V(ApiCallback)                          \
-  V(ApiGetter)                            \
-  V(StoreGlobalViaContext)                \
-  V(MathPowTagged)                        \
-  V(MathPowInteger)                       \
-  V(GrowArrayElements)                    \
-  V(InterpreterDispatch)                  \
-  V(InterpreterPushArgsAndCall)           \
-  V(InterpreterPushArgsAndConstruct)      \
-  V(InterpreterPushArgsAndConstructArray) \
-  V(InterpreterCEntry)                    \
-  V(ResumeGenerator)
+#define INTERFACE_DESCRIPTOR_LIST(V)       \
+  V(Void)                                  \
+  V(ContextOnly)                           \
+  V(Load)                                  \
+  V(LoadWithVector)                        \
+  V(LoadField)                             \
+  V(LoadICProtoArray)                      \
+  V(LoadGlobal)                            \
+  V(LoadGlobalWithVector)                  \
+  V(Store)                                 \
+  V(StoreWithVector)                       \
+  V(StoreNamedTransition)                  \
+  V(StoreTransition)                       \
+  V(VarArgFunction)                        \
+  V(FastNewClosure)                        \
+  V(FastNewFunctionContext)                \
+  V(FastNewObject)                         \
+  V(FastNewArguments)                      \
+  V(TypeConversion)                        \
+  V(Typeof)                                \
+  V(FastCloneRegExp)                       \
+  V(FastCloneShallowArray)                 \
+  V(FastCloneShallowObject)                \
+  V(CreateAllocationSite)                  \
+  V(CreateWeakCell)                        \
+  V(CallFunction)                          \
+  V(CallIC)                                \
+  V(CallICTrampoline)                      \
+  V(CallForwardVarargs)                    \
+  V(CallConstruct)                         \
+  V(CallTrampoline)                        \
+  V(ConstructStub)                         \
+  V(ConstructForwardVarargs)               \
+  V(ConstructTrampoline)                   \
+  V(TransitionElementsKind)                \
+  V(AllocateHeapNumber)                    \
+  V(Builtin)                               \
+  V(ArrayConstructor)                      \
+  V(IteratingArrayBuiltin)                 \
+  V(ArrayNoArgumentConstructor)            \
+  V(ArraySingleArgumentConstructor)        \
+  V(ArrayNArgumentsConstructor)            \
+  V(Compare)                               \
+  V(BinaryOp)                              \
+  V(BinaryOpWithAllocationSite)            \
+  V(BinaryOpWithVector)                    \
+  V(CountOp)                               \
+  V(StringAdd)                             \
+  V(StringCharAt)                          \
+  V(StringCharCodeAt)                      \
+  V(StringCompare)                         \
+  V(SubString)                             \
+  V(ForInPrepare)                          \
+  V(GetProperty)                           \
+  V(ArgumentAdaptor)                       \
+  V(ApiCallback)                           \
+  V(ApiGetter)                             \
+  V(MathPowTagged)                         \
+  V(MathPowInteger)                        \
+  V(GrowArrayElements)                     \
+  V(NewArgumentsElements)                  \
+  V(InterpreterDispatch)                   \
+  V(InterpreterPushArgsThenCall)           \
+  V(InterpreterPushArgsThenConstruct)      \
+  V(InterpreterPushArgsThenConstructArray) \
+  V(InterpreterCEntry)                     \
+  V(ResumeGenerator)                       \
+  V(FrameDropperTrampoline)                \
+  V(WasmRuntimeCall)                       \
+  BUILTIN_LIST_TFS(V)
 
-class CallInterfaceDescriptorData {
+class V8_EXPORT_PRIVATE CallInterfaceDescriptorData {
  public:
   CallInterfaceDescriptorData() : register_param_count_(-1), param_count_(-1) {}
 
@@ -149,15 +143,14 @@ class CallInterfaceDescriptorData {
 class CallDescriptors {
  public:
   enum Key {
-#define DEF_ENUM(name) name,
+#define DEF_ENUM(name, ...) name,
     INTERFACE_DESCRIPTOR_LIST(DEF_ENUM)
 #undef DEF_ENUM
-    NUMBER_OF_DESCRIPTORS
+        NUMBER_OF_DESCRIPTORS
   };
 };
 
-
-class CallInterfaceDescriptor {
+class V8_EXPORT_PRIVATE CallInterfaceDescriptor {
  public:
   CallInterfaceDescriptor() : data_(NULL) {}
   virtual ~CallInterfaceDescriptor() {}
@@ -233,15 +226,25 @@ class CallInterfaceDescriptor {
   }                                                        \
   static inline CallDescriptors::Key key();
 
-#define DECLARE_DEFAULT_DESCRIPTOR(name, base, parameter_count)            \
-  DECLARE_DESCRIPTOR_WITH_BASE(name, base)                                 \
- protected:                                                                \
-  void InitializePlatformSpecific(CallInterfaceDescriptorData* data)       \
-      override {                                                           \
-    DefaultInitializePlatformSpecific(data, parameter_count);              \
-  }                                                                        \
-  name(Isolate* isolate, CallDescriptors::Key key) : base(isolate, key) {} \
-                                                                           \
+static const int kMaxBuiltinRegisterParams = 5;
+
+#define DECLARE_DEFAULT_DESCRIPTOR(name, base, parameter_count)               \
+  DECLARE_DESCRIPTOR_WITH_BASE(name, base)                                    \
+ protected:                                                                   \
+  static const int kRegisterParams =                                          \
+      parameter_count > kMaxBuiltinRegisterParams ? kMaxBuiltinRegisterParams \
+                                                  : parameter_count;          \
+  static const int kStackParams = parameter_count - kRegisterParams;          \
+  void InitializePlatformSpecific(CallInterfaceDescriptorData* data)          \
+      override {                                                              \
+    DefaultInitializePlatformSpecific(data, kRegisterParams);                 \
+  }                                                                           \
+  void InitializePlatformIndependent(CallInterfaceDescriptorData* data)       \
+      override {                                                              \
+    data->InitializePlatformIndependent(kRegisterParams, kStackParams, NULL); \
+  }                                                                           \
+  name(Isolate* isolate, CallDescriptors::Key key) : base(isolate, key) {}    \
+                                                                              \
  public:
 
 #define DECLARE_DESCRIPTOR(name, base)                                         \
@@ -274,12 +277,52 @@ class CallInterfaceDescriptor {
                                                                         \
  public:
 
+#define DEFINE_EMPTY_PARAMETERS()                       \
+  enum ParameterIndices {                               \
+    kParameterCount,                                    \
+    kContext = kParameterCount /* implicit parameter */ \
+  };
+
 #define DEFINE_PARAMETERS(...)                          \
   enum ParameterIndices {                               \
     __VA_ARGS__,                                        \
                                                         \
     kParameterCount,                                    \
     kContext = kParameterCount /* implicit parameter */ \
+  };
+
+#define DECLARE_BUILTIN_DESCRIPTOR(name)                                      \
+  DECLARE_DESCRIPTOR_WITH_BASE(name, BuiltinDescriptor)                       \
+ protected:                                                                   \
+  void InitializePlatformIndependent(CallInterfaceDescriptorData* data)       \
+      override {                                                              \
+    MachineType machine_types[] = {MachineType::AnyTagged(),                  \
+                                   MachineType::AnyTagged(),                  \
+                                   MachineType::Int32()};                     \
+    data->InitializePlatformIndependent(arraysize(machine_types),             \
+                                        kStackParameterCount, machine_types); \
+  }                                                                           \
+  void InitializePlatformSpecific(CallInterfaceDescriptorData* data)          \
+      override {                                                              \
+    Register registers[] = {TargetRegister(), NewTargetRegister(),            \
+                            ArgumentsCountRegister()};                        \
+    data->InitializePlatformSpecific(arraysize(registers), registers);        \
+  }                                                                           \
+                                                                              \
+ public:
+
+#define DEFINE_BUILTIN_PARAMETERS(...)                                  \
+  enum ParameterIndices {                                               \
+    kReceiver,                                                          \
+    kBeforeFirstStackParameter = kReceiver,                             \
+    __VA_ARGS__,                                                        \
+    kAfterLastStackParameter,                                           \
+    kNewTarget = kAfterLastStackParameter,                              \
+    kArgumentsCount,                                                    \
+    kContext, /* implicit parameter */                                  \
+    kParameterCount = kContext,                                         \
+    kArity = kAfterLastStackParameter - kBeforeFirstStackParameter - 1, \
+    kStackParameterCount = kArity + 1                                   \
   };
 
 class VoidDescriptor : public CallInterfaceDescriptor {
@@ -304,11 +347,27 @@ class LoadDescriptor : public CallInterfaceDescriptor {
   static const Register SlotRegister();
 };
 
+// LoadFieldDescriptor is used by the shared handler that loads a field from an
+// object based on the smi-encoded field description.
+class LoadFieldDescriptor : public CallInterfaceDescriptor {
+ public:
+  DEFINE_PARAMETERS(kReceiver, kSmiHandler)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(LoadFieldDescriptor,
+                                               CallInterfaceDescriptor)
+
+  static const Register ReceiverRegister();
+  static const Register SmiHandlerRegister();
+};
+
 class LoadGlobalDescriptor : public CallInterfaceDescriptor {
  public:
-  DEFINE_PARAMETERS(kSlot)
+  DEFINE_PARAMETERS(kName, kSlot)
   DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(LoadGlobalDescriptor,
                                                CallInterfaceDescriptor)
+
+  static const Register NameRegister() {
+    return LoadDescriptor::NameRegister();
+  }
 
   static const Register SlotRegister() {
     return LoadDescriptor::SlotRegister();
@@ -389,9 +448,18 @@ class LoadWithVectorDescriptor : public LoadDescriptor {
   static const Register VectorRegister();
 };
 
+class LoadICProtoArrayDescriptor : public LoadWithVectorDescriptor {
+ public:
+  DEFINE_PARAMETERS(kReceiver, kName, kSlot, kVector, kHandler)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(LoadICProtoArrayDescriptor,
+                                               LoadWithVectorDescriptor)
+
+  static const Register HandlerRegister();
+};
+
 class LoadGlobalWithVectorDescriptor : public LoadGlobalDescriptor {
  public:
-  DEFINE_PARAMETERS(kSlot, kVector)
+  DEFINE_PARAMETERS(kName, kSlot, kVector)
   DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(LoadGlobalWithVectorDescriptor,
                                                LoadGlobalDescriptor)
 
@@ -402,6 +470,7 @@ class LoadGlobalWithVectorDescriptor : public LoadGlobalDescriptor {
 
 class FastNewClosureDescriptor : public CallInterfaceDescriptor {
  public:
+  DEFINE_PARAMETERS(kSharedFunctionInfo, kVector, kSlot)
   DECLARE_DESCRIPTOR(FastNewClosureDescriptor, CallInterfaceDescriptor)
 };
 
@@ -417,24 +486,17 @@ class FastNewFunctionContextDescriptor : public CallInterfaceDescriptor {
 
 class FastNewObjectDescriptor : public CallInterfaceDescriptor {
  public:
+  DEFINE_PARAMETERS(kTarget, kNewTarget)
   DECLARE_DESCRIPTOR(FastNewObjectDescriptor, CallInterfaceDescriptor)
+  static const Register TargetRegister();
+  static const Register NewTargetRegister();
 };
 
-class FastNewRestParameterDescriptor : public CallInterfaceDescriptor {
+class FastNewArgumentsDescriptor : public CallInterfaceDescriptor {
  public:
-  DECLARE_DESCRIPTOR(FastNewRestParameterDescriptor, CallInterfaceDescriptor)
-};
-
-class FastNewSloppyArgumentsDescriptor : public CallInterfaceDescriptor {
- public:
-  DECLARE_DESCRIPTOR(FastNewSloppyArgumentsDescriptor,
-                     CallInterfaceDescriptor)
-};
-
-class FastNewStrictArgumentsDescriptor : public CallInterfaceDescriptor {
- public:
-  DECLARE_DESCRIPTOR(FastNewStrictArgumentsDescriptor,
-                     CallInterfaceDescriptor)
+  DEFINE_PARAMETERS(kFunction)
+  DECLARE_DESCRIPTOR(FastNewArgumentsDescriptor, CallInterfaceDescriptor)
+  static const Register TargetRegister();
 };
 
 class TypeConversionDescriptor final : public CallInterfaceDescriptor {
@@ -445,17 +507,10 @@ class TypeConversionDescriptor final : public CallInterfaceDescriptor {
   static const Register ArgumentRegister();
 };
 
-class HasPropertyDescriptor final : public CallInterfaceDescriptor {
+class ForInPrepareDescriptor final : public CallInterfaceDescriptor {
  public:
-  DEFINE_PARAMETERS(kKey, kObject)
-  DECLARE_DEFAULT_DESCRIPTOR(HasPropertyDescriptor, CallInterfaceDescriptor,
-                             kParameterCount)
-};
-
-class ForInFilterDescriptor final : public CallInterfaceDescriptor {
- public:
-  DEFINE_PARAMETERS(kKey, kObject)
-  DECLARE_DEFAULT_DESCRIPTOR(ForInFilterDescriptor, CallInterfaceDescriptor,
+  DEFINE_PARAMETERS(kObject)
+  DECLARE_DEFAULT_DESCRIPTOR(ForInPrepareDescriptor, CallInterfaceDescriptor,
                              kParameterCount)
 };
 
@@ -491,6 +546,7 @@ class FastCloneShallowArrayDescriptor : public CallInterfaceDescriptor {
 
 class FastCloneShallowObjectDescriptor : public CallInterfaceDescriptor {
  public:
+  DEFINE_PARAMETERS(kClosure, kLiteralIndex, kBoilerplateDescription, kFlags)
   DECLARE_DESCRIPTOR(FastCloneShallowObjectDescriptor, CallInterfaceDescriptor)
 };
 
@@ -518,6 +574,19 @@ class CallTrampolineDescriptor : public CallInterfaceDescriptor {
                                                CallInterfaceDescriptor)
 };
 
+class CallForwardVarargsDescriptor : public CallInterfaceDescriptor {
+ public:
+  DEFINE_PARAMETERS(kTarget, kActualArgumentsCount, kStartIndex)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(CallForwardVarargsDescriptor,
+                                               CallInterfaceDescriptor)
+};
+
+class ConstructForwardVarargsDescriptor : public CallInterfaceDescriptor {
+ public:
+  DEFINE_PARAMETERS(kTarget, kNewTarget, kActualArgumentsCount, kStartIndex)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(
+      ConstructForwardVarargsDescriptor, CallInterfaceDescriptor)
+};
 
 class ConstructStubDescriptor : public CallInterfaceDescriptor {
  public:
@@ -541,58 +610,23 @@ class CallFunctionDescriptor : public CallInterfaceDescriptor {
   DECLARE_DESCRIPTOR(CallFunctionDescriptor, CallInterfaceDescriptor)
 };
 
-
-class CallFunctionWithFeedbackDescriptor : public CallInterfaceDescriptor {
+class CallICDescriptor : public CallInterfaceDescriptor {
  public:
-  DEFINE_PARAMETERS(kFunction, kSlot)
-  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(
-      CallFunctionWithFeedbackDescriptor, CallInterfaceDescriptor)
+  DEFINE_PARAMETERS(kTarget, kActualArgumentsCount, kSlot, kVector)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(CallICDescriptor,
+                                               CallInterfaceDescriptor)
 };
 
-
-class CallFunctionWithFeedbackAndVectorDescriptor
-    : public CallInterfaceDescriptor {
+class CallICTrampolineDescriptor : public CallInterfaceDescriptor {
  public:
-  DEFINE_PARAMETERS(kFunction, kSlot, kVector)
-  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(
-      CallFunctionWithFeedbackAndVectorDescriptor, CallInterfaceDescriptor)
+  DEFINE_PARAMETERS(kTarget, kActualArgumentsCount, kSlot)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(CallICTrampolineDescriptor,
+                                               CallInterfaceDescriptor)
 };
-
 
 class CallConstructDescriptor : public CallInterfaceDescriptor {
  public:
   DECLARE_DESCRIPTOR(CallConstructDescriptor, CallInterfaceDescriptor)
-};
-
-class RegExpExecDescriptor : public CallInterfaceDescriptor {
- public:
-  DEFINE_PARAMETERS(kRegExpObject, kString, kPreviousIndex, kLastMatchInfo)
-  DECLARE_DESCRIPTOR_WITH_STACK_ARGS(RegExpExecDescriptor,
-                                     CallInterfaceDescriptor)
-};
-
-class RegExpConstructResultDescriptor : public CallInterfaceDescriptor {
- public:
-  DEFINE_PARAMETERS(kLength, kIndex, kInput)
-  DECLARE_DESCRIPTOR(RegExpConstructResultDescriptor, CallInterfaceDescriptor)
-};
-
-
-class StoreGlobalViaContextDescriptor : public CallInterfaceDescriptor {
- public:
-  DEFINE_PARAMETERS(kSlot, kValue)
-  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(StoreGlobalViaContextDescriptor,
-                                               CallInterfaceDescriptor)
-
-  static const Register SlotRegister();
-  static const Register ValueRegister();
-};
-
-class CopyFastSmiOrObjectElementsDescriptor : public CallInterfaceDescriptor {
- public:
-  DEFINE_PARAMETERS(kObject)
-  DECLARE_DEFAULT_DESCRIPTOR(CopyFastSmiOrObjectElementsDescriptor,
-                             CallInterfaceDescriptor, kParameterCount)
 };
 
 class TransitionElementsKindDescriptor : public CallInterfaceDescriptor {
@@ -604,16 +638,33 @@ class TransitionElementsKindDescriptor : public CallInterfaceDescriptor {
 
 class AllocateHeapNumberDescriptor : public CallInterfaceDescriptor {
  public:
+  DEFINE_EMPTY_PARAMETERS()
   DECLARE_DESCRIPTOR(AllocateHeapNumberDescriptor, CallInterfaceDescriptor)
 };
 
-#define SIMD128_ALLOC_DESC(TYPE, Type, type, lane_count, lane_type)         \
-  class Allocate##Type##Descriptor : public CallInterfaceDescriptor {       \
-   public:                                                                  \
-    DECLARE_DESCRIPTOR(Allocate##Type##Descriptor, CallInterfaceDescriptor) \
-  };
-SIMD128_TYPES(SIMD128_ALLOC_DESC)
-#undef SIMD128_ALLOC_DESC
+class BuiltinDescriptor : public CallInterfaceDescriptor {
+ public:
+  // TODO(ishell): Where is kFunction??
+  DEFINE_PARAMETERS(kNewTarget, kArgumentsCount)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(BuiltinDescriptor,
+                                               CallInterfaceDescriptor)
+  static const Register ArgumentsCountRegister();
+  static const Register NewTargetRegister();
+  static const Register TargetRegister();
+};
+
+class IteratingArrayBuiltinDescriptor : public BuiltinDescriptor {
+ public:
+  DEFINE_BUILTIN_PARAMETERS(kCallback, kThisArg)
+  DECLARE_BUILTIN_DESCRIPTOR(IteratingArrayBuiltinDescriptor)
+};
+
+class ArrayConstructorDescriptor : public CallInterfaceDescriptor {
+ public:
+  DEFINE_PARAMETERS(kTarget, kNewTarget, kActualArgumentsCount, kAllocationSite)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(ArrayConstructorDescriptor,
+                                               CallInterfaceDescriptor)
+};
 
 class ArrayNoArgumentConstructorDescriptor : public CallInterfaceDescriptor {
  public:
@@ -679,6 +730,19 @@ class StringAddDescriptor : public CallInterfaceDescriptor {
   DECLARE_DESCRIPTOR(StringAddDescriptor, CallInterfaceDescriptor)
 };
 
+class StringCharAtDescriptor final : public CallInterfaceDescriptor {
+ public:
+  DEFINE_PARAMETERS(kReceiver, kPosition)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(StringCharAtDescriptor,
+                                               CallInterfaceDescriptor)
+};
+
+class StringCharCodeAtDescriptor final : public CallInterfaceDescriptor {
+ public:
+  DEFINE_PARAMETERS(kReceiver, kPosition)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(StringCharCodeAtDescriptor,
+                                               CallInterfaceDescriptor)
+};
 
 class StringCompareDescriptor : public CallInterfaceDescriptor {
  public:
@@ -695,25 +759,6 @@ class SubStringDescriptor : public CallInterfaceDescriptor {
   DECLARE_DESCRIPTOR_WITH_STACK_ARGS(SubStringDescriptor,
                                      CallInterfaceDescriptor)
 };
-
-// TODO(ishell): not used, remove.
-class KeyedDescriptor : public CallInterfaceDescriptor {
- public:
-  DECLARE_DESCRIPTOR(KeyedDescriptor, CallInterfaceDescriptor)
-};
-
-// TODO(ishell): not used, remove
-class NamedDescriptor : public CallInterfaceDescriptor {
- public:
-  DECLARE_DESCRIPTOR(NamedDescriptor, CallInterfaceDescriptor)
-};
-
-// TODO(ishell): not used, remove.
-class CallHandlerDescriptor : public CallInterfaceDescriptor {
- public:
-  DECLARE_DESCRIPTOR(CallHandlerDescriptor, CallInterfaceDescriptor)
-};
-
 
 class ArgumentAdaptorDescriptor : public CallInterfaceDescriptor {
  public:
@@ -773,7 +818,15 @@ class GrowArrayElementsDescriptor : public CallInterfaceDescriptor {
   static const Register KeyRegister();
 };
 
-class InterpreterDispatchDescriptor : public CallInterfaceDescriptor {
+class NewArgumentsElementsDescriptor final : public CallInterfaceDescriptor {
+ public:
+  DEFINE_PARAMETERS(kFrame, kLength)
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(NewArgumentsElementsDescriptor,
+                                               CallInterfaceDescriptor)
+};
+
+class V8_EXPORT_PRIVATE InterpreterDispatchDescriptor
+    : public CallInterfaceDescriptor {
  public:
   DEFINE_PARAMETERS(kAccumulator, kBytecodeOffset, kBytecodeArray,
                     kDispatchTable)
@@ -781,30 +834,29 @@ class InterpreterDispatchDescriptor : public CallInterfaceDescriptor {
                                                CallInterfaceDescriptor)
 };
 
-class InterpreterPushArgsAndCallDescriptor : public CallInterfaceDescriptor {
+class InterpreterPushArgsThenCallDescriptor : public CallInterfaceDescriptor {
  public:
   DEFINE_PARAMETERS(kNumberOfArguments, kFirstArgument, kFunction)
   DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(
-      InterpreterPushArgsAndCallDescriptor, CallInterfaceDescriptor)
+      InterpreterPushArgsThenCallDescriptor, CallInterfaceDescriptor)
 };
 
-
-class InterpreterPushArgsAndConstructDescriptor
+class InterpreterPushArgsThenConstructDescriptor
     : public CallInterfaceDescriptor {
  public:
   DEFINE_PARAMETERS(kNumberOfArguments, kNewTarget, kConstructor,
                     kFeedbackElement, kFirstArgument)
   DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(
-      InterpreterPushArgsAndConstructDescriptor, CallInterfaceDescriptor)
+      InterpreterPushArgsThenConstructDescriptor, CallInterfaceDescriptor)
 };
 
-class InterpreterPushArgsAndConstructArrayDescriptor
+class InterpreterPushArgsThenConstructArrayDescriptor
     : public CallInterfaceDescriptor {
  public:
   DEFINE_PARAMETERS(kNumberOfArguments, kFunction, kFeedbackElement,
                     kFirstArgument)
   DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(
-      InterpreterPushArgsAndConstructArrayDescriptor, CallInterfaceDescriptor)
+      InterpreterPushArgsThenConstructArrayDescriptor, CallInterfaceDescriptor)
 };
 
 class InterpreterCEntryDescriptor : public CallInterfaceDescriptor {
@@ -819,6 +871,29 @@ class ResumeGeneratorDescriptor final : public CallInterfaceDescriptor {
   DECLARE_DESCRIPTOR(ResumeGeneratorDescriptor, CallInterfaceDescriptor)
 };
 
+class FrameDropperTrampolineDescriptor final : public CallInterfaceDescriptor {
+  DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE(FrameDropperTrampolineDescriptor,
+                                               CallInterfaceDescriptor)
+};
+
+class WasmRuntimeCallDescriptor final : public CallInterfaceDescriptor {
+ public:
+  DEFINE_EMPTY_PARAMETERS()
+  DECLARE_DEFAULT_DESCRIPTOR(WasmRuntimeCallDescriptor, CallInterfaceDescriptor,
+                             0)
+};
+
+#define DEFINE_TFS_BUILTIN_DESCRIPTOR(Name, ...)                          \
+  class Name##Descriptor : public CallInterfaceDescriptor {               \
+   public:                                                                \
+    DEFINE_PARAMETERS(__VA_ARGS__)                                        \
+    DECLARE_DEFAULT_DESCRIPTOR(Name##Descriptor, CallInterfaceDescriptor, \
+                               kParameterCount)                           \
+  };
+BUILTIN_LIST_TFS(DEFINE_TFS_BUILTIN_DESCRIPTOR)
+#undef DEFINE_TFS_BUILTIN_DESCRIPTOR
+
+#undef DECLARE_DEFAULT_DESCRIPTOR
 #undef DECLARE_DESCRIPTOR_WITH_BASE
 #undef DECLARE_DESCRIPTOR
 #undef DECLARE_DESCRIPTOR_WITH_CUSTOM_FUNCTION_TYPE
@@ -827,7 +902,7 @@ class ResumeGeneratorDescriptor final : public CallInterfaceDescriptor {
 
 // We define the association between CallDescriptors::Key and the specialized
 // descriptor here to reduce boilerplate and mistakes.
-#define DEF_KEY(name) \
+#define DEF_KEY(name, ...) \
   CallDescriptors::Key name##Descriptor::key() { return CallDescriptors::name; }
 INTERFACE_DESCRIPTOR_LIST(DEF_KEY)
 #undef DEF_KEY

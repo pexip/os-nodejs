@@ -1,7 +1,8 @@
 'use strict';
 
-/* WPT Refs:
-   https://github.com/w3c/web-platform-tests/blob/e48dd15/url/setters_tests.json
+/* The following tests are copied from WPT. Modifications to them should be
+   upstreamed first. Refs:
+   https://github.com/w3c/web-platform-tests/blob/b30abaecf4/url/setters_tests.json
    License: http://www.w3.org/Consortium/Legal/2008/04-testsuite-copyright.html
 */
 module.exports =
@@ -34,7 +35,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "",
             "expected": {
-                "href": "a://example.net/",
+                "href": "a://example.net",
                 "protocol": "a:"
             }
         },
@@ -42,7 +43,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "b",
             "expected": {
-                "href": "b://example.net/",
+                "href": "b://example.net",
                 "protocol": "b:"
             }
         },
@@ -59,7 +60,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "B",
             "expected": {
-                "href": "b://example.net/",
+                "href": "b://example.net",
                 "protocol": "b:"
             }
         },
@@ -68,7 +69,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "é",
             "expected": {
-                "href": "a://example.net/",
+                "href": "a://example.net",
                 "protocol": "a:"
             }
         },
@@ -77,7 +78,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "0b",
             "expected": {
-                "href": "a://example.net/",
+                "href": "a://example.net",
                 "protocol": "a:"
             }
         },
@@ -86,7 +87,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "+b",
             "expected": {
-                "href": "a://example.net/",
+                "href": "a://example.net",
                 "protocol": "a:"
             }
         },
@@ -94,7 +95,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "bC0+-.",
             "expected": {
-                "href": "bc0+-.://example.net/",
+                "href": "bc0+-.://example.net",
                 "protocol": "bc0+-.:"
             }
         },
@@ -103,7 +104,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "b,c",
             "expected": {
-                "href": "a://example.net/",
+                "href": "a://example.net",
                 "protocol": "a:"
             }
         },
@@ -112,7 +113,7 @@ module.exports =
             "href": "a://example.net",
             "new_value": "bé",
             "expected": {
-                "href": "a://example.net/",
+                "href": "a://example.net",
                 "protocol": "a:"
             }
         },
@@ -213,7 +214,7 @@ module.exports =
             "href": "ssh://me@example.net",
             "new_value": "http",
             "expected": {
-                "href": "ssh://me@example.net/",
+                "href": "ssh://me@example.net",
                 "protocol": "ssh:"
             }
         },
@@ -221,7 +222,7 @@ module.exports =
             "href": "ssh://me@example.net",
             "new_value": "gopher",
             "expected": {
-                "href": "ssh://me@example.net/",
+                "href": "ssh://me@example.net",
                 "protocol": "ssh:"
             }
         },
@@ -229,7 +230,15 @@ module.exports =
             "href": "ssh://me@example.net",
             "new_value": "file",
             "expected": {
-                "href": "ssh://me@example.net/",
+                "href": "ssh://me@example.net",
+                "protocol": "ssh:"
+            }
+        },
+        {
+            "href": "ssh://example.net",
+            "new_value": "file",
+            "expected": {
+                "href": "ssh://example.net",
                 "protocol": "ssh:"
             }
         },
@@ -257,6 +266,16 @@ module.exports =
             "expected": {
                 "href": "view-source+data:text/html,<p>Test",
                 "protocol": "view-source+data:"
+            }
+        },
+        {
+            "comment": "Port is set to null if it is the default for new scheme.",
+            "href": "http://foo.com:443/",
+            "new_value": "https",
+            "expected": {
+                "href": "https://foo.com/",
+                "protocol": "https:",
+                "port": ""
             }
         }
     ],
@@ -362,14 +381,14 @@ module.exports =
                 "username": "wario"
             }
         },
-        // {
-        //     "href": "file://test/",
-        //     "new_value": "test",
-        //     "expected": {
-        //         "href": "file://test/",
-        //         "username": ""
-        //     }
-        // }
+        {
+            "href": "file://test/",
+            "new_value": "test",
+            "expected": {
+                "href": "file://test/",
+                "username": ""
+            }
+        }
     ],
     "password": [
         {
@@ -465,14 +484,14 @@ module.exports =
                 "password": "bowser"
             }
         },
-        // {
-        //     "href": "file://test/",
-        //     "new_value": "test",
-        //     "expected": {
-        //         "href": "file://test/",
-        //         "password": ""
-        //     }
-        // }
+        {
+            "href": "file://test/",
+            "new_value": "test",
+            "expected": {
+                "href": "file://test/",
+                "password": ""
+            }
+        }
     ],
     "host": [
         {
@@ -485,33 +504,33 @@ module.exports =
                 "hostname": "x"
             }
         },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "\u0009",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "\u000A",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "\u000D",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
+        {
+            "href": "sc://x/",
+            "new_value": "\u0009",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
+        {
+            "href": "sc://x/",
+            "new_value": "\u000A",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
+        {
+            "href": "sc://x/",
+            "new_value": "\u000D",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
         {
             "href": "sc://x/",
             "new_value": " ",
@@ -521,33 +540,33 @@ module.exports =
                 "hostname": "x"
             }
         },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "#",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "/",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "?",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
+        {
+            "href": "sc://x/",
+            "new_value": "#",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
+        {
+            "href": "sc://x/",
+            "new_value": "/",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
+        {
+            "href": "sc://x/",
+            "new_value": "?",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
         {
             "href": "sc://x/",
             "new_value": "@",
@@ -557,15 +576,15 @@ module.exports =
                 "hostname": "x"
             }
         },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "ß",
-        //     "expected": {
-        //         "href": "sc://%C3%9F/",
-        //         "host": "%C3%9F",
-        //         "hostname": "%C3%9F"
-        //     }
-        // },
+        {
+            "href": "sc://x/",
+            "new_value": "ß",
+            "expected": {
+                "href": "sc://%C3%9F/",
+                "host": "%C3%9F",
+                "hostname": "%C3%9F"
+            }
+        },
         {
             "comment": "IDNA Nontransitional_Processing",
             "href": "https://x/",
@@ -872,92 +891,92 @@ module.exports =
                 "hostname": "example.net"
             }
         },
-        // {
-        //     "href": "http://example.net/",
-        //     "new_value": "[::1.2.3.4x]",
-        //     "expected": {
-        //         "href": "http://example.net/",
-        //         "host": "example.net",
-        //         "hostname": "example.net"
-        //     }
-        // },
-        // {
-        //     "href": "http://example.net/",
-        //     "new_value": "[::1.2.3.]",
-        //     "expected": {
-        //         "href": "http://example.net/",
-        //         "host": "example.net",
-        //         "hostname": "example.net"
-        //     }
-        // },
-        // {
-        //     "href": "http://example.net/",
-        //     "new_value": "[::1.2.]",
-        //     "expected": {
-        //         "href": "http://example.net/",
-        //         "host": "example.net",
-        //         "hostname": "example.net"
-        //     }
-        // },
-        // {
-        //     "href": "http://example.net/",
-        //     "new_value": "[::1.]",
-        //     "expected": {
-        //         "href": "http://example.net/",
-        //         "host": "example.net",
-        //         "hostname": "example.net"
-        //     }
-        // },
-        // {
-        //     "href": "file://y/",
-        //     "new_value": "x:123",
-        //     "expected": {
-        //         "href": "file://y/",
-        //         "host": "y",
-        //         "hostname": "y",
-        //         "port": ""
-        //     }
-        // },
-        // {
-        //     "href": "file://y/",
-        //     "new_value": "loc%41lhost",
-        //     "expected": {
-        //         "href": "file:///",
-        //         "host": "",
-        //         "hostname": "",
-        //         "port": ""
-        //     }
-        // },
-        // {
-        //     "href": "file://hi/x",
-        //     "new_value": "",
-        //     "expected": {
-        //         "href": "file:///x",
-        //         "host": "",
-        //         "hostname": "",
-        //         "port": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://test@test/",
-        //     "new_value": "",
-        //     "expected": {
-        //         "href": "sc://test@test/",
-        //         "host": "test",
-        //         "hostname": "test",
-        //         "username": "test"
-        //     }
-        // },
-        // {
-        //     "href": "sc://test:12/",
-        //     "new_value": "",
-        //     "expected": {
-        //         "href": "sc://test:12/",
-        //         "host": "test:12",
-        //         "hostname": "test",
-        //         "port": "12"
-        //     }
-        // }
+        {
+            "href": "http://example.net/",
+            "new_value": "[::1.2.3.4x]",
+            "expected": {
+                "href": "http://example.net/",
+                "host": "example.net",
+                "hostname": "example.net"
+            }
+        },
+        {
+            "href": "http://example.net/",
+            "new_value": "[::1.2.3.]",
+            "expected": {
+                "href": "http://example.net/",
+                "host": "example.net",
+                "hostname": "example.net"
+            }
+        },
+        {
+            "href": "http://example.net/",
+            "new_value": "[::1.2.]",
+            "expected": {
+                "href": "http://example.net/",
+                "host": "example.net",
+                "hostname": "example.net"
+            }
+        },
+        {
+            "href": "http://example.net/",
+            "new_value": "[::1.]",
+            "expected": {
+                "href": "http://example.net/",
+                "host": "example.net",
+                "hostname": "example.net"
+            }
+        },
+        {
+            "href": "file://y/",
+            "new_value": "x:123",
+            "expected": {
+                "href": "file://y/",
+                "host": "y",
+                "hostname": "y",
+                "port": ""
+            }
+        },
+        {
+            "href": "file://y/",
+            "new_value": "loc%41lhost",
+            "expected": {
+                "href": "file:///",
+                "host": "",
+                "hostname": "",
+                "port": ""
+            }
+        },
+        {
+            "href": "file://hi/x",
+            "new_value": "",
+            "expected": {
+                "href": "file:///x",
+                "host": "",
+                "hostname": "",
+                "port": ""
+            }
+        },
+        {
+            "href": "sc://test@test/",
+            "new_value": "",
+            "expected": {
+                "href": "sc://test@test/",
+                "host": "test",
+                "hostname": "test",
+                "username": "test"
+            }
+        },
+        {
+            "href": "sc://test:12/",
+            "new_value": "",
+            "expected": {
+                "href": "sc://test:12/",
+                "host": "test:12",
+                "hostname": "test",
+                "port": "12"
+            }
+        }
     ],
     "hostname": [
         {
@@ -970,33 +989,33 @@ module.exports =
                 "hostname": "x"
             }
         },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "\u0009",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "\u000A",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "\u000D",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
+        {
+            "href": "sc://x/",
+            "new_value": "\u0009",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
+        {
+            "href": "sc://x/",
+            "new_value": "\u000A",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
+        {
+            "href": "sc://x/",
+            "new_value": "\u000D",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
         {
             "href": "sc://x/",
             "new_value": " ",
@@ -1006,33 +1025,33 @@ module.exports =
                 "hostname": "x"
             }
         },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "#",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "/",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://x/",
-        //     "new_value": "?",
-        //     "expected": {
-        //         "href": "sc:///",
-        //         "host": "",
-        //         "hostname": ""
-        //     }
-        // },
+        {
+            "href": "sc://x/",
+            "new_value": "#",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
+        {
+            "href": "sc://x/",
+            "new_value": "/",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
+        {
+            "href": "sc://x/",
+            "new_value": "?",
+            "expected": {
+                "href": "sc:///",
+                "host": "",
+                "hostname": ""
+            }
+        },
         {
             "href": "sc://x/",
             "new_value": "@",
@@ -1206,92 +1225,92 @@ module.exports =
                 "hostname": "example.net"
             }
         },
-        // {
-        //     "href": "http://example.net/",
-        //     "new_value": "[::1.2.3.4x]",
-        //     "expected": {
-        //         "href": "http://example.net/",
-        //         "host": "example.net",
-        //         "hostname": "example.net"
-        //     }
-        // },
-        // {
-        //     "href": "http://example.net/",
-        //     "new_value": "[::1.2.3.]",
-        //     "expected": {
-        //         "href": "http://example.net/",
-        //         "host": "example.net",
-        //         "hostname": "example.net"
-        //     }
-        // },
-        // {
-        //     "href": "http://example.net/",
-        //     "new_value": "[::1.2.]",
-        //     "expected": {
-        //         "href": "http://example.net/",
-        //         "host": "example.net",
-        //         "hostname": "example.net"
-        //     }
-        // },
-        // {
-        //     "href": "http://example.net/",
-        //     "new_value": "[::1.]",
-        //     "expected": {
-        //         "href": "http://example.net/",
-        //         "host": "example.net",
-        //         "hostname": "example.net"
-        //     }
-        // },
-        // {
-        //     "href": "file://y/",
-        //     "new_value": "x:123",
-        //     "expected": {
-        //         "href": "file://y/",
-        //         "host": "y",
-        //         "hostname": "y",
-        //         "port": ""
-        //     }
-        // },
-        // {
-        //     "href": "file://y/",
-        //     "new_value": "loc%41lhost",
-        //     "expected": {
-        //         "href": "file:///",
-        //         "host": "",
-        //         "hostname": "",
-        //         "port": ""
-        //     }
-        // },
-        // {
-        //     "href": "file://hi/x",
-        //     "new_value": "",
-        //     "expected": {
-        //         "href": "file:///x",
-        //         "host": "",
-        //         "hostname": "",
-        //         "port": ""
-        //     }
-        // },
-        // {
-        //     "href": "sc://test@test/",
-        //     "new_value": "",
-        //     "expected": {
-        //         "href": "sc://test@test/",
-        //         "host": "test",
-        //         "hostname": "test",
-        //         "username": "test"
-        //     }
-        // },
-        // {
-        //     "href": "sc://test:12/",
-        //     "new_value": "",
-        //     "expected": {
-        //         "href": "sc://test:12/",
-        //         "host": "test:12",
-        //         "hostname": "test",
-        //         "port": "12"
-        //     }
-        // }
+        {
+            "href": "http://example.net/",
+            "new_value": "[::1.2.3.4x]",
+            "expected": {
+                "href": "http://example.net/",
+                "host": "example.net",
+                "hostname": "example.net"
+            }
+        },
+        {
+            "href": "http://example.net/",
+            "new_value": "[::1.2.3.]",
+            "expected": {
+                "href": "http://example.net/",
+                "host": "example.net",
+                "hostname": "example.net"
+            }
+        },
+        {
+            "href": "http://example.net/",
+            "new_value": "[::1.2.]",
+            "expected": {
+                "href": "http://example.net/",
+                "host": "example.net",
+                "hostname": "example.net"
+            }
+        },
+        {
+            "href": "http://example.net/",
+            "new_value": "[::1.]",
+            "expected": {
+                "href": "http://example.net/",
+                "host": "example.net",
+                "hostname": "example.net"
+            }
+        },
+        {
+            "href": "file://y/",
+            "new_value": "x:123",
+            "expected": {
+                "href": "file://y/",
+                "host": "y",
+                "hostname": "y",
+                "port": ""
+            }
+        },
+        {
+            "href": "file://y/",
+            "new_value": "loc%41lhost",
+            "expected": {
+                "href": "file:///",
+                "host": "",
+                "hostname": "",
+                "port": ""
+            }
+        },
+        {
+            "href": "file://hi/x",
+            "new_value": "",
+            "expected": {
+                "href": "file:///x",
+                "host": "",
+                "hostname": "",
+                "port": ""
+            }
+        },
+        {
+            "href": "sc://test@test/",
+            "new_value": "",
+            "expected": {
+                "href": "sc://test@test/",
+                "host": "test",
+                "hostname": "test",
+                "username": "test"
+            }
+        },
+        {
+            "href": "sc://test:12/",
+            "new_value": "",
+            "expected": {
+                "href": "sc://test:12/",
+                "host": "test:12",
+                "hostname": "test",
+                "port": "12"
+            }
+        }
     ],
     "port": [
         {
@@ -1585,6 +1604,60 @@ module.exports =
                 "href": "http://example.net/%3F",
                 "pathname": "/%3F"
             }
+        },
+        {
+            "comment": "# needs to be encoded",
+            "href": "http://example.net",
+            "new_value": "#",
+            "expected": {
+                "href": "http://example.net/%23",
+                "pathname": "/%23"
+            }
+        },
+        {
+            "comment": "? needs to be encoded, non-special scheme",
+            "href": "sc://example.net",
+            "new_value": "?",
+            "expected": {
+                "href": "sc://example.net/%3F",
+                "pathname": "/%3F"
+            }
+        },
+        {
+            "comment": "# needs to be encoded, non-special scheme",
+            "href": "sc://example.net",
+            "new_value": "#",
+            "expected": {
+                "href": "sc://example.net/%23",
+                "pathname": "/%23"
+            }
+        },
+        {
+            "comment": "File URLs and (back)slashes",
+            "href": "file://monkey/",
+            "new_value": "\\\\",
+            "expected": {
+                "href": "file://monkey/",
+                "pathname": "/"
+            }
+        },
+        {
+            "comment": "File URLs and (back)slashes",
+            "href": "file:///unicorn",
+            "new_value": "//\\/",
+            "expected": {
+                "href": "file:///",
+                "pathname": "/"
+            }
+        },
+        {
+            "comment": "File URLs and (back)slashes",
+            "href": "file:///unicorn",
+            "new_value": "//monkey/..//",
+            "expected": {
+                "href": "file:///",
+                "pathname": "/"
+            }
         }
     ],
     "search": [
@@ -1738,13 +1811,13 @@ module.exports =
                 "hash": "#%c3%89t%C3%A9"
             }
         },
-        // {
-        //     "href": "javascript:alert(1)",
-        //     "new_value": "castle",
-        //     "expected": {
-        //         "href": "javascript:alert(1)#castle",
-        //         "hash": "#castle"
-        //     }
-        // }
+        {
+            "href": "javascript:alert(1)",
+            "new_value": "castle",
+            "expected": {
+                "href": "javascript:alert(1)#castle",
+                "hash": "#castle"
+            }
+        }
     ]
 }

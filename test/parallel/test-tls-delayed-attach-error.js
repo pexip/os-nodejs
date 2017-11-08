@@ -1,10 +1,9 @@
 'use strict';
 const common = require('../common');
 
-if (!common.hasCrypto) {
+if (!common.hasCrypto)
   common.skip('missing crypto');
-  return;
-}
+
 const tls = require('tls');
 const fs = require('fs');
 const net = require('net');
@@ -12,8 +11,8 @@ const net = require('net');
 const bonkers = Buffer.alloc(1024, 42);
 
 const options = {
-  key: fs.readFileSync(common.fixturesDir + '/keys/agent1-key.pem'),
-  cert: fs.readFileSync(common.fixturesDir + '/keys/agent1-cert.pem')
+  key: fs.readFileSync(`${common.fixturesDir}/keys/agent1-key.pem`),
+  cert: fs.readFileSync(`${common.fixturesDir}/keys/agent1-cert.pem`)
 };
 
 const server = net.createServer(common.mustCall(function(c) {
@@ -23,7 +22,7 @@ const server = net.createServer(common.mustCall(function(c) {
       secureContext: tls.createSecureContext(options)
     });
 
-    s.on('_tlsError', common.mustCall(function() {}));
+    s.on('_tlsError', common.mustCall());
 
     s.on('close', function() {
       server.close();

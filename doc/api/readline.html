@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Readline | Node.js v7.9.0 Documentation</title>
+  <title>Readline | Node.js v8.4.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/sh.css">
@@ -24,8 +24,10 @@
 
 <ul>
 <li><a class="nav-assert" href="assert.html">Assertion Testing</a></li>
+<li><a class="nav-async_hooks" href="async_hooks.html">Async Hooks</a></li>
 <li><a class="nav-buffer" href="buffer.html">Buffer</a></li>
-<li><a class="nav-addons" href="addons.html">C/C++ Addons</a></li>
+<li><a class="nav-addons" href="addons.html">C++ Addons</a></li>
+<li><a class="nav-n-api" href="n-api.html">C/C++ Addons - N-API</a></li>
 <li><a class="nav-child_process" href="child_process.html">Child Processes</a></li>
 <li><a class="nav-cluster" href="cluster.html">Cluster</a></li>
 <li><a class="nav-cli" href="cli.html">Command Line Options</a></li>
@@ -40,7 +42,10 @@
 <li><a class="nav-fs" href="fs.html">File System</a></li>
 <li><a class="nav-globals" href="globals.html">Globals</a></li>
 <li><a class="nav-http" href="http.html">HTTP</a></li>
+<li><a class="nav-http2" href="http2.html">HTTP/2</a></li>
 <li><a class="nav-https" href="https.html">HTTPS</a></li>
+<li><a class="nav-inspector" href="inspector.html">Inspector</a></li>
+<li><a class="nav-intl" href="intl.html">Internationalization</a></li>
 <li><a class="nav-modules" href="modules.html">Modules</a></li>
 <li><a class="nav-net" href="net.html">Net</a></li>
 <li><a class="nav-os" href="os.html">OS</a></li>
@@ -74,7 +79,7 @@
 
     <div id="column1" data-id="readline" class="interior">
       <header>
-        <h1>Node.js v7.9.0 Documentation</h1>
+        <h1>Node.js v8.4.0 Documentation</h1>
         <div id="gtoc">
           <p>
             <a href="index.html" name="toc">Index</a> |
@@ -144,7 +149,7 @@ rl.question(&#39;What do you think of Node.js? &#39;, (answer) =&gt; {
   rl.close();
 });
 </code></pre>
-<p><em>Note</em> Once this code is invoked, the Node.js application will not
+<p><em>Note</em>: Once this code is invoked, the Node.js application will not
 terminate until the <code>readline.Interface</code> is closed because the interface
 waits for data to be received on the <code>input</code> stream.</p>
 <h2>Class: Interface<span><a class="mark" href="#readline_class_interface" id="readline_class_interface">#</a></span></h2>
@@ -233,7 +238,7 @@ event will be emitted.</p>
 <p>The listener function is invoked without passing any arguments.</p>
 <p>For example:</p>
 <pre><code class="lang-js">rl.on(&#39;SIGINT&#39;, () =&gt; {
-  rl.question(&#39;Are you sure you want to exit?&#39;, (answer) =&gt; {
+  rl.question(&#39;Are you sure you want to exit? &#39;, (answer) =&gt; {
     if (answer.match(/^y(es)?$/i)) rl.pause();
   });
 });
@@ -302,7 +307,7 @@ paused.</p>
 <p>If the <code>readline.Interface</code> was created with <code>output</code> set to <code>null</code> or
 <code>undefined</code> the <code>query</code> is not written.</p>
 <p>Example usage:</p>
-<pre><code class="lang-js">rl.question(&#39;What is your favorite food?&#39;, (answer) =&gt; {
+<pre><code class="lang-js">rl.question(&#39;What is your favorite food? &#39;, (answer) =&gt; {
   console.log(`Oh, so your favorite food is ${answer}`);
 });
 </code></pre>
@@ -345,7 +350,7 @@ paused.</p>
 <p>For example:</p>
 <pre><code class="lang-js">rl.write(&#39;Delete this!&#39;);
 // Simulate Ctrl+u to delete the line written previously
-rl.write(null, {ctrl: true, name: &#39;u&#39;});
+rl.write(null, { ctrl: true, name: &#39;u&#39; });
 </code></pre>
 <p><em>Note</em>: The <code>rl.write()</code> method will write the data to the <code>readline</code>
 Interface&#39;s <code>input</code> <em>as if it were provided by the user</em>.</p>
@@ -404,7 +409,9 @@ check, otherwise the history caching mechanism is not initialized at all.</li>
 <li><code>crlfDelay</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&lt;number&gt;</a> If the delay between <code>\r</code> and <code>\n</code> exceeds
 <code>crlfDelay</code> milliseconds, both <code>\r</code> and <code>\n</code> will be treated as separate
 end-of-line input. Default to <code>100</code> milliseconds.
-<code>crlfDelay</code> will be coerced to <code>[100, 2000]</code> range.</li>
+<code>crlfDelay</code> will be coerced to a number no less than <code>100</code>. It can be set to
+<code>Infinity</code>, in which case <code>\r</code> followed by <code>\n</code> will always be considered a
+single newline.</li>
 <li><code>removeHistoryDuplicates</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&lt;boolean&gt;</a> If <code>true</code>, when a new input line added
 to the history list duplicates an older one, this removes the older line
 from the list. Defaults to <code>false</code>.</li>
@@ -431,8 +438,8 @@ the best compatibility if it defines an <code>output.columns</code> property and
 a <code>&#39;resize&#39;</code> event on the <code>output</code> if or when the columns ever change
 (<a href="process.html#process_process_stdout"><code>process.stdout</code></a> does this automatically when it is a TTY).</p>
 <h3>Use of the <code>completer</code> Function<span><a class="mark" href="#readline_use_of_the_completer_function" id="readline_use_of_the_completer_function">#</a></span></h3>
-<p>When called, the <code>completer</code> function is provided the current line entered by
-the user, and is expected to return an Array with 2 entries:</p>
+<p>The <code>completer</code> function takes the current line entered by the user
+as an argument, and returns an Array with 2 entries:</p>
 <ul>
 <li>An Array with matching entries for the completion.</li>
 <li>The substring that was used for the matching.</li>
@@ -440,7 +447,7 @@ the user, and is expected to return an Array with 2 entries:</p>
 <p>For instance: <code>[[substr1, substr2, ...], originalsubstring]</code>.</p>
 <pre><code class="lang-js">function completer(line) {
   const completions = &#39;.help .error .exit .quit .q&#39;.split(&#39; &#39;);
-  const hits = completions.filter((c) =&gt; { return c.indexOf(line) === 0 });
+  const hits = completions.filter((c) =&gt; c.startsWith(line));
   // show all completions if none found
   return [hits.length ? hits : completions, line];
 }
@@ -473,6 +480,9 @@ given <a href="tty.html">TTY</a> <code>stream</code>.</p>
 <p>Optionally, <code>interface</code> specifies a <code>readline.Interface</code> instance for which
 autocompletion is disabled when copy-pasted input is detected.</p>
 <p>If the <code>stream</code> is a <a href="tty.html">TTY</a>, then it must be in raw mode.</p>
+<p><em>Note</em>: This is automatically called by any readline instance on its <code>input</code>
+if the <code>input</code> is a terminal. Closing the <code>readline</code> instance does not stop
+the <code>input</code> from emitting <code>&#39;keypress&#39;</code> events.</p>
 <pre><code class="lang-js">readline.emitKeypressEvents(process.stdin);
 if (process.stdin.isTTY)
   process.stdin.setRawMode(true);
@@ -500,7 +510,7 @@ const rl = readline.createInterface({
 rl.prompt();
 
 rl.on(&#39;line&#39;, (line) =&gt; {
-  switch(line.trim()) {
+  switch (line.trim()) {
     case &#39;hello&#39;:
       console.log(&#39;world!&#39;);
       break;
