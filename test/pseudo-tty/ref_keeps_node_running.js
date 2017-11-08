@@ -1,4 +1,5 @@
 'use strict';
+
 require('../common');
 
 const { TTY, isTTY } = process.binding('tty_wrap');

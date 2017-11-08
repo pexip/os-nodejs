@@ -1,24 +1,25 @@
 'use strict';
 const common = require('../common');
-const path = require('path');
-const { URL, URLSearchParams } = require('url');
-const { test, assert_equals, assert_true, assert_throws } = common.WPT;
-
 if (!common.hasIntl) {
   // A handful of the tests fail when ICU is not included.
   common.skip('missing Intl');
-  return;
 }
+
+const path = require('path');
+const { URL, URLSearchParams } = require('url');
+const { test, assert_equals, assert_true, assert_throws } =
+  require('../common/wpt');
 
 const request = {
   response: require(path.join(common.fixturesDir, 'url-tests'))
 };
 
-/* eslint-disable */
-/* WPT Refs:
+/* The following tests are copied from WPT. Modifications to them should be
+   upstreamed first. Refs:
    https://github.com/w3c/web-platform-tests/blob/8791bed/url/url-constructor.html
    License: http://www.w3.org/Consortium/Legal/2008/04-testsuite-copyright.html
 */
+/* eslint-disable */
 function runURLConstructorTests() {
   // var setup = async_test("Loading data…")
   // setup.step(function() {
@@ -120,12 +121,12 @@ function runURLSearchParamTests() {
     // And in the other direction, altering searchParams propagates
     // back to 'search'.
     searchParams.append('i', ' j ')
-    // assert_equals(url.search, '?e=f&g=h&i=+j+')
-    // assert_equals(url.searchParams.toString(), 'e=f&g=h&i=+j+')
+    assert_equals(url.search, '?e=f&g=h&i=+j+')
+    assert_equals(url.searchParams.toString(), 'e=f&g=h&i=+j+')
     assert_equals(searchParams.get('i'), ' j ')
 
     searchParams.set('e', 'updated')
-    // assert_equals(url.search, '?e=updated&g=h&i=+j+')
+    assert_equals(url.search, '?e=updated&g=h&i=+j+')
     assert_equals(searchParams.get('e'), 'updated')
 
     var url2 = bURL('http://example.org/file??a=b&c=d')

@@ -6,6 +6,7 @@
 
 #include "src/ast/scopes.h"
 #include "src/globals.h"
+#include "src/objects-inl.h"
 
 namespace v8 {
 namespace internal {
@@ -19,12 +20,14 @@ Variable::Variable(Scope* scope, const AstRawString* name, VariableMode mode,
     : scope_(scope),
       name_(name),
       local_if_not_shadowed_(nullptr),
+      next_(nullptr),
       index_(-1),
       initializer_position_(kNoSourcePosition),
       bit_field_(MaybeAssignedFlagField::encode(maybe_assigned_flag) |
                  InitializationFlagField::encode(initialization_flag) |
                  VariableModeField::encode(mode) | IsUsedField::encode(false) |
                  ForceContextAllocationField::encode(false) |
+                 ForceHoleInitializationField::encode(false) |
                  LocationField::encode(VariableLocation::UNALLOCATED) |
                  VariableKindField::encode(kind)) {
   // Var declared variables never need initialization.
@@ -35,19 +38,9 @@ Variable::Variable(Scope* scope, const AstRawString* name, VariableMode mode,
 bool Variable::IsGlobalObjectProperty() const {
   // Temporaries are never global, they must always be allocated in the
   // activation frame.
-  return (IsDynamicVariableMode(mode()) ||
-          (IsDeclaredVariableMode(mode()) && !IsLexicalVariableMode(mode()))) &&
-         scope_ != NULL && scope_->is_script_scope();
+  return (IsDynamicVariableMode(mode()) || mode() == VAR) &&
+         scope_ != nullptr && scope_->is_script_scope();
 }
-
-
-bool Variable::IsStaticGlobalObjectProperty() const {
-  // Temporaries are never global, they must always be allocated in the
-  // activation frame.
-  return (IsDeclaredVariableMode(mode()) && !IsLexicalVariableMode(mode())) &&
-         scope_ != NULL && scope_->is_script_scope();
-}
-
 
 }  // namespace internal
 }  // namespace v8

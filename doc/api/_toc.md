@@ -6,8 +6,10 @@
 <div class="line"></div>
 
 * [Assertion Testing](assert.html)
+* [Async Hooks](async_hooks.html)
 * [Buffer](buffer.html)
-* [C/C++ Addons](addons.html)
+* [C++ Addons](addons.html)
+* [C/C++ Addons - N-API](n-api.html)
 * [Child Processes](child_process.html)
 * [Cluster](cluster.html)
 * [Command Line Options](cli.html)
@@ -22,7 +24,10 @@
 * [File System](fs.html)
 * [Globals](globals.html)
 * [HTTP](http.html)
+* [HTTP/2](http2.html)
 * [HTTPS](https.html)
+* [Inspector](inspector.html)
+* [Internationalization](intl.html)
 * [Modules](modules.html)
 * [Net](net.html)
 * [OS](os.html)

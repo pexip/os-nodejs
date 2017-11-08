@@ -1,13 +1,11 @@
 'use strict';
 const common = require('../common');
+if (!common.hasCrypto)
+  common.skip('missing crypto');
+
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-
-if (!common.hasCrypto) {
-  common.skip('missing crypto');
-  return;
-}
 const crypto = require('crypto');
 
 // Test hashing
@@ -96,22 +94,24 @@ assert.throws(function() {
 // Default UTF-8 encoding
 const hutf8 = crypto.createHash('sha512').update('УТФ-8 text').digest('hex');
 assert.strictEqual(
-    hutf8,
-    '4b21bbd1a68e690a730ddcb5a8bc94ead9879ffe82580767ad7ec6fa8ba2dea6' +
+  hutf8,
+  '4b21bbd1a68e690a730ddcb5a8bc94ead9879ffe82580767ad7ec6fa8ba2dea6' +
         '43a821af66afa9a45b6a78c712fecf0e56dc7f43aef4bcfc8eb5b4d8dca6ea5b');
 
 assert.notStrictEqual(
-    hutf8,
-    crypto.createHash('sha512').update('УТФ-8 text', 'latin1').digest('hex'));
+  hutf8,
+  crypto.createHash('sha512').update('УТФ-8 text', 'latin1').digest('hex'));
 
 const h3 = crypto.createHash('sha256');
 h3.digest();
 assert.throws(function() {
   h3.digest();
-},
-              /Digest already called/);
+}, /Digest already called/);
 
 assert.throws(function() {
   h3.update('foo');
-},
-              /Digest already called/);
+}, /Digest already called/);
+
+assert.throws(function() {
+  crypto.createHash('sha256').digest('ucs2');
+}, /^Error: hash\.digest\(\) does not support UTF-16$/);
