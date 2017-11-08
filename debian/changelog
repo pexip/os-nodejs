@@ -1,3 +1,9 @@
+nodejs (8.9.1-0pexip1) pexip; urgency=low
+
+  * New upstream release.
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 08 Nov 2017 13:16:54 +0000
+
 nodejs (8.4.0-1nodesource1~jessie1pexip1) pexip; urgency=low
 
   * New upstream release.
