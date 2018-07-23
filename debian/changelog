@@ -1,3 +1,9 @@
+nodejs (8.9.1-0pexip2) pexip; urgency=low
+
+  * Build-Depend on libssl 1.0.x
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 23 Jul 2018 15:08:46 +0100
+
 nodejs (8.9.1-0pexip1) pexip; urgency=low
 
   * New upstream release.
