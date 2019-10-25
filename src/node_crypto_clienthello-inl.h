@@ -26,10 +26,17 @@
 
 #include "node_crypto_clienthello.h"
 #include "util.h"
-#include "util-inl.h"
 
 namespace node {
 namespace crypto {
+
+inline ClientHelloParser::ClientHelloParser()
+    : state_(kEnded),
+      onhello_cb_(nullptr),
+      onend_cb_(nullptr),
+      cb_arg_(nullptr) {
+  Reset();
+}
 
 inline void ClientHelloParser::Reset() {
   frame_len_ = 0;
@@ -50,7 +57,7 @@ inline void ClientHelloParser::Start(ClientHelloParser::OnHelloCb onhello_cb,
     return;
   Reset();
 
-  CHECK_NE(onhello_cb, nullptr);
+  CHECK_NOT_NULL(onhello_cb);
 
   state_ = kWaiting;
   onhello_cb_ = onhello_cb;

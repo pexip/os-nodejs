@@ -1,4 +1,5 @@
-// Flags: --expose-http2
+// Flags: --expose_internals
+
 'use strict';
 
 const common = require('../common');
@@ -8,9 +9,11 @@ const assert = require('assert');
 const h2 = require('http2');
 const net = require('net');
 
-// Tests behaviour of the proxied socket in Http2ServerRequest
+const { kTimeout } = require('internal/timers');
+
+// Tests behavior of the proxied socket in Http2ServerRequest
 // & Http2ServerResponse - this proxy socket should mimic the
-// behaviour of http1 but against the http2 api & model
+// behavior of http1 but against the http2 api & model
 
 const errMsg = {
   code: 'ERR_HTTP2_NO_SOCKET_MANIPULATION',
@@ -32,7 +35,7 @@ server.on('request', common.mustCall(function(request, response) {
   assert.strictEqual(request.socket.destroyed, false);
 
   request.socket.setTimeout(987);
-  assert.strictEqual(request.stream.session._idleTimeout, 987);
+  assert.strictEqual(request.stream.session[kTimeout]._idleTimeout, 987);
   request.socket.setTimeout(0);
 
   common.expectsError(() => request.socket.read(), errMsg);
@@ -40,13 +43,13 @@ server.on('request', common.mustCall(function(request, response) {
   common.expectsError(() => request.socket.pause(), errMsg);
   common.expectsError(() => request.socket.resume(), errMsg);
 
-  // should have correct this context for socket methods & getters
+  // Should have correct this context for socket methods & getters
   assert.ok(request.socket.address() != null);
   assert.ok(request.socket.remotePort);
 
   request.on('end', common.mustCall(() => {
     assert.strictEqual(request.socket.readable, false);
-    assert.doesNotThrow(() => response.socket.destroy());
+    response.socket.destroy();
   }));
   response.on('finish', common.mustCall(() => {
     assert.ok(request.socket);
@@ -59,13 +62,13 @@ server.on('request', common.mustCall(function(request, response) {
     });
   }));
 
-  // properties that do not exist on the proxy are retrieved from the socket
+  // Properties that do not exist on the proxy are retrieved from the socket
   assert.ok(request.socket._server);
   assert.strictEqual(request.socket.connecting, false);
 
-  // socket events are bound and emitted on Http2Stream
-  request.socket.on('streamClosed', common.mustCall());
-  request.socket.once('streamClosed', common.mustCall());
+  // Socket events are bound and emitted on Http2Stream
+  request.socket.on('close', common.mustCall());
+  request.socket.once('close', common.mustCall());
   request.socket.on('testEvent', common.mustCall());
   request.socket.emit('testEvent');
 }));
@@ -82,7 +85,7 @@ server.listen(0, common.mustCall(function() {
     };
     const request = client.request(headers);
     request.on('end', common.mustCall(() => {
-      client.destroy();
+      client.close();
     }));
     request.end();
     request.resume();

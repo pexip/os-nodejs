@@ -2,15 +2,12 @@
 const common = require('../common.js');
 
 const bench = common.createBenchmark(main, {
-  size: [16, 512, 1024, 4096, 16386],
-  args: [1, 2, 3, 4, 5],
-  millions: [1]
+  size: [16, 512, 4096, 16386],
+  args: [1, 2, 5],
+  n: [1e6]
 });
 
-function main(conf) {
-  const iter = (conf.millions >>> 0) * 1e6;
-  const size = (conf.size >>> 0);
-  const args = (conf.args >>> 0);
+function main({ n, size, args }) {
   const b0 = Buffer.alloc(size, 'a');
   const b1 = Buffer.alloc(size, 'a');
   const b0Len = b0.length;
@@ -22,58 +19,42 @@ function main(conf) {
   switch (args) {
     case 2:
       b0.compare(b1, 0);
-      break;
-    case 3:
-      b0.compare(b1, 0, b1Len);
-      break;
-    case 4:
-      b0.compare(b1, 0, b1Len, 0);
-      break;
-    case 5:
-      b0.compare(b1, 0, b1Len, 0, b0Len);
-      break;
-    default:
-      b0.compare(b1);
-  }
-  switch (args) {
-    case 2:
-      b0.compare(b1, 0);
       bench.start();
-      for (i = 0; i < iter; i++) {
+      for (i = 0; i < n; i++) {
         b0.compare(b1, 0);
       }
-      bench.end(iter / 1e6);
+      bench.end(n);
       break;
     case 3:
       b0.compare(b1, 0, b1Len);
       bench.start();
-      for (i = 0; i < iter; i++) {
+      for (i = 0; i < n; i++) {
         b0.compare(b1, 0, b1Len);
       }
-      bench.end(iter / 1e6);
+      bench.end(n);
       break;
     case 4:
       b0.compare(b1, 0, b1Len, 0);
       bench.start();
-      for (i = 0; i < iter; i++) {
+      for (i = 0; i < n; i++) {
         b0.compare(b1, 0, b1Len, 0);
       }
-      bench.end(iter / 1e6);
+      bench.end(n);
       break;
     case 5:
       b0.compare(b1, 0, b1Len, 0, b0Len);
       bench.start();
-      for (i = 0; i < iter; i++) {
+      for (i = 0; i < n; i++) {
         b0.compare(b1, 0, b1Len, 0, b0Len);
       }
-      bench.end(iter / 1e6);
+      bench.end(n);
       break;
     default:
       b0.compare(b1);
       bench.start();
-      for (i = 0; i < iter; i++) {
+      for (i = 0; i < n; i++) {
         b0.compare(b1);
       }
-      bench.end(iter / 1e6);
+      bench.end(n);
   }
 }

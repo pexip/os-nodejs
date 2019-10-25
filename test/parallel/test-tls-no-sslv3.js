@@ -11,9 +11,9 @@ const tls = require('tls');
 const spawn = require('child_process').spawn;
 const fixtures = require('../common/fixtures');
 
-const cert = fixtures.readSync('test_cert.pem');
-const key = fixtures.readSync('test_key.pem');
-const server = tls.createServer({ cert: cert, key: key }, common.mustNotCall());
+const cert = fixtures.readKey('rsa_cert.crt');
+const key = fixtures.readKey('rsa_private.pem');
+const server = tls.createServer({ cert, key }, common.mustNotCall());
 const errors = [];
 let stderr = '';
 
@@ -22,10 +22,6 @@ server.listen(0, '127.0.0.1', function() {
   const args = ['s_client',
                 '-ssl3',
                 '-connect', address];
-
-  // for the performance and stability issue in s_client on Windows
-  if (common.isWindows)
-    args.push('-no_rand_screen');
 
   const client = spawn(common.opensslCli, args, { stdio: 'pipe' });
   client.stdout.pipe(process.stdout);
@@ -46,6 +42,8 @@ process.on('exit', function() {
     common.printSkipMessage('`openssl s_client -ssl3` not supported.');
   } else {
     assert.strictEqual(errors.length, 1);
-    assert(/:wrong version number/.test(errors[0].message));
+    // OpenSSL 1.0.x and 1.1.x report invalid client versions differently.
+    assert(/:wrong version number/.test(errors[0].message) ||
+           /:version too low/.test(errors[0].message));
   }
 });

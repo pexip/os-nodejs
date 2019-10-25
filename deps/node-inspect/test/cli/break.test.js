@@ -18,12 +18,12 @@ test('stepping through breakpoints', (t) => {
     .then(() => cli.waitForPrompt())
     .then(() => {
       t.match(
-        cli.output,
-        `break in ${script}:1`,
+        cli.breakInfo,
+        { filename: script, line: 1 },
         'pauses in the first line of the script');
       t.match(
         cli.output,
-        /> 1 \(function \([^)]+\) \{ const x = 10;/,
+        /> 1 (?:\(function \([^)]+\) \{ )?const x = 10;/,
         'shows the source and marks the current line');
     })
     .then(() => cli.stepCommand('n'))
@@ -134,7 +134,7 @@ test('sb before loading file', (t) => {
 
   return cli.waitForInitialBreak()
     .then(() => cli.waitForPrompt())
-    .then(() => cli.command('sb("other.js", 3)'))
+    .then(() => cli.command('sb("other.js", 2)'))
     .then(() => {
       t.match(
         cli.output,
@@ -145,7 +145,7 @@ test('sb before loading file', (t) => {
     .then(() => {
       t.match(
         cli.output,
-        `break in ${otherScript}:3`,
+        `break in ${otherScript}:2`,
         'found breakpoint in file that was not loaded yet');
     })
     .then(() => cli.quit())

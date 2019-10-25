@@ -1,5 +1,5 @@
 'use strict';
-require('../common');
+const common = require('../common');
 const assert = require('assert');
 
 const b = Buffer.from('abcdef');
@@ -88,7 +88,7 @@ assert.strictEqual(
   true
 );
 
-// test base64 encoding
+// Test base64 encoding
 assert.strictEqual(
   Buffer.from(b.toString('base64'), 'base64')
     .includes('ZA==', 0, 'base64'),
@@ -112,7 +112,7 @@ assert.strictEqual(
   true
 );
 
-// test latin1 encoding
+// Test latin1 encoding
 assert.strictEqual(
   Buffer.from(b.toString('latin1'), 'latin1')
     .includes('d', 0, 'latin1'),
@@ -124,7 +124,7 @@ assert.strictEqual(
   true
 );
 
-// test binary encoding
+// Test binary encoding
 assert.strictEqual(
   Buffer.from(b.toString('binary'), 'binary')
     .includes('d', 0, 'binary'),
@@ -137,7 +137,7 @@ assert.strictEqual(
 );
 
 
-// test usc2 encoding
+// test ucs2 encoding
 let twoByteString = Buffer.from('\u039a\u0391\u03a3\u03a3\u0395', 'ucs2');
 
 assert(twoByteString.includes('\u0395', 4, 'ucs2'));
@@ -148,7 +148,7 @@ assert(twoByteString.includes(
 assert(!twoByteString.includes('\u03a3', -2, 'ucs2'));
 
 const mixedByteStringUcs2 =
-    Buffer.from('\u039a\u0391abc\u03a3\u03a3\u0395', 'ucs2');
+  Buffer.from('\u039a\u0391abc\u03a3\u03a3\u0395', 'ucs2');
 assert(mixedByteStringUcs2.includes('bc', 0, 'ucs2'));
 assert(mixedByteStringUcs2.includes('\u03a3', 0, 'ucs2'));
 assert(!mixedByteStringUcs2.includes('\u0396', 0, 'ucs2'));
@@ -193,7 +193,7 @@ for (let i = 66; i < 76; i++) {  // from 'B' to 'K'
 
 const longBufferString = Buffer.from(longString);
 
-// pattern of 15 chars, repeated every 16 chars in long
+// Pattern of 15 chars, repeated every 16 chars in long
 let pattern = 'ABACABADABACABA';
 for (let i = 0; i < longBufferString.length - pattern.length; i += 7) {
   const includes = longBufferString.includes(pattern, i);
@@ -214,8 +214,9 @@ assert(asciiString.includes('leb', 0));
 
 // Search in string containing many non-ASCII chars.
 const allCodePoints = [];
-for (let i = 0; i < 65536; i++) allCodePoints[i] = i;
-const allCharsString = String.fromCharCode.apply(String, allCodePoints);
+for (let i = 0; i < 65534; i++) allCodePoints[i] = i;
+const allCharsString = String.fromCharCode.apply(String, allCodePoints) +
+    String.fromCharCode(65534, 65535);
 const allCharsBufferUtf8 = Buffer.from(allCharsString);
 const allCharsBufferUcs2 = Buffer.from(allCharsString, 'ucs2');
 
@@ -261,7 +262,7 @@ for (let lengthIndex = 0; lengthIndex < lengths.length; lengthIndex++) {
     const length = lengths[lengthIndex];
 
     const patternBufferUcs2 =
-        allCharsBufferUcs2.slice(index, index + length);
+      allCharsBufferUcs2.slice(index, index + length);
     assert.ok(
       allCharsBufferUcs2.includes(patternBufferUcs2, 0, 'ucs2'));
 
@@ -271,19 +272,23 @@ for (let lengthIndex = 0; lengthIndex < lengths.length; lengthIndex++) {
   }
 }
 
-const expectedError =
-  /^TypeError: "val" argument must be string, number, Buffer or Uint8Array$/;
-assert.throws(() => {
-  b.includes(() => {});
-}, expectedError);
-assert.throws(() => {
-  b.includes({});
-}, expectedError);
-assert.throws(() => {
-  b.includes([]);
-}, expectedError);
+[
+  () => { },
+  {},
+  []
+].forEach((val) => {
+  common.expectsError(
+    () => b.includes(val),
+    {
+      code: 'ERR_INVALID_ARG_TYPE',
+      type: TypeError,
+      message: 'The "value" argument must be one of type number, string, ' +
+               `Buffer, or Uint8Array. Received type ${typeof val}`
+    }
+  );
+});
 
-// test truncation of Number arguments to uint8
+// Test truncation of Number arguments to uint8
 {
   const buf = Buffer.from('this is a test');
   assert.ok(buf.includes(0x6973));

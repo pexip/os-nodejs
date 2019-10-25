@@ -26,15 +26,13 @@ if (!common.hasCrypto)
   common.skip('missing crypto');
 
 const assert = require('assert');
-
 const tls = require('tls');
 
-const fs = require('fs');
+const fixtures = require('../common/fixtures');
 
-const dir = common.fixturesDir;
-const options = { key: fs.readFileSync(`${dir}/test_key.pem`),
-                  cert: fs.readFileSync(`${dir}/test_cert.pem`),
-                  ca: [ fs.readFileSync(`${dir}/test_ca.pem`) ] };
+const options = { key: fixtures.readKey('rsa_private.pem'),
+                  cert: fixtures.readKey('rsa_cert.crt'),
+                  ca: [ fixtures.readKey('rsa_ca.crt') ] };
 
 const writes = [
   'some server data',
@@ -44,6 +42,7 @@ const writes = [
 let receivedWrites = 0;
 
 const server = tls.createServer(options, function(c) {
+  c.resume();
   writes.forEach(function(str) {
     c.write(str);
   });

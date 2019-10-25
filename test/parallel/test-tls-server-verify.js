@@ -149,10 +149,6 @@ function runClient(prefix, port, options, cb) {
 
   const args = ['s_client', '-connect', `127.0.0.1:${port}`];
 
-  // for the performance issue in s_client on Windows
-  if (common.isWindows)
-    args.push('-no_rand_screen');
-
   console.log(`${prefix}  connecting with`, options.name);
 
   switch (options.name) {
@@ -227,22 +223,17 @@ function runClient(prefix, port, options, cb) {
     }
   });
 
-  //client.stdout.pipe(process.stdout);
-
   client.on('exit', function(code) {
-    //assert.strictEqual(
-    //  0, code,
-    //  `${prefix}${options.name}: s_client exited with error code ${code}`);
     if (options.shouldReject) {
       assert.strictEqual(
-        true, rejected,
+        rejected, true,
         `${prefix}${options.name} NOT rejected, but should have been`);
     } else {
       assert.strictEqual(
-        false, rejected,
+        rejected, false,
         `${prefix}${options.name} rejected, but should NOT have been`);
       assert.strictEqual(
-        options.shouldAuth, authed,
+        authed, options.shouldAuth,
         `${prefix}${options.name} authed is ${authed} but should have been ${
           options.shouldAuth}`);
     }
@@ -259,7 +250,7 @@ function runTest(port, testIndex) {
   const tcase = testCases[testIndex];
   if (!tcase) return;
 
-  console.error(`${prefix}Running '%s'`, tcase.title);
+  console.error(`${prefix}Running '${tcase.title}'`);
 
   const cas = tcase.CAs.map(loadPEM);
 
@@ -281,13 +272,15 @@ function runTest(port, testIndex) {
   if (tcase.renegotiate) {
     serverOptions.secureOptions =
         SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
+    // Renegotiation as a protocol feature was dropped after TLS1.2.
+    serverOptions.maxVersion = 'TLSv1.2';
   }
 
   let renegotiated = false;
   const server = tls.Server(serverOptions, function handleConnection(c) {
     c.on('error', function(e) {
-      // child.kill() leads ECONNRESET errro in the TLS connection of
-      // openssl s_client via spawn(). A Test result is already
+      // child.kill() leads ECONNRESET error in the TLS connection of
+      // openssl s_client via spawn(). A test result is already
       // checked by the data of client.stdout before child.kill() so
       // these tls errors can be ignored.
     });
@@ -327,7 +320,7 @@ function runTest(port, testIndex) {
     } else {
       server.close();
       successfulTests++;
-      runTest(port, nextTest++);
+      runTest(0, nextTest++);
     }
   }
 
@@ -345,7 +338,7 @@ function runTest(port, testIndex) {
           if (clientsCompleted === tcase.clients.length) {
             server.close();
             successfulTests++;
-            runTest(port, nextTest++);
+            runTest(0, nextTest++);
           }
         });
       }
@@ -355,7 +348,6 @@ function runTest(port, testIndex) {
 
 
 let nextTest = 0;
-runTest(0, nextTest++);
 runTest(0, nextTest++);
 
 

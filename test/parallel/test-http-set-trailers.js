@@ -24,6 +24,7 @@ const common = require('../common');
 const assert = require('assert');
 const http = require('http');
 const net = require('net');
+const util = require('util');
 
 let outstanding_reqs = 0;
 
@@ -35,7 +36,7 @@ const server = http.createServer(function(req, res) {
 server.listen(0);
 
 
-// first, we test an HTTP/1.0 request.
+// First, we test an HTTP/1.0 request.
 server.on('listening', function() {
   const c = net.createConnection(this.address().port);
   let res_buffer = '';
@@ -48,22 +49,23 @@ server.on('listening', function() {
   });
 
   c.on('data', function(chunk) {
-    //console.log(chunk);
     res_buffer += chunk;
   });
 
   c.on('end', function() {
     c.end();
-    assert.ok(!/x-foo/.test(res_buffer), 'Trailer in HTTP/1.0 response.');
+    assert.ok(
+      !/x-foo/.test(res_buffer),
+      `Trailer in HTTP/1.0 response. Response buffer: ${res_buffer}`
+    );
     outstanding_reqs--;
     if (outstanding_reqs === 0) {
       server.close();
-      process.exit();
     }
   });
 });
 
-// now, we test an HTTP/1.1 request.
+// Now, we test an HTTP/1.1 request.
 server.on('listening', function() {
   const c = net.createConnection(this.address().port);
   let res_buffer = '';
@@ -78,24 +80,22 @@ server.on('listening', function() {
   });
 
   c.on('data', function(chunk) {
-    //console.log(chunk);
     res_buffer += chunk;
     if (/0\r\n/.test(res_buffer)) { // got the end.
       outstanding_reqs--;
       clearTimeout(tid);
       assert.ok(
         /0\r\nx-foo: bar\r\n\r\n$/.test(res_buffer),
-        'No trailer in HTTP/1.1 response.'
+        `No trailer in HTTP/1.1 response. Response buffer: ${res_buffer}`
       );
       if (outstanding_reqs === 0) {
         server.close();
-        process.exit();
       }
     }
   });
 });
 
-// now, see if the client sees the trailers.
+// Now, see if the client sees the trailers.
 server.on('listening', function() {
   http.get({
     port: this.address().port,
@@ -103,12 +103,11 @@ server.on('listening', function() {
     headers: {}
   }, function(res) {
     res.on('end', function() {
-      //console.log(res.trailers);
-      assert.ok('x-foo' in res.trailers, 'Client doesn\'t see trailers.');
+      assert.ok('x-foo' in res.trailers,
+                `${util.inspect(res.trailers)} misses the 'x-foo' property`);
       outstanding_reqs--;
       if (outstanding_reqs === 0) {
         server.close();
-        process.exit();
       }
     });
     res.resume();

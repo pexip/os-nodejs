@@ -11,7 +11,7 @@
 
 #include "src/asmjs/asm-names.h"
 #include "src/base/logging.h"
-#include "src/globals.h"
+#include "src/common/globals.h"
 
 namespace v8 {
 namespace internal {
@@ -29,13 +29,9 @@ class Utf16CharacterStream;
 //   (for performance).
 class V8_EXPORT_PRIVATE AsmJsScanner {
  public:
-  typedef int32_t token_t;
+  using token_t = int32_t;
 
-  AsmJsScanner();
-  ~AsmJsScanner();
-
-  // Pick the stream to parse (must be called before anything else).
-  void SetStream(std::unique_ptr<Utf16CharacterStream> stream);
+  explicit AsmJsScanner(Utf16CharacterStream* stream);
 
   // Get current token.
   token_t Token() const { return token_; }
@@ -140,7 +136,7 @@ class V8_EXPORT_PRIVATE AsmJsScanner {
   // clang-format on
 
  private:
-  std::unique_ptr<Utf16CharacterStream> stream_;
+  Utf16CharacterStream* stream_;
   token_t token_;
   token_t preceding_token_;
   token_t next_token_;         // Only set when in {rewind} state.

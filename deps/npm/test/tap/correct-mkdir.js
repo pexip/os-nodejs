@@ -1,17 +1,24 @@
-var test = require('tap').test
+/* eslint-disable camelcase */
+var t = require('tap')
+var test = t.test
 var assert = require('assert')
-var path = require('path')
 var requireInject = require('require-inject')
-var cache_dir = path.resolve(__dirname, 'correct-mkdir')
+const common = require('../common-tap.js')
+var cache_dir = common.pkg
+
+if (process.platform === 'win32') {
+  t.plan(0, 'windows does not use correct-mkdir behavior')
+  process.exit(0)
+}
 
 test('correct-mkdir: no race conditions', function (t) {
   var mock_fs = {}
   var did_hook = false
-  mock_fs.stat = function (path, cb) {
+  mock_fs.lstat = function (path, cb) {
     if (path === cache_dir) {
       // Return a non-matching owner
       cb(null, {
-        uid: +process.uid + 1,
+        uid: +process.getuid() + 1,
         isDirectory: function () {
           return true
         }
@@ -34,7 +41,8 @@ test('correct-mkdir: no race conditions', function (t) {
   }
   var mocks = {
     'graceful-fs': mock_fs,
-    'chownr': mock_chownr
+    'chownr': mock_chownr,
+    'infer-owner': requireInject('infer-owner', { fs: mock_fs })
   }
   var correctMkdir = requireInject('../../lib/utils/correct-mkdir.js', mocks)
 
@@ -59,7 +67,7 @@ test('correct-mkdir: no race conditions', function (t) {
 
 test('correct-mkdir: ignore ENOENTs from chownr', function (t) {
   var mock_fs = {}
-  mock_fs.stat = function (path, cb) {
+  mock_fs.lstat = function (path, cb) {
     if (path === cache_dir) {
       cb(null, {
         isDirectory: function () {
@@ -71,7 +79,7 @@ test('correct-mkdir: ignore ENOENTs from chownr', function (t) {
     }
   }
   var mock_chownr = function (path, uid, gid, cb) {
-    cb({code: 'ENOENT'})
+    cb(Object.assign(new Error(), {code: 'ENOENT'}))
   }
   var mocks = {
     'graceful-fs': mock_fs,
@@ -98,7 +106,7 @@ test('correct-mkdir: SUDO_UID and SUDO_GID non-Windows', function (t) {
   process.getuid = function () { return 0 }
   process.getgid = function () { return 0 }
   var mock_fs = {}
-  mock_fs.stat = function (path, cb) {
+  mock_fs.lstat = function (path, cb) {
     if (path === cache_dir) {
       cb(null, {
         uid: 0,
@@ -133,7 +141,7 @@ test('correct-mkdir: SUDO_UID and SUDO_GID Windows', function (t) {
   delete process.getuid
   delete process.getgid
   var mock_fs = {}
-  mock_fs.stat = function (path, cb) {
+  mock_fs.lstat = function (path, cb) {
     if (path === cache_dir) {
       cb(null, {
         uid: 0,
@@ -147,7 +155,7 @@ test('correct-mkdir: SUDO_UID and SUDO_GID Windows', function (t) {
   }
   var mock_chownr = function (path, uid, gid, cb) {
     t.fail('chownr should not be called at all on Windows')
-    cb('nope')
+    cb(new Error('nope'))
   }
   var mocks = {
     'graceful-fs': mock_fs,

@@ -50,13 +50,13 @@ if (process.argv[2] === 'pipe') {
   });
 
 } else {
-  // testcase | start parent && child IPC test
+  // Testcase | start parent && child IPC test
 
   // testing: is stderr and stdout piped to parent
   const args = [process.argv[1], 'parent'];
   const parent = childProcess.spawn(process.execPath, args);
 
-  //got any stderr or std data
+  // Got any stderr or std data
   let stdoutData = false;
   parent.stdout.on('data', function() {
     stdoutData = true;

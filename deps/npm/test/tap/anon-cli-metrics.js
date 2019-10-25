@@ -7,19 +7,18 @@ var mr = require('npm-registry-mock')
 var Tacks = require('tacks')
 var File = Tacks.File
 var Dir = Tacks.Dir
-var extend = Object.assign || require('util')._extend
 var common = require('../common-tap.js')
 
-var basedir = path.join(__dirname, path.basename(__filename, '.js'))
+var basedir = common.pkg
 var testdir = path.join(basedir, 'testdir')
-var cachedir = path.join(basedir, 'cache')
+var cachedir = common.cache
 var globaldir = path.join(basedir, 'global')
 var tmpdir = path.join(basedir, 'tmp')
 var metricsFile = path.join(cachedir, 'anonymous-cli-metrics.json')
 
 var conf = {
   cwd: testdir,
-  env: extend(extend({}, process.env), {
+  env: Object.assign({}, process.env, {
     npm_config_cache: cachedir,
     npm_config_tmp: tmpdir,
     npm_config_prefix: globaldir,
@@ -55,7 +54,7 @@ var fixture = new Tacks(Dir({
         name: 'slow',
         version: '1.0.0',
         scripts: {
-          preinstall: "node -e 'setTimeout(function(){}, 500)'"
+          preinstall: 'node -e "setTimeout(function(){}, 500)"'
         }
       })
     }),

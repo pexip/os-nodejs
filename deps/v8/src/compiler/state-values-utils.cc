@@ -4,7 +4,7 @@
 
 #include "src/compiler/state-values-utils.h"
 
-#include "src/bit-vector.h"
+#include "src/utils/bit-vector.h"
 
 namespace v8 {
 namespace internal {
@@ -50,7 +50,7 @@ bool StateValuesCache::IsKeysEqualToNode(StateValuesKey* key, Node* node) {
     return false;
   }
 
-  DCHECK(node->opcode() == IrOpcode::kStateValues);
+  DCHECK_EQ(IrOpcode::kStateValues, node->opcode());
   SparseInputMask node_mask = SparseInputMaskOf(node->op());
 
   if (node_mask != key->mask) {
@@ -109,7 +109,7 @@ int StateValuesHashKey(Node** nodes, size_t count) {
   for (size_t i = 0; i < count; i++) {
     hash = hash * 23 + (nodes[i] == nullptr ? 0 : nodes[i]->id());
   }
-  return static_cast<int>(hash & 0x7fffffff);
+  return static_cast<int>(hash & 0x7FFFFFFF);
 }
 
 }  // namespace
@@ -159,8 +159,8 @@ SparseInputMask::BitMaskType StateValuesCache::FillBufferWithValues(
     (*values_idx)++;
   }
 
-  DCHECK(*node_count <= StateValuesCache::kMaxInputCount);
-  DCHECK(virtual_node_count <= SparseInputMask::kMaxSparseInputs);
+  DCHECK_GE(StateValuesCache::kMaxInputCount, *node_count);
+  DCHECK_GE(SparseInputMask::kMaxSparseInputs, virtual_node_count);
 
   // Add the end marker at the end of the mask.
   input_mask |= SparseInputMask::kEndMarker << virtual_node_count;
@@ -232,7 +232,7 @@ namespace {
 
 void CheckTreeContainsValues(Node* tree, Node** values, size_t count,
                              const BitVector* liveness, int liveness_offset) {
-  CHECK_EQ(count, StateValuesAccess(tree).size());
+  DCHECK_EQ(count, StateValuesAccess(tree).size());
 
   int i;
   auto access = StateValuesAccess(tree);
@@ -240,12 +240,12 @@ void CheckTreeContainsValues(Node* tree, Node** values, size_t count,
   auto itend = access.end();
   for (i = 0; it != itend; ++it, ++i) {
     if (liveness == nullptr || liveness->Contains(liveness_offset + i)) {
-      CHECK((*it).node == values[i]);
+      DCHECK_EQ((*it).node, values[i]);
     } else {
-      CHECK((*it).node == nullptr);
+      DCHECK_NULL((*it).node);
     }
   }
-  CHECK_EQ(static_cast<size_t>(i), count);
+  DCHECK_EQ(static_cast<size_t>(i), count);
 }
 
 }  // namespace
@@ -311,27 +311,25 @@ StateValuesAccess::iterator::iterator(Node* node) : current_depth_(0) {
 }
 
 SparseInputMask::InputIterator* StateValuesAccess::iterator::Top() {
-  DCHECK(current_depth_ >= 0);
-  DCHECK(current_depth_ < kMaxInlineDepth);
+  DCHECK_LE(0, current_depth_);
+  DCHECK_GT(kMaxInlineDepth, current_depth_);
   return &(stack_[current_depth_]);
 }
 
 void StateValuesAccess::iterator::Push(Node* node) {
   current_depth_++;
-  CHECK(current_depth_ < kMaxInlineDepth);
+  CHECK_GT(kMaxInlineDepth, current_depth_);
   stack_[current_depth_] =
       SparseInputMaskOf(node->op()).IterateOverInputs(node);
 }
 
 
 void StateValuesAccess::iterator::Pop() {
-  DCHECK(current_depth_ >= 0);
+  DCHECK_LE(0, current_depth_);
   current_depth_--;
 }
 
-
-bool StateValuesAccess::iterator::done() { return current_depth_ < 0; }
-
+bool StateValuesAccess::iterator::done() const { return current_depth_ < 0; }
 
 void StateValuesAccess::iterator::Advance() {
   Top()->Advance();
@@ -392,13 +390,11 @@ MachineType StateValuesAccess::iterator::type() {
   }
 }
 
-
-bool StateValuesAccess::iterator::operator!=(iterator& other) {
+bool StateValuesAccess::iterator::operator!=(iterator const& other) {
   // We only allow comparison with end().
   CHECK(other.done());
   return !done();
 }
-
 
 StateValuesAccess::iterator& StateValuesAccess::iterator::operator++() {
   Advance();

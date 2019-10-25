@@ -5,20 +5,10 @@
 #include "src/builtins/builtins-utils.h"
 #include "src/builtins/builtins.h"
 #include "src/debug/debug.h"
-#include "src/objects-inl.h"
+#include "src/objects/objects-inl.h"
 
 namespace v8 {
 namespace internal {
-
-void Builtins::Generate_Return_DebugBreak(MacroAssembler* masm) {
-  DebugCodegen::GenerateDebugBreakStub(masm,
-                                       DebugCodegen::SAVE_RESULT_REGISTER);
-}
-
-void Builtins::Generate_Slot_DebugBreak(MacroAssembler* masm) {
-  DebugCodegen::GenerateDebugBreakStub(masm,
-                                       DebugCodegen::IGNORE_RESULT_REGISTER);
-}
 
 void Builtins::Generate_FrameDropperTrampoline(MacroAssembler* masm) {
   DebugCodegen::GenerateFrameDropperTrampoline(masm);

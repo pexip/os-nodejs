@@ -36,9 +36,6 @@
 #include <unistd.h>
 
 
-static char *process_title;
-
-
 int uv__platform_loop_init(uv_loop_t* loop) {
   return uv__kqueue_init(loop);
 }
@@ -71,11 +68,11 @@ int uv_exepath(char* buffer, size_t* size) {
   int err;
 
   if (buffer == NULL || size == NULL || *size == 0)
-    return -EINVAL;
+    return UV_EINVAL;
 
   mypid = getpid();
   for (;;) {
-    err = -ENOMEM;
+    err = UV_ENOMEM;
     argsbuf_tmp = uv__realloc(argsbuf, argsbuf_size);
     if (argsbuf_tmp == NULL)
       goto out;
@@ -88,14 +85,14 @@ int uv_exepath(char* buffer, size_t* size) {
       break;
     }
     if (errno != ENOMEM) {
-      err = -errno;
+      err = UV__ERR(errno);
       goto out;
     }
     argsbuf_size *= 2U;
   }
 
   if (argsbuf[0] == NULL) {
-    err = -EINVAL;  /* FIXME(bnoordhuis) More appropriate error. */
+    err = UV_EINVAL;  /* FIXME(bnoordhuis) More appropriate error. */
     goto out;
   }
 
@@ -121,7 +118,7 @@ uint64_t uv_get_free_memory(void) {
   int which[] = {CTL_VM, VM_UVMEXP};
 
   if (sysctl(which, 2, &info, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   return (uint64_t) info.free * sysconf(_SC_PAGESIZE);
 }
@@ -133,51 +130,14 @@ uint64_t uv_get_total_memory(void) {
   size_t size = sizeof(info);
 
   if (sysctl(which, 2, &info, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   return (uint64_t) info;
 }
 
 
-char** uv_setup_args(int argc, char** argv) {
-  process_title = argc ? uv__strdup(argv[0]) : NULL;
-  return argv;
-}
-
-
-int uv_set_process_title(const char* title) {
-  char* new_title;
-
-  new_title = uv__strdup(title);
-  if (process_title == NULL)
-    return -ENOMEM;
-  uv__free(process_title);
-  process_title = new_title;
-  setproctitle("%s", title);
-  return 0;
-}
-
-
-int uv_get_process_title(char* buffer, size_t size) {
-  size_t len;
-
-  if (buffer == NULL || size == 0)
-    return -EINVAL;
-
-  if (process_title) {
-    len = strlen(process_title) + 1;
-
-    if (size < len)
-      return -ENOBUFS;
-
-    memcpy(buffer, process_title, len);
-  } else {
-    len = 0;
-  }
-
-  buffer[len] = '\0';
-
-  return 0;
+uint64_t uv_get_constrained_memory(void) {
+  return 0;  /* Memory constraints are unknown. */
 }
 
 
@@ -195,7 +155,7 @@ int uv_resident_set_memory(size_t* rss) {
   mib[5] = 1;
 
   if (sysctl(mib, 6, &kinfo, &size, NULL, 0) < 0)
-    return -errno;
+    return UV__ERR(errno);
 
   *rss = kinfo.p_vm_rssize * page_size;
   return 0;
@@ -209,7 +169,7 @@ int uv_uptime(double* uptime) {
   static int which[] = {CTL_KERN, KERN_BOOTTIME};
 
   if (sysctl(which, 2, &info, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   now = time(NULL);
 
@@ -231,25 +191,24 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
 
   size = sizeof(model);
   if (sysctl(which, 2, &model, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
-  which[1] = HW_NCPU;
+  which[1] = HW_NCPUONLINE;
   size = sizeof(numcpus);
   if (sysctl(which, 2, &numcpus, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   *cpu_infos = uv__malloc(numcpus * sizeof(**cpu_infos));
   if (!(*cpu_infos))
-    return -ENOMEM;
+    return UV_ENOMEM;
 
+  i = 0;
   *count = numcpus;
 
   which[1] = HW_CPUSPEED;
   size = sizeof(cpuspeed);
-  if (sysctl(which, 2, &cpuspeed, &size, NULL, 0)) {
-    uv__free(*cpu_infos);
-    return -errno;
-  }
+  if (sysctl(which, 2, &cpuspeed, &size, NULL, 0))
+    goto error;
 
   size = sizeof(info);
   which[0] = CTL_KERN;
@@ -257,10 +216,8 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
   for (i = 0; i < numcpus; i++) {
     which[2] = i;
     size = sizeof(info);
-    if (sysctl(which, 3, &info, &size, NULL, 0)) {
-      uv__free(*cpu_infos);
-      return -errno;
-    }
+    if (sysctl(which, 3, &info, &size, NULL, 0))
+      goto error;
 
     cpu_info = &(*cpu_infos)[i];
 
@@ -275,15 +232,13 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
   }
 
   return 0;
-}
 
+error:
+  *count = 0;
+  for (j = 0; j < i; j++)
+    uv__free((*cpu_infos)[j].model);
 
-void uv_free_cpu_info(uv_cpu_info_t* cpu_infos, int count) {
-  int i;
-
-  for (i = 0; i < count; i++) {
-    uv__free(cpu_infos[i].model);
-  }
-
-  uv__free(cpu_infos);
+  uv__free(*cpu_infos);
+  *cpu_infos = NULL;
+  return UV__ERR(errno);
 }

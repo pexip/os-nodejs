@@ -1,3 +1,5 @@
+// Flags: --expose_internals
+
 'use strict';
 
 const common = require('../common');
@@ -6,8 +8,11 @@ if (!common.hasCrypto)
 const assert = require('assert');
 const h2 = require('http2');
 const net = require('net');
+const util = require('util');
 
-// Tests behaviour of the proxied socket on Http2Session
+const { kTimeout } = require('internal/timers');
+
+// Tests behavior of the proxied socket on Http2Session
 
 const errMsg = {
   code: 'ERR_HTTP2_NO_SOCKET_MANIPULATION',
@@ -29,7 +34,23 @@ server.on('stream', common.mustCall(function(stream, headers) {
   assert.strictEqual(typeof socket.address(), 'object');
 
   socket.setTimeout(987);
-  assert.strictEqual(session._idleTimeout, 987);
+  assert.strictEqual(session[kTimeout]._idleTimeout, 987);
+
+  // The indentation is corrected depending on the depth.
+  let inspectedTimeout = util.inspect(session[kTimeout]);
+  assert(inspectedTimeout.includes('  _idlePrev: [TimersList]'));
+  assert(inspectedTimeout.includes('  _idleNext: [TimersList]'));
+  assert(!inspectedTimeout.includes('   _idleNext: [TimersList]'));
+
+  inspectedTimeout = util.inspect([ session[kTimeout] ]);
+  assert(inspectedTimeout.includes('    _idlePrev: [TimersList]'));
+  assert(inspectedTimeout.includes('    _idleNext: [TimersList]'));
+  assert(!inspectedTimeout.includes('     _idleNext: [TimersList]'));
+
+  const inspectedTimersList = util.inspect([[ session[kTimeout]._idlePrev ]]);
+  assert(inspectedTimersList.includes('      _idlePrev: [Timeout]'));
+  assert(inspectedTimersList.includes('      _idleNext: [Timeout]'));
+  assert(!inspectedTimersList.includes('       _idleNext: [Timeout]'));
 
   common.expectsError(() => socket.destroy, errMsg);
   common.expectsError(() => socket.emit, errMsg);
@@ -38,6 +59,9 @@ server.on('stream', common.mustCall(function(stream, headers) {
   common.expectsError(() => socket.read, errMsg);
   common.expectsError(() => socket.resume, errMsg);
   common.expectsError(() => socket.write, errMsg);
+  common.expectsError(() => socket.setEncoding, errMsg);
+  common.expectsError(() => socket.setKeepAlive, errMsg);
+  common.expectsError(() => socket.setNoDelay, errMsg);
 
   common.expectsError(() => (socket.destroy = undefined), errMsg);
   common.expectsError(() => (socket.emit = undefined), errMsg);
@@ -46,9 +70,18 @@ server.on('stream', common.mustCall(function(stream, headers) {
   common.expectsError(() => (socket.read = undefined), errMsg);
   common.expectsError(() => (socket.resume = undefined), errMsg);
   common.expectsError(() => (socket.write = undefined), errMsg);
+  common.expectsError(() => (socket.setEncoding = undefined), errMsg);
+  common.expectsError(() => (socket.setKeepAlive = undefined), errMsg);
+  common.expectsError(() => (socket.setNoDelay = undefined), errMsg);
 
-  assert.doesNotThrow(() => (socket.on = socket.on));
-  assert.doesNotThrow(() => (socket.once = socket.once));
+  // Resetting the socket listeners to their own value should not throw.
+  socket.on = socket.on;  // eslint-disable-line no-self-assign
+  socket.once = socket.once;  // eslint-disable-line no-self-assign
+
+  socket.unref();
+  assert.strictEqual(socket._handle.hasRef(), false);
+  socket.ref();
+  assert.strictEqual(socket._handle.hasRef(), true);
 
   stream.respond();
 
@@ -57,10 +90,18 @@ server.on('stream', common.mustCall(function(stream, headers) {
   assert.strictEqual(socket.writable, 0);
   assert.strictEqual(socket.readable, 0);
 
-  stream.session.destroy();
+  stream.end();
 
-  socket.setTimeout = undefined;
-  assert.strictEqual(session.setTimeout, undefined);
+  // Setting socket properties sets the session properties correctly.
+  const fn = () => {};
+  socket.setTimeout = fn;
+  assert.strictEqual(session.setTimeout, fn);
+
+  socket.ref = fn;
+  assert.strictEqual(session.ref, fn);
+
+  socket.unref = fn;
+  assert.strictEqual(session.unref, fn);
 
   stream.session.on('close', common.mustCall(() => {
     assert.strictEqual(session.socket, undefined);
@@ -71,18 +112,11 @@ server.listen(0, common.mustCall(function() {
   const port = server.address().port;
   const url = `http://localhost:${port}`;
   const client = h2.connect(url, common.mustCall(() => {
-    const headers = {
-      ':path': '/',
-      ':method': 'GET',
-      ':scheme': 'http',
-      ':authority': `localhost:${port}`
-    };
-    const request = client.request(headers);
+    const request = client.request();
     request.on('end', common.mustCall(() => {
-      client.destroy();
+      client.close();
       server.close();
     }));
-    request.end();
     request.resume();
   }));
 }));

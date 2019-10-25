@@ -25,6 +25,7 @@ const Path = require('path');
 const Repl = require('repl');
 const util = require('util');
 const vm = require('vm');
+const fileURLToPath = require('url').fileURLToPath;
 
 const debuglog = util.debuglog('inspect');
 
@@ -89,8 +90,11 @@ function isNativeUrl(url) {
   return url.replace('.js', '') in NATIVES || url === 'bootstrap_node.js';
 }
 
-function getRelativePath(filename) {
+function getRelativePath(filenameOrURL) {
   const dir = Path.join(Path.resolve(), 'x').slice(0, -1);
+
+  const filename = filenameOrURL.startsWith('file://') ?
+    fileURLToPath(filenameOrURL) : filenameOrURL;
 
   // Change path to relative, if possible
   if (filename.indexOf(dir) === 0) {
@@ -900,10 +904,8 @@ function createRepl(inspector) {
         return new Promise((resolve, reject) => {
           const absoluteFile = Path.resolve(filename);
           const writer = FS.createWriteStream(absoluteFile);
-          let totalSize;
           let sizeWritten = 0;
           function onProgress({ done, total, finished }) {
-            totalSize = total;
             if (finished) {
               print('Heap snaphost prepared.');
             } else {
@@ -913,13 +915,18 @@ function createRepl(inspector) {
           function onChunk({ chunk }) {
             sizeWritten += chunk.length;
             writer.write(chunk);
-            print(`Writing snapshot: ${sizeWritten}/${totalSize}`, true);
-            if (sizeWritten >= totalSize) {
-              writer.end();
+            print(`Writing snapshot: ${sizeWritten}`, true);
+          }
+          function onResolve() {
+            writer.end(() => {
               teardown();
               print(`Wrote snapshot: ${absoluteFile}`);
               resolve();
-            }
+            });
+          }
+          function onReject(error) {
+            teardown();
+            reject(error);
           }
           function teardown() {
             HeapProfiler.removeListener(
@@ -932,10 +939,7 @@ function createRepl(inspector) {
 
           print('Heap snapshot: 0/0', true);
           HeapProfiler.takeHeapSnapshot({ reportProgress: true })
-            .then(null, (error) => {
-              teardown();
-              reject(error);
-            });
+            .then(onResolve, onReject);
         });
       },
 
@@ -958,8 +962,8 @@ function createRepl(inspector) {
 
       get repl() {
         // Don't display any default messages
-        const listeners = repl.rli.listeners('SIGINT').slice(0);
-        repl.rli.removeAllListeners('SIGINT');
+        const listeners = repl.listeners('SIGINT').slice(0);
+        repl.removeAllListeners('SIGINT');
 
         const oldContext = repl.context;
 
@@ -967,7 +971,7 @@ function createRepl(inspector) {
           // Restore all listeners
           process.nextTick(() => {
             listeners.forEach((listener) => {
-              repl.rli.on('SIGINT', listener);
+              repl.on('SIGINT', listener);
             });
           });
 
@@ -975,21 +979,21 @@ function createRepl(inspector) {
           repl.eval = controlEval;
 
           // Swap history
-          history.debug = repl.rli.history;
-          repl.rli.history = history.control;
+          history.debug = repl.history;
+          repl.history = history.control;
 
           repl.context = oldContext;
-          repl.rli.setPrompt('debug> ');
+          repl.setPrompt('debug> ');
           repl.displayPrompt();
 
-          repl.rli.removeListener('SIGINT', exitDebugRepl);
+          repl.removeListener('SIGINT', exitDebugRepl);
           repl.removeListener('exit', exitDebugRepl);
 
           exitDebugRepl = null;
         };
 
         // Exit debug repl on SIGINT
-        repl.rli.on('SIGINT', exitDebugRepl);
+        repl.on('SIGINT', exitDebugRepl);
 
         // Exit debug repl on repl exit
         repl.on('exit', exitDebugRepl);
@@ -999,10 +1003,10 @@ function createRepl(inspector) {
         repl.context = {};
 
         // Swap history
-        history.control = repl.rli.history;
-        repl.rli.history = history.debug;
+        history.control = repl.history;
+        repl.history = history.debug;
 
-        repl.rli.setPrompt('> ');
+        repl.setPrompt('> ');
 
         print('Press Ctrl + C to leave debug repl');
         repl.displayPrompt();
@@ -1077,7 +1081,7 @@ function createRepl(inspector) {
 
     repl.defineCommand('interrupt', () => {
       // We want this for testing purposes where sending CTRL-C can be tricky.
-      repl.rli.emit('SIGINT');
+      repl.emit('SIGINT');
     });
 
     // Init once for the initial connection

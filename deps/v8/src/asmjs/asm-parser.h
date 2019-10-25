@@ -10,6 +10,8 @@
 
 #include "src/asmjs/asm-scanner.h"
 #include "src/asmjs/asm-types.h"
+#include "src/base/enum-set.h"
+#include "src/utils/vector.h"
 #include "src/wasm/wasm-module-builder.h"
 #include "src/zone/zone-containers.h"
 
@@ -47,10 +49,10 @@ class AsmJsParser {
   };
   // clang-format on
 
-  typedef std::unordered_set<StandardMember, std::hash<int>> StdlibSet;
+  using StdlibSet = base::EnumSet<StandardMember, uint64_t>;
 
   explicit AsmJsParser(Zone* zone, uintptr_t stack_limit,
-                       std::unique_ptr<Utf16CharacterStream> stream);
+                       Utf16CharacterStream* stream);
   bool Run();
   const char* failure_message() const { return failure_message_; }
   int failure_location() const { return failure_location_; }
@@ -76,9 +78,16 @@ class AsmJsParser {
   };
   // clang-format on
 
+  // A single import in asm.js can require multiple imports in wasm, if the
+  // function is used with different signatures. {cache} keeps the wasm
+  // imports for the single asm.js import of name {function_name}.
   struct FunctionImportInfo {
     Vector<const char> function_name;
-    WasmModuleBuilder::SignatureMap cache;
+    ZoneUnorderedMap<FunctionSig, uint32_t> cache;
+
+    // Constructor.
+    FunctionImportInfo(Vector<const char> name, Zone* zone)
+        : function_name(name), cache(zone) {}
   };
 
   struct VarInfo {
@@ -98,8 +107,20 @@ class AsmJsParser {
     VarInfo* var_info;
   };
 
-  enum class BlockKind { kRegular, kLoop, kOther };
+  // Distinguish different kinds of blocks participating in {block_stack}. Each
+  // entry on that stack represents one block in the wasm code, and determines
+  // which block 'break' and 'continue' target in the current context:
+  //  - kRegular: The target of a 'break' (with & without identifier).
+  //              Pushed by an IterationStatement and a SwitchStatement.
+  //  - kLoop   : The target of a 'continue' (with & without identifier).
+  //              Pushed by an IterationStatement.
+  //  - kNamed  : The target of a 'break' with a specific identifier.
+  //              Pushed by a BlockStatement.
+  //  - kOther  : Only used for internal blocks, can never be targeted.
+  enum class BlockKind { kRegular, kLoop, kNamed, kOther };
 
+  // One entry in the {block_stack}, see {BlockKind} above for details. Blocks
+  // without a label have {kTokenNone} set as their label.
   struct BlockInfo {
     BlockKind kind;
     AsmJsScanner::token_t label;
@@ -133,9 +154,9 @@ class AsmJsParser {
   template <typename T>
   class CachedVector final : public ZoneVector<T> {
    public:
-    explicit CachedVector(CachedVectors<T>& cache)
-        : ZoneVector<T>(cache.zone()), cache_(&cache) {
-      cache.fill(this);
+    explicit CachedVector(CachedVectors<T>* cache)
+        : ZoneVector<T>(cache->zone()), cache_(cache) {
+      cache->fill(this);
     }
     ~CachedVector() { cache_->reuse(this); }
 
@@ -183,7 +204,6 @@ class AsmJsParser {
   // Types used for stdlib function and their set up.
   AsmType* stdlib_dq2d_;
   AsmType* stdlib_dqdq2d_;
-  AsmType* stdlib_fq2f_;
   AsmType* stdlib_i2s_;
   AsmType* stdlib_ii2s_;
   AsmType* stdlib_minmax_;
@@ -207,6 +227,14 @@ class AsmJsParser {
   // The source position at which requesting a deferred coercion via the
   // aforementioned {call_coercion_deferred} is allowed.
   size_t call_coercion_deferred_position_;
+
+  // The code position of the last heap access shift by an immediate value.
+  // For `heap[expr >> value:NumericLiteral]` this indicates from where to
+  // delete code when the expression is used as part of a valid heap access.
+  // Will be set to {kNoHeapAccessShift} if heap access shift wasn't matched.
+  size_t heap_access_shift_position_;
+  uint32_t heap_access_shift_value_;
+  static const size_t kNoHeapAccessShift = -1;
 
   // Used to track the last label we've seen so it can be matched to later
   // statements it's attached to.
@@ -296,8 +324,7 @@ class AsmJsParser {
 
   // Use to set up block stack layers (including synthetic ones for if-else).
   // Begin/Loop/End below are implemented with these plus code generation.
-  void BareBegin(BlockKind kind = BlockKind::kOther,
-                 AsmJsScanner::token_t label = 0);
+  void BareBegin(BlockKind kind, AsmJsScanner::token_t label = 0);
   void BareEnd();
   int FindContinueLabelDepth(AsmJsScanner::token_t label);
   int FindBreakLabelDepth(AsmJsScanner::token_t label);

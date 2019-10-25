@@ -18,7 +18,7 @@ server.listen(0, common.mustCall(function() {
     request.on('end', common.mustCall(() => {
       assert.strictEqual(request.complete, true);
       response.on('finish', common.mustCall(function() {
-        // the following tests edge cases on request socket
+        // The following tests edge cases on request socket
         // right after finished fires but before backing
         // Http2Stream is destroyed
         assert.strictEqual(request.socket.readable, request.stream.readable);
@@ -26,23 +26,16 @@ server.listen(0, common.mustCall(function() {
 
         server.close();
       }));
-      response.end();
+      assert.strictEqual(response.end(), response);
     }));
   }));
 
   const url = `http://localhost:${port}`;
-  const client = h2.connect(url, common.mustCall(function() {
-    const headers = {
-      ':path': '/foobar',
-      ':method': 'GET',
-      ':scheme': 'http',
-      ':authority': `localhost:${port}`
-    };
-    const request = client.request(headers);
+  const client = h2.connect(url, common.mustCall(() => {
+    const request = client.request();
     request.resume();
-    request.on('end', common.mustCall(function() {
-      client.destroy();
+    request.on('end', common.mustCall(() => {
+      client.close();
     }));
-    request.end();
   }));
 }));
