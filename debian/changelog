@@ -1,3 +1,9 @@
+nodejs (12.13.0-pexip1) pexip; urgency=low
+
+  * New upstream release.
+
+ -- Darius Keeley <darius@pexip.com>  Fri, 25 Oct 2019 13:37:43 +0000
+
 nodejs (8.9.1-0pexip2) pexip; urgency=low
 
   * Build-Depend on libssl 1.0.x
