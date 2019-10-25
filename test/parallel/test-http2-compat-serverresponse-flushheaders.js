@@ -15,7 +15,7 @@ server.listen(0, common.mustCall(function() {
   const port = server.address().port;
   server.once('request', common.mustCall(function(request, response) {
     assert.strictEqual(response.headersSent, false);
-    assert.strictEqual(response._header, false); // alias for headersSent
+    assert.strictEqual(response._header, false); // Alias for headersSent
     response.flushHeaders();
     assert.strictEqual(response.headersSent, true);
     assert.strictEqual(response._header, true);
@@ -51,7 +51,7 @@ server.listen(0, common.mustCall(function() {
       serverResponse.end();
     }, 1));
     request.on('end', common.mustCall(function() {
-      client.destroy();
+      client.close();
     }));
     request.end();
     request.resume();

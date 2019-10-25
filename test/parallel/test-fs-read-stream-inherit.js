@@ -26,7 +26,7 @@ const rangeFile = fixtures.path('x.txt');
     file.resume();
   }));
 
-  file.on('data', function(data) {
+  file.on('data', common.mustCallAtLeast(function(data) {
     assert.ok(data instanceof Buffer);
     assert.ok(!paused);
     file.length += data.length;
@@ -38,7 +38,7 @@ const rangeFile = fixtures.path('x.txt');
       paused = false;
       file.resume();
     }, 10);
-  });
+  }));
 
 
   file.on('end', common.mustCall());
@@ -109,9 +109,19 @@ const rangeFile = fixtures.path('x.txt');
 }
 
 {
-  assert.throws(function() {
-    fs.createReadStream(rangeFile, Object.create({ start: 10, end: 2 }));
-  }, /"start" option must be <= "end" option/);
+  const message =
+    'The value of "start" is out of range. It must be <= "end" (here: 2).' +
+    ' Received 10';
+
+  common.expectsError(
+    () => {
+      fs.createReadStream(rangeFile, Object.create({ start: 10, end: 2 }));
+    },
+    {
+      code: 'ERR_OUT_OF_RANGE',
+      message,
+      type: RangeError
+    });
 }
 
 {
@@ -130,7 +140,7 @@ const rangeFile = fixtures.path('x.txt');
   }));
 }
 
-// pause and then resume immediately.
+// Pause and then resume immediately.
 {
   const pauseRes = fs.createReadStream(rangeFile);
   pauseRes.pause();

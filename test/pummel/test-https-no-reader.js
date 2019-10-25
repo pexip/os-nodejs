@@ -29,8 +29,8 @@ const https = require('https');
 const fixtures = require('../common/fixtures');
 
 const options = {
-  key: fixtures.readSync('test_key.pem'),
-  cert: fixtures.readSync('test_cert.pem')
+  key: fixtures.readKey('rsa_private.pem'),
+  cert: fixtures.readKey('rsa_cert.crt')
 };
 
 const buf = Buffer.allocUnsafe(1024 * 1024);
@@ -54,7 +54,7 @@ server.listen(common.PORT, function() {
     setTimeout(function() {
       // Read buffer should be somewhere near high watermark
       // (i.e. should not leak)
-      assert(res._readableState.length < 100 * 1024);
+      assert(res.readableLength < 100 * 1024);
       process.exit(0);
     }, 2000);
   });

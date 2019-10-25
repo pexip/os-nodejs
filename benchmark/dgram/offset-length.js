@@ -1,7 +1,8 @@
-// test UDP send/recv throughput with the "old" offset/length API
+// Test UDP send/recv throughput with the "old" offset/length API
 'use strict';
 
 const common = require('../common.js');
+const dgram = require('dgram');
 const PORT = common.PORT;
 
 // `num` is the number of send requests to queue up each time.
@@ -14,41 +15,29 @@ const bench = common.createBenchmark(main, {
   dur: [5]
 });
 
-var dur;
-var len;
-var num;
-var type;
-var chunk;
-
-function main(conf) {
-  dur = +conf.dur;
-  len = +conf.len;
-  num = +conf.num;
-  type = conf.type;
-  chunk = Buffer.allocUnsafe(len);
-  server();
-}
-
-const dgram = require('dgram');
-
-function server() {
+function main({ dur, len, num, type }) {
+  const chunk = Buffer.allocUnsafe(len);
   var sent = 0;
   var received = 0;
   const socket = dgram.createSocket('udp4');
 
   function onsend() {
     if (sent++ % num === 0) {
-      for (var i = 0; i < num; i++) {
-        socket.send(chunk, 0, chunk.length, PORT, '127.0.0.1', onsend);
-      }
+      // The setImmediate() is necessary to have event loop progress on OSes
+      // that only perform synchronous I/O on nonblocking UDP sockets.
+      setImmediate(() => {
+        for (var i = 0; i < num; i++) {
+          socket.send(chunk, 0, chunk.length, PORT, '127.0.0.1', onsend);
+        }
+      });
     }
   }
 
-  socket.on('listening', function() {
+  socket.on('listening', () => {
     bench.start();
     onsend();
 
-    setTimeout(function() {
+    setTimeout(() => {
       const bytes = (type === 'send' ? sent : received) * chunk.length;
       const gbits = (bytes * 8) / (1024 * 1024 * 1024);
       bench.end(gbits);
@@ -56,7 +45,7 @@ function server() {
     }, dur * 1000);
   });
 
-  socket.on('message', function() {
+  socket.on('message', () => {
     received++;
   });
 

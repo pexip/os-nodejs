@@ -9,10 +9,13 @@ const assert = require('assert');
 const fs = require('fs');
 const fixtures = require('../common/fixtures');
 
-common.refreshTmpDir();
-const npmSandbox = path.join(common.tmpDir, 'npm-sandbox');
+const tmpdir = require('../common/tmpdir');
+tmpdir.refresh();
+const npmSandbox = path.join(tmpdir.path, 'npm-sandbox');
 fs.mkdirSync(npmSandbox);
-const installDir = path.join(common.tmpDir, 'install-dir');
+const homeDir = path.join(tmpdir.path, 'home');
+fs.mkdirSync(homeDir);
+const installDir = path.join(tmpdir.path, 'install-dir');
 fs.mkdirSync(installDir);
 
 const npmPath = path.join(
@@ -39,7 +42,7 @@ const env = Object.assign({}, process.env, {
   PATH: path.dirname(process.execPath),
   NPM_CONFIG_PREFIX: path.join(npmSandbox, 'npm-prefix'),
   NPM_CONFIG_TMP: path.join(npmSandbox, 'npm-tmp'),
-  HOME: path.join(npmSandbox, 'home'),
+  HOME: homeDir,
 });
 
 exec(`${process.execPath} ${npmPath} install`, {
@@ -57,7 +60,5 @@ function handleExit(error, stdout, stderr) {
 
   assert.strictEqual(code, 0, `npm install got error code ${code}`);
   assert.strictEqual(signalCode, null, `unexpected signal: ${signalCode}`);
-  assert.doesNotThrow(function() {
-    fs.accessSync(`${installDir}/node_modules/package-name`);
-  });
+  assert(fs.existsSync(`${installDir}/node_modules/package-name`));
 }

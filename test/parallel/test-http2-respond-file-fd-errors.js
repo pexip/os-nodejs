@@ -7,16 +7,10 @@ const fixtures = require('../common/fixtures');
 const http2 = require('http2');
 const fs = require('fs');
 
-const {
-  HTTP2_HEADER_CONTENT_TYPE,
-  HTTP2_HEADER_METHOD
-} = http2.constants;
-
 const optionsWithTypeError = {
   offset: 'number',
   length: 'number',
-  statCheck: 'function',
-  getTrailers: 'function'
+  statCheck: 'function'
 };
 
 const types = {
@@ -35,7 +29,7 @@ const fd = fs.openSync(fname, 'r');
 const server = http2.createServer();
 
 server.on('stream', common.mustCall((stream) => {
-  // should throw if fd isn't a number
+  // Should throw if fd isn't a number
   Object.keys(types).forEach((type) => {
     if (type === 'number') {
       return;
@@ -43,12 +37,14 @@ server.on('stream', common.mustCall((stream) => {
 
     common.expectsError(
       () => stream.respondWithFD(types[type], {
-        [HTTP2_HEADER_CONTENT_TYPE]: 'text/plain'
+        'content-type': 'text/plain'
       }),
       {
         type: TypeError,
         code: 'ERR_INVALID_ARG_TYPE',
-        message: 'The "fd" argument must be of type number'
+        message: 'The "fd" argument must be one of type number or FileHandle.' +
+                 ' Received type ' +
+                 typeof types[type]
       }
     );
   });
@@ -62,7 +58,7 @@ server.on('stream', common.mustCall((stream) => {
 
       common.expectsError(
         () => stream.respondWithFD(fd, {
-          [HTTP2_HEADER_CONTENT_TYPE]: 'text/plain'
+          'content-type': 'text/plain'
         }, {
           [option]: types[type]
         }),
@@ -79,7 +75,7 @@ server.on('stream', common.mustCall((stream) => {
   // Should throw if :status 204, 205 or 304
   [204, 205, 304].forEach((status) => common.expectsError(
     () => stream.respondWithFD(fd, {
-      [HTTP2_HEADER_CONTENT_TYPE]: 'text/plain',
+      'content-type': 'text/plain',
       ':status': status,
     }),
     {
@@ -89,35 +85,11 @@ server.on('stream', common.mustCall((stream) => {
     }
   ));
 
-  // should emit an error on the stream if headers aren't valid
-  stream.respondWithFD(fd, {
-    [HTTP2_HEADER_METHOD]: 'POST'
-  }, {
-    statCheck() {
-      return true;
-    }
-  });
-  stream.once('error', common.expectsError({
-    code: 'ERR_HTTP2_INVALID_PSEUDOHEADER',
-    type: Error,
-    message: '":method" is an invalid pseudoheader or is used incorrectly'
-  }));
-  stream.respondWithFD(fd, {
-    [HTTP2_HEADER_METHOD]: 'POST'
-  });
-  stream.once('error', common.expectsError({
-    code: 'ERR_HTTP2_INVALID_PSEUDOHEADER',
-    type: Error,
-    message: '":method" is an invalid pseudoheader or is used incorrectly'
-  }));
-
   // Should throw if headers already sent
-  stream.respond({
-    ':status': 200,
-  });
+  stream.respond();
   common.expectsError(
     () => stream.respondWithFD(fd, {
-      [HTTP2_HEADER_CONTENT_TYPE]: 'text/plain'
+      'content-type': 'text/plain'
     }),
     {
       code: 'ERR_HTTP2_HEADERS_SENT',
@@ -130,7 +102,7 @@ server.on('stream', common.mustCall((stream) => {
   stream.destroy();
   common.expectsError(
     () => stream.respondWithFD(fd, {
-      [HTTP2_HEADER_CONTENT_TYPE]: 'text/plain'
+      'content-type': 'text/plain'
     }),
     {
       code: 'ERR_HTTP2_INVALID_STREAM',
@@ -144,8 +116,8 @@ server.listen(0, common.mustCall(() => {
   const client = http2.connect(`http://localhost:${server.address().port}`);
   const req = client.request();
 
-  req.on('streamClosed', common.mustCall(() => {
-    client.destroy();
+  req.on('close', common.mustCall(() => {
+    client.close();
     server.close();
   }));
   req.end();

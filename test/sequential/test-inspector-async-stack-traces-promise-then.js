@@ -2,7 +2,6 @@
 const common = require('../common');
 common.skipIfInspectorDisabled();
 common.skipIf32Bits();
-common.crashOnUnhandledRejection();
 const { NodeInstance } = require('../common/inspector-helper');
 const assert = require('assert');
 
@@ -35,17 +34,17 @@ async function runTests() {
   await session.send({ 'method': 'Debugger.resume' });
 
   console.error('[test] Waiting for break1');
-  debuggerPausedAt(await session.waitForBreakOnLine(6, '[eval]'),
-                   'break1', 'runTest:5');
+  debuggerPausedAt(await session.waitForBreakOnLine(4, '[eval]'),
+                   'break1', 'runTest:3');
 
   await session.send({ 'method': 'Debugger.resume' });
 
   console.error('[test] Waiting for break2');
-  debuggerPausedAt(await session.waitForBreakOnLine(9, '[eval]'),
-                   'break2', 'runTest:8');
+  debuggerPausedAt(await session.waitForBreakOnLine(7, '[eval]'),
+                   'break2', 'runTest:6');
 
   await session.runToCompletion();
-  assert.strictEqual(0, (await instance.expectShutdown()).exitCode);
+  assert.strictEqual((await instance.expectShutdown()).exitCode, 0);
 }
 
 function debuggerPausedAt(msg, functionName, previousTickLocation) {
@@ -54,7 +53,7 @@ function debuggerPausedAt(msg, functionName, previousTickLocation) {
     `${Object.keys(msg.params)} contains "asyncStackTrace" property`);
 
   assert.strictEqual(msg.params.callFrames[0].functionName, functionName);
-  assert.strictEqual(msg.params.asyncStackTrace.description, 'PROMISE');
+  assert.strictEqual(msg.params.asyncStackTrace.description, 'Promise.then');
 
   const frameLocations = msg.params.asyncStackTrace.callFrames.map(
     (frame) => `${frame.functionName}:${frame.lineNumber}`);

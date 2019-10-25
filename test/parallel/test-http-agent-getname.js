@@ -1,13 +1,15 @@
 'use strict';
 
-const common = require('../common');
+require('../common');
 const assert = require('assert');
 const http = require('http');
 const path = require('path');
 
+const tmpdir = require('../common/tmpdir');
+
 const agent = new http.Agent();
 
-// default to localhost
+// Default to localhost
 assert.strictEqual(
   agent.getName({
     port: 80,
@@ -33,7 +35,7 @@ assert.strictEqual(
 );
 
 // unix socket
-const socketPath = path.join(common.tmpDir, 'foo', 'bar');
+const socketPath = path.join(tmpdir.path, 'foo', 'bar');
 assert.strictEqual(
   agent.getName({
     socketPath

@@ -8,7 +8,8 @@ const fs = require('fs');
 const http2 = require('http2');
 const path = require('path');
 
-common.refreshTmpDir();
+const tmpdir = require('../common/tmpdir');
+tmpdir.refresh();
 
 // This test assesses whether long-running writes can complete
 // or timeout because the session or stream are not aware that the
@@ -29,7 +30,7 @@ let offsetTimeout = common.platformTimeout(100);
 let didReceiveData = false;
 
 const content = Buffer.alloc(writeSize, 0x44);
-const filepath = path.join(common.tmpDir, 'http2-large-write.tmp');
+const filepath = path.join(tmpdir.path, 'http2-large-write.tmp');
 fs.writeFileSync(filepath, content, 'binary');
 const fd = fs.openSync(filepath, 'r');
 
@@ -43,15 +44,11 @@ server.on('stream', common.mustCall((stream) => {
     'Content-Length': content.length.toString(),
     'Vary': 'Accept-Encoding'
   });
-  stream.setTimeout(serverTimeout);
-  stream.on('timeout', () => {
-    assert.strictEqual(didReceiveData, false, 'Should not timeout');
-  });
   stream.end();
 }));
 server.setTimeout(serverTimeout);
 server.on('timeout', () => {
-  assert.strictEqual(didReceiveData, false, 'Should not timeout');
+  assert.ok(!didReceiveData, 'Should not timeout');
 });
 
 server.listen(0, common.mustCall(() => {
@@ -83,7 +80,7 @@ server.listen(0, common.mustCall(() => {
     }
   }, 1));
   req.on('end', common.mustCall(() => {
-    client.destroy();
+    client.close();
     server.close();
   }));
 }));

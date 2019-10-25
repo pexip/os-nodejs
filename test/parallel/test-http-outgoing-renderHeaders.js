@@ -1,25 +1,29 @@
 'use strict';
 // Flags: --expose-internals
 
-require('../common');
+const common = require('../common');
 const assert = require('assert');
 
-const outHeadersKey = require('internal/http').outHeadersKey;
+const kOutHeaders = require('internal/http').kOutHeaders;
 const http = require('http');
 const OutgoingMessage = http.OutgoingMessage;
 
 {
   const outgoingMessage = new OutgoingMessage();
   outgoingMessage._header = {};
-  assert.throws(
+  common.expectsError(
     outgoingMessage._renderHeaders.bind(outgoingMessage),
-    /^Error: Can't render headers after they are sent to the client$/
+    {
+      code: 'ERR_HTTP_HEADERS_SENT',
+      type: Error,
+      message: 'Cannot render headers after they are sent to the client'
+    }
   );
 }
 
 {
   const outgoingMessage = new OutgoingMessage();
-  outgoingMessage[outHeadersKey] = null;
+  outgoingMessage[kOutHeaders] = null;
   const result = outgoingMessage._renderHeaders();
   assert.deepStrictEqual(result, {});
 }
@@ -27,14 +31,14 @@ const OutgoingMessage = http.OutgoingMessage;
 
 {
   const outgoingMessage = new OutgoingMessage();
-  outgoingMessage[outHeadersKey] = {};
+  outgoingMessage[kOutHeaders] = {};
   const result = outgoingMessage._renderHeaders();
   assert.deepStrictEqual(result, {});
 }
 
 {
   const outgoingMessage = new OutgoingMessage();
-  outgoingMessage[outHeadersKey] = {
+  outgoingMessage[kOutHeaders] = {
     host: ['host', 'nodejs.org'],
     origin: ['Origin', 'localhost']
   };

@@ -22,14 +22,14 @@ function onsend() {
 client.on('listening', function() {
   port = this.address().port;
 
-  setImmediate(function() {
+  process.nextTick(() => {
     async = true;
   });
 
   onsend();
 });
 
-client.on('message', function(buf, info) {
+client.on('message', (buf, info) => {
   received++;
   if (received === limit) {
     client.close();

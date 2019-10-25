@@ -2,6 +2,7 @@
 var npm = require('../npm.js')
 var util = require('util')
 var nameValidator = require('validate-npm-package-name')
+var npmlog = require('npmlog')
 
 module.exports = errorMessage
 
@@ -9,6 +10,17 @@ function errorMessage (er) {
   var short = []
   var detail = []
   switch (er.code) {
+    case 'ENOAUDIT':
+      short.push(['audit', er.message])
+      break
+    case 'EAUDITNOPJSON':
+      short.push(['audit', er.message])
+      break
+    case 'EAUDITNOLOCK':
+      short.push(['audit', er.message])
+      detail.push(['audit', 'Try creating one first with: npm i --package-lock-only'])
+      break
+
     case 'ECONNREFUSED':
       short.push(['', er])
       detail.push([
@@ -22,9 +34,56 @@ function errorMessage (er) {
 
     case 'EACCES':
     case 'EPERM':
-      short.push(['', er])
-      detail.push(['', ['\nPlease try running this command again as root/Administrator.'
-                ].join('\n')])
+      const isCachePath = typeof er.path === 'string' &&
+        er.path.startsWith(npm.config.get('cache'))
+      const isCacheDest = typeof er.dest === 'string' &&
+        er.dest.startsWith(npm.config.get('cache'))
+
+      const isWindows = process.platform === 'win32'
+
+      if (!isWindows && (isCachePath || isCacheDest)) {
+        // user probably doesn't need this, but still add it to the debug log
+        npmlog.verbose(er.stack)
+        short.push([
+          '',
+          [
+            '',
+            'Your cache folder contains root-owned files, due to a bug in',
+            'previous versions of npm which has since been addressed.',
+            '',
+            'To permanently fix this problem, please run:',
+            `  sudo chown -R ${process.getuid()}:${process.getgid()} ${JSON.stringify(npm.config.get('cache'))}`
+          ].join('\n')
+        ])
+      } else {
+        short.push(['', er])
+        detail.push([
+          '',
+          [
+            '\nThe operation was rejected by your operating system.',
+            (process.platform === 'win32'
+              ? 'It\'s possible that the file was already in use (by a text editor or antivirus),\n' +
+                'or that you lack permissions to access it.'
+              : 'It is likely you do not have the permissions to access this file as the current user'),
+            '\nIf you believe this might be a permissions issue, please double-check the',
+            'permissions of the file and its containing directories, or try running',
+            'the command again as root/Administrator.'
+          ].join('\n')])
+      }
+      break
+
+    case 'EUIDLOOKUP':
+      short.push(['lifecycle', er.message])
+      detail.push([
+        '',
+        [
+          '',
+          'Failed to look up the user/group for running scripts.',
+          '',
+          'Try again with a different --user or --group settings, or',
+          'run with --unsafe-perm to execute scripts as root.'
+        ].join('\n')
+      ])
       break
 
     case 'ELIFECYCLE':
@@ -52,37 +111,52 @@ function errorMessage (er) {
       break
 
     case 'EJSONPARSE':
-      short.push(['', er.message])
-      short.push(['', 'File: ' + er.file])
+      const path = require('path')
+      // Check whether we ran into a conflict in our own package.json
+      if (er.file === path.join(npm.prefix, 'package.json')) {
+        const isDiff = require('../install/read-shrinkwrap.js')._isDiff
+        const txt = require('fs').readFileSync(er.file, 'utf8')
+        if (isDiff(txt)) {
+          detail.push([
+            '',
+            [
+              'Merge conflict detected in your package.json.',
+              '',
+              'Please resolve the package.json conflict and retry the command:',
+              '',
+              `$ ${process.argv.join(' ')}`
+            ].join('\n')
+          ])
+          break
+        }
+      }
+      short.push(['JSON.parse', er.message])
       detail.push([
-        '',
+        'JSON.parse',
         [
           'Failed to parse package.json data.',
-          'package.json must be actual JSON, not just JavaScript.',
-          '',
-          'Tell the package author to fix their package.json file.'
-        ].join('\n'),
-        'JSON.parse'
-      ])
-      break
-
-    case 'EOTP':
-      short.push(['', 'This operation requires a one-time password from your authenticator.'])
-      detail.push([
-        '',
-        [
-          'You can provide a one-time password by passing --otp=<code> to the command you ran.',
-          'If you already provided a one-time password then it is likely that you either typoed',
-          'it, or it timed out. Please try again.'
+          'package.json must be actual JSON, not just JavaScript.'
         ].join('\n')
       ])
       break
 
+    case 'EOTP':
     case 'E401':
-      // npm ERR! code E401
-      // npm ERR! Unable to authenticate, need: Basic
-      if (er.headers && er.headers['www-authenticate']) {
-        const auth = er.headers['www-authenticate']
+      // E401 is for places where we accidentally neglect OTP stuff
+      if (er.code === 'EOTP' || /one-time pass/.test(er.message)) {
+        short.push(['', 'This operation requires a one-time password from your authenticator.'])
+        detail.push([
+          '',
+          [
+            'You can provide a one-time password by passing --otp=<code> to the command you ran.',
+            'If you already provided a one-time password then it is likely that you either typoed',
+            'it, or it timed out. Please try again.'
+          ].join('\n')
+        ])
+      } else {
+        // npm ERR! code E401
+        // npm ERR! Unable to authenticate, need: Basic
+        const auth = (er.headers && er.headers['www-authenticate'] && er.headers['www-authenticate'].map((au) => au.split(/,\s*/))[0]) || []
         if (auth.indexOf('Bearer') !== -1) {
           short.push(['', 'Unable to authenticate, your authentication token seems to be invalid.'])
           detail.push([
@@ -92,7 +166,6 @@ function errorMessage (er) {
               '    npm login'
             ].join('\n')
           ])
-          break
         } else if (auth.indexOf('Basic') !== -1) {
           short.push(['', 'Incorrect or missing password.'])
           detail.push([
@@ -100,7 +173,7 @@ function errorMessage (er) {
             [
               'If you were trying to login, change your password, create an',
               'authentication token or enable two-factor authentication then',
-              'that means you likely typed your password in incorectly.',
+              'that means you likely typed your password in incorrectly.',
               'Please try again, or recover your password at:',
               '    https://www.npmjs.com/forgot',
               '',
@@ -109,19 +182,23 @@ function errorMessage (er) {
               '    npm login'
             ].join('\n')
           ])
-          break
+        } else {
+          short.push(['', er.message || er])
         }
       }
+      break
 
     case 'E404':
       // There's no need to have 404 in the message as well.
       var msg = er.message.replace(/^404\s+/, '')
       short.push(['404', msg])
       if (er.pkgid && er.pkgid !== '-') {
+        var pkg = er.pkgid.replace(/(?!^)@.*$/, '')
+
         detail.push(['404', ''])
         detail.push(['404', '', "'" + er.pkgid + "' is not in the npm registry."])
 
-        var valResult = nameValidator(er.pkgid)
+        var valResult = nameValidator(pkg)
 
         if (valResult.validForNewPackages) {
           detail.push(['404', 'You should bug the author to publish it (or use the name yourself!)'])
@@ -250,6 +327,18 @@ function errorMessage (er) {
       detail.push(['notarget', msg.join('\n')])
       break
 
+    case 'E403':
+      short.push(['403', er.message])
+      msg = [
+        'In most cases, you or one of your dependencies are requesting',
+        'a package version that is forbidden by your security policy.'
+      ]
+      if (er.parent) {
+        msg.push("\nIt was specified as a dependency of '" + er.parent + "'\n")
+      }
+      detail.push(['403', msg.join('\n')])
+      break
+
     case 'ENOTSUP':
       if (er.required) {
         short.push(['notsup', er.message])
@@ -267,7 +356,7 @@ function errorMessage (er) {
         ])
         break
       } // else passthrough
-      /*eslint no-fallthrough:0*/
+      /* eslint no-fallthrough:0 */
 
     case 'ENOSPC':
       short.push(['nospc', er.message])
@@ -311,7 +400,7 @@ function errorMessage (er) {
         'typeerror',
         [
           'This is an error with npm itself. Please report this error at:',
-          '    <https://github.com/npm/npm/issues>'
+          '    <https://npm.community>'
         ].join('\n')
       ])
       break

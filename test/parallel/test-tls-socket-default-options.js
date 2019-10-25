@@ -17,20 +17,22 @@ test({}, (err) => {
   assert.strictEqual(err.message, 'unable to verify the first certificate');
 });
 
-test({ secureContext: tls.createSecureContext({ ca: keys.agent1.ca }) },
-     (err) => assert.ifError(err));
+test(
+  { secureContext: tls.createSecureContext({ ca: keys.agent1.ca }) },
+  (err) => { assert.ifError(err); });
 
-test({ ca: keys.agent1.ca }, (err) => {
-  assert.ifError(err);
-});
+test(
+  { ca: keys.agent1.ca },
+  (err) => { assert.ifError(err); });
 
 // Secure context options, like ca, are ignored if a sec ctx is explicitly
 // provided.
-test({ secureContext: tls.createSecureContext(), ca: keys.agent1.ca },
-     (err) => {
-       assert.strictEqual(err.message,
-                          'unable to verify the first certificate');
-     });
+test(
+  { secureContext: tls.createSecureContext(), ca: keys.agent1.ca },
+  (err) => {
+    assert.strictEqual(err.message,
+                       'unable to verify the first certificate');
+  });
 
 function test(client, callback) {
   callback = common.mustCall(callback);
@@ -52,8 +54,9 @@ function test(client, callback) {
       }));
     }));
 
-    // Client doesn't support the 'secureConnect' event, and doesn't error if
-    // authentication failed. Caller must explicitly check for failure.
+    // `new TLSSocket` doesn't support the 'secureConnect' event on client side,
+    // and doesn't error if authentication failed. Caller must explicitly check
+    // for failure.
     (new tls.TLSSocket(null, client)).connect(pair.server.server.address().port)
       .on('connect', common.mustCall(function() {
         this.end('hello');

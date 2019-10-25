@@ -44,10 +44,8 @@ common.expectWarning('SecurityWarning',
                      'DH parameter is less than 2048 bits');
 
 function loadDHParam(n) {
-  const params = [`dh${n}.pem`];
-  if (n !== 'error')
-    params.unshift('keys');
-  return fixtures.readSync(params);
+  const keyname = `dh${n}.pem`;
+  return fixtures.readKey(keyname);
 }
 
 function test(keylen, expectedCipher, cb) {
@@ -70,10 +68,6 @@ function test(keylen, expectedCipher, cb) {
   server.listen(0, '127.0.0.1', function() {
     const args = ['s_client', '-connect', `127.0.0.1:${this.address().port}`,
                   '-cipher', ciphers];
-
-    // for the performance and stability issue in s_client on Windows
-    if (common.isWindows)
-      args.push('-no_rand_screen');
 
     const client = spawn(common.opensslCli, args);
     let out = '';

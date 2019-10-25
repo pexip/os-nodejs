@@ -26,11 +26,13 @@ const assert = require('assert');
 const path = require('path');
 const fs = require('fs');
 
-// test creating and reading symbolic link
-const linkData = fixtures.path('cycles/');
-const linkPath = path.join(common.tmpDir, 'cycles_link');
+const tmpdir = require('../common/tmpdir');
 
-common.refreshTmpDir();
+// Test creating and reading symbolic link
+const linkData = fixtures.path('cycles/');
+const linkPath = path.join(tmpdir.path, 'cycles_link');
+
+tmpdir.refresh();
 
 fs.symlink(linkData, linkPath, 'junction', common.mustCall(function(err) {
   assert.ifError(err);
@@ -45,8 +47,8 @@ fs.symlink(linkData, linkPath, 'junction', common.mustCall(function(err) {
 
       fs.unlink(linkPath, common.mustCall(function(err) {
         assert.ifError(err);
-        assert(!common.fileExists(linkPath));
-        assert(common.fileExists(linkData));
+        assert(!fs.existsSync(linkPath));
+        assert(fs.existsSync(linkData));
       }));
     }));
   }));

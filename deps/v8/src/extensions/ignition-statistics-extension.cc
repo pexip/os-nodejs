@@ -5,9 +5,9 @@
 #include "src/extensions/ignition-statistics-extension.h"
 
 #include "src/base/logging.h"
+#include "src/execution/isolate.h"
 #include "src/interpreter/bytecodes.h"
 #include "src/interpreter/interpreter.h"
-#include "src/isolate.h"
 
 namespace v8 {
 namespace internal {
@@ -15,7 +15,8 @@ namespace internal {
 v8::Local<v8::FunctionTemplate>
 IgnitionStatisticsExtension::GetNativeFunctionTemplate(
     v8::Isolate* isolate, v8::Local<v8::String> name) {
-  DCHECK_EQ(strcmp(*v8::String::Utf8Value(name), "getIgnitionDispatchCounters"),
+  DCHECK_EQ(strcmp(*v8::String::Utf8Value(isolate, name),
+                   "getIgnitionDispatchCounters"),
             0);
   return v8::FunctionTemplate::New(
       isolate, IgnitionStatisticsExtension::GetIgnitionDispatchCounters);

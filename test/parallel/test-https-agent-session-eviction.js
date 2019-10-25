@@ -1,3 +1,4 @@
+// Flags: --tls-min-v1.0
 'use strict';
 
 const common = require('../common');
@@ -6,9 +7,8 @@ const { readKey } = require('../common/fixtures');
 if (!common.hasCrypto)
   common.skip('missing crypto');
 
-const assert = require('assert');
 const https = require('https');
-const SSL_OP_NO_TICKET = require('crypto').constants.SSL_OP_NO_TICKET;
+const { SSL_OP_NO_TICKET } = require('crypto').constants;
 
 const options = {
   key: readKey('agent1-key.pem'),
@@ -58,27 +58,12 @@ function second(server, session) {
     res.resume();
   });
 
-  // Let it fail
-  req.on('error', common.mustCall(function(err) {
-    assert(/wrong version number/.test(err.message));
-
-    req.on('close', function() {
-      third(server);
-    });
-  }));
-  req.end();
-}
-
-// Try one more time - session should be evicted!
-function third(server) {
-  const req = https.request({
-    port: server.address().port,
-    rejectUnauthorized: false
-  }, function(res) {
-    res.resume();
-    assert(!req.socket.isSessionReused());
+  // Although we have a TLS 1.2 session to offer to the TLS 1.0 server,
+  // connection to the TLS 1.0 server should work.
+  req.on('response', common.mustCall(function(res) {
+    // The test is now complete for OpenSSL 1.1.0.
     server.close();
-  });
-  req.on('error', common.mustNotCall());
+  }));
+
   req.end();
 }

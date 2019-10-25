@@ -8,14 +8,14 @@ var test = require('tap').test
 
 var common = require('../common-tap.js')
 
-var pkg = path.resolve(__dirname, 'lifecycle-initcwd')
+var pkg = common.pkg
 var subdir = path.resolve(pkg, 'subdir')
 
 var json = {
   name: 'init-cwd',
   version: '1.0.0',
   scripts: {
-    initcwd: 'echo "$INIT_CWD"'
+    initcwd: process.platform === 'win32' ? 'echo %INIT_CWD%' : 'echo "$INIT_CWD"'
   }
 }
 

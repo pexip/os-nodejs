@@ -9,6 +9,9 @@ npm-access(1) -- Set access level on published packages
     npm access grant <read-only|read-write> <scope:team> [<package>]
     npm access revoke <scope:team> [<package>]
 
+    npm access 2fa-required [<package>]
+    npm access 2fa-not-required [<package>]
+
     npm access ls-packages [<user>|<scope>|<scope:team>]
     npm access ls-collaborators [<package> [<user>]]
     npm access edit [<package>]
@@ -28,8 +31,11 @@ subcommand.
   Add or remove the ability of users and teams to have read-only or read-write
   access to a package.
 
-* ls-packages:
+* 2fa-required / 2fa-not-required:
+  Configure whether a package requires that anyone publishing it have two-factor
+  authentication enabled on their account.
 
+* ls-packages:
   Show all of the packages a user or a team is able to access, along with the
   access level, except for read-only public packages (it won't print the whole
   registry listing)
@@ -71,6 +77,7 @@ Management of teams and team memberships is done with the `npm team` command.
 
 ## SEE ALSO
 
+* [`libnpmaccess`](https://npm.im/libnpmaccess)
 * npm-team(1)
 * npm-publish(1)
 * npm-config(7)

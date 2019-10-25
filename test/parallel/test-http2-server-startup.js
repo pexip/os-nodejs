@@ -20,28 +20,20 @@ const options = {
   cert: commonFixtures.readKey('agent2-cert.pem')
 };
 
-// There should not be any throws
-assert.doesNotThrow(() => {
+// There should not be any throws.
+const serverTLS = http2.createSecureServer(options, () => {});
+serverTLS.listen(0, common.mustCall(() => serverTLS.close()));
 
-  const serverTLS = http2.createSecureServer(options, () => {});
+// There should not be an error event reported either.
+serverTLS.on('error', common.mustNotCall());
 
-  serverTLS.listen(0, common.mustCall(() => serverTLS.close()));
+const server = http2.createServer(options, common.mustNotCall());
+server.listen(0, common.mustCall(() => server.close()));
 
-  // There should not be an error event reported either
-  serverTLS.on('error', common.mustNotCall());
-});
+// There should not be an error event reported either.
+server.on('error', common.mustNotCall());
 
-// There should not be any throws
-assert.doesNotThrow(() => {
-  const server = http2.createServer(options, common.mustNotCall());
-
-  server.listen(0, common.mustCall(() => server.close()));
-
-  // There should not be an error event reported either
-  server.on('error', common.mustNotCall());
-});
-
-// Test the plaintext server socket timeout
+// Test the plaintext server socket timeout.
 {
   let client;
   const server = http2.createServer();
@@ -57,7 +49,26 @@ assert.doesNotThrow(() => {
   }));
 }
 
-// Test the secure server socket timeout
+// Test that `http2.createServer()` supports `net.Server` options.
+{
+  const server = http2.createServer({ allowHalfOpen: true });
+
+  server.on('connection', common.mustCall((socket) => {
+    assert.strictEqual(socket.allowHalfOpen, true);
+    socket.end();
+    server.close();
+  }));
+
+  assert.strictEqual(server.allowHalfOpen, true);
+
+  server.listen(0, common.mustCall(() => {
+    const port = server.address().port;
+    const socket = net.connect(port, common.mustCall());
+    socket.resume();
+  }));
+}
+
+// Test the secure server socket timeout.
 {
   let client;
   const server = http2.createSecureServer(options);
@@ -74,5 +85,31 @@ assert.doesNotThrow(() => {
       rejectUnauthorized: false,
       ALPNProtocols: ['h2']
     }, common.mustCall());
+  }));
+}
+
+// Test that `http2.createSecureServer()` supports `net.Server` options.
+{
+  const server = http2.createSecureServer({
+    allowHalfOpen: true,
+    ...options
+  });
+
+  server.on('secureConnection', common.mustCall((socket) => {
+    assert.strictEqual(socket.allowHalfOpen, true);
+    socket.end();
+    server.close();
+  }));
+
+  assert.strictEqual(server.allowHalfOpen, true);
+
+  server.listen(0, common.mustCall(() => {
+    const port = server.address().port;
+    const socket = tls.connect({
+      port: port,
+      rejectUnauthorized: false,
+      ALPNProtocols: ['h2']
+    }, common.mustCall());
+    socket.resume();
   }));
 }

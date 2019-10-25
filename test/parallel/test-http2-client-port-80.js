@@ -11,9 +11,15 @@ const net = require('net');
 
 const connect = net.connect;
 net.connect = common.mustCall((...args) => {
-  assert.strictEqual(args[0], '80');
+  assert.strictEqual(args[0].port, '80');
   return connect(...args);
 });
 
 const client = http2.connect('http://localhost:80');
-client.destroy();
+
+// A socket error may or may not occur depending on whether there is something
+// currently listening on port 80. Keep this as a non-op and not a mustCall or
+// mustNotCall.
+client.on('error', () => {});
+
+client.close();

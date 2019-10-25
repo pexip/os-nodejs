@@ -28,7 +28,7 @@ const { inspect } = require('util');
 
 const is = {
   number: (value, key) => {
-    assert(!isNaN(value), `${key} should not be NaN`);
+    assert(!Number.isNaN(value), `${key} should not be NaN`);
     assert.strictEqual(typeof value, 'number');
   },
   string: (value) => { assert.strictEqual(typeof value, 'string'); },
@@ -92,6 +92,15 @@ assert.ok(uptime > 0);
 const cpus = os.cpus();
 is.array(cpus);
 assert.ok(cpus.length > 0);
+for (const cpu of cpus) {
+  assert.strictEqual(typeof cpu.model, 'string');
+  assert.strictEqual(typeof cpu.speed, 'number');
+  assert.strictEqual(typeof cpu.times.user, 'number');
+  assert.strictEqual(typeof cpu.times.nice, 'number');
+  assert.strictEqual(typeof cpu.times.sys, 'number');
+  assert.strictEqual(typeof cpu.times.idle, 'number');
+  assert.strictEqual(typeof cpu.times.irq, 'number');
+}
 
 const type = os.type();
 is.string(type);
@@ -100,7 +109,7 @@ assert.ok(type.length > 0);
 const release = os.release();
 is.string(release);
 assert.ok(release.length > 0);
-//TODO: Check format on more than just AIX
+// TODO: Check format on more than just AIX
 if (common.isAIX)
   assert.ok(/^\d+\.\d+$/.test(release));
 
@@ -113,7 +122,7 @@ is.string(arch);
 assert.ok(arch.length > 0);
 
 if (!common.isSunOS) {
-  // not implemeneted yet
+  // not implemented yet
   assert.ok(os.loadavg().length > 0);
   assert.ok(os.freemem() > 0);
   assert.ok(os.totalmem() > 0);
@@ -130,8 +139,8 @@ switch (platform) {
     const expected = [{
       address: '127.0.0.1',
       netmask: '255.0.0.0',
-      mac: '00:00:00:00:00:00',
       family: 'IPv4',
+      mac: '00:00:00:00:00:00',
       internal: true,
       cidr: '127.0.0.1/8'
     }];
@@ -146,8 +155,8 @@ switch (platform) {
     const expected = [{
       address: '127.0.0.1',
       netmask: '255.0.0.0',
-      mac: '00:00:00:00:00:00',
       family: 'IPv4',
+      mac: '00:00:00:00:00:00',
       internal: true,
       cidr: '127.0.0.1/8'
     }];

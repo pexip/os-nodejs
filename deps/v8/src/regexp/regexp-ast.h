@@ -5,9 +5,10 @@
 #ifndef V8_REGEXP_REGEXP_AST_H_
 #define V8_REGEXP_REGEXP_AST_H_
 
-#include "src/objects.h"
+#include "src/objects/js-regexp.h"
+#include "src/objects/objects.h"
 #include "src/objects/string.h"
-#include "src/utils.h"
+#include "src/utils/utils.h"
 #include "src/zone/zone-containers.h"
 #include "src/zone/zone.h"
 
@@ -36,10 +37,9 @@ class RegExpCompiler;
 class RegExpNode;
 class RegExpTree;
 
-
-class RegExpVisitor BASE_EMBEDDED {
+class RegExpVisitor {
  public:
-  virtual ~RegExpVisitor() {}
+  virtual ~RegExpVisitor() = default;
 #define MAKE_CASE(Name) \
   virtual void* Visit##Name(RegExp##Name*, void* data) = 0;
   FOR_EACH_REG_EXP_TREE_TYPE(MAKE_CASE)
@@ -50,7 +50,7 @@ class RegExpVisitor BASE_EMBEDDED {
 // A simple closed interval.
 class Interval {
  public:
-  Interval() : from_(kNone), to_(kNone) {}
+  Interval() : from_(kNone), to_(kNone - 1) {}  // '- 1' for branchless size().
   Interval(int from, int to) : from_(from), to_(to) {}
   Interval Union(Interval that) {
     if (that.from_ == kNone)
@@ -60,12 +60,16 @@ class Interval {
     else
       return Interval(Min(from_, that.from_), Max(to_, that.to_));
   }
+
   bool Contains(int value) { return (from_ <= value) && (value <= to_); }
   bool is_empty() { return from_ == kNone; }
   int from() const { return from_; }
   int to() const { return to_; }
+  int size() const { return to_ - from_ + 1; }
+
   static Interval Empty() { return Interval(); }
-  static const int kNone = -1;
+
+  static constexpr int kNone = -1;
 
  private:
   int from_;
@@ -80,11 +84,13 @@ class CharacterRange {
   CharacterRange() : from_(0), to_(0) {}
   // For compatibility with the CHECK_OK macro
   CharacterRange(void* null) { DCHECK_NULL(null); }  // NOLINT
-  static void AddClassEscape(uc16 type, ZoneList<CharacterRange>* ranges,
-                             Zone* zone);
+  V8_EXPORT_PRIVATE static void AddClassEscape(char type,
+                                               ZoneList<CharacterRange>* ranges,
+                                               Zone* zone);
   // Add class escapes. Add case equivalent closure for \w and \W if necessary.
-  static void AddClassEscape(uc16 type, ZoneList<CharacterRange>* ranges,
-                             bool add_unicode_case_equivalents, Zone* zone);
+  V8_EXPORT_PRIVATE static void AddClassEscape(
+      char type, ZoneList<CharacterRange>* ranges,
+      bool add_unicode_case_equivalents, Zone* zone);
   static Vector<const int> GetWordBounds();
   static inline CharacterRange Singleton(uc32 value) {
     return CharacterRange(value, value);
@@ -110,14 +116,14 @@ class CharacterRange {
   uc32 to() const { return to_; }
   void set_to(uc32 value) { to_ = value; }
   bool is_valid() { return from_ <= to_; }
-  bool IsEverything(uc16 max) { return from_ == 0 && to_ >= max; }
+  bool IsEverything(uc32 max) { return from_ == 0 && to_ >= max; }
   bool IsSingleton() { return (from_ == to_); }
-  static void AddCaseEquivalents(Isolate* isolate, Zone* zone,
-                                 ZoneList<CharacterRange>* ranges,
-                                 bool is_one_byte);
+  V8_EXPORT_PRIVATE static void AddCaseEquivalents(
+      Isolate* isolate, Zone* zone, ZoneList<CharacterRange>* ranges,
+      bool is_one_byte);
   // Whether a range list is in canonical form: Ranges ordered by from value,
   // and ranges non-overlapping and non-adjacent.
-  static bool IsCanonical(ZoneList<CharacterRange>* ranges);
+  V8_EXPORT_PRIVATE static bool IsCanonical(ZoneList<CharacterRange>* ranges);
   // Convert range list to canonical form. The characters covered by the ranges
   // will still be the same, but no character is in more than one range, and
   // adjacent ranges are merged. The resulting list may be shorter than the
@@ -136,20 +142,19 @@ class CharacterRange {
   uc32 to_;
 };
 
-
-class CharacterSet final BASE_EMBEDDED {
+class CharacterSet final {
  public:
   explicit CharacterSet(uc16 standard_set_type)
-      : ranges_(NULL), standard_set_type_(standard_set_type) {}
+      : ranges_(nullptr), standard_set_type_(standard_set_type) {}
   explicit CharacterSet(ZoneList<CharacterRange>* ranges)
       : ranges_(ranges), standard_set_type_(0) {}
   ZoneList<CharacterRange>* ranges(Zone* zone);
-  uc16 standard_set_type() { return standard_set_type_; }
+  uc16 standard_set_type() const { return standard_set_type_; }
   void set_standard_set_type(uc16 special_set_type) {
     standard_set_type_ = special_set_type;
   }
   bool is_standard() { return standard_set_type_ != 0; }
-  void Canonicalize();
+  V8_EXPORT_PRIVATE void Canonicalize();
 
  private:
   ZoneList<CharacterRange>* ranges_;
@@ -158,8 +163,7 @@ class CharacterSet final BASE_EMBEDDED {
   uc16 standard_set_type_;
 };
 
-
-class TextElement final BASE_EMBEDDED {
+class TextElement final {
  public:
   enum TextType { ATOM, CHAR_CLASS };
 
@@ -197,7 +201,7 @@ class TextElement final BASE_EMBEDDED {
 class RegExpTree : public ZoneObject {
  public:
   static const int kInfinity = kMaxInt;
-  virtual ~RegExpTree() {}
+  virtual ~RegExpTree() = default;
   virtual void* Accept(RegExpVisitor* visitor, void* data) = 0;
   virtual RegExpNode* ToNode(RegExpCompiler* compiler,
                              RegExpNode* on_success) = 0;
@@ -210,7 +214,8 @@ class RegExpTree : public ZoneObject {
   // expression.
   virtual Interval CaptureRegisters() { return Interval::Empty(); }
   virtual void AppendToText(RegExpText* text, Zone* zone);
-  std::ostream& Print(std::ostream& os, Zone* zone);  // NOLINT
+  V8_EXPORT_PRIVATE std::ostream& Print(std::ostream& os,
+                                        Zone* zone);  // NOLINT
 #define MAKE_ASTYPE(Name)           \
   virtual RegExp##Name* As##Name(); \
   virtual bool Is##Name();
@@ -267,14 +272,16 @@ class RegExpAlternative final : public RegExpTree {
 class RegExpAssertion final : public RegExpTree {
  public:
   enum AssertionType {
-    START_OF_LINE,
-    START_OF_INPUT,
-    END_OF_LINE,
-    END_OF_INPUT,
-    BOUNDARY,
-    NON_BOUNDARY
+    START_OF_LINE = 0,
+    START_OF_INPUT = 1,
+    END_OF_LINE = 2,
+    END_OF_INPUT = 3,
+    BOUNDARY = 4,
+    NON_BOUNDARY = 5,
+    LAST_TYPE = NON_BOUNDARY,
   };
-  explicit RegExpAssertion(AssertionType type) : assertion_type_(type) {}
+  RegExpAssertion(AssertionType type, JSRegExp::Flags flags)
+      : assertion_type_(type), flags_(flags) {}
   void* Accept(RegExpVisitor* visitor, void* data) override;
   RegExpNode* ToNode(RegExpCompiler* compiler, RegExpNode* on_success) override;
   RegExpAssertion* AsAssertion() override;
@@ -283,10 +290,12 @@ class RegExpAssertion final : public RegExpTree {
   bool IsAnchoredAtEnd() override;
   int min_match() override { return 0; }
   int max_match() override { return 0; }
-  AssertionType assertion_type() { return assertion_type_; }
+  AssertionType assertion_type() const { return assertion_type_; }
+  JSRegExp::Flags flags() const { return flags_; }
 
  private:
-  AssertionType assertion_type_;
+  const AssertionType assertion_type_;
+  const JSRegExp::Flags flags_;
 };
 
 
@@ -300,12 +309,24 @@ class RegExpCharacterClass final : public RegExpTree {
     NEGATED = 1 << 0,
     CONTAINS_SPLIT_SURROGATE = 1 << 1,
   };
-  typedef base::Flags<Flag> Flags;
+  using CharacterClassFlags = base::Flags<Flag>;
 
-  explicit RegExpCharacterClass(ZoneList<CharacterRange>* ranges,
-                                Flags flags = Flags())
-      : set_(ranges), flags_(flags) {}
-  explicit RegExpCharacterClass(uc16 type) : set_(type), flags_(0) {}
+  RegExpCharacterClass(
+      Zone* zone, ZoneList<CharacterRange>* ranges, JSRegExp::Flags flags,
+      CharacterClassFlags character_class_flags = CharacterClassFlags())
+      : set_(ranges),
+        flags_(flags),
+        character_class_flags_(character_class_flags) {
+    // Convert the empty set of ranges to the negated Everything() range.
+    if (ranges->is_empty()) {
+      ranges->Add(CharacterRange::Everything(), zone);
+      character_class_flags_ ^= NEGATED;
+    }
+  }
+  RegExpCharacterClass(uc16 type, JSRegExp::Flags flags)
+      : set_(type),
+        flags_(flags),
+        character_class_flags_(CharacterClassFlags()) {}
   void* Accept(RegExpVisitor* visitor, void* data) override;
   RegExpNode* ToNode(RegExpCompiler* compiler, RegExpNode* on_success) override;
   RegExpCharacterClass* AsCharacterClass() override;
@@ -332,22 +353,25 @@ class RegExpCharacterClass final : public RegExpTree {
   // D : non-ASCII digit
   // . : non-newline
   // * : All characters, for advancing unanchored regexp
-  uc16 standard_type() { return set_.standard_set_type(); }
+  uc16 standard_type() const { return set_.standard_set_type(); }
   ZoneList<CharacterRange>* ranges(Zone* zone) { return set_.ranges(zone); }
-  bool is_negated() const { return (flags_ & NEGATED) != 0; }
+  bool is_negated() const { return (character_class_flags_ & NEGATED) != 0; }
+  JSRegExp::Flags flags() const { return flags_; }
   bool contains_split_surrogate() const {
-    return (flags_ & CONTAINS_SPLIT_SURROGATE) != 0;
+    return (character_class_flags_ & CONTAINS_SPLIT_SURROGATE) != 0;
   }
 
  private:
   CharacterSet set_;
-  const Flags flags_;
+  const JSRegExp::Flags flags_;
+  CharacterClassFlags character_class_flags_;
 };
 
 
 class RegExpAtom final : public RegExpTree {
  public:
-  explicit RegExpAtom(Vector<const uc16> data) : data_(data) {}
+  explicit RegExpAtom(Vector<const uc16> data, JSRegExp::Flags flags)
+      : data_(data), flags_(flags) {}
   void* Accept(RegExpVisitor* visitor, void* data) override;
   RegExpNode* ToNode(RegExpCompiler* compiler, RegExpNode* on_success) override;
   RegExpAtom* AsAtom() override;
@@ -358,9 +382,12 @@ class RegExpAtom final : public RegExpTree {
   void AppendToText(RegExpText* text, Zone* zone) override;
   Vector<const uc16> data() { return data_; }
   int length() { return data_.length(); }
+  JSRegExp::Flags flags() const { return flags_; }
+  bool ignore_case() const { return (flags_ & JSRegExp::kIgnoreCase) != 0; }
 
  private:
   Vector<const uc16> data_;
+  const JSRegExp::Flags flags_;
 };
 
 
@@ -394,8 +421,12 @@ class RegExpQuantifier final : public RegExpTree {
       : body_(body),
         min_(min),
         max_(max),
-        min_match_(min * body->min_match()),
         quantifier_type_(type) {
+    if (min > 0 && body->min_match() > kInfinity / min) {
+      min_match_ = kInfinity;
+    } else {
+      min_match_ = min * body->min_match();
+    }
     if (max > 0 && body->max_match() > kInfinity / max) {
       max_match_ = kInfinity;
     } else {
@@ -432,7 +463,7 @@ class RegExpQuantifier final : public RegExpTree {
 class RegExpCapture final : public RegExpTree {
  public:
   explicit RegExpCapture(int index)
-      : body_(NULL), index_(index), name_(nullptr) {}
+      : body_(nullptr), index_(index), name_(nullptr) {}
   void* Accept(RegExpVisitor* visitor, void* data) override;
   RegExpNode* ToNode(RegExpCompiler* compiler, RegExpNode* on_success) override;
   static RegExpNode* ToNode(RegExpTree* body, int index,
@@ -532,9 +563,10 @@ class RegExpLookaround final : public RegExpTree {
 
 class RegExpBackReference final : public RegExpTree {
  public:
-  RegExpBackReference() : capture_(nullptr), name_(nullptr) {}
-  explicit RegExpBackReference(RegExpCapture* capture)
-      : capture_(capture), name_(nullptr) {}
+  explicit RegExpBackReference(JSRegExp::Flags flags)
+      : capture_(nullptr), name_(nullptr), flags_(flags) {}
+  RegExpBackReference(RegExpCapture* capture, JSRegExp::Flags flags)
+      : capture_(capture), name_(nullptr), flags_(flags) {}
   void* Accept(RegExpVisitor* visitor, void* data) override;
   RegExpNode* ToNode(RegExpCompiler* compiler, RegExpNode* on_success) override;
   RegExpBackReference* AsBackReference() override;
@@ -552,12 +584,13 @@ class RegExpBackReference final : public RegExpTree {
  private:
   RegExpCapture* capture_;
   const ZoneVector<uc16>* name_;
+  const JSRegExp::Flags flags_;
 };
 
 
 class RegExpEmpty final : public RegExpTree {
  public:
-  RegExpEmpty() {}
+  RegExpEmpty() = default;
   void* Accept(RegExpVisitor* visitor, void* data) override;
   RegExpNode* ToNode(RegExpCompiler* compiler, RegExpNode* on_success) override;
   RegExpEmpty* AsEmpty() override;
