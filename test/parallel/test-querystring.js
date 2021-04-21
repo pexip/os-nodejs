@@ -20,7 +20,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 'use strict';
-const common = require('../common');
+require('../common');
 const assert = require('assert');
 const inspect = require('util').inspect;
 
@@ -144,7 +144,8 @@ const qsWeirdObjects = [
   [{ n: null }, 'n=', { 'n': '' }],
   [{ nan: NaN }, 'nan=', { 'nan': '' }],
   [{ inf: Infinity }, 'inf=', { 'inf': '' }],
-  [{ a: [], b: [] }, '', {}]
+  [{ a: [], b: [] }, '', {}],
+  [{ a: 1, b: [] }, 'a=1', { 'a': '1' }]
 ];
 // }}}
 
@@ -174,7 +175,10 @@ const qsUnescapeTestCases = [
   ['there%2Qare%0-fake%escaped values in%%%%this%9Hstring',
    'there%2Qare%0-fake%escaped values in%%%%this%9Hstring'],
   ['%20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2D%2E%2F%30%31%32%33%34%35%36%37',
-   ' !"#$%&\'()*+,-./01234567']
+   ' !"#$%&\'()*+,-./01234567'],
+  ['%%2a', '%*'],
+  ['%2sf%2a', '%2sf*'],
+  ['%2%2af%2a', '%2*f*']
 ];
 
 assert.strictEqual(qs.parse('id=918854443121279438895193').id,
@@ -270,11 +274,11 @@ qsWeirdObjects.forEach((testCase) => {
 });
 
 // Invalid surrogate pair throws URIError
-common.expectsError(
+assert.throws(
   () => qs.stringify({ foo: '\udc00' }),
   {
     code: 'ERR_INVALID_URI',
-    type: URIError,
+    name: 'URIError',
     message: 'URI malformed'
   }
 );

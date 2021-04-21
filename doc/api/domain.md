@@ -1,7 +1,9 @@
 # Domain
 <!-- YAML
+deprecated: v1.4.2
 changes:
   - version: v8.8.0
+    pr-url: https://github.com/nodejs/node/pull/15695
     description: Any `Promise`s created in VM contexts no longer have a
                  `.domain` property. Their handlers are still executed in the
                  proper domain, however, and `Promise`s created in the main
@@ -16,8 +18,10 @@ changes:
 
 > Stability: 0 - Deprecated
 
+<!-- source_link=lib/domain.js -->
+
 **This module is pending deprecation**. Once a replacement API has been
-finalized, this module will be fully deprecated. Most end users should
+finalized, this module will be fully deprecated. Most developers should
 **not** have cause to use this module. Users who absolutely must have
 the functionality that domains provide may rely on it for the time being
 but should expect to have to migrate to a different solution
@@ -30,7 +34,7 @@ will be notified, rather than losing the context of the error in the
 `process.on('uncaughtException')` handler, or causing the program to
 exit immediately with an error code.
 
-## Warning: Don't Ignore Errors!
+## Warning: Don't ignore errors!
 
 <!-- type=misc -->
 
@@ -184,7 +188,7 @@ function handleRequest(req, res) {
 }
 ```
 
-## Additions to Error objects
+## Additions to `Error` objects
 
 <!-- type=misc -->
 
@@ -199,7 +203,7 @@ are added to it.
 * `error.domainThrown` A boolean indicating whether the error was
   thrown, emitted, or passed to a bound callback function.
 
-## Implicit Binding
+## Implicit binding
 
 <!--type=misc-->
 
@@ -225,7 +229,7 @@ Implicit binding routes thrown errors and `'error'` events to the
 `Domain`.
 Implicit binding only takes care of thrown errors and `'error'` events.
 
-## Explicit Binding
+## Explicit binding
 
 <!--type=misc-->
 
@@ -267,11 +271,11 @@ serverDomain.run(() => {
 });
 ```
 
-## domain.create()
+## `domain.create()`
 
 * Returns: {Domain}
 
-## Class: Domain
+## Class: `Domain`
 
 * Extends: {EventEmitter}
 
@@ -280,14 +284,14 @@ uncaught exceptions to the active `Domain` object.
 
 To handle the errors that it catches, listen to its `'error'` event.
 
-### domain.members
+### `domain.members`
 
 * {Array}
 
 An array of timers and event emitters that have been explicitly added
 to the domain.
 
-### domain.add(emitter)
+### `domain.add(emitter)`
 
 * `emitter` {EventEmitter|Timer} emitter or timer to be added to the domain
 
@@ -303,7 +307,7 @@ the domain `'error'` handler.
 If the Timer or `EventEmitter` was already bound to a domain, it is removed
 from that one, and bound to this one instead.
 
-### domain.bind(callback)
+### `domain.bind(callback)`
 
 * `callback` {Function} The callback function
 * Returns: {Function} The bound function
@@ -328,7 +332,7 @@ d.on('error', (er) => {
 });
 ```
 
-### domain.enter()
+### `domain.enter()`
 
 The `enter()` method is plumbing used by the `run()`, `bind()`, and
 `intercept()` methods to set the active domain. It sets `domain.active` and
@@ -341,7 +345,7 @@ Calling `enter()` changes only the active domain, and does not alter the domain
 itself. `enter()` and `exit()` can be called an arbitrary number of times on a
 single domain.
 
-### domain.exit()
+### `domain.exit()`
 
 The `exit()` method exits the current domain, popping it off the domain stack.
 Any time execution is going to switch to the context of a different chain of
@@ -356,7 +360,7 @@ Calling `exit()` changes only the active domain, and does not alter the domain
 itself. `enter()` and `exit()` can be called an arbitrary number of times on a
 single domain.
 
-### domain.intercept(callback)
+### `domain.intercept(callback)`
 
 * `callback` {Function} The callback function
 * Returns: {Function} The intercepted function
@@ -391,14 +395,14 @@ d.on('error', (er) => {
 });
 ```
 
-### domain.remove(emitter)
+### `domain.remove(emitter)`
 
 * `emitter` {EventEmitter|Timer} emitter or timer to be removed from the domain
 
 The opposite of [`domain.add(emitter)`][]. Removes domain handling from the
 specified emitter.
 
-### domain.run(fn\[, ...args\])
+### `domain.run(fn[, ...args])`
 
 * `fn` {Function}
 * `...args` {any}
@@ -432,9 +436,9 @@ d.run(() => {
 In this example, the `d.on('error')` handler will be triggered, rather
 than crashing the program.
 
-## Domains and Promises
+## Domains and promises
 
-As of Node.js 8.0.0, the handlers of Promises are run inside the domain in
+As of Node.js 8.0.0, the handlers of promises are run inside the domain in
 which the call to `.then()` or `.catch()` itself was made:
 
 ```js
@@ -472,13 +476,13 @@ d2.run(() => {
 ```
 
 Domains will not interfere with the error handling mechanisms for
-Promises. In other words, no `'error'` event will be emitted for unhandled
+promises. In other words, no `'error'` event will be emitted for unhandled
 `Promise` rejections.
 
-[`Error`]: errors.html#errors_class_error
+[`Error`]: errors.md#errors_class_error
 [`domain.add(emitter)`]: #domain_domain_add_emitter
 [`domain.bind(callback)`]: #domain_domain_bind_callback
 [`domain.exit()`]: #domain_domain_exit
-[`setInterval()`]: timers.html#timers_setinterval_callback_delay_args
-[`setTimeout()`]: timers.html#timers_settimeout_callback_delay_args
+[`setInterval()`]: timers.md#timers_setinterval_callback_delay_args
+[`setTimeout()`]: timers.md#timers_settimeout_callback_delay_args
 [`throw`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/throw

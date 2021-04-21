@@ -35,6 +35,7 @@ so that you can make the actual changes. This is where we will start.
   * [CI Testing](#ci-testing)
   * [Waiting Until the Pull Request Gets Landed](#waiting-until-the-pull-request-gets-landed)
   * [Check Out the Collaborator Guide](#check-out-the-collaborator-guide)
+  * [Appendix: Subsystems](#appendix-subsystems)
 
 ## Dependencies
 
@@ -46,10 +47,19 @@ Node.js. We cannot accept such patches.
 In case of doubt, open an issue in the
 [issue tracker](https://github.com/nodejs/node/issues/) or contact one of the
 [project Collaborators](https://github.com/nodejs/node/#current-project-team-members).
-Node.js has two IRC channels:
+
+Node.js has many channels on the
+[OpenJS Foundation Slack](https://slack-invite.openjsf.org/). Interesting
+channels are:
+[#nodejs](https://openjs-foundation.slack.com/archives/CK9Q4MB53) for general
+help, questions and discussions.
+[#nodejs-dev](https://openjs-foundation.slack.com/archives/C019Y2T6STH) for
+development of Node.js core specifically.
+
+Node.js also has two IRC channels:
 [#Node.js](https://webchat.freenode.net/?channels=node.js) for general help and
 questions, and
-[#Node-dev](https://webchat.freenode.net/?channels=node-dev) for development of
+[#node-dev](https://webchat.freenode.net/?channels=node-dev) for development of
 Node.js core specifically.
 
 ## Setting up your local environment
@@ -57,6 +67,9 @@ Node.js core specifically.
 To get started, you will need to have `git` installed locally. Depending on
 your operating system, there are also a number of other dependencies required.
 These are detailed in the [Building guide][].
+
+Depending on your environment you might want to grab IDE specific settings from
+[IDE configs](https://github.com/nodejs/node-code-ide-configs).
 
 Once you have `git` and are sure you have all of the necessary dependencies,
 it's time to create a fork.
@@ -73,7 +86,7 @@ $ git remote add upstream https://github.com/nodejs/node.git
 $ git fetch upstream
 ```
 
-It is recommended to configure `git` so that it knows who you are:
+Configure `git` so that it knows who you are:
 
 ```text
 $ git config user.name "J. Random User"
@@ -115,17 +128,29 @@ If you are modifying code, please be sure to run `make lint` from time to
 time to ensure that the changes follow the Node.js code style guide.
 
 Any documentation you write (including code comments and API documentation)
-should follow the [Style Guide](../../STYLE_GUIDE.md). Code samples included
-in the API docs will also be checked when running `make lint` (or
+should follow the [Style Guide](../doc-style-guide.md). Code samples
+included in the API docs will also be checked when running `make lint` (or
 `vcbuild.bat lint` on Windows). If you are adding to or deprecating an API,
-use `REPLACEME` for the version number in the documentation YAML.
+add or change the appropriate YAML documentation. Use `REPLACEME` for the
+version number in the documentation YAML:
+
+```markdown
+### `request.method`
+<!-- YAML
+added: REPLACEME
+-->
+
+* {string} The request method.
+```
 
 For contributing C++ code, you may want to look at the
-[C++ Style Guide](../../../CPP_STYLE_GUIDE.md).
+[C++ Style Guide](../cpp-style-guide.md), as well as the
+[README of `src/`](../../../src/README.md) for an overview over Node.js
+C++ internals.
 
 ### Step 4: Commit
 
-It is a recommended best practice to keep your changes as logically grouped
+It is a best practice to keep your changes as logically grouped
 as possible within individual commits. There is no limit to the number of
 commits any single Pull Request may have, and many contributors find it easier
 to review changes that are split across multiple commits.
@@ -147,9 +172,9 @@ A good commit message should describe what changed and why.
      less, and no more than 72 characters)
    * be entirely in lowercase with the exception of proper nouns, acronyms, and
    the words that refer to code, like function/variable names
-   * be prefixed with the name of the changed subsystem and start with an
-   imperative verb. Check the output of `git log --oneline files/you/changed` to
-   find out what subsystems your changes touch.
+   * be prefixed with the name of the changed [subsystem](#appendix-subsystems)
+   and start with an imperative verb. Check the output of `git log --oneline
+   files/you/changed` to find out what subsystems your changes touch.
 
    Examples:
    * `net: add localAddress and localPort to Socket`
@@ -173,7 +198,7 @@ situation would trigger the breaking change and what is the exact change.
 
 Sample complete commit message:
 
-```txt
+```text
 subsystem: explain the commit in one line
 
 The body of the commit message should be one or more paragraphs, explaining
@@ -189,9 +214,6 @@ conforming to these guidelines, but do not worry if you get something wrong.
 One of the existing contributors will help get things situated and the
 contributor landing the Pull Request will ensure that everything follows
 the project guidelines.
-
-See [core-validate-commit](https://github.com/nodejs/core-validate-commit) -
-A utility that ensures commits follow the commit formatting guidelines.
 
 ### Step 5: Rebase
 
@@ -582,15 +604,26 @@ widely used, so don't be discouraged!
 If you want to know more about the code review and the landing process, see the
 [Collaborator Guide][].
 
-[approved]: #getting-approvals-for-your-pull-request
-[benchmark results]: ../writing-and-running-benchmarks.md
+### Appendix: Subsystems
+
+* `lib/*.js` (`assert`, `buffer`, etc.)
+* `build`
+* `doc`
+* `lib / src`
+* `test`
+* `tools`
+
+More than one subsystem may be valid for any particular issue or pull request.
+
 [Building guide]: ../../../BUILDING.md
 [CI (Continuous Integration) test run]: #ci-testing
 [Code of Conduct]: https://github.com/nodejs/admin/blob/master/CODE_OF_CONDUCT.md
-[Collaborator Guide]: ../../../COLLABORATOR_GUIDE.md
+[Collaborator Guide]: ../collaborator-guide.md
+[IRC in the #node-dev channel]: https://webchat.freenode.net?channels=node-dev&uio=d4
+[Onboarding guide]: ../../../onboarding.md
+[approved]: #getting-approvals-for-your-pull-request
+[benchmark results]: ../writing-and-running-benchmarks.md
 [guide for writing tests in Node.js]: ../writing-tests.md
 [hiding-a-comment]: https://help.github.com/articles/managing-disruptive-comments/#hiding-a-comment
 [https://ci.nodejs.org/]: https://ci.nodejs.org/
-[IRC in the #node-dev channel]: https://webchat.freenode.net?channels=node-dev&uio=d4
-[Onboarding guide]: ../../onboarding.md
 [running tests]: ../../../BUILDING.md#running-tests

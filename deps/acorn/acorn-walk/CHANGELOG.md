@@ -1,3 +1,37 @@
+## 8.0.0 (2020-08-12)
+
+### New features
+
+The package can now be loaded directly as an ECMAScript module in node 13+.
+
+## 7.2.0 (2020-06-17)
+
+### New features
+
+Support optional chaining and nullish coalescing.
+
+Support `import.meta`.
+
+Add support for `export * as ns from "source"`.
+
+## 7.1.1 (2020-02-13)
+
+### Bug fixes
+
+Clean up the type definitions to actually work well with the main parser.
+
+## 7.1.0 (2020-02-11)
+
+### New features
+
+Add a TypeScript definition file for the library.
+
+## 7.0.0 (2017-08-12)
+
+### New features
+
+Support walking `ImportExpression` nodes.
+
 ## 6.2.0 (2017-07-04)
 
 ### New features

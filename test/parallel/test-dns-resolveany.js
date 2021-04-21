@@ -11,7 +11,7 @@ const answers = [
   { type: 'AAAA', address: '::42', ttl: 123 },
   { type: 'MX', priority: 42, exchange: 'foobar.com', ttl: 124 },
   { type: 'NS', value: 'foobar.org', ttl: 457 },
-  { type: 'TXT', entries: [ 'v=spf1 ~all', 'xyz' ] },
+  { type: 'TXT', entries: [ 'v=spf1 ~all', 'xyz\0foo' ] },
   { type: 'PTR', value: 'baz.org', ttl: 987 },
   {
     type: 'SOA',
@@ -45,8 +45,7 @@ server.bind(0, common.mustCall(async () => {
 
   validateResults(await dnsPromises.resolveAny('example.org'));
 
-  dns.resolveAny('example.org', common.mustCall((err, res) => {
-    assert.ifError(err);
+  dns.resolveAny('example.org', common.mustSucceed((res) => {
     validateResults(res);
     server.close();
   }));
