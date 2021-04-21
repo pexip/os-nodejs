@@ -1,4 +1,5 @@
 #include "base_object-inl.h"
+#include "debug_utils-inl.h"
 #include "env-inl.h"
 #include "node.h"
 #include "node_errors.h"
@@ -35,13 +36,11 @@ using v8::ArrayBuffer;
 using v8::BigUint64Array;
 using v8::Context;
 using v8::Float64Array;
-using v8::Function;
 using v8::FunctionCallbackInfo;
 using v8::HeapStatistics;
 using v8::Integer;
 using v8::Isolate;
 using v8::Local;
-using v8::Name;
 using v8::NewStringType;
 using v8::Number;
 using v8::Object;
@@ -63,6 +62,13 @@ static void Abort(const FunctionCallbackInfo<Value>& args) {
   Abort();
 }
 
+// For internal testing only, not exposed to userland.
+static void CauseSegfault(const FunctionCallbackInfo<Value>& args) {
+  // This should crash hard all platforms.
+  volatile void** d = static_cast<volatile void**>(nullptr);
+  *d = nullptr;
+}
+
 static void Chdir(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   CHECK(env->owns_process_state());
@@ -79,6 +85,16 @@ static void Chdir(const FunctionCallbackInfo<Value>& args) {
     uv_cwd(buf, &cwd_len);
     return env->ThrowUVException(err, "chdir", nullptr, buf, *path);
   }
+}
+
+inline Local<ArrayBuffer> get_fields_array_buffer(
+    const FunctionCallbackInfo<Value>& args,
+    size_t index,
+    size_t array_length) {
+  CHECK(args[index]->IsFloat64Array());
+  Local<Float64Array> arr = args[index].As<Float64Array>();
+  CHECK_EQ(arr->Length(), array_length);
+  return arr->Buffer();
 }
 
 // CPUUsage use libuv's uv_getrusage() this-process resource usage accessor,
@@ -98,11 +114,8 @@ static void CPUUsage(const FunctionCallbackInfo<Value>& args) {
   }
 
   // Get the double array pointer from the Float64Array argument.
-  CHECK(args[0]->IsFloat64Array());
-  Local<Float64Array> array = args[0].As<Float64Array>();
-  CHECK_EQ(array->Length(), 2);
-  Local<ArrayBuffer> ab = array->Buffer();
-  double* fields = static_cast<double*>(ab->GetContents().Data());
+  Local<ArrayBuffer> ab = get_fields_array_buffer(args, 0, 2);
+  double* fields = static_cast<double*>(ab->GetBackingStore()->Data());
 
   // Set the Float64Array elements to be user / system values in microseconds.
   fields[0] = MICROS_PER_SEC * rusage.ru_utime.tv_sec + rusage.ru_utime.tv_usec;
@@ -141,7 +154,7 @@ static void Hrtime(const FunctionCallbackInfo<Value>& args) {
   uint64_t t = uv_hrtime();
 
   Local<ArrayBuffer> ab = args[0].As<Uint32Array>()->Buffer();
-  uint32_t* fields = static_cast<uint32_t*>(ab->GetContents().Data());
+  uint32_t* fields = static_cast<uint32_t*>(ab->GetBackingStore()->Data());
 
   fields[0] = (t / NANOS_PER_SEC) >> 32;
   fields[1] = (t / NANOS_PER_SEC) & 0xffffffff;
@@ -150,7 +163,7 @@ static void Hrtime(const FunctionCallbackInfo<Value>& args) {
 
 static void HrtimeBigInt(const FunctionCallbackInfo<Value>& args) {
   Local<ArrayBuffer> ab = args[0].As<BigUint64Array>()->Buffer();
-  uint64_t* fields = static_cast<uint64_t*>(ab->GetContents().Data());
+  uint64_t* fields = static_cast<uint64_t*>(ab->GetBackingStore()->Data());
   fields[0] = uv_hrtime();
 }
 
@@ -158,18 +171,23 @@ static void Kill(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   Local<Context> context = env->context();
 
-  if (args.Length() != 2)
-    return env->ThrowError("Bad argument.");
+  if (args.Length() < 2) {
+    THROW_ERR_MISSING_ARGS(env, "Bad argument.");
+  }
 
   int pid;
   if (!args[0]->Int32Value(context).To(&pid)) return;
   int sig;
   if (!args[1]->Int32Value(context).To(&sig)) return;
-    // TODO(joyeecheung): white list the signals?
 
-#if HAVE_INSPECTOR
-  profiler::EndStartedProfilers(env);
-#endif
+  uv_pid_t own_pid = uv_os_getpid();
+  if (sig > 0 &&
+      (pid == 0 || pid == -1 || pid == own_pid || pid == -own_pid) &&
+      !HasSignalJSHandler(sig)) {
+    // This is most likely going to terminate this process.
+    // It's not an exact method but it might be close enough.
+    RunAtExit(env);
+  }
 
   int err = uv_kill(pid, sig);
   args.GetReturnValue().Set(err);
@@ -188,35 +206,27 @@ static void MemoryUsage(const FunctionCallbackInfo<Value>& args) {
   HeapStatistics v8_heap_stats;
   isolate->GetHeapStatistics(&v8_heap_stats);
 
+  NodeArrayBufferAllocator* array_buffer_allocator =
+      env->isolate_data()->node_allocator();
+
   // Get the double array pointer from the Float64Array argument.
-  CHECK(args[0]->IsFloat64Array());
-  Local<Float64Array> array = args[0].As<Float64Array>();
-  CHECK_EQ(array->Length(), 4);
-  Local<ArrayBuffer> ab = array->Buffer();
-  double* fields = static_cast<double*>(ab->GetContents().Data());
+  Local<ArrayBuffer> ab = get_fields_array_buffer(args, 0, 5);
+  double* fields = static_cast<double*>(ab->GetBackingStore()->Data());
 
   fields[0] = rss;
   fields[1] = v8_heap_stats.total_heap_size();
   fields[2] = v8_heap_stats.used_heap_size();
   fields[3] = v8_heap_stats.external_memory();
+  fields[4] = array_buffer_allocator == nullptr ?
+      0 : array_buffer_allocator->total_mem_usage();
 }
 
 void RawDebug(const FunctionCallbackInfo<Value>& args) {
   CHECK(args.Length() == 1 && args[0]->IsString() &&
         "must be called with a single string");
   Utf8Value message(args.GetIsolate(), args[0]);
-  PrintErrorString("%s\n", *message);
+  FPrintF(stderr, "%s\n", message);
   fflush(stderr);
-}
-
-static void StartProfilerIdleNotifier(const FunctionCallbackInfo<Value>& args) {
-  Environment* env = Environment::GetCurrent(args);
-  env->StartProfilerIdleNotifier();
-}
-
-static void StopProfilerIdleNotifier(const FunctionCallbackInfo<Value>& args) {
-  Environment* env = Environment::GetCurrent(args);
-  env->StopProfilerIdleNotifier();
 }
 
 static void Umask(const FunctionCallbackInfo<Value>& args) {
@@ -286,11 +296,8 @@ static void ResourceUsage(const FunctionCallbackInfo<Value>& args) {
   if (err)
     return env->ThrowUVException(err, "uv_getrusage");
 
-  CHECK(args[0]->IsFloat64Array());
-  Local<Float64Array> array = args[0].As<Float64Array>();
-  CHECK_EQ(array->Length(), 16);
-  Local<ArrayBuffer> ab = array->Buffer();
-  double* fields = static_cast<double*>(ab->GetContents().Data());
+  Local<ArrayBuffer> ab = get_fields_array_buffer(args, 0, 16);
+  double* fields = static_cast<double*>(ab->GetBackingStore()->Data());
 
   fields[0] = MICROS_PER_SEC * rusage.ru_utime.tv_sec + rusage.ru_utime.tv_usec;
   fields[1] = MICROS_PER_SEC * rusage.ru_stime.tv_sec + rusage.ru_stime.tv_usec;
@@ -314,8 +321,8 @@ static void ResourceUsage(const FunctionCallbackInfo<Value>& args) {
 static void DebugProcess(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
-  if (args.Length() != 1) {
-    return env->ThrowError("Invalid number of arguments.");
+  if (args.Length() < 1) {
+    return THROW_ERR_MISSING_ARGS(env, "Invalid number of arguments.");
   }
 
   CHECK(args[0]->IsNumber());
@@ -339,9 +346,8 @@ static void DebugProcess(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   Isolate* isolate = args.GetIsolate();
 
-  if (args.Length() != 1) {
-    env->ThrowError("Invalid number of arguments.");
-    return;
+  if (args.Length() < 1) {
+    return THROW_ERR_MISSING_ARGS(env, "Invalid number of arguments.");
   }
 
   HANDLE process = nullptr;
@@ -351,7 +357,7 @@ static void DebugProcess(const FunctionCallbackInfo<Value>& args) {
   LPTHREAD_START_ROUTINE* handler = nullptr;
   DWORD pid = 0;
 
-  OnScopeLeave cleanup([&]() {
+  auto cleanup = OnScopeLeave([&]() {
     if (process != nullptr) CloseHandle(process);
     if (thread != nullptr) CloseHandle(thread);
     if (handler != nullptr) UnmapViewOfFile(handler);
@@ -421,7 +427,7 @@ static void DebugEnd(const FunctionCallbackInfo<Value>& args) {
 
 static void ReallyExit(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
-  WaitForInspectorDisconnect(env);
+  RunAtExit(env);
   int code = args[0]->Int32Value(env->context()).FromMaybe(0);
   env->Exit(code);
 }
@@ -437,12 +443,9 @@ static void InitializeProcessMethods(Local<Object> target,
     env->SetMethod(target, "_debugProcess", DebugProcess);
     env->SetMethod(target, "_debugEnd", DebugEnd);
     env->SetMethod(target, "abort", Abort);
+    env->SetMethod(target, "causeSegfault", CauseSegfault);
     env->SetMethod(target, "chdir", Chdir);
   }
-
-  env->SetMethod(
-      target, "_startProfilerIdleNotifier", StartProfilerIdleNotifier);
-  env->SetMethod(target, "_stopProfilerIdleNotifier", StopProfilerIdleNotifier);
 
   env->SetMethod(target, "umask", Umask);
   env->SetMethod(target, "_rawDebug", RawDebug);

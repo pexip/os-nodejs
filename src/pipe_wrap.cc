@@ -39,9 +39,7 @@ using v8::EscapableHandleScope;
 using v8::Function;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
-using v8::HandleScope;
 using v8::Int32;
-using v8::Isolate;
 using v8::Local;
 using v8::MaybeLocal;
 using v8::Object;
@@ -74,7 +72,7 @@ void PipeWrap::Initialize(Local<Object> target,
   Local<String> pipeString = FIXED_ONE_BYTE_STRING(env->isolate(), "Pipe");
   t->SetClassName(pipeString);
   t->InstanceTemplate()
-    ->SetInternalFieldCount(StreamBase::kStreamBaseFieldCount);
+    ->SetInternalFieldCount(StreamBase::kInternalFieldCount);
 
   t->Inherit(LibuvStreamWrap::GetConstructorTemplate(env));
 
@@ -217,9 +215,8 @@ void PipeWrap::Open(const FunctionCallbackInfo<Value>& args) {
   int err = uv_pipe_open(&wrap->handle_, fd);
   wrap->set_fd(fd);
 
-  Isolate* isolate = env->isolate();
   if (err != 0)
-    isolate->ThrowException(UVException(isolate, err, "uv_pipe_open"));
+    env->ThrowUVException(err, "uv_pipe_open");
 }
 
 

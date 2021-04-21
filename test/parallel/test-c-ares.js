@@ -42,22 +42,18 @@ const dnsPromises = dns.promises;
   assert.strictEqual(res.family, 6);
 })();
 
-// Try resolution without callback
-
-dns.lookup(null, common.mustCall((error, result, addressType) => {
-  assert.ifError(error);
+// Try resolution without hostname.
+dns.lookup(null, common.mustSucceed((result, addressType) => {
   assert.strictEqual(result, null);
   assert.strictEqual(addressType, 4);
 }));
 
-dns.lookup('127.0.0.1', common.mustCall((error, result, addressType) => {
-  assert.ifError(error);
+dns.lookup('127.0.0.1', common.mustSucceed((result, addressType) => {
   assert.strictEqual(result, '127.0.0.1');
   assert.strictEqual(addressType, 4);
 }));
 
-dns.lookup('::1', common.mustCall((error, result, addressType) => {
-  assert.ifError(error);
+dns.lookup('::1', common.mustSucceed((result, addressType) => {
   assert.strictEqual(result, '::1');
   assert.strictEqual(addressType, 6);
 }));
@@ -70,24 +66,24 @@ dns.lookup('::1', common.mustCall((error, result, addressType) => {
 ].forEach((val) => {
   const err = {
     code: 'ERR_INVALID_OPT_VALUE',
-    type: TypeError,
+    name: 'TypeError',
     message: `The value "${val}" is invalid for option "rrtype"`
   };
 
-  common.expectsError(
+  assert.throws(
     () => dns.resolve('www.google.com', val),
     err
   );
 
-  common.expectsError(() => dnsPromises.resolve('www.google.com', val), err);
+  assert.throws(() => dnsPromises.resolve('www.google.com', val), err);
 });
 
 // Windows doesn't usually have an entry for localhost 127.0.0.1 in
 // C:\Windows\System32\drivers\etc\hosts
 // so we disable this test on Windows.
-if (!common.isWindows) {
-  dns.reverse('127.0.0.1', common.mustCall(function(error, domains) {
-    assert.ifError(error);
+// IBMi reports `ENOTFOUND` when get hostname by address 127.0.0.1
+if (!common.isWindows && !common.isIBMi) {
+  dns.reverse('127.0.0.1', common.mustSucceed((domains) => {
     assert.ok(Array.isArray(domains));
   }));
 

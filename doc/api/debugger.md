@@ -23,7 +23,7 @@ Break on start in myscript.js:1
 debug>
 ```
 
-Node.js's debugger client is not a full-featured debugger, but simple step and
+The Node.js debugger client is not a full-featured debugger, but simple step and
 inspection are possible.
 
 Inserting the statement `debugger;` into the source code of a script will
@@ -104,22 +104,25 @@ To begin watching an expression, type `watch('my_expression')`. The command
 
 ### Stepping
 
-* `cont`, `c` - Continue execution
-* `next`, `n` - Step next
-* `step`, `s` - Step in
-* `out`, `o` - Step out
-* `pause` - Pause running code (like pause button in Developer Tools)
+* `cont`, `c`: Continue execution
+* `next`, `n`: Step next
+* `step`, `s`: Step in
+* `out`, `o`: Step out
+* `pause`: Pause running code (like pause button in Developer Tools)
 
 ### Breakpoints
 
-* `setBreakpoint()`, `sb()` - Set breakpoint on current line
-* `setBreakpoint(line)`, `sb(line)` - Set breakpoint on specific line
-* `setBreakpoint('fn()')`, `sb(...)` - Set breakpoint on a first statement in
-functions body
-* `setBreakpoint('script.js', 1)`, `sb(...)` - Set breakpoint on first line of
-`script.js`
-* `clearBreakpoint('script.js', 1)`, `cb(...)` - Clear breakpoint in `script.js`
-on line 1
+* `setBreakpoint()`, `sb()`: Set breakpoint on current line
+* `setBreakpoint(line)`, `sb(line)`: Set breakpoint on specific line
+* `setBreakpoint('fn()')`, `sb(...)`: Set breakpoint on a first statement in
+  function's body
+* `setBreakpoint('script.js', 1)`, `sb(...)`: Set breakpoint on first line of
+  `script.js`
+* `setBreakpoint('script.js', 1, 'num < 4')`, `sb(...)`: Set conditional
+  breakpoint on first line of `script.js` that only breaks when `num < 4`
+  evaluates to `true`
+* `clearBreakpoint('script.js', 1)`, `cb(...)`: Clear breakpoint in `script.js`
+  on line 1
 
 It is also possible to set a breakpoint in a file (module) that
 is not loaded yet:
@@ -145,32 +148,68 @@ break in mod.js:22
 debug>
 ```
 
+It is also possible to set a conditional breakpoint that only breaks when a
+given expression evaluates to `true`:
+
+```console
+$ node inspect main.js
+< Debugger listening on ws://127.0.0.1:9229/ce24daa8-3816-44d4-b8ab-8273c8a66d35
+< For help, see: https://nodejs.org/en/docs/inspector
+< Debugger attached.
+Break on start in main.js:7
+  5 }
+  6
+> 7 addOne(10);
+  8 addOne(-1);
+  9
+debug> setBreakpoint('main.js', 4, 'num < 0')
+  1 'use strict';
+  2
+  3 function addOne(num) {
+> 4   return num + 1;
+  5 }
+  6
+  7 addOne(10);
+  8 addOne(-1);
+  9
+debug> cont
+break in main.js:4
+  2
+  3 function addOne(num) {
+> 4   return num + 1;
+  5 }
+  6
+debug> exec('num')
+-1
+debug>
+```
+
 ### Information
 
-* `backtrace`, `bt` - Print backtrace of current execution frame
-* `list(5)` - List scripts source code with 5 line context (5 lines before and
-after)
-* `watch(expr)` - Add expression to watch list
-* `unwatch(expr)` - Remove expression from watch list
-* `watchers` - List all watchers and their values (automatically listed on each
-breakpoint)
-* `repl` - Open debugger's repl for evaluation in debugging script's context
-* `exec expr` - Execute an expression in debugging script's context
+* `backtrace`, `bt`: Print backtrace of current execution frame
+* `list(5)`: List scripts source code with 5 line context (5 lines before and
+  after)
+* `watch(expr)`: Add expression to watch list
+* `unwatch(expr)`: Remove expression from watch list
+* `watchers`: List all watchers and their values (automatically listed on each
+  breakpoint)
+* `repl`: Open debugger's repl for evaluation in debugging script's context
+* `exec expr`: Execute an expression in debugging script's context
 
 ### Execution control
 
-* `run` - Run script (automatically runs on debugger's start)
-* `restart` - Restart script
-* `kill` - Kill script
+* `run`: Run script (automatically runs on debugger's start)
+* `restart`: Restart script
+* `kill`: Kill script
 
 ### Various
 
-* `scripts` - List all loaded scripts
-* `version` - Display V8's version
+* `scripts`: List all loaded scripts
+* `version`: Display V8's version
 
-## Advanced Usage
+## Advanced usage
 
-### V8 Inspector Integration for Node.js
+### V8 inspector integration for Node.js
 
 V8 Inspector integration allows attaching Chrome DevTools to Node.js
 instances for debugging and profiling. It uses the
@@ -185,9 +224,8 @@ flag instead of `--inspect`.
 
 ```console
 $ node --inspect index.js
-Debugger listening on 127.0.0.1:9229.
-To start debugging, open the following URL in Chrome:
-    chrome-devtools://devtools/bundled/js_app.html?experiments=true&v8only=true&ws=127.0.0.1:9229/dc9010dd-f8b8-4ac5-a510-c1a114ec7d29
+Debugger listening on ws://127.0.0.1:9229/dc9010dd-f8b8-4ac5-a510-c1a114ec7d29
+For help, see: https://nodejs.org/en/docs/inspector
 ```
 
 (In the example above, the UUID dc9010dd-f8b8-4ac5-a510-c1a114ec7d29
@@ -197,5 +235,10 @@ debugging sessions.)
 If the Chrome browser is older than 66.0.3345.0,
 use `inspector.html` instead of `js_app.html` in the above URL.
 
+Chrome DevTools doesn't support debugging [worker threads][] yet.
+[ndb][] can be used to debug them.
+
 [Chrome DevTools Protocol]: https://chromedevtools.github.io/devtools-protocol/
 [V8 Inspector]: #debugger_v8_inspector_integration_for_node_js
+[ndb]: https://github.com/GoogleChromeLabs/ndb/
+[worker threads]: worker_threads.md

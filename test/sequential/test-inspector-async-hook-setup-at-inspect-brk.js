@@ -24,7 +24,7 @@ async function checkAsyncStackTrace(session) {
          `${Object.keys(paused.params)} contains "asyncStackTrace" property`);
   assert(paused.params.asyncStackTrace.description, 'Timeout');
   assert(paused.params.asyncStackTrace.callFrames
-           .some((frame) => frame.functionName === 'Module._compile'));
+           .some((frame) => frame.url === 'internal/process/execution.js'));
 }
 
 async function runTests() {
@@ -46,4 +46,4 @@ async function runTests() {
   assert.strictEqual((await instance.expectShutdown()).exitCode, 55);
 }
 
-runTests();
+runTests().then(common.mustCall());

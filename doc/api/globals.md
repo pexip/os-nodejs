@@ -1,4 +1,4 @@
-# Global Objects
+# Global objects
 
 <!--introduced_in=v0.10.0-->
 <!-- type=misc -->
@@ -13,11 +13,11 @@ to be global but are not. They exist only in the scope of modules, see the
 * [`module`][]
 * [`require()`][]
 
-The objects listed here are specific to Node.js. There are a number of
-[built-in objects][] that are part of the JavaScript language itself, which are
-also globally accessible.
+The objects listed here are specific to Node.js. There are [built-in objects][]
+that are part of the JavaScript language itself, which are also globally
+accessible.
 
-## Class: Buffer
+## Class: `Buffer`
 <!-- YAML
 added: v0.1.103
 -->
@@ -28,15 +28,15 @@ added: v0.1.103
 
 Used to handle binary data. See the [buffer section][].
 
-## \_\_dirname
+## `__dirname`
 
 This variable may appear to be global but is not. See [`__dirname`][].
 
-## \_\_filename
+## `__filename`
 
 This variable may appear to be global but is not. See [`__filename`][].
 
-## clearImmediate(immediateObject)
+## `clearImmediate(immediateObject)`
 <!-- YAML
 added: v0.9.1
 -->
@@ -45,7 +45,7 @@ added: v0.9.1
 
 [`clearImmediate`][] is described in the [timers][] section.
 
-## clearInterval(intervalObject)
+## `clearInterval(intervalObject)`
 <!-- YAML
 added: v0.0.1
 -->
@@ -54,7 +54,7 @@ added: v0.0.1
 
 [`clearInterval`][] is described in the [timers][] section.
 
-## clearTimeout(timeoutObject)
+## `clearTimeout(timeoutObject)`
 <!-- YAML
 added: v0.0.1
 -->
@@ -63,7 +63,7 @@ added: v0.0.1
 
 [`clearTimeout`][] is described in the [timers][] section.
 
-## console
+## `console`
 <!-- YAML
 added: v0.1.100
 -->
@@ -74,11 +74,11 @@ added: v0.1.100
 
 Used to print to stdout and stderr. See the [`console`][] section.
 
-## exports
+## `exports`
 
 This variable may appear to be global but is not. See [`exports`][].
 
-## global
+## `global`
 <!-- YAML
 added: v0.1.27
 -->
@@ -92,11 +92,11 @@ within the browser `var something` will define a new global variable. In
 Node.js this is different. The top-level scope is not the global scope;
 `var something` inside a Node.js module will be local to that module.
 
-## module
+## `module`
 
 This variable may appear to be global but is not. See [`module`][].
 
-## process
+## `process`
 <!-- YAML
 added: v0.1.7
 -->
@@ -107,7 +107,7 @@ added: v0.1.7
 
 The process object. See the [`process` object][] section.
 
-## queueMicrotask(callback)
+## `queueMicrotask(callback)`
 <!-- YAML
 added: v11.0.0
 -->
@@ -146,11 +146,11 @@ DataHandler.prototype.load = async function load(key) {
 };
 ```
 
-## require()
+## `require()`
 
 This variable may appear to be global but is not. See [`require()`][].
 
-## setImmediate(callback\[, ...args\])
+## `setImmediate(callback[, ...args])`
 <!-- YAML
 added: v0.9.1
 -->
@@ -159,7 +159,7 @@ added: v0.9.1
 
 [`setImmediate`][] is described in the [timers][] section.
 
-## setInterval(callback, delay\[, ...args\])
+## `setInterval(callback, delay[, ...args])`
 <!-- YAML
 added: v0.0.1
 -->
@@ -168,7 +168,7 @@ added: v0.0.1
 
 [`setInterval`][] is described in the [timers][] section.
 
-## setTimeout(callback, delay\[, ...args\])
+## `setTimeout(callback, delay[, ...args])`
 <!-- YAML
 added: v0.0.1
 -->
@@ -177,7 +177,7 @@ added: v0.0.1
 
 [`setTimeout`][] is described in the [timers][] section.
 
-## TextDecoder
+## `TextDecoder`
 <!-- YAML
 added: v11.0.0
 -->
@@ -186,7 +186,7 @@ added: v11.0.0
 
 The WHATWG `TextDecoder` class. See the [`TextDecoder`][] section.
 
-## TextEncoder
+## `TextEncoder`
 <!-- YAML
 added: v11.0.0
 -->
@@ -195,7 +195,7 @@ added: v11.0.0
 
 The WHATWG `TextEncoder` class. See the [`TextEncoder`][] section.
 
-## URL
+## `URL`
 <!-- YAML
 added: v10.0.0
 -->
@@ -204,7 +204,7 @@ added: v10.0.0
 
 The WHATWG `URL` class. See the [`URL`][] section.
 
-## URLSearchParams
+## `URLSearchParams`
 <!-- YAML
 added: v10.0.0
 -->
@@ -213,7 +213,7 @@ added: v10.0.0
 
 The WHATWG `URLSearchParams` class. See the [`URLSearchParams`][] section.
 
-## WebAssembly
+## `WebAssembly`
 <!-- YAML
 added: v8.0.0
 -->
@@ -226,27 +226,27 @@ The object that acts as the namespace for all W3C
 [WebAssembly][webassembly-org] related functionality. See the
 [Mozilla Developer Network][webassembly-mdn] for usage and compatibility.
 
-[`TextDecoder`]: util.html#util_class_util_textdecoder
-[`TextEncoder`]: util.html#util_class_util_textencoder
-[`URLSearchParams`]: url.html#url_class_urlsearchparams
-[`URL`]: url.html#url_class_url
-[`__dirname`]: modules.html#modules_dirname
-[`__filename`]: modules.html#modules_filename
-[`clearImmediate`]: timers.html#timers_clearimmediate_immediate
-[`clearInterval`]: timers.html#timers_clearinterval_timeout
-[`clearTimeout`]: timers.html#timers_cleartimeout_timeout
-[`console`]: console.html
-[`exports`]: modules.html#modules_exports
-[`module`]: modules.html#modules_module
-[`process.nextTick()`]: process.html#process_process_nexttick_callback_args
-[`process` object]: process.html#process_process
-[`require()`]: modules.html#modules_require_id
-[`setImmediate`]: timers.html#timers_setimmediate_callback_args
-[`setInterval`]: timers.html#timers_setinterval_callback_delay_args
-[`setTimeout`]: timers.html#timers_settimeout_callback_delay_args
-[buffer section]: buffer.html
+[`TextDecoder`]: util.md#util_class_util_textdecoder
+[`TextEncoder`]: util.md#util_class_util_textencoder
+[`URLSearchParams`]: url.md#url_class_urlsearchparams
+[`URL`]: url.md#url_class_url
+[`__dirname`]: modules.md#modules_dirname
+[`__filename`]: modules.md#modules_filename
+[`clearImmediate`]: timers.md#timers_clearimmediate_immediate
+[`clearInterval`]: timers.md#timers_clearinterval_timeout
+[`clearTimeout`]: timers.md#timers_cleartimeout_timeout
+[`console`]: console.md
+[`exports`]: modules.md#modules_exports
+[`module`]: modules.md#modules_module
+[`process.nextTick()`]: process.md#process_process_nexttick_callback_args
+[`process` object]: process.md#process_process
+[`require()`]: modules.md#modules_require_id
+[`setImmediate`]: timers.md#timers_setimmediate_callback_args
+[`setInterval`]: timers.md#timers_setinterval_callback_delay_args
+[`setTimeout`]: timers.md#timers_settimeout_callback_delay_args
+[buffer section]: buffer.md
 [built-in objects]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-[module system documentation]: modules.html
-[timers]: timers.html
+[module system documentation]: modules.md
+[timers]: timers.md
 [webassembly-mdn]: https://developer.mozilla.org/en-US/docs/WebAssembly
 [webassembly-org]: https://webassembly.org

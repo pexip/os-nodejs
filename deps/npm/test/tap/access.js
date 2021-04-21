@@ -73,8 +73,7 @@ test('npm access public when no package passed and no package.json', function (t
   function (er, code, stdout, stderr) {
     t.ifError(er, 'npm access')
     t.match(stderr, /no package name passed to command and no package.json found/)
-    rimraf.sync(missing)
-    t.end()
+    rimraf(missing, t.end)
   })
 })
 
@@ -95,8 +94,7 @@ test('npm access public when no package passed and invalid package.json', functi
   function (er, code, stdout, stderr) {
     t.ifError(er, 'npm access')
     t.match(stderr, /Failed to parse json/)
-    rimraf.sync(invalid)
-    t.end()
+    rimraf(invalid, t.end)
   })
 })
 
@@ -208,6 +206,33 @@ test('npm access grant read-write', function (t) {
       'grant', 'read-write',
       'myorg:myteam',
       '@scoped/another',
+      '--registry', common.registry
+    ],
+    { cwd: pkg },
+    function (er, code, stdout, stderr) {
+      t.ifError(er, 'npm access grant')
+      t.equal(code, 0, 'exited with Error')
+      t.end()
+    }
+  )
+})
+
+test('npm access grant read-write on unscoped package', function (t) {
+  server.filteringRequestBody((body) => {
+    const data = JSON.parse(body)
+    t.deepEqual(data, {
+      permissions: 'read-write',
+      package: 'another'
+    }, 'got the right body')
+    return true
+  })
+  server.put('/-/team/myorg/myteam/package', true).reply(201)
+  common.npm(
+    [
+      'access',
+      'grant', 'read-write',
+      'myorg:myteam',
+      'another',
       '--registry', common.registry
     ],
     { cwd: pkg },
@@ -405,8 +430,7 @@ test('npm access ls-packages with no package specified or package.json', functio
     function (er, code, stdout, stderr) {
       t.ifError(er, 'npm access ls-packages')
       t.same(JSON.parse(stdout), clientPackages)
-      rimraf.sync(missing)
-      t.end()
+      rimraf(missing, t.end)
     }
   )
 })
@@ -557,7 +581,6 @@ test('npm access blerg', function (t) {
 
 test('cleanup', function (t) {
   t.pass('cleaned up')
-  rimraf.sync(pkg)
   server.done()
   server.close()
   t.end()

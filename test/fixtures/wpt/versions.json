@@ -4,7 +4,7 @@
     "path": "console"
   },
   "encoding": {
-    "commit": "5059d2c77703d67d2f76931b44e6d2437526b6e9",
+    "commit": "1821fb5f77723b5361058c6a8ed0b71f9d2d6b8d",
     "path": "encoding"
   },
   "url": {
@@ -16,7 +16,7 @@
     "path": "resources"
   },
   "interfaces": {
-    "commit": "712c9f275e83997884749dbcaa503f12c0ff5bba",
+    "commit": "8ada332aeac03764f73ec7ff66f682c5c0b454b4",
     "path": "interfaces"
   },
   "html/webappapis/microtask-queuing": {
@@ -26,5 +26,9 @@
   "html/webappapis/timers": {
     "commit": "ddfe9c089bab565a9d3aa37bdef63d8012c1a94c",
     "path": "html/webappapis/timers"
+  },
+  "hr-time": {
+    "commit": "a5d1774ecf41751d1c9357c27c709ee33bf3e279",
+    "path": "hr-time"
   }
 }

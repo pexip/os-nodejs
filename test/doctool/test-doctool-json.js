@@ -69,7 +69,7 @@ const testData = [
           textRaw: 'Subsection',
           name: 'subsection',
           classMethods: [{
-            textRaw: 'Class Method: Buffer.from(array)',
+            textRaw: 'Static method: Buffer.from(array)',
             type: 'classMethod',
             name: 'from',
             signatures: [
@@ -157,14 +157,80 @@ const testData = [
         }
       ]
     }
+  },
+  {
+    file: fixtures.path('doc_with_backticks_in_headings.md'),
+    json: {
+      type: 'module',
+      source: 'foo',
+      modules: [
+        {
+          textRaw: 'Fhqwhgads',
+          name: 'fhqwhgads',
+          properties: [
+            {
+              name: 'fullName',
+              textRaw: '`Fqhqwhgads.fullName`'
+            }
+          ],
+          classMethods: [
+            {
+              name: 'again',
+              signatures: [
+                {
+                  params: []
+                }
+              ],
+              textRaw: 'Static method: `Fhqwhgads.again()`',
+              type: 'classMethod'
+            }
+          ],
+          classes: [
+            {
+              textRaw: 'Class: `ComeOn`',
+              type: 'class',
+              name: 'ComeOn'
+            }
+          ],
+          ctors: [
+            {
+              name: 'Fhqwhgads',
+              signatures: [
+                {
+                  params: []
+                }
+              ],
+              textRaw: 'Constructor: `new Fhqwhgads()`',
+              type: 'ctor'
+            }
+          ],
+          methods: [
+            {
+              textRaw: '`everybody.to(limit)`',
+              type: 'method',
+              name: 'to',
+              signatures: [{ params: [] }]
+            }
+          ],
+          events: [
+            {
+              textRaw: "Event: `'FHQWHfest'`",
+              type: 'event',
+              name: 'FHQWHfest',
+              params: []
+            }
+          ],
+          type: 'module',
+          displayName: 'Fhqwhgads'
+        }
+      ]
+    }
   }
 ];
 
 testData.forEach((item) => {
-  fs.readFile(item.file, 'utf8', common.mustCall((err, input) => {
-    assert.ifError(err);
-    toJSON(input, 'foo', common.mustCall((err, output) => {
-      assert.ifError(err);
+  fs.readFile(item.file, 'utf8', common.mustSucceed((input) => {
+    toJSON(input, 'foo', common.mustSucceed((output) => {
       assert.deepStrictEqual(output.json, item.json);
     }));
   }));

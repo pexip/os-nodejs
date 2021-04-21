@@ -220,9 +220,9 @@ function test_cyclic_link_protection(realpath, realpathSync, callback) {
     fs.symlinkSync(t[1], t[0], 'dir');
     unlink.push(t[0]);
   });
-  common.expectsError(() => {
+  assert.throws(() => {
     realpathSync(entry);
-  }, { code: 'ELOOP', type: Error });
+  }, { code: 'ELOOP', name: 'Error' });
   asynctest(
     realpath, [entry], callback, common.mustCall(function(err, result) {
       assert.strictEqual(err.path, entry);
@@ -298,17 +298,16 @@ function test_deep_symlink_mix(realpath, realpathSync, callback) {
     return callback();
   }
 
-  /*
-  /tmp/node-test-realpath-f1 -> $tmpDir/node-test-realpath-d1/foo
-  /tmp/node-test-realpath-d1 -> $tmpDir/node-test-realpath-d2
-  /tmp/node-test-realpath-d2/foo -> $tmpDir/node-test-realpath-f2
-  /tmp/node-test-realpath-f2
-    -> $tmpDir/targets/nested-index/one/realpath-c
-  $tmpDir/targets/nested-index/one/realpath-c
-    -> $tmpDir/targets/nested-index/two/realpath-c
-  $tmpDir/targets/nested-index/two/realpath-c -> $tmpDir/cycles/root.js
-  $tmpDir/targets/cycles/root.js (hard)
-  */
+  // /tmp/node-test-realpath-f1 -> $tmpDir/node-test-realpath-d1/foo
+  // /tmp/node-test-realpath-d1 -> $tmpDir/node-test-realpath-d2
+  // /tmp/node-test-realpath-d2/foo -> $tmpDir/node-test-realpath-f2
+  // /tmp/node-test-realpath-f2
+  //   -> $tmpDir/targets/nested-index/one/realpath-c
+  // $tmpDir/targets/nested-index/one/realpath-c
+  //   -> $tmpDir/targets/nested-index/two/realpath-c
+  // $tmpDir/targets/nested-index/two/realpath-c -> $tmpDir/cycles/root.js
+  // $tmpDir/targets/cycles/root.js (hard)
+
   const entry = tmp('node-test-realpath-f1');
   try { fs.unlinkSync(tmp('node-test-realpath-d2/foo')); } catch {}
   try { fs.rmdirSync(tmp('node-test-realpath-d2')); } catch {}
@@ -490,6 +489,7 @@ function test_abs_with_kids(realpath, realpathSync, cb) {
       try { fs.rmdirSync(root + folder); } catch {}
     });
   }
+
   function setup() {
     cleanup();
     ['',
@@ -564,8 +564,7 @@ function runNextTest(err) {
     return console.log(`${numtests} subtests completed OK for fs.realpath`);
   }
   testsRun++;
-  test(fs.realpath, fs.realpathSync, common.mustCall((err) => {
-    assert.ifError(err);
+  test(fs.realpath, fs.realpathSync, common.mustSucceed(() => {
     testsRun++;
     test(fs.realpath.native,
          fs.realpathSync.native,
