@@ -1,3 +1,9 @@
+nodejs (14.16.0-pexip2) pexip; urgency=medium
+
+  * Remove libssl 1.0.x Build-Depend; we're happy with 1.1.x
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 02 Aug 2021 17:04:24 +0100
+
 nodejs (14.16.0-0pexip1) pexip; urgency=medium
 
   [ Darius Keeley ]
