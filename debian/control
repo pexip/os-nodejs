@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 7),
  python,
  quilt (>= 0.46-7~),
  binutils,
- libssl1.0-dev | libssl-dev (<< 1.1),
+ libssl-dev (>= 0.9.8),
  pkg-config
 Standards-Version: 4.3.0
 Homepage: http://nodejs.org/
