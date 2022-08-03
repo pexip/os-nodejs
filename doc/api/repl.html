@@ -1,10 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v14.16.0">
-  <title>REPL | Node.js v14.16.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v14.18.1">
+  <title>REPL | Node.js v14.18.1 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -28,7 +28,7 @@
 <li><a href="async_hooks.html" class="nav-async_hooks">Async hooks</a></li>
 <li><a href="buffer.html" class="nav-buffer">Buffer</a></li>
 <li><a href="addons.html" class="nav-addons">C++ addons</a></li>
-<li><a href="n-api.html" class="nav-n-api">C/C++ addons with N-API</a></li>
+<li><a href="n-api.html" class="nav-n-api">C/C++ addons with Node-API</a></li>
 <li><a href="embedding.html" class="nav-embedding">C++ embedder API</a></li>
 <li><a href="child_process.html" class="nav-child_process">Child processes</a></li>
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
@@ -37,6 +37,7 @@
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
+<li><a href="diagnostics_channel.html" class="nav-diagnostics_channel">Diagnostics Channel</a></li>
 <li><a href="dns.html" class="nav-dns">DNS</a></li>
 <li><a href="domain.html" class="nav-domain">Domain</a></li>
 <li><a href="errors.html" class="nav-errors">Errors</a></li>
@@ -86,7 +87,20 @@
 
     <div id="column1" data-id="repl" class="interior">
       <header>
-        <h1>Node.js v14.16.0 Documentation</h1>
+        <div class="header-container">
+          <h1>Node.js v14.18.1 documentation</h1>
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
+              <path fill="none" d="M0 0h24v24H0z" />
+              <path d="M11.1 12.08c-2.33-4.51-.5-8.48.53-10.07C6.27 2.2 1.98 6.59 1.98 12c0 .14.02.28.02.42.62-.27 1.29-.42 2-.42 1.66 0 3.18.83 4.1 2.15A4.01 4.01 0 0111 18c0 1.52-.87 2.83-2.12 3.51.98.32 2.03.5 3.11.5 3.5 0 6.58-1.8 8.37-4.52-2.36.23-6.98-.97-9.26-5.41z"/>
+              <path d="M7 16h-.18C6.4 14.84 5.3 14 4 14c-1.66 0-3 1.34-3 3s1.34 3 3 3h3c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon light-icon" height="24" width="24">
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+            </svg>
+          </button>
+        </div>
         <div id="gtoc">
           <ul>
             <li>
@@ -101,12 +115,13 @@
             
     <li class="version-picker">
       <a href="#">View another version <span>&#x25bc;</span></a>
-      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v15.x/api/repl.html">15.x</a></li>
+      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v16.x/api/repl.html">16.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v15.x/api/repl.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/repl.html">14.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/repl.html">13.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v12.x/api/repl.html">12.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v11.x/api/repl.html">11.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v10.x/api/repl.html">10.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v10.x/api/repl.html">10.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v9.x/api/repl.html">9.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v8.x/api/repl.html">8.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v7.x/api/repl.html">7.x</a></li>
@@ -117,15 +132,13 @@
 <li><a href="https://nodejs.org/docs/latest-v0.10.x/api/repl.html">0.10.x</a></li></ol>
     </li>
   
-            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/repl.md"><span class="github_icon"><svg height="16" width="16" viewBox="0 0 16.1 16.1" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2 .4-2.5-.5-2.7-1 0-.1-.5-.9-.8-1-.3-.2-.7-.6 0-.6.6 0 1 .6 1.2.8.7 1.2 1.9 1 2.4.7 0-.5.2-.9.5-1-1.8-.3-3.7-1-3.7-4 0-.9.3-1.6.8-2.2 0-.2-.3-1 .1-2 0 0 .7-.3 2.2.7a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.5 1.1.2 2 .1 2.1.5.6.8 1.3.8 2.2 0 3-1.9 3.7-3.6 4 .3.2.5.7.5 1.4v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8a8 8 0 0 0-8-8z"/></svg></span>Edit on GitHub</a></li>
+            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/repl.md">Edit on GitHub</a></li>
           </ul>
         </div>
         <hr>
       </header>
 
-      <div id="toc">
-        <h2>Table of Contents</h2>
-        <ul>
+      <details id="toc" open><summary>Table of contents</summary><ul>
 <li><span class="stability_2"><a href="#repl_repl">REPL</a></span>
 <ul>
 <li><a href="#repl_design_and_features">Design and features</a>
@@ -173,19 +186,18 @@
 </li>
 </ul>
 </li>
-</ul>
-      </div>
+</ul></details>
 
       <div id="apicontent">
-        <h1>REPL<span><a class="mark" href="#repl_repl" id="repl_repl">#</a></span></h1>
+        <h2>REPL<span><a class="mark" href="#repl_repl" id="repl_repl">#</a></span></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#documentation_stability_index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.16.0/lib/repl.js">lib/repl.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.18.1/lib/repl.js">lib/repl.js</a></p>
 <p>The <code>repl</code> module provides a Read-Eval-Print-Loop (REPL) implementation that
 is available both as a standalone program or includible in other applications.
 It can be accessed using:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);</code></pre>
-<h2>Design and features<span><a class="mark" href="#repl_design_and_features" id="repl_design_and_features">#</a></span></h2>
+<section><h3>Design and features<span><a class="mark" href="#repl_design_and_features" id="repl_design_and_features">#</a></span></h3>
 <p>The <code>repl</code> module exports the <a href="#repl_class_replserver"><code>repl.REPLServer</code></a> class. While running,
 instances of <a href="#repl_class_replserver"><code>repl.REPLServer</code></a> will accept individual lines of user input,
 evaluate those according to a user-defined evaluation function, then output the
@@ -198,7 +210,7 @@ ANSI-styled output, saving and restoring current REPL session state, error
 recovery, and customizable evaluation functions. Terminals that do not support
 ANSI styles and Emacs-style line editing automatically fall back to a limited
 feature set.</p>
-<h3>Commands and special keys<span><a class="mark" href="#repl_commands_and_special_keys" id="repl_commands_and_special_keys">#</a></span></h3>
+<h4>Commands and special keys<span><a class="mark" href="#repl_commands_and_special_keys" id="repl_commands_and_special_keys">#</a></span></h4>
 <p>The following special commands are supported by all REPL instances:</p>
 <ul>
 <li><code>.break</code>: When in the process of inputting a multi-line expression, enter
@@ -215,7 +227,7 @@ multi-line expression being input.</li>
 <li><code>.editor</code>: Enter editor mode (<kbd>Ctrl</kbd>+<kbd>D</kbd> to finish,
 <kbd>Ctrl</kbd>+<kbd>C</kbd> to cancel).</li>
 </ul>
-<pre><code class="language-console"><span class="hljs-meta">></span><span class="bash"> .editor</span>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">.editor</span>
 // Entering editor mode (^D to finish, ^C to cancel)
 function welcome(name) {
   return `Hello ${name}!`;
@@ -239,52 +251,52 @@ autocompletion options.</li>
 </ul>
 <p>For key bindings related to the reverse-i-search, see <a href="#repl_reverse_i_search"><code>reverse-i-search</code></a>.
 For all other key bindings, see <a href="readline.html#readline_tty_keybindings">TTY keybindings</a>.</p>
-<h3>Default evaluation<span><a class="mark" href="#repl_default_evaluation" id="repl_default_evaluation">#</a></span></h3>
+<h4>Default evaluation<span><a class="mark" href="#repl_default_evaluation" id="repl_default_evaluation">#</a></span></h4>
 <p>By default, all instances of <a href="#repl_class_replserver"><code>repl.REPLServer</code></a> use an evaluation function
 that evaluates JavaScript expressions and provides access to Node.js built-in
 modules. This default behavior can be overridden by passing in an alternative
 evaluation function when the <a href="#repl_class_replserver"><code>repl.REPLServer</code></a> instance is created.</p>
-<h4>JavaScript expressions<span><a class="mark" href="#repl_javascript_expressions" id="repl_javascript_expressions">#</a></span></h4>
+<h5>JavaScript expressions<span><a class="mark" href="#repl_javascript_expressions" id="repl_javascript_expressions">#</a></span></h5>
 <p>The default evaluator supports direct evaluation of JavaScript expressions:</p>
-<pre><code class="language-console"><span class="hljs-meta">></span><span class="bash"> 1 + 1</span>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">1 + 1</span>
 2
-<span class="hljs-meta">></span><span class="bash"> const m = 2</span>
+<span class="hljs-meta">> </span><span class="language-bash">const m = 2</span>
 undefined
-<span class="hljs-meta">></span><span class="bash"> m + 1</span>
+<span class="hljs-meta">> </span><span class="language-bash">m + 1</span>
 3</code></pre>
 <p>Unless otherwise scoped within blocks or functions, variables declared
 either implicitly or using the <code>const</code>, <code>let</code>, or <code>var</code> keywords
 are declared at the global scope.</p>
-<h4>Global and local scope<span><a class="mark" href="#repl_global_and_local_scope" id="repl_global_and_local_scope">#</a></span></h4>
+<h5>Global and local scope<span><a class="mark" href="#repl_global_and_local_scope" id="repl_global_and_local_scope">#</a></span></h5>
 <p>The default evaluator provides access to any variables that exist in the global
 scope. It is possible to expose a variable to the REPL explicitly by assigning
 it to the <code>context</code> object associated with each <code>REPLServer</code>:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);
 <span class="hljs-keyword">const</span> msg = <span class="hljs-string">'message'</span>;
 
-repl.start(<span class="hljs-string">'> '</span>).context.m = msg;</code></pre>
+repl.<span class="hljs-title function_">start</span>(<span class="hljs-string">'> '</span>).<span class="hljs-property">context</span>.<span class="hljs-property">m</span> = msg;</code></pre>
 <p>Properties in the <code>context</code> object appear as local within the REPL:</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node repl_test.js</span>
-<span class="hljs-meta">></span><span class="bash"> m</span>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node repl_test.js</span>
+<span class="hljs-meta">> </span><span class="language-bash">m</span>
 'message'</code></pre>
 <p>Context properties are not read-only by default. To specify read-only globals,
 context properties must be defined using <code>Object.defineProperty()</code>:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);
 <span class="hljs-keyword">const</span> msg = <span class="hljs-string">'message'</span>;
 
-<span class="hljs-keyword">const</span> r = repl.start(<span class="hljs-string">'> '</span>);
-<span class="hljs-built_in">Object</span>.defineProperty(r.context, <span class="hljs-string">'m'</span>, {
+<span class="hljs-keyword">const</span> r = repl.<span class="hljs-title function_">start</span>(<span class="hljs-string">'> '</span>);
+<span class="hljs-title class_">Object</span>.<span class="hljs-title function_">defineProperty</span>(r.<span class="hljs-property">context</span>, <span class="hljs-string">'m'</span>, {
   <span class="hljs-attr">configurable</span>: <span class="hljs-literal">false</span>,
   <span class="hljs-attr">enumerable</span>: <span class="hljs-literal">true</span>,
   <span class="hljs-attr">value</span>: msg
 });</code></pre>
-<h4>Accessing core Node.js modules<span><a class="mark" href="#repl_accessing_core_node_js_modules" id="repl_accessing_core_node_js_modules">#</a></span></h4>
+<h5>Accessing core Node.js modules<span><a class="mark" href="#repl_accessing_core_node_js_modules" id="repl_accessing_core_node_js_modules">#</a></span></h5>
 <p>The default evaluator will automatically load Node.js core modules into the
 REPL environment when used. For instance, unless otherwise declared as a
 global or scoped variable, the input <code>fs</code> will be evaluated on-demand as
 <code>global.fs = require('fs')</code>.</p>
-<pre><code class="language-console"><span class="hljs-meta">></span><span class="bash"> fs.createReadStream(<span class="hljs-string">'./some/file'</span>);</span></code></pre>
-<h4>Global uncaught exceptions<span><a class="mark" href="#repl_global_uncaught_exceptions" id="repl_global_uncaught_exceptions">#</a></span></h4>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">fs.createReadStream(<span class="hljs-string">'./some/file'</span>);</span></code></pre>
+<h5>Global uncaught exceptions<span><a class="mark" href="#repl_global_uncaught_exceptions" id="repl_global_uncaught_exceptions">#</a></span></h5>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -298,26 +310,25 @@ global or scoped variable, the input <code>fs</code> will be evaluated on-demand
 REPL session.</p>
 <p>This use of the <a href="domain.html"><code>domain</code></a> module in the REPL has these side effects:</p>
 <ul>
-<li>Uncaught exceptions only emit the <a href="process.html#process_event_uncaughtexception"><code>'uncaughtException'</code></a> event in the
+<li>
+<p>Uncaught exceptions only emit the <a href="process.html#process_event_uncaughtexception"><code>'uncaughtException'</code></a> event in the
 standalone REPL. Adding a listener for this event in a REPL within
-another Node.js program throws <a href="errors.html#errors_err_invalid_repl_input"><code>ERR_INVALID_REPL_INPUT</code></a>.</li>
-<li>Trying to use <a href="process.html#process_process_setuncaughtexceptioncapturecallback_fn"><code>process.setUncaughtExceptionCaptureCallback()</code></a> throws
-an <a href="errors.html#errors_err_domain_cannot_set_uncaught_exception_capture"><code>ERR_DOMAIN_CANNOT_SET_UNCAUGHT_EXCEPTION_CAPTURE</code></a> error.</li>
+another Node.js program results in <a href="errors.html#errors_err_invalid_repl_input"><code>ERR_INVALID_REPL_INPUT</code></a>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> r = repl.<span class="hljs-title function_">start</span>();
+
+r.<span class="hljs-title function_">write</span>(<span class="hljs-string">'process.on("uncaughtException", () => console.log("Foobar"));\n'</span>);
+<span class="hljs-comment">// Output stream includes:</span>
+<span class="hljs-comment">//   TypeError [ERR_INVALID_REPL_INPUT]: Listeners for `uncaughtException`</span>
+<span class="hljs-comment">//   cannot be used in the REPL</span>
+
+r.<span class="hljs-title function_">close</span>();</code></pre>
+</li>
+<li>
+<p>Trying to use <a href="process.html#process_process_setuncaughtexceptioncapturecallback_fn"><code>process.setUncaughtExceptionCaptureCallback()</code></a> throws
+an <a href="errors.html#errors_err_domain_cannot_set_uncaught_exception_capture"><code>ERR_DOMAIN_CANNOT_SET_UNCAUGHT_EXCEPTION_CAPTURE</code></a> error.</p>
+</li>
 </ul>
-<p>As standalone program:</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'uncaughtException'</span>, <span class="hljs-function">() =></span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Uncaught'</span>));
-
-<span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'foobar'</span>);
-<span class="hljs-comment">// Uncaught</span></code></pre>
-<p>When used in another application:</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'uncaughtException'</span>, <span class="hljs-function">() =></span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Uncaught'</span>));
-<span class="hljs-comment">// TypeError [ERR_INVALID_REPL_INPUT]: Listeners for `uncaughtException`</span>
-<span class="hljs-comment">// cannot be used in the REPL</span>
-
-<span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'foobar'</span>);
-<span class="hljs-comment">// Thrown:</span>
-<span class="hljs-comment">// Error: foobar</span></code></pre>
-<h4>Assignment of the <code>_</code> (underscore) variable<span><a class="mark" href="#repl_assignment_of_the_underscore_variable" id="repl_assignment_of_the_underscore_variable">#</a></span></h4>
+<h5>Assignment of the <code>_</code> (underscore) variable<span><a class="mark" href="#repl_assignment_of_the_underscore_variable" id="repl_assignment_of_the_underscore_variable">#</a></span></h5>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -330,37 +341,49 @@ an <a href="errors.html#errors_err_domain_cannot_set_uncaught_exception_capture"
 <p>The default evaluator will, by default, assign the result of the most recently
 evaluated expression to the special variable <code>_</code> (underscore).
 Explicitly setting <code>_</code> to a value will disable this behavior.</p>
-<pre><code class="language-console"><span class="hljs-meta">></span><span class="bash"> [ <span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>, <span class="hljs-string">'c'</span> ]</span>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">[ <span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>, <span class="hljs-string">'c'</span> ]</span>
 [ 'a', 'b', 'c' ]
-<span class="hljs-meta">></span><span class="bash"> _.length</span>
+<span class="hljs-meta">> </span><span class="language-bash">_.length</span>
 3
-<span class="hljs-meta">></span><span class="bash"> _ += 1</span>
+<span class="hljs-meta">> </span><span class="language-bash">_ += 1</span>
 Expression assignment to _ now disabled.
 4
-<span class="hljs-meta">></span><span class="bash"> 1 + 1</span>
+<span class="hljs-meta">> </span><span class="language-bash">1 + 1</span>
 2
-<span class="hljs-meta">></span><span class="bash"> _</span>
+<span class="hljs-meta">> </span><span class="language-bash">_</span>
 4</code></pre>
 <p>Similarly, <code>_error</code> will refer to the last seen error, if there was any.
 Explicitly setting <code>_error</code> to a value will disable this behavior.</p>
-<pre><code class="language-console"><span class="hljs-meta">></span><span class="bash"> throw new Error(<span class="hljs-string">'foo'</span>);</span>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">throw new Error(<span class="hljs-string">'foo'</span>);</span>
 Error: foo
-<span class="hljs-meta">></span><span class="bash"> _error.message</span>
+<span class="hljs-meta">> </span><span class="language-bash">_error.message</span>
 'foo'</code></pre>
-<h4><code>await</code> keyword<span><a class="mark" href="#repl_await_keyword" id="repl_await_keyword">#</a></span></h4>
+<h5><code>await</code> keyword<span><a class="mark" href="#repl_await_keyword" id="repl_await_keyword">#</a></span></h5>
 <p>With the <a href="cli.html#cli_experimental_repl_await"><code>--experimental-repl-await</code></a> command-line option specified,
 experimental support for the <code>await</code> keyword is enabled.</p>
-<pre><code class="language-console"><span class="hljs-meta">></span><span class="bash"> await Promise.resolve(123)</span>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">await Promise.resolve(123)</span>
 123
-<span class="hljs-meta">></span><span class="bash"> await Promise.reject(new Error(<span class="hljs-string">'REPL await'</span>))</span>
+<span class="hljs-meta">> </span><span class="language-bash">await Promise.reject(new Error(<span class="hljs-string">'REPL await'</span>))</span>
 Error: REPL await
     at repl:1:45
-<span class="hljs-meta">></span><span class="bash"> const timeout = util.promisify(setTimeout);</span>
+<span class="hljs-meta">> </span><span class="language-bash">const timeout = util.promisify(setTimeout);</span>
 undefined
-<span class="hljs-meta">></span><span class="bash"> const old = Date.now(); await timeout(1000); console.log(Date.now() - old);</span>
+<span class="hljs-meta">> </span><span class="language-bash">const old = Date.now(); await timeout(1000); console.log(Date.now() - old);</span>
 1002
 undefined</code></pre>
-<h3>Reverse-i-search<span><a class="mark" href="#repl_reverse_i_search" id="repl_reverse_i_search">#</a></span></h3>
+<p>One known limitation of using the <code>await</code> keyword in the REPL is that
+it will invalidate the lexical scoping of the <code>const</code> and <code>let</code>
+keywords.</p>
+<p>For example:</p>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">const m = await Promise.resolve(123)</span>
+undefined
+<span class="hljs-meta">> </span><span class="language-bash">m</span>
+123
+<span class="hljs-meta">> </span><span class="language-bash">const m = await Promise.resolve(234)</span>
+undefined
+<span class="hljs-meta">> </span><span class="language-bash">m</span>
+234</code></pre>
+<h4>Reverse-i-search<span><a class="mark" href="#repl_reverse_i_search" id="repl_reverse_i_search">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v13.6.0</span>
 </div>
@@ -368,51 +391,51 @@ undefined</code></pre>
 triggered with <kbd>Ctrl</kbd>+<kbd>R</kbd> to search backward and
 <kbd>Ctrl</kbd>+<kbd>S</kbd> to search
 forwards.</p>
-<p>Duplicated history entires will be skipped.</p>
+<p>Duplicated history entries will be skipped.</p>
 <p>Entries are accepted as soon as any key is pressed that doesn't correspond
 with the reverse search. Cancelling is possible by pressing <kbd>Esc</kbd> or
 <kbd>Ctrl</kbd>+<kbd>C</kbd>.</p>
 <p>Changing the direction immediately searches for the next entry in the expected
 direction from the current position on.</p>
-<h3>Custom evaluation functions<span><a class="mark" href="#repl_custom_evaluation_functions" id="repl_custom_evaluation_functions">#</a></span></h3>
+<h4>Custom evaluation functions<span><a class="mark" href="#repl_custom_evaluation_functions" id="repl_custom_evaluation_functions">#</a></span></h4>
 <p>When a new <a href="#repl_class_replserver"><code>repl.REPLServer</code></a> is created, a custom evaluation function may be
 provided. This can be used, for instance, to implement fully customized REPL
 applications.</p>
 <p>The following illustrates a hypothetical example of a REPL that performs
 translation of text from one language to another:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);
-<span class="hljs-keyword">const</span> { Translator } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'translator'</span>);
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">Translator</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'translator'</span>);
 
-<span class="hljs-keyword">const</span> myTranslator = <span class="hljs-keyword">new</span> Translator(<span class="hljs-string">'en'</span>, <span class="hljs-string">'fr'</span>);
+<span class="hljs-keyword">const</span> myTranslator = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Translator</span>(<span class="hljs-string">'en'</span>, <span class="hljs-string">'fr'</span>);
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">myEval</span>(<span class="hljs-params">cmd, context, filename, callback</span>) </span>{
-  callback(<span class="hljs-literal">null</span>, myTranslator.translate(cmd));
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">myEval</span>(<span class="hljs-params">cmd, context, filename, callback</span>) {
+  <span class="hljs-title function_">callback</span>(<span class="hljs-literal">null</span>, myTranslator.<span class="hljs-title function_">translate</span>(cmd));
 }
 
-repl.start({ <span class="hljs-attr">prompt</span>: <span class="hljs-string">'> '</span>, <span class="hljs-attr">eval</span>: myEval });</code></pre>
-<h4>Recoverable errors<span><a class="mark" href="#repl_recoverable_errors" id="repl_recoverable_errors">#</a></span></h4>
+repl.<span class="hljs-title function_">start</span>({ <span class="hljs-attr">prompt</span>: <span class="hljs-string">'> '</span>, <span class="hljs-attr">eval</span>: myEval });</code></pre>
+<h5>Recoverable errors<span><a class="mark" href="#repl_recoverable_errors" id="repl_recoverable_errors">#</a></span></h5>
 <p>At the REPL prompt, pressing <kbd>Enter</kbd> sends the current line of input to
 the <code>eval</code> function. In order to support multi-line input, the <code>eval</code> function
 can return an instance of <code>repl.Recoverable</code> to the provided callback function:</p>
-<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">myEval</span>(<span class="hljs-params">cmd, context, filename, callback</span>) </span>{
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">myEval</span>(<span class="hljs-params">cmd, context, filename, callback</span>) {
   <span class="hljs-keyword">let</span> result;
   <span class="hljs-keyword">try</span> {
-    result = vm.runInThisContext(cmd);
+    result = vm.<span class="hljs-title function_">runInThisContext</span>(cmd);
   } <span class="hljs-keyword">catch</span> (e) {
-    <span class="hljs-keyword">if</span> (isRecoverableError(e)) {
-      <span class="hljs-keyword">return</span> callback(<span class="hljs-keyword">new</span> repl.Recoverable(e));
+    <span class="hljs-keyword">if</span> (<span class="hljs-title function_">isRecoverableError</span>(e)) {
+      <span class="hljs-keyword">return</span> <span class="hljs-title function_">callback</span>(<span class="hljs-keyword">new</span> repl.<span class="hljs-title class_">Recoverable</span>(e));
     }
   }
-  callback(<span class="hljs-literal">null</span>, result);
+  <span class="hljs-title function_">callback</span>(<span class="hljs-literal">null</span>, result);
 }
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">isRecoverableError</span>(<span class="hljs-params">error</span>) </span>{
-  <span class="hljs-keyword">if</span> (error.name === <span class="hljs-string">'SyntaxError'</span>) {
-    <span class="hljs-keyword">return</span> <span class="hljs-regexp">/^(Unexpected end of input|Unexpected token)/</span>.test(error.message);
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">isRecoverableError</span>(<span class="hljs-params">error</span>) {
+  <span class="hljs-keyword">if</span> (error.<span class="hljs-property">name</span> === <span class="hljs-string">'SyntaxError'</span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-regexp">/^(Unexpected end of input|Unexpected token)/</span>.<span class="hljs-title function_">test</span>(error.<span class="hljs-property">message</span>);
   }
   <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
 }</code></pre>
-<h3>Customizing REPL output<span><a class="mark" href="#repl_customizing_repl_output" id="repl_customizing_repl_output">#</a></span></h3>
+<h4>Customizing REPL output<span><a class="mark" href="#repl_customizing_repl_output" id="repl_customizing_repl_output">#</a></span></h4>
 <p>By default, <a href="#repl_class_replserver"><code>repl.REPLServer</code></a> instances format output using the
 <a href="util.html#util_util_inspect_object_options"><code>util.inspect()</code></a> method before writing the output to the provided <code>Writable</code>
 stream (<code>process.stdout</code> by default). The <code>showProxy</code> inspection option is set
@@ -425,9 +448,9 @@ default writer to use ANSI style codes to colorize the output from the
 REPL's <a href="util.html#util_util_inspect_object_options">inspection defaults</a> from inside the REPL by using the
 <code>inspect.replDefaults</code> property which mirrors the <code>defaultOptions</code> from
 <a href="util.html#util_util_inspect_object_options"><code>util.inspect()</code></a>.</p>
-<pre><code class="language-console"><span class="hljs-meta">></span><span class="bash"> util.inspect.replDefaults.compact = <span class="hljs-literal">false</span>;</span>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">util.inspect.replDefaults.compact = <span class="hljs-literal">false</span>;</span>
 false
-<span class="hljs-meta">></span><span class="bash"> [1]</span>
+<span class="hljs-meta">> </span><span class="language-bash">[1]</span>
 [
   1
 ]
@@ -437,16 +460,16 @@ function for the <code>writer</code> option on construction. The following examp
 instance, simply converts any input text to upper case:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);
 
-<span class="hljs-keyword">const</span> r = repl.start({ <span class="hljs-attr">prompt</span>: <span class="hljs-string">'> '</span>, <span class="hljs-attr">eval</span>: myEval, <span class="hljs-attr">writer</span>: myWriter });
+<span class="hljs-keyword">const</span> r = repl.<span class="hljs-title function_">start</span>({ <span class="hljs-attr">prompt</span>: <span class="hljs-string">'> '</span>, <span class="hljs-attr">eval</span>: myEval, <span class="hljs-attr">writer</span>: myWriter });
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">myEval</span>(<span class="hljs-params">cmd, context, filename, callback</span>) </span>{
-  callback(<span class="hljs-literal">null</span>, cmd);
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">myEval</span>(<span class="hljs-params">cmd, context, filename, callback</span>) {
+  <span class="hljs-title function_">callback</span>(<span class="hljs-literal">null</span>, cmd);
 }
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">myWriter</span>(<span class="hljs-params">output</span>) </span>{
-  <span class="hljs-keyword">return</span> output.toUpperCase();
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">myWriter</span>(<span class="hljs-params">output</span>) {
+  <span class="hljs-keyword">return</span> output.<span class="hljs-title function_">toUpperCase</span>();
 }</code></pre>
-<h2>Class: <code>REPLServer</code><span><a class="mark" href="#repl_class_replserver" id="repl_class_replserver">#</a></span></h2>
+</section><section><h3>Class: <code>REPLServer</code><span><a class="mark" href="#repl_class_replserver" id="repl_class_replserver">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.91</span>
 </div>
@@ -460,9 +483,9 @@ or directly using the JavaScript <code>new</code> keyword.</p>
 
 <span class="hljs-keyword">const</span> options = { <span class="hljs-attr">useColors</span>: <span class="hljs-literal">true</span> };
 
-<span class="hljs-keyword">const</span> firstInstance = repl.start(options);
-<span class="hljs-keyword">const</span> secondInstance = <span class="hljs-keyword">new</span> repl.REPLServer(options);</code></pre>
-<h3>Event: <code>'exit'</code><span><a class="mark" href="#repl_event_exit" id="repl_event_exit">#</a></span></h3>
+<span class="hljs-keyword">const</span> firstInstance = repl.<span class="hljs-title function_">start</span>(options);
+<span class="hljs-keyword">const</span> secondInstance = <span class="hljs-keyword">new</span> repl.<span class="hljs-title function_">REPLServer</span>(options);</code></pre>
+<h4>Event: <code>'exit'</code><span><a class="mark" href="#repl_event_exit" id="repl_event_exit">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.7.7</span>
 </div>
@@ -472,11 +495,11 @@ to signal <code>SIGINT</code>,
 or by pressing <kbd>Ctrl</kbd>+<kbd>D</kbd> to signal <code>'end'</code> on the input
 stream. The listener
 callback is invoked without any arguments.</p>
-<pre><code class="language-js">replServer.on(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Received "exit" event from repl!'</span>);
-  process.exit();
+<pre><code class="language-js">replServer.<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Received "exit" event from repl!'</span>);
+  process.<span class="hljs-title function_">exit</span>();
 });</code></pre>
-<h3>Event: <code>'reset'</code><span><a class="mark" href="#repl_event_reset" id="repl_event_reset">#</a></span></h3>
+<h4>Event: <code>'reset'</code><span><a class="mark" href="#repl_event_reset" id="repl_event_reset">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.11.0</span>
 </div>
@@ -489,29 +512,29 @@ reference to the <code>context</code> object as the only argument.</p>
 state:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">initializeContext</span>(<span class="hljs-params">context</span>) </span>{
-  context.m = <span class="hljs-string">'test'</span>;
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">initializeContext</span>(<span class="hljs-params">context</span>) {
+  context.<span class="hljs-property">m</span> = <span class="hljs-string">'test'</span>;
 }
 
-<span class="hljs-keyword">const</span> r = repl.start({ <span class="hljs-attr">prompt</span>: <span class="hljs-string">'> '</span> });
-initializeContext(r.context);
+<span class="hljs-keyword">const</span> r = repl.<span class="hljs-title function_">start</span>({ <span class="hljs-attr">prompt</span>: <span class="hljs-string">'> '</span> });
+<span class="hljs-title function_">initializeContext</span>(r.<span class="hljs-property">context</span>);
 
-r.on(<span class="hljs-string">'reset'</span>, initializeContext);</code></pre>
+r.<span class="hljs-title function_">on</span>(<span class="hljs-string">'reset'</span>, initializeContext);</code></pre>
 <p>When this code is executed, the global <code>'m'</code> variable can be modified but then
 reset to its initial value using the <code>.clear</code> command:</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> ./node example.js</span>
-<span class="hljs-meta">></span><span class="bash"> m</span>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">./node example.js</span>
+<span class="hljs-meta">> </span><span class="language-bash">m</span>
 'test'
-<span class="hljs-meta">></span><span class="bash"> m = 1</span>
+<span class="hljs-meta">> </span><span class="language-bash">m = 1</span>
 1
-<span class="hljs-meta">></span><span class="bash"> m</span>
+<span class="hljs-meta">> </span><span class="language-bash">m</span>
 1
-<span class="hljs-meta">></span><span class="bash"> .clear</span>
+<span class="hljs-meta">> </span><span class="language-bash">.clear</span>
 Clearing context...
-<span class="hljs-meta">></span><span class="bash"> m</span>
+<span class="hljs-meta">> </span><span class="language-bash">m</span>
 'test'
 <span class="hljs-meta">></span></code></pre>
-<h3><code>replServer.defineCommand(keyword, cmd)</code><span><a class="mark" href="#repl_replserver_definecommand_keyword_cmd" id="repl_replserver_definecommand_keyword_cmd">#</a></span></h3>
+<h4><code>replServer.defineCommand(keyword, cmd)</code><span><a class="mark" href="#repl_replserver_definecommand_keyword_cmd" id="repl_replserver_definecommand_keyword_cmd">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.3.0</span>
 </div>
@@ -531,25 +554,25 @@ string argument.</li>
 <p>The following example shows two new commands added to the REPL instance:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);
 
-<span class="hljs-keyword">const</span> replServer = repl.start({ <span class="hljs-attr">prompt</span>: <span class="hljs-string">'> '</span> });
-replServer.defineCommand(<span class="hljs-string">'sayhello'</span>, {
+<span class="hljs-keyword">const</span> replServer = repl.<span class="hljs-title function_">start</span>({ <span class="hljs-attr">prompt</span>: <span class="hljs-string">'> '</span> });
+replServer.<span class="hljs-title function_">defineCommand</span>(<span class="hljs-string">'sayhello'</span>, {
   <span class="hljs-attr">help</span>: <span class="hljs-string">'Say hello'</span>,
-  action(name) {
-    <span class="hljs-built_in">this</span>.clearBufferedCommand();
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Hello, <span class="hljs-subst">${name}</span>!`</span>);
-    <span class="hljs-built_in">this</span>.displayPrompt();
+  <span class="hljs-title function_">action</span>(<span class="hljs-params">name</span>) {
+    <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">clearBufferedCommand</span>();
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Hello, <span class="hljs-subst">${name}</span>!`</span>);
+    <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">displayPrompt</span>();
   }
 });
-replServer.defineCommand(<span class="hljs-string">'saybye'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">saybye</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Goodbye!'</span>);
-  <span class="hljs-built_in">this</span>.close();
+replServer.<span class="hljs-title function_">defineCommand</span>(<span class="hljs-string">'saybye'</span>, <span class="hljs-keyword">function</span> <span class="hljs-title function_">saybye</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Goodbye!'</span>);
+  <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">close</span>();
 });</code></pre>
 <p>The new commands can then be used from within the REPL instance:</p>
-<pre><code class="language-console"><span class="hljs-meta">></span><span class="bash"> .sayhello Node.js User</span>
+<pre><code class="language-console"><span class="hljs-meta">> </span><span class="language-bash">.sayhello Node.js User</span>
 Hello, Node.js User!
-<span class="hljs-meta">></span><span class="bash"> .saybye</span>
+<span class="hljs-meta">> </span><span class="language-bash">.saybye</span>
 Goodbye!</code></pre>
-<h3><code>replServer.displayPrompt([preserveCursor])</code><span><a class="mark" href="#repl_replserver_displayprompt_preservecursor" id="repl_replserver_displayprompt_preservecursor">#</a></span></h3>
+<h4><code>replServer.displayPrompt([preserveCursor])</code><span><a class="mark" href="#repl_replserver_displayprompt_preservecursor" id="repl_replserver_displayprompt_preservecursor">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.1.91</span>
 </div>
@@ -565,7 +588,7 @@ and resuming the <code>input</code> to accept new input.</p>
 <p>The <code>replServer.displayPrompt</code> method is primarily intended to be called from
 within the action function for commands registered using the
 <code>replServer.defineCommand()</code> method.</p>
-<h3><code>replServer.clearBufferedCommand()</code><span><a class="mark" href="#repl_replserver_clearbufferedcommand" id="repl_replserver_clearbufferedcommand">#</a></span></h3>
+<h4><code>replServer.clearBufferedCommand()</code><span><a class="mark" href="#repl_replserver_clearbufferedcommand" id="repl_replserver_clearbufferedcommand">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v9.0.0</span>
 </div>
@@ -573,7 +596,7 @@ within the action function for commands registered using the
 buffered but not yet executed. This method is primarily intended to be
 called from within the action function for commands registered using the
 <code>replServer.defineCommand()</code> method.</p>
-<h3><code>replServer.parseREPLKeyword(keyword[, rest])</code><span><a class="mark" href="#repl_replserver_parsereplkeyword_keyword_rest" id="repl_replserver_parsereplkeyword_keyword_rest">#</a></span></h3>
+<h4><code>replServer.parseREPLKeyword(keyword[, rest])</code><span><a class="mark" href="#repl_replserver_parsereplkeyword_keyword_rest" id="repl_replserver_parsereplkeyword_keyword_rest">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.8.9</span><span>Deprecated since: v9.0.0</span>
 </div>
@@ -585,7 +608,7 @@ called from within the action function for commands registered using the
 </ul>
 <p>An internal method used to parse and execute <code>REPLServer</code> keywords.
 Returns <code>true</code> if <code>keyword</code> is a valid keyword, otherwise <code>false</code>.</p>
-<h3><code>replServer.setupHistory(historyPath, callback)</code><span><a class="mark" href="#repl_replserver_setuphistory_historypath_callback" id="repl_replserver_setuphistory_historypath_callback">#</a></span></h3>
+<h4><code>replServer.setupHistory(historyPath, callback)</code><span><a class="mark" href="#repl_replserver_setuphistory_historypath_callback" id="repl_replserver_setuphistory_historypath_callback">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v11.10.0</span>
 </div>
@@ -603,7 +626,7 @@ Node.js binary and using the command-line REPL, a history file is initialized
 by default. However, this is not the case when creating a REPL
 programmatically. Use this method to initialize a history log file when working
 with REPL instances programmatically.</p>
-<h2><code>repl.builtinModules</code><span><a class="mark" href="#repl_repl_builtinmodules" id="repl_repl_builtinmodules">#</a></span></h2>
+</section><section><h3><code>repl.builtinModules</code><span><a class="mark" href="#repl_repl_builtinmodules" id="repl_repl_builtinmodules">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v14.5.0</span>
 </div>
@@ -611,7 +634,7 @@ with REPL instances programmatically.</p>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string[]></a></li>
 </ul>
 <p>A list of the names of all Node.js modules, e.g., <code>'http'</code>.</p>
-<h2><code>repl.start([options])</code><span><a class="mark" href="#repl_repl_start_options" id="repl_repl_start_options">#</a></span></h2>
+</section><section><h3><code>repl.start([options])</code><span><a class="mark" href="#repl_repl_start_options" id="repl_repl_start_options">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -690,23 +713,23 @@ there are no previews and the value of <code>preview</code> has no effect.</li>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);
 
 <span class="hljs-comment">// a Unix style prompt</span>
-repl.start(<span class="hljs-string">'$ '</span>);</code></pre>
-<h2>The Node.js REPL<span><a class="mark" href="#repl_the_node_js_repl" id="repl_the_node_js_repl">#</a></span></h2>
+repl.<span class="hljs-title function_">start</span>(<span class="hljs-string">'$ '</span>);</code></pre>
+</section><section><h3>The Node.js REPL<span><a class="mark" href="#repl_the_node_js_repl" id="repl_the_node_js_repl">#</a></span></h3>
 <p>Node.js itself uses the <code>repl</code> module to provide its own interactive interface
 for executing JavaScript. This can be used by executing the Node.js binary
 without passing any arguments (or by passing the <code>-i</code> argument):</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node</span>
-<span class="hljs-meta">></span><span class="bash"> const a = [1, 2, 3];</span>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node</span>
+<span class="hljs-meta">> </span><span class="language-bash">const a = [1, 2, 3];</span>
 undefined
-<span class="hljs-meta">></span><span class="bash"> a</span>
+<span class="hljs-meta">> </span><span class="language-bash">a</span>
 [ 1, 2, 3 ]
-<span class="hljs-meta">></span><span class="bash"> a.forEach((v) => {</span>
+<span class="hljs-meta">> </span><span class="language-bash">a.forEach((v) => {</span>
 ...   console.log(v);
 ...   });
 1
 2
 3</code></pre>
-<h3>Environment variable options<span><a class="mark" href="#repl_environment_variable_options" id="repl_environment_variable_options">#</a></span></h3>
+<h4>Environment variable options<span><a class="mark" href="#repl_environment_variable_options" id="repl_environment_variable_options">#</a></span></h4>
 <p>Various behaviors of the Node.js REPL can be customized using the following
 environment variables:</p>
 <ul>
@@ -722,18 +745,18 @@ persisted if history is available. Must be a positive number.
 <li><code>NODE_REPL_MODE</code>: May be either <code>'sloppy'</code> or <code>'strict'</code>. <strong>Default:</strong>
 <code>'sloppy'</code>, which will allow non-strict mode code to be run.</li>
 </ul>
-<h3>Persistent history<span><a class="mark" href="#repl_persistent_history" id="repl_persistent_history">#</a></span></h3>
+<h4>Persistent history<span><a class="mark" href="#repl_persistent_history" id="repl_persistent_history">#</a></span></h4>
 <p>By default, the Node.js REPL will persist history between <code>node</code> REPL sessions
 by saving inputs to a <code>.node_repl_history</code> file located in the user's home
 directory. This can be disabled by setting the environment variable
 <code>NODE_REPL_HISTORY=''</code>.</p>
-<h3>Using the Node.js REPL with advanced line-editors<span><a class="mark" href="#repl_using_the_node_js_repl_with_advanced_line_editors" id="repl_using_the_node_js_repl_with_advanced_line_editors">#</a></span></h3>
+<h4>Using the Node.js REPL with advanced line-editors<span><a class="mark" href="#repl_using_the_node_js_repl_with_advanced_line_editors" id="repl_using_the_node_js_repl_with_advanced_line_editors">#</a></span></h4>
 <p>For advanced line-editors, start Node.js with the environment variable
 <code>NODE_NO_READLINE=1</code>. This will start the main and debugger REPL in canonical
 terminal settings, which will allow use with <code>rlwrap</code>.</p>
 <p>For example, the following can be added to a <code>.bashrc</code> file:</p>
 <pre><code class="language-text">alias node="env NODE_NO_READLINE=1 rlwrap node"</code></pre>
-<h3>Starting multiple REPL instances against a single running instance<span><a class="mark" href="#repl_starting_multiple_repl_instances_against_a_single_running_instance" id="repl_starting_multiple_repl_instances_against_a_single_running_instance">#</a></span></h3>
+<h4>Starting multiple REPL instances against a single running instance<span><a class="mark" href="#repl_starting_multiple_repl_instances_against_a_single_running_instance" id="repl_starting_multiple_repl_instances_against_a_single_running_instance">#</a></span></h4>
 <p>It is possible to create and run multiple REPL instances against a single
 running instance of Node.js that share a single <code>global</code> object but have
 separate I/O interfaces.</p>
@@ -743,33 +766,33 @@ socket, and a TCP socket:</p>
 <span class="hljs-keyword">const</span> repl = <span class="hljs-built_in">require</span>(<span class="hljs-string">'repl'</span>);
 <span class="hljs-keyword">let</span> connections = <span class="hljs-number">0</span>;
 
-repl.start({
+repl.<span class="hljs-title function_">start</span>({
   <span class="hljs-attr">prompt</span>: <span class="hljs-string">'Node.js via stdin> '</span>,
-  <span class="hljs-attr">input</span>: process.stdin,
-  <span class="hljs-attr">output</span>: process.stdout
+  <span class="hljs-attr">input</span>: process.<span class="hljs-property">stdin</span>,
+  <span class="hljs-attr">output</span>: process.<span class="hljs-property">stdout</span>
 });
 
-net.createServer(<span class="hljs-function">(<span class="hljs-params">socket</span>) =></span> {
+net.<span class="hljs-title function_">createServer</span>(<span class="hljs-function">(<span class="hljs-params">socket</span>) =></span> {
   connections += <span class="hljs-number">1</span>;
-  repl.start({
+  repl.<span class="hljs-title function_">start</span>({
     <span class="hljs-attr">prompt</span>: <span class="hljs-string">'Node.js via Unix socket> '</span>,
     <span class="hljs-attr">input</span>: socket,
     <span class="hljs-attr">output</span>: socket
-  }).on(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
-    socket.end();
+  }).<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
+    socket.<span class="hljs-title function_">end</span>();
   });
-}).listen(<span class="hljs-string">'/tmp/node-repl-sock'</span>);
+}).<span class="hljs-title function_">listen</span>(<span class="hljs-string">'/tmp/node-repl-sock'</span>);
 
-net.createServer(<span class="hljs-function">(<span class="hljs-params">socket</span>) =></span> {
+net.<span class="hljs-title function_">createServer</span>(<span class="hljs-function">(<span class="hljs-params">socket</span>) =></span> {
   connections += <span class="hljs-number">1</span>;
-  repl.start({
+  repl.<span class="hljs-title function_">start</span>({
     <span class="hljs-attr">prompt</span>: <span class="hljs-string">'Node.js via TCP socket> '</span>,
     <span class="hljs-attr">input</span>: socket,
     <span class="hljs-attr">output</span>: socket
-  }).on(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
-    socket.end();
+  }).<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
+    socket.<span class="hljs-title function_">end</span>();
   });
-}).listen(<span class="hljs-number">5001</span>);</code></pre>
+}).<span class="hljs-title function_">listen</span>(<span class="hljs-number">5001</span>);</code></pre>
 <p>Running this application from the command line will start a REPL on stdin.
 Other REPL clients may connect through the Unix socket or TCP socket. <code>telnet</code>,
 for instance, is useful for connecting to TCP sockets, while <code>socat</code> can be used
@@ -780,10 +803,46 @@ possible to connect to a long-running Node.js process without restarting it.</p>
 a <code>net.Server</code> and <code>net.Socket</code> instance, see:
 <a href="https://gist.github.com/TooTallNate/2209310">https://gist.github.com/TooTallNate/2209310</a>.</p>
 <p>For an example of running a REPL instance over <a href="https://curl.haxx.se/docs/manpage.html"><code>curl(1)</code></a>, see:
-<a href="https://gist.github.com/TooTallNate/2053342">https://gist.github.com/TooTallNate/2053342</a>.</p>
+<a href="https://gist.github.com/TooTallNate/2053342">https://gist.github.com/TooTallNate/2053342</a>.</p></section>
         <!-- API END -->
       </div>
     </div>
   </div>
+  <script>
+    'use strict';
+    {
+      const kCustomPreference = 'customDarkTheme';
+      const userSettings = sessionStorage.getItem(kCustomPreference);
+      const themeToggleButton = document.getElementById('theme-toggle-btn');
+      if (userSettings === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if ('onchange' in mq) {
+          function mqChangeListener(e) {
+            document.body.classList.toggle('dark-mode', e.matches);
+          }
+          mq.addEventListener('change', mqChangeListener);
+          if (themeToggleButton) {
+            themeToggleButton.addEventListener('click', function() {
+              mq.removeEventListener('change', mqChangeListener);
+            }, { once: true });
+          }
+        }
+        if (mq.matches) {
+          document.body.classList.add('dark-mode');
+        }
+      } else if (userSettings === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+      if (themeToggleButton) {
+        themeToggleButton.hidden = false;
+        themeToggleButton.addEventListener('click', function() {
+          sessionStorage.setItem(
+            kCustomPreference,
+            document.body.classList.toggle('dark-mode')
+          );
+        });
+      }
+    }
+  </script>
 </body>
 </html>

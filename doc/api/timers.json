@@ -8,13 +8,13 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/timers.js\">lib/timers.js</a></p>\n<p>The <code>timer</code> module exposes a global API for scheduling functions to\nbe called at some future period of time. Because the timer functions are\nglobals, there is no need to call <code>require('timers')</code> to use the API.</p>\n<p>The timer functions within Node.js implement a similar API as the timers API\nprovided by Web Browsers but use a different internal implementation that is\nbuilt around the Node.js <a href=\"https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/#setimmediate-vs-settimeout\">Event Loop</a>.</p>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/timers.js\">lib/timers.js</a></p>\n<p>The <code>timer</code> module exposes a global API for scheduling functions to\nbe called at some future period of time. Because the timer functions are\nglobals, there is no need to call <code>require('timers')</code> to use the API.</p>\n<p>The timer functions within Node.js implement a similar API as the timers API\nprovided by Web Browsers but use a different internal implementation that is\nbuilt around the Node.js <a href=\"https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/#setimmediate-vs-settimeout\">Event Loop</a>.</p>",
       "classes": [
         {
           "textRaw": "Class: `Immediate`",
           "type": "class",
           "name": "Immediate",
-          "desc": "<p>This object is created internally and is returned from <a href=\"timers.html#timers_setimmediate_callback_args\"><code>setImmediate()</code></a>. It\ncan be passed to <a href=\"timers.html#timers_clearimmediate_immediate\"><code>clearImmediate()</code></a> in order to cancel the scheduled\nactions.</p>\n<p>By default, when an immediate is scheduled, the Node.js event loop will continue\nrunning as long as the immediate is active. The <code>Immediate</code> object returned by\n<a href=\"timers.html#timers_setimmediate_callback_args\"><code>setImmediate()</code></a> exports both <code>immediate.ref()</code> and <code>immediate.unref()</code>\nfunctions that can be used to control this default behavior.</p>",
+          "desc": "<p>This object is created internally and is returned from <a href=\"#timers_setimmediate_callback_args\"><code>setImmediate()</code></a>. It\ncan be passed to <a href=\"#timers_clearimmediate_immediate\"><code>clearImmediate()</code></a> in order to cancel the scheduled\nactions.</p>\n<p>By default, when an immediate is scheduled, the Node.js event loop will continue\nrunning as long as the immediate is active. The <code>Immediate</code> object returned by\n<a href=\"#timers_setimmediate_callback_args\"><code>setImmediate()</code></a> exports both <code>immediate.ref()</code> and <code>immediate.unref()</code>\nfunctions that can be used to control this default behavior.</p>",
           "methods": [
             {
               "textRaw": "`immediate.hasRef()`",
@@ -90,7 +90,7 @@
           "textRaw": "Class: `Timeout`",
           "type": "class",
           "name": "Timeout",
-          "desc": "<p>This object is created internally and is returned from <a href=\"timers.html#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a> and\n<a href=\"timers.html#timers_setinterval_callback_delay_args\"><code>setInterval()</code></a>. It can be passed to either <a href=\"timers.html#timers_cleartimeout_timeout\"><code>clearTimeout()</code></a> or\n<a href=\"timers.html#timers_clearinterval_timeout\"><code>clearInterval()</code></a> in order to cancel the scheduled actions.</p>\n<p>By default, when a timer is scheduled using either <a href=\"timers.html#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a> or\n<a href=\"timers.html#timers_setinterval_callback_delay_args\"><code>setInterval()</code></a>, the Node.js event loop will continue running as long as the\ntimer is active. Each of the <code>Timeout</code> objects returned by these functions\nexport both <code>timeout.ref()</code> and <code>timeout.unref()</code> functions that can be used to\ncontrol this default behavior.</p>",
+          "desc": "<p>This object is created internally and is returned from <a href=\"#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a> and\n<a href=\"#timers_setinterval_callback_delay_args\"><code>setInterval()</code></a>. It can be passed to either <a href=\"#timers_cleartimeout_timeout\"><code>clearTimeout()</code></a> or\n<a href=\"#timers_clearinterval_timeout\"><code>clearInterval()</code></a> in order to cancel the scheduled actions.</p>\n<p>By default, when a timer is scheduled using either <a href=\"#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a> or\n<a href=\"#timers_setinterval_callback_delay_args\"><code>setInterval()</code></a>, the Node.js event loop will continue running as long as the\ntimer is active. Each of the <code>Timeout</code> objects returned by these functions\nexport both <code>timeout.ref()</code> and <code>timeout.unref()</code> functions that can be used to\ncontrol this default behavior.</p>",
           "methods": [
             {
               "textRaw": "`timeout.hasRef()`",
@@ -342,7 +342,7 @@
         {
           "textRaw": "Cancelling timers",
           "name": "cancelling_timers",
-          "desc": "<p>The <a href=\"timers.html#timers_setimmediate_callback_args\"><code>setImmediate()</code></a>, <a href=\"timers.html#timers_setinterval_callback_delay_args\"><code>setInterval()</code></a>, and <a href=\"timers.html#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a> methods\neach return objects that represent the scheduled timers. These can be used to\ncancel the timer and prevent it from triggering.</p>\n<p>It is not possible to cancel timers that were created using the promisified\nvariants of <a href=\"timers.html#timers_setimmediate_callback_args\"><code>setImmediate()</code></a>, <a href=\"timers.html#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a>.</p>",
+          "desc": "<p>The <a href=\"#timers_setimmediate_callback_args\"><code>setImmediate()</code></a>, <a href=\"#timers_setinterval_callback_delay_args\"><code>setInterval()</code></a>, and <a href=\"#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a> methods\neach return objects that represent the scheduled timers. These can be used to\ncancel the timer and prevent it from triggering.</p>\n<p>For the promisified variants of <a href=\"#timers_setimmediate_callback_args\"><code>setImmediate()</code></a> and <a href=\"#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a>,\nan <a href=\"globals.html#globals_class_abortcontroller\"><code>AbortController</code></a> may be used to cancel the timer. When canceled, the\nreturned Promises will be rejected with an <code>'AbortError'</code>.</p>\n<p>For <code>setImmediate()</code>:</p>\n<pre><code class=\"language-js\">const util = require('util');\nconst setImmediatePromise = util.promisify(setImmediate);\n\nconst ac = new AbortController();\nconst signal = ac.signal;\n\nsetImmediatePromise('foobar', { signal })\n  .then(console.log)\n  .catch((err) => {\n    if (err.name === 'AbortError')\n      console.log('The immediate was aborted');\n  });\n\nac.abort();\n</code></pre>\n<p>For <code>setTimeout()</code>:</p>\n<pre><code class=\"language-js\">const util = require('util');\nconst setTimeoutPromise = util.promisify(setTimeout);\n\nconst ac = new AbortController();\nconst signal = ac.signal;\n\nsetTimeoutPromise(1000, 'foobar', { signal })\n  .then(console.log)\n  .catch((err) => {\n    if (err.name === 'AbortError')\n      console.log('The timeout was aborted');\n  });\n\nac.abort();\n</code></pre>",
           "methods": [
             {
               "textRaw": "`clearImmediate(immediate)`",
@@ -366,7 +366,7 @@
                   ]
                 }
               ],
-              "desc": "<p>Cancels an <code>Immediate</code> object created by <a href=\"timers.html#timers_setimmediate_callback_args\"><code>setImmediate()</code></a>.</p>"
+              "desc": "<p>Cancels an <code>Immediate</code> object created by <a href=\"#timers_setimmediate_callback_args\"><code>setImmediate()</code></a>.</p>"
             },
             {
               "textRaw": "`clearInterval(timeout)`",
@@ -382,15 +382,15 @@
                 {
                   "params": [
                     {
-                      "textRaw": "`timeout` {Timeout} A `Timeout` object as returned by [`setInterval()`][].",
+                      "textRaw": "`timeout` {Timeout|string|number} A `Timeout` object as returned by [`setInterval()`][] or the [primitive][] of the `Timeout` object as a string or a number.",
                       "name": "timeout",
-                      "type": "Timeout",
-                      "desc": "A `Timeout` object as returned by [`setInterval()`][]."
+                      "type": "Timeout|string|number",
+                      "desc": "A `Timeout` object as returned by [`setInterval()`][] or the [primitive][] of the `Timeout` object as a string or a number."
                     }
                   ]
                 }
               ],
-              "desc": "<p>Cancels a <code>Timeout</code> object created by <a href=\"timers.html#timers_setinterval_callback_delay_args\"><code>setInterval()</code></a>.</p>"
+              "desc": "<p>Cancels a <code>Timeout</code> object created by <a href=\"#timers_setinterval_callback_delay_args\"><code>setInterval()</code></a>.</p>"
             },
             {
               "textRaw": "`clearTimeout(timeout)`",
@@ -406,15 +406,15 @@
                 {
                   "params": [
                     {
-                      "textRaw": "`timeout` {Timeout} A `Timeout` object as returned by [`setTimeout()`][].",
+                      "textRaw": "`timeout` {Timeout|string|number} A `Timeout` object as returned by [`setTimeout()`][] or the [primitive][] of the `Timeout` object as a string or a number.",
                       "name": "timeout",
-                      "type": "Timeout",
-                      "desc": "A `Timeout` object as returned by [`setTimeout()`][]."
+                      "type": "Timeout|string|number",
+                      "desc": "A `Timeout` object as returned by [`setTimeout()`][] or the [primitive][] of the `Timeout` object as a string or a number."
                     }
                   ]
                 }
               ],
-              "desc": "<p>Cancels a <code>Timeout</code> object created by <a href=\"timers.html#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a>.</p>"
+              "desc": "<p>Cancels a <code>Timeout</code> object created by <a href=\"#timers_settimeout_callback_delay_args\"><code>setTimeout()</code></a>.</p>"
             }
           ],
           "type": "module",

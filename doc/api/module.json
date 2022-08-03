@@ -5,7 +5,13 @@
     {
       "textRaw": "Modules: `module` API",
       "name": "modules:_`module`_api",
-      "introduced_in": "v0.3.7",
+      "introduced_in": "v12.20.0",
+      "meta": {
+        "added": [
+          "v0.3.7"
+        ],
+        "changes": []
+      },
       "modules": [
         {
           "textRaw": "The `Module` object",
@@ -24,7 +30,7 @@
                 ],
                 "changes": []
               },
-              "desc": "<p>A list of the names of all modules provided by Node.js. Can be used to verify\nif a module is maintained by a third party or not.</p>\n<p><code>module</code> in this context isn't the same object that's provided\nby the <a href=\"modules.html#modules_the_module_wrapper\">module wrapper</a>. To access it, require the <code>Module</code> module:</p>\n<pre><code class=\"language-js\">// module.mjs\n// In an ECMAScript module\nimport { builtinModules as builtin } from 'module';\n</code></pre>\n<pre><code class=\"language-js\">// module.cjs\n// In a CommonJS module\nconst builtin = require('module').builtinModules;\n</code></pre>"
+              "desc": "<p>A list of the names of all modules provided by Node.js. Can be used to verify\nif a module is maintained by a third party or not.</p>\n<p><code>module</code> in this context isn't the same object that's provided\nby the <a href=\"modules.html#modules_the_module_wrapper\">module wrapper</a>. To access it, require the <code>Module</code> module:</p>\n<pre><code class=\"language-mjs\">// module.mjs\n// In an ECMAScript module\nimport { builtinModules as builtin } from 'module';\n</code></pre>\n<pre><code class=\"language-cjs\">// module.cjs\n// In a CommonJS module\nconst builtin = require('module').builtinModules;\n</code></pre>"
             }
           ],
           "methods": [
@@ -56,7 +62,7 @@
                   ]
                 }
               ],
-              "desc": "<pre><code class=\"language-js\">import { createRequire } from 'module';\nconst require = createRequire(import.meta.url);\n\n// sibling-module.js is a CommonJS module.\nconst siblingModule = require('./sibling-module');\n</code></pre>"
+              "desc": "<pre><code class=\"language-mjs\">import { createRequire } from 'module';\nconst require = createRequire(import.meta.url);\n\n// sibling-module.js is a CommonJS module.\nconst siblingModule = require('./sibling-module');\n</code></pre>"
             },
             {
               "textRaw": "`module.createRequireFromPath(filename)`",
@@ -108,7 +114,7 @@
                   "params": []
                 }
               ],
-              "desc": "<p>The <code>module.syncBuiltinESMExports()</code> method updates all the live bindings for\nbuiltin <a href=\"esm.html\">ES Modules</a> to match the properties of the <a href=\"modules.html\">CommonJS</a> exports. It\ndoes not add or remove exported names from the <a href=\"esm.html\">ES Modules</a>.</p>\n<pre><code class=\"language-js\">const fs = require('fs');\nconst { syncBuiltinESMExports } = require('module');\n\nfs.readFile = null;\n\ndelete fs.readFileSync;\n\nfs.newAPI = function newAPI() {\n  // ...\n};\n\nsyncBuiltinESMExports();\n\nimport('fs').then((esmFS) => {\n  assert.strictEqual(esmFS.readFile, null);\n  assert.strictEqual('readFileSync' in fs, true);\n  assert.strictEqual(esmFS.newAPI, undefined);\n});\n</code></pre>"
+              "desc": "<p>The <code>module.syncBuiltinESMExports()</code> method updates all the live bindings for\nbuiltin <a href=\"esm.html\">ES Modules</a> to match the properties of the <a href=\"modules.html\">CommonJS</a> exports. It\ndoes not add or remove exported names from the <a href=\"esm.html\">ES Modules</a>.</p>\n<pre><code class=\"language-js\">const fs = require('fs');\nconst assert = require('assert');\nconst { syncBuiltinESMExports } = require('module');\n\nfs.readFile = newAPI;\n\ndelete fs.readFileSync;\n\nfunction newAPI() {\n  // ...\n}\n\nfs.newAPI = newAPI;\n\nsyncBuiltinESMExports();\n\nimport('fs').then((esmFS) => {\n  // It syncs the existing readFile property with the new value\n  assert.strictEqual(esmFS.readFile, newAPI);\n  // readFileSync has been deleted from the required fs\n  assert.strictEqual('readFileSync' in fs, false);\n  // syncBuiltinESMExports() does not remove readFileSync from esmFS\n  assert.strictEqual('readFileSync' in esmFS, true);\n  // syncBuiltinESMExports() does not add names\n  assert.strictEqual(esmFS.newAPI, undefined);\n});\n</code></pre>"
             }
           ],
           "type": "module",
@@ -126,10 +132,10 @@
           },
           "stability": 1,
           "stabilityText": "Experimental",
-          "desc": "<p>Helpers for interacting with the source map cache. This cache is\npopulated when source map parsing is enabled and\n<a href=\"https://sourcemaps.info/spec.html#h.lmz475t4mvbx\">source map include directives</a> are found in a modules' footer.</p>\n<p>To enable source map parsing, Node.js must be run with the flag\n<a href=\"cli.html#cli_enable_source_maps\"><code>--enable-source-maps</code></a>, or with code coverage enabled by setting\n<a href=\"cli.html#cli_node_v8_coverage_dir\"><code>NODE_V8_COVERAGE=dir</code></a>.</p>\n<pre><code class=\"language-js\">// module.mjs\n// In an ECMAScript module\nimport { findSourceMap, SourceMap } from 'module';\n</code></pre>\n<pre><code class=\"language-js\">// module.cjs\n// In a CommonJS module\nconst { findSourceMap, SourceMap } = require('module');\n</code></pre>",
+          "desc": "<p>Helpers for interacting with the source map cache. This cache is\npopulated when source map parsing is enabled and\n<a href=\"https://sourcemaps.info/spec.html#h.lmz475t4mvbx\">source map include directives</a> are found in a modules' footer.</p>\n<p>To enable source map parsing, Node.js must be run with the flag\n<a href=\"cli.html#cli_enable_source_maps\"><code>--enable-source-maps</code></a>, or with code coverage enabled by setting\n<a href=\"cli.html#cli_node_v8_coverage_dir\"><code>NODE_V8_COVERAGE=dir</code></a>.</p>\n<pre><code class=\"language-mjs\">// module.mjs\n// In an ECMAScript module\nimport { findSourceMap, SourceMap } from 'module';\n</code></pre>\n<pre><code class=\"language-cjs\">// module.cjs\n// In a CommonJS module\nconst { findSourceMap, SourceMap } = require('module');\n</code></pre>\n<!-- Anchors to make sure old links find a target -->\n<p><a id=\"module_module_findsourcemap_path_error\"></a></p>",
           "methods": [
             {
-              "textRaw": "`module.findSourceMap(path[, error])`",
+              "textRaw": "`module.findSourceMap(path)`",
               "type": "method",
               "name": "findSourceMap",
               "meta": {
@@ -151,16 +157,11 @@
                       "textRaw": "`path` {string}",
                       "name": "path",
                       "type": "string"
-                    },
-                    {
-                      "textRaw": "`error` {Error}",
-                      "name": "error",
-                      "type": "Error"
                     }
                   ]
                 }
               ],
-              "desc": "<p><code>path</code> is the resolved path for the file for which a corresponding source map\nshould be fetched.</p>\n<p>The <code>error</code> instance should be passed as the second parameter to <code>findSourceMap</code>\nin exceptional flows, such as when an overridden\n<a href=\"https://v8.dev/docs/stack-trace-api#customizing-stack-traces\"><code>Error.prepareStackTrace(error, trace)</code></a> is invoked. Modules are not added to\nthe module cache until they are successfully loaded. In these cases, source maps\nare associated with the <code>error</code> instance along with the <code>path</code>.</p>"
+              "desc": "<p><code>path</code> is the resolved path for the file for which a corresponding source map\nshould be fetched.</p>"
             }
           ],
           "classes": [
@@ -209,7 +210,7 @@
                       ]
                     }
                   ],
-                  "desc": "<p>Given a line number and column number in the generated source file, returns\nan object representing the position in the original file. The object returned\nconsists of the following keys:</p>\n<ul>\n<li>generatedLine: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a></li>\n<li>generatedColumn: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a></li>\n<li>originalSource: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></li>\n<li>originalLine: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a></li>\n<li>originalColumn: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a></li>\n</ul>"
+                  "desc": "<p>Given a line number and column number in the generated source file, returns\nan object representing the position in the original file. The object returned\nconsists of the following keys:</p>\n<ul>\n<li>generatedLine: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a></li>\n<li>generatedColumn: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a></li>\n<li>originalSource: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></li>\n<li>originalLine: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a></li>\n<li>originalColumn: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a></li>\n<li>name: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></li>\n</ul>"
                 }
               ],
               "signatures": [

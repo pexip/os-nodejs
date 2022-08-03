@@ -1,10 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v14.16.0">
-  <title>WebAssembly System Interface (WASI) | Node.js v14.16.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v14.18.1">
+  <title>WebAssembly System Interface (WASI) | Node.js v14.18.1 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -28,7 +28,7 @@
 <li><a href="async_hooks.html" class="nav-async_hooks">Async hooks</a></li>
 <li><a href="buffer.html" class="nav-buffer">Buffer</a></li>
 <li><a href="addons.html" class="nav-addons">C++ addons</a></li>
-<li><a href="n-api.html" class="nav-n-api">C/C++ addons with N-API</a></li>
+<li><a href="n-api.html" class="nav-n-api">C/C++ addons with Node-API</a></li>
 <li><a href="embedding.html" class="nav-embedding">C++ embedder API</a></li>
 <li><a href="child_process.html" class="nav-child_process">Child processes</a></li>
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
@@ -37,6 +37,7 @@
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
+<li><a href="diagnostics_channel.html" class="nav-diagnostics_channel">Diagnostics Channel</a></li>
 <li><a href="dns.html" class="nav-dns">DNS</a></li>
 <li><a href="domain.html" class="nav-domain">Domain</a></li>
 <li><a href="errors.html" class="nav-errors">Errors</a></li>
@@ -86,7 +87,20 @@
 
     <div id="column1" data-id="wasi" class="interior">
       <header>
-        <h1>Node.js v14.16.0 Documentation</h1>
+        <div class="header-container">
+          <h1>Node.js v14.18.1 documentation</h1>
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
+              <path fill="none" d="M0 0h24v24H0z" />
+              <path d="M11.1 12.08c-2.33-4.51-.5-8.48.53-10.07C6.27 2.2 1.98 6.59 1.98 12c0 .14.02.28.02.42.62-.27 1.29-.42 2-.42 1.66 0 3.18.83 4.1 2.15A4.01 4.01 0 0111 18c0 1.52-.87 2.83-2.12 3.51.98.32 2.03.5 3.11.5 3.5 0 6.58-1.8 8.37-4.52-2.36.23-6.98-.97-9.26-5.41z"/>
+              <path d="M7 16h-.18C6.4 14.84 5.3 14 4 14c-1.66 0-3 1.34-3 3s1.34 3 3 3h3c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon light-icon" height="24" width="24">
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+            </svg>
+          </button>
+        </div>
         <div id="gtoc">
           <ul>
             <li>
@@ -101,21 +115,20 @@
             
     <li class="version-picker">
       <a href="#">View another version <span>&#x25bc;</span></a>
-      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v15.x/api/wasi.html">15.x</a></li>
+      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v16.x/api/wasi.html">16.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v15.x/api/wasi.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/wasi.html">14.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/wasi.html">13.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v12.x/api/wasi.html">12.x <b>LTS</b></a></li></ol>
     </li>
   
-            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/wasi.md"><span class="github_icon"><svg height="16" width="16" viewBox="0 0 16.1 16.1" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2 .4-2.5-.5-2.7-1 0-.1-.5-.9-.8-1-.3-.2-.7-.6 0-.6.6 0 1 .6 1.2.8.7 1.2 1.9 1 2.4.7 0-.5.2-.9.5-1-1.8-.3-3.7-1-3.7-4 0-.9.3-1.6.8-2.2 0-.2-.3-1 .1-2 0 0 .7-.3 2.2.7a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.5 1.1.2 2 .1 2.1.5.6.8 1.3.8 2.2 0 3-1.9 3.7-3.6 4 .3.2.5.7.5 1.4v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8a8 8 0 0 0-8-8z"/></svg></span>Edit on GitHub</a></li>
+            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/wasi.md">Edit on GitHub</a></li>
           </ul>
         </div>
         <hr>
       </header>
 
-      <div id="toc">
-        <h2>Table of Contents</h2>
-        <ul>
+      <details id="toc" open><summary>Table of contents</summary><ul>
 <li><span class="stability_1"><a href="#wasi_webassembly_system_interface_wasi">WebAssembly System Interface (WASI)</a></span>
 <ul>
 <li><a href="#wasi_class_wasi">Class: <code>WASI</code></a>
@@ -128,34 +141,49 @@
 </li>
 </ul>
 </li>
-</ul>
-      </div>
+</ul></details>
 
       <div id="apicontent">
-        <h1>WebAssembly System Interface (WASI)<span><a class="mark" href="#wasi_webassembly_system_interface_wasi" id="wasi_webassembly_system_interface_wasi">#</a></span></h1>
+        <h2>WebAssembly System Interface (WASI)<span><a class="mark" href="#wasi_webassembly_system_interface_wasi" id="wasi_webassembly_system_interface_wasi">#</a></span></h2>
 
 <p></p><div class="api_stability api_stability_1"><a href="documentation.html#documentation_stability_index">Stability: 1</a> - Experimental</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.16.0/lib/wasi.js">lib/wasi.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.18.1/lib/wasi.js">lib/wasi.js</a></p>
 <p>The WASI API provides an implementation of the <a href="https://wasi.dev/">WebAssembly System Interface</a>
 specification. WASI gives sandboxed WebAssembly applications access to the
 underlying operating system via a collection of POSIX-like functions.</p>
-<pre><code class="language-js"><span class="hljs-meta">'use strict'</span>;
-<span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>);
-<span class="hljs-keyword">const</span> { WASI } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wasi'</span>);
-<span class="hljs-keyword">const</span> wasi = <span class="hljs-keyword">new</span> WASI({
-  <span class="hljs-attr">args</span>: process.argv,
-  <span class="hljs-attr">env</span>: process.env,
+
+<pre><input class="js-flavor-selector" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> fs <span class="hljs-keyword">from</span> <span class="hljs-string">'fs'</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">WASI</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">'wasi'</span>;
+
+<span class="hljs-keyword">const</span> wasi = <span class="hljs-keyword">new</span> <span class="hljs-title function_">WASI</span>({
+  <span class="hljs-attr">args</span>: process.<span class="hljs-property">argv</span>,
+  <span class="hljs-attr">env</span>: process.<span class="hljs-property">env</span>,
   <span class="hljs-attr">preopens</span>: {
     <span class="hljs-string">'/sandbox'</span>: <span class="hljs-string">'/some/real/path/that/wasm/can/access'</span>
   }
 });
-<span class="hljs-keyword">const</span> importObject = { <span class="hljs-attr">wasi_snapshot_preview1</span>: wasi.wasiImport };
+<span class="hljs-keyword">const</span> importObject = { <span class="hljs-attr">wasi_snapshot_preview1</span>: wasi.<span class="hljs-property">wasiImport</span> };
+
+<span class="hljs-keyword">const</span> wasm = <span class="hljs-keyword">await</span> <span class="hljs-title class_">WebAssembly</span>.<span class="hljs-title function_">compile</span>(fs.<span class="hljs-title function_">readFileSync</span>(<span class="hljs-string">'./demo.wasm'</span>));
+<span class="hljs-keyword">const</span> instance = <span class="hljs-keyword">await</span> <span class="hljs-title class_">WebAssembly</span>.<span class="hljs-title function_">instantiate</span>(wasm, importObject);
+
+wasi.<span class="hljs-title function_">start</span>(instance);</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+<span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>);
+<span class="hljs-keyword">const</span> { <span class="hljs-variable constant_">WASI</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wasi'</span>);
+<span class="hljs-keyword">const</span> wasi = <span class="hljs-keyword">new</span> <span class="hljs-title function_">WASI</span>({
+  <span class="hljs-attr">args</span>: process.<span class="hljs-property">argv</span>,
+  <span class="hljs-attr">env</span>: process.<span class="hljs-property">env</span>,
+  <span class="hljs-attr">preopens</span>: {
+    <span class="hljs-string">'/sandbox'</span>: <span class="hljs-string">'/some/real/path/that/wasm/can/access'</span>
+  }
+});
+<span class="hljs-keyword">const</span> importObject = { <span class="hljs-attr">wasi_snapshot_preview1</span>: wasi.<span class="hljs-property">wasiImport</span> };
 
 (<span class="hljs-keyword">async</span> () => {
-  <span class="hljs-keyword">const</span> wasm = <span class="hljs-keyword">await</span> WebAssembly.compile(fs.readFileSync(<span class="hljs-string">'./demo.wasm'</span>));
-  <span class="hljs-keyword">const</span> instance = <span class="hljs-keyword">await</span> WebAssembly.instantiate(wasm, importObject);
+  <span class="hljs-keyword">const</span> wasm = <span class="hljs-keyword">await</span> <span class="hljs-title class_">WebAssembly</span>.<span class="hljs-title function_">compile</span>(fs.<span class="hljs-title function_">readFileSync</span>(<span class="hljs-string">'./demo.wasm'</span>));
+  <span class="hljs-keyword">const</span> instance = <span class="hljs-keyword">await</span> <span class="hljs-title class_">WebAssembly</span>.<span class="hljs-title function_">instantiate</span>(wasm, importObject);
 
-  wasi.start(instance);
+  wasi.<span class="hljs-title function_">start</span>(instance);
 })();</code></pre>
 <p>To run the above example, create a new WebAssembly text format file named
 <code>demo.wat</code>:</p>
@@ -187,10 +215,10 @@ underlying operating system via a collection of POSIX-like functions.</p>
     )
 )</code></pre>
 <p>Use <a href="https://github.com/WebAssembly/wabt">wabt</a> to compile <code>.wat</code> to <code>.wasm</code></p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> wat2wasm demo.wat</span></code></pre>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">wat2wasm demo.wat</span></code></pre>
 <p>The <code>--experimental-wasi-unstable-preview1</code> and <code>--experimental-wasm-bigint</code>
 CLI arguments are needed for this example to run.</p>
-<h2>Class: <code>WASI</code><span><a class="mark" href="#wasi_class_wasi" id="wasi_class_wasi">#</a></span></h2>
+<section><h3>Class: <code>WASI</code><span><a class="mark" href="#wasi_class_wasi" id="wasi_class_wasi">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v13.3.0, v12.16.0</span>
 </div>
@@ -199,7 +227,7 @@ methods for working with WASI-based applications. Each <code>WASI</code> instanc
 represents a distinct sandbox environment. For security purposes, each <code>WASI</code>
 instance must have its command-line arguments, environment variables, and
 sandbox directory structure configured explicitly.</p>
-<h3><code>new WASI([options])</code><span><a class="mark" href="#wasi_new_wasi_options" id="wasi_new_wasi_options">#</a></span></h3>
+<h4><code>new WASI([options])</code><span><a class="mark" href="#wasi_new_wasi_options" id="wasi_new_wasi_options">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v13.3.0, v12.16.0</span>
 </div>
@@ -228,7 +256,7 @@ WebAssembly application. <strong>Default:</strong> <code>2</code>.</li>
 </ul>
 </li>
 </ul>
-<h3><code>wasi.start(instance)</code><span><a class="mark" href="#wasi_wasi_start_instance" id="wasi_wasi_start_instance">#</a></span></h3>
+<h4><code>wasi.start(instance)</code><span><a class="mark" href="#wasi_wasi_start_instance" id="wasi_wasi_start_instance">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v13.3.0, v12.16.0</span>
 </div>
@@ -241,7 +269,7 @@ WebAssembly application. <strong>Default:</strong> <code>2</code>.</li>
 <p><code>start()</code> requires that <code>instance</code> exports a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory"><code>WebAssembly.Memory</code></a> named
 <code>memory</code>. If <code>instance</code> does not have a <code>memory</code> export an exception is thrown.</p>
 <p>If <code>start()</code> is called more than once, an exception is thrown.</p>
-<h3><code>wasi.initialize(instance)</code><span><a class="mark" href="#wasi_wasi_initialize_instance" id="wasi_wasi_initialize_instance">#</a></span></h3>
+<h4><code>wasi.initialize(instance)</code><span><a class="mark" href="#wasi_wasi_initialize_instance" id="wasi_wasi_initialize_instance">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v14.6.0</span>
 </div>
@@ -254,7 +282,7 @@ export, then an exception is thrown.</p>
 <p><code>initialize()</code> requires that <code>instance</code> exports a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory"><code>WebAssembly.Memory</code></a> named
 <code>memory</code>. If <code>instance</code> does not have a <code>memory</code> export an exception is thrown.</p>
 <p>If <code>initialize()</code> is called more than once, an exception is thrown.</p>
-<h3><code>wasi.wasiImport</code><span><a class="mark" href="#wasi_wasi_wasiimport" id="wasi_wasi_wasiimport">#</a></span></h3>
+<h4><code>wasi.wasiImport</code><span><a class="mark" href="#wasi_wasi_wasiimport" id="wasi_wasi_wasiimport">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v13.3.0, v12.16.0</span>
 </div>
@@ -263,10 +291,46 @@ export, then an exception is thrown.</p>
 </ul>
 <p><code>wasiImport</code> is an object that implements the WASI system call API. This object
 should be passed as the <code>wasi_snapshot_preview1</code> import during the instantiation
-of a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Instance"><code>WebAssembly.Instance</code></a>.</p>
+of a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Instance"><code>WebAssembly.Instance</code></a>.</p></section>
         <!-- API END -->
       </div>
     </div>
   </div>
+  <script>
+    'use strict';
+    {
+      const kCustomPreference = 'customDarkTheme';
+      const userSettings = sessionStorage.getItem(kCustomPreference);
+      const themeToggleButton = document.getElementById('theme-toggle-btn');
+      if (userSettings === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if ('onchange' in mq) {
+          function mqChangeListener(e) {
+            document.body.classList.toggle('dark-mode', e.matches);
+          }
+          mq.addEventListener('change', mqChangeListener);
+          if (themeToggleButton) {
+            themeToggleButton.addEventListener('click', function() {
+              mq.removeEventListener('change', mqChangeListener);
+            }, { once: true });
+          }
+        }
+        if (mq.matches) {
+          document.body.classList.add('dark-mode');
+        }
+      } else if (userSettings === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+      if (themeToggleButton) {
+        themeToggleButton.hidden = false;
+        themeToggleButton.addEventListener('click', function() {
+          sessionStorage.setItem(
+            kCustomPreference,
+            document.body.classList.toggle('dark-mode')
+          );
+        });
+      }
+    }
+  </script>
 </body>
 </html>

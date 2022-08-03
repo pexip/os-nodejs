@@ -40,7 +40,7 @@ const dnsPromises = dns.promises;
   res = await dnsPromises.lookup('::1');
   assert.strictEqual(res.address, '::1');
   assert.strictEqual(res.family, 6);
-})();
+})().then(common.mustCall());
 
 // Try resolution without hostname.
 dns.lookup(null, common.mustSucceed((result, addressType) => {
@@ -62,7 +62,7 @@ dns.lookup('::1', common.mustSucceed((result, addressType) => {
   // Try calling resolve with an unsupported type.
   'HI',
   // Try calling resolve with an unsupported type that's an object key
-  'toString'
+  'toString',
 ].forEach((val) => {
   const err = {
     code: 'ERR_INVALID_OPT_VALUE',
@@ -89,5 +89,5 @@ if (!common.isWindows && !common.isIBMi) {
 
   (async function() {
     assert.ok(Array.isArray(await dnsPromises.reverse('127.0.0.1')));
-  })();
+  })().then(common.mustCall());
 }

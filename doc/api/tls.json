@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/tls.js\">lib/tls.js</a></p>\n<p>The <code>tls</code> module provides an implementation of the Transport Layer Security\n(TLS) and Secure Socket Layer (SSL) protocols that is built on top of OpenSSL.\nThe module can be accessed using:</p>\n<pre><code class=\"language-js\">const tls = require('tls');\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/tls.js\">lib/tls.js</a></p>\n<p>The <code>tls</code> module provides an implementation of the Transport Layer Security\n(TLS) and Secure Socket Layer (SSL) protocols that is built on top of OpenSSL.\nThe module can be accessed using:</p>\n<pre><code class=\"language-js\">const tls = require('tls');\n</code></pre>",
       "modules": [
         {
           "textRaw": "TLS/SSL concepts",
@@ -429,9 +429,9 @@
                 {
                   "params": [
                     {
-                      "textRaw": "`keys` {Buffer} A 48-byte buffer containing the session ticket keys.",
+                      "textRaw": "`keys` {Buffer|TypedArray|DataView} A 48-byte buffer containing the session ticket keys.",
                       "name": "keys",
-                      "type": "Buffer",
+                      "type": "Buffer|TypedArray|DataView",
                       "desc": "A 48-byte buffer containing the session ticket keys."
                     }
                   ]
@@ -517,7 +517,7 @@
                 "changes": []
               },
               "params": [],
-              "desc": "<p>The <code>'secureConnect'</code> event is emitted after the handshaking process for a new\nconnection has successfully completed. The listener callback will be called\nregardless of whether or not the server's certificate has been authorized. It\nis the client's responsibility to check the <code>tlsSocket.authorized</code> property to\ndetermine if the server certificate was signed by one of the specified CAs. If\n<code>tlsSocket.authorized === false</code>, then the error can be found by examining the\n<code>tlsSocket.authorizationError</code> property. If ALPN was used, the\n<code>tlsSocket.alpnProtocol</code> property can be checked to determine the negotiated\nprotocol.</p>"
+              "desc": "<p>The <code>'secureConnect'</code> event is emitted after the handshaking process for a new\nconnection has successfully completed. The listener callback will be called\nregardless of whether or not the server's certificate has been authorized. It\nis the client's responsibility to check the <code>tlsSocket.authorized</code> property to\ndetermine if the server certificate was signed by one of the specified CAs. If\n<code>tlsSocket.authorized === false</code>, then the error can be found by examining the\n<code>tlsSocket.authorizationError</code> property. If ALPN was used, the\n<code>tlsSocket.alpnProtocol</code> property can be checked to determine the negotiated\nprotocol.</p>\n<p>The <code>'secureConnect'</code> event is not emitted when a <a href=\"tls.html#tls_class_tls_tlssocket\" class=\"type\">&lt;tls.TLSSocket&gt;</a> is created\nusing the <code>new tls.TLSSocket()</code> constructor.</p>"
             },
             {
               "textRaw": "Event: `'session'`",
@@ -1246,6 +1246,11 @@
             ],
             "changes": [
               {
+                "version": "v14.18.0",
+                "pr-url": "https://github.com/nodejs/node/pull/35753",
+                "description": "Added `onread` option."
+              },
+              {
                 "version": "v14.1.0",
                 "pr-url": "https://github.com/nodejs/node/pull/32786",
                 "description": "The `highWaterMark` option is accepted now."
@@ -1350,11 +1355,11 @@
                       "desc": "Establish secure connection on a given socket rather than creating a new socket. Typically, this is an instance of [`net.Socket`][], but any `Duplex` stream is allowed. If this option is specified, `path`, `host` and `port` are ignored, except for certificate validation. Usually, a socket is already connected when passed to `tls.connect()`, but it can be connected later. Connection/disconnection/destruction of `socket` is the user's responsibility; calling `tls.connect()` will not cause `net.connect()` to be called."
                     },
                     {
-                      "textRaw": "`allowHalfOpen` {boolean} If the `socket` option is missing, indicates whether or not to allow the internally created socket to be half-open, otherwise the option is ignored. See the `allowHalfOpen` option of [`net.Socket`][] for details. **Default:** `false`.",
+                      "textRaw": "`allowHalfOpen` {boolean} If set to `false`, then the socket will automatically end the writable side when the readable side ends. If the `socket` option is set, this option has no effect. See the `allowHalfOpen` option of [`net.Socket`][] for details. **Default:** `false`.",
                       "name": "allowHalfOpen",
                       "type": "boolean",
                       "default": "`false`",
-                      "desc": "If the `socket` option is missing, indicates whether or not to allow the internally created socket to be half-open, otherwise the option is ignored. See the `allowHalfOpen` option of [`net.Socket`][] for details."
+                      "desc": "If set to `false`, then the socket will automatically end the writable side when the readable side ends. If the `socket` option is set, this option has no effect. See the `allowHalfOpen` option of [`net.Socket`][] for details."
                     },
                     {
                       "textRaw": "`rejectUnauthorized` {boolean} If not `false`, the server certificate is verified against the list of supplied CAs. An `'error'` event is emitted if verification fails; `err.code` contains the OpenSSL error code. **Default:** `true`.",
@@ -1424,6 +1429,12 @@
                       "textRaw": "`secureContext`: TLS context object created with [`tls.createSecureContext()`][]. If a `secureContext` is _not_ provided, one will be created by passing the entire `options` object to `tls.createSecureContext()`.",
                       "name": "secureContext",
                       "desc": "TLS context object created with [`tls.createSecureContext()`][]. If a `secureContext` is _not_ provided, one will be created by passing the entire `options` object to `tls.createSecureContext()`."
+                    },
+                    {
+                      "textRaw": "`onread` {Object} If the `socket` option is missing, incoming data is stored in a single `buffer` and passed to the supplied `callback` when data arrives on the socket, otherwise the option is ignored. See the `onread` option of [`net.Socket`][] for details.",
+                      "name": "onread",
+                      "type": "Object",
+                      "desc": "If the `socket` option is missing, incoming data is stored in a single `buffer` and passed to the supplied `callback` when data arrives on the socket, otherwise the option is ignored. See the `onread` option of [`net.Socket`][] for details."
                     },
                     {
                       "textRaw": "...: [`tls.createSecureContext()`][] options that are used if the `secureContext` option is missing, otherwise they are ignored.",
@@ -1681,18 +1692,18 @@
                       "desc": "Identifier of a private key managed by an OpenSSL engine. Should be used together with `privateKeyEngine`. Should not be set together with `key`, because both options define a private key in different ways."
                     },
                     {
-                      "textRaw": "`maxVersion` {string} Optionally set the maximum TLS version to allow. One of `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the `secureProtocol` option, use one or the other. **Default:** [`tls.DEFAULT_MAX_VERSION`][].",
+                      "textRaw": "`maxVersion` {string} Optionally set the maximum TLS version to allow. One of `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the `secureProtocol` option; use one or the other. **Default:** [`tls.DEFAULT_MAX_VERSION`][].",
                       "name": "maxVersion",
                       "type": "string",
                       "default": "[`tls.DEFAULT_MAX_VERSION`][]",
-                      "desc": "Optionally set the maximum TLS version to allow. One of `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the `secureProtocol` option, use one or the other."
+                      "desc": "Optionally set the maximum TLS version to allow. One of `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the `secureProtocol` option; use one or the other."
                     },
                     {
-                      "textRaw": "`minVersion` {string} Optionally set the minimum TLS version to allow. One of `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the `secureProtocol` option, use one or the other. It is not recommended to use less than TLSv1.2, but it may be required for interoperability. **Default:** [`tls.DEFAULT_MIN_VERSION`][].",
+                      "textRaw": "`minVersion` {string} Optionally set the minimum TLS version to allow. One of `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the `secureProtocol` option; use one or the other. Avoid setting to less than TLSv1.2, but it may be required for interoperability. **Default:** [`tls.DEFAULT_MIN_VERSION`][].",
                       "name": "minVersion",
                       "type": "string",
                       "default": "[`tls.DEFAULT_MIN_VERSION`][]",
-                      "desc": "Optionally set the minimum TLS version to allow. One of `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the `secureProtocol` option, use one or the other. It is not recommended to use less than TLSv1.2, but it may be required for interoperability."
+                      "desc": "Optionally set the minimum TLS version to allow. One of `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the `secureProtocol` option; use one or the other. Avoid setting to less than TLSv1.2, but it may be required for interoperability."
                     },
                     {
                       "textRaw": "`passphrase` {string} Shared passphrase used for a single private key and/or a PFX.",

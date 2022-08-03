@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/dgram.js\">lib/dgram.js</a></p>\n<p>The <code>dgram</code> module provides an implementation of UDP datagram sockets.</p>\n<pre><code class=\"language-js\">const dgram = require('dgram');\nconst server = dgram.createSocket('udp4');\n\nserver.on('error', (err) => {\n  console.log(`server error:\\n${err.stack}`);\n  server.close();\n});\n\nserver.on('message', (msg, rinfo) => {\n  console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);\n});\n\nserver.on('listening', () => {\n  const address = server.address();\n  console.log(`server listening ${address.address}:${address.port}`);\n});\n\nserver.bind(41234);\n// Prints: server listening 0.0.0.0:41234\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/dgram.js\">lib/dgram.js</a></p>\n<p>The <code>dgram</code> module provides an implementation of UDP datagram sockets.</p>\n<pre><code class=\"language-js\">const dgram = require('dgram');\nconst server = dgram.createSocket('udp4');\n\nserver.on('error', (err) => {\n  console.log(`server error:\\n${err.stack}`);\n  server.close();\n});\n\nserver.on('message', (msg, rinfo) => {\n  console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);\n});\n\nserver.on('listening', () => {\n  const address = server.address();\n  console.log(`server listening ${address.address}:${address.port}`);\n});\n\nserver.bind(41234);\n// Prints: server listening 0.0.0.0:41234\n</code></pre>",
       "classes": [
         {
           "textRaw": "Class: `dgram.Socket`",
@@ -801,6 +801,11 @@
                 ],
                 "changes": [
                   {
+                    "version": "v14.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/37026",
+                    "description": "AbortSignal support was added."
+                  },
+                  {
                     "version": "v11.4.0",
                     "pr-url": "https://github.com/nodejs/node/pull/23798",
                     "description": "The `ipv6Only` option is supported."
@@ -869,6 +874,12 @@
                           "type": "Function",
                           "default": "[`dns.lookup()`][]",
                           "desc": "Custom lookup function."
+                        },
+                        {
+                          "textRaw": "`signal` {AbortSignal} An AbortSignal that may be used to close a socket.",
+                          "name": "signal",
+                          "type": "AbortSignal",
+                          "desc": "An AbortSignal that may be used to close a socket."
                         }
                       ]
                     },
@@ -881,7 +892,7 @@
                   ]
                 }
               ],
-              "desc": "<p>Creates a <code>dgram.Socket</code> object. Once the socket is created, calling\n<a href=\"#dgram_socket_bind_port_address_callback\"><code>socket.bind()</code></a> will instruct the socket to begin listening for datagram\nmessages. When <code>address</code> and <code>port</code> are not passed to <a href=\"#dgram_socket_bind_port_address_callback\"><code>socket.bind()</code></a> the\nmethod will bind the socket to the \"all interfaces\" address on a random port\n(it does the right thing for both <code>udp4</code> and <code>udp6</code> sockets). The bound address\nand port can be retrieved using <a href=\"#dgram_socket_address\"><code>socket.address().address</code></a> and\n<a href=\"#dgram_socket_address\"><code>socket.address().port</code></a>.</p>"
+              "desc": "<p>Creates a <code>dgram.Socket</code> object. Once the socket is created, calling\n<a href=\"#dgram_socket_bind_port_address_callback\"><code>socket.bind()</code></a> will instruct the socket to begin listening for datagram\nmessages. When <code>address</code> and <code>port</code> are not passed to <a href=\"#dgram_socket_bind_port_address_callback\"><code>socket.bind()</code></a> the\nmethod will bind the socket to the \"all interfaces\" address on a random port\n(it does the right thing for both <code>udp4</code> and <code>udp6</code> sockets). The bound address\nand port can be retrieved using <a href=\"#dgram_socket_address\"><code>socket.address().address</code></a> and\n<a href=\"#dgram_socket_address\"><code>socket.address().port</code></a>.</p>\n<p>If the <code>signal</code> option is enabled, calling <code>.abort()</code> on the corresponding\n<code>AbortController</code> is similar to calling <code>.close()</code> on the socket:</p>\n<pre><code class=\"language-js\">const controller = new AbortController();\nconst { signal } = controller;\nconst server = dgram.createSocket({ type: 'udp4', signal });\nserver.on('message', (msg, rinfo) => {\n  console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);\n});\n// Later, when you want to close the server.\ncontroller.abort();\n</code></pre>"
             },
             {
               "textRaw": "`dgram.createSocket(type[, callback])`",

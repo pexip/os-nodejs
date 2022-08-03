@@ -6,7 +6,7 @@
       "textRaw": "V8",
       "name": "v8",
       "introduced_in": "v4.0.0",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/v8.js\">lib/v8.js</a></p>\n<p>The <code>v8</code> module exposes APIs that are specific to the version of <a href=\"https://developers.google.com/v8/\">V8</a>\nbuilt into the Node.js binary. It can be accessed using:</p>\n<pre><code class=\"language-js\">const v8 = require('v8');\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/v8.js\">lib/v8.js</a></p>\n<p>The <code>v8</code> module exposes APIs that are specific to the version of <a href=\"https://developers.google.com/v8/\">V8</a>\nbuilt into the Node.js binary. It can be accessed using:</p>\n<pre><code class=\"language-js\">const v8 = require('v8');\n</code></pre>",
       "methods": [
         {
           "textRaw": "`v8.cachedDataVersionTag()`",
@@ -158,6 +158,40 @@
             }
           ],
           "desc": "<p>The <code>v8.setFlagsFromString()</code> method can be used to programmatically set\nV8 command-line flags. This method should be used with care. Changing settings\nafter the VM has started may result in unpredictable behavior, including\ncrashes and data loss; or it may simply do nothing.</p>\n<p>The V8 options available for a version of Node.js may be determined by running\n<code>node --v8-options</code>.</p>\n<p>Usage:</p>\n<pre><code class=\"language-js\">// Print GC events to stdout for one minute.\nconst v8 = require('v8');\nv8.setFlagsFromString('--trace_gc');\nsetTimeout(() => { v8.setFlagsFromString('--notrace_gc'); }, 60e3);\n</code></pre>"
+        },
+        {
+          "textRaw": "`v8.stopCoverage()`",
+          "type": "method",
+          "name": "stopCoverage",
+          "meta": {
+            "added": [
+              "v14.18.0"
+            ],
+            "changes": []
+          },
+          "signatures": [
+            {
+              "params": []
+            }
+          ],
+          "desc": "<p>The <code>v8.stopCoverage()</code> method allows the user to stop the coverage collection\nstarted by <a href=\"cli.html#cli_node_v8_coverage_dir\"><code>NODE_V8_COVERAGE</code></a>, so that V8 can release the execution count\nrecords and optimize code. This can be used in conjunction with\n<a href=\"#v8_v8_takecoverage\"><code>v8.takeCoverage()</code></a> if the user wants to collect the coverage on demand.</p>"
+        },
+        {
+          "textRaw": "`v8.takeCoverage()`",
+          "type": "method",
+          "name": "takeCoverage",
+          "meta": {
+            "added": [
+              "v14.18.0"
+            ],
+            "changes": []
+          },
+          "signatures": [
+            {
+              "params": []
+            }
+          ],
+          "desc": "<p>The <code>v8.takeCoverage()</code> method allows the user to write the coverage started by\n<a href=\"cli.html#cli_node_v8_coverage_dir\"><code>NODE_V8_COVERAGE</code></a> to disk on demand. This method can be invoked multiple\ntimes during the lifetime of the process. Each time the execution counter will\nbe reset and a new coverage report will be written to the directory specified\nby <a href=\"cli.html#cli_node_v8_coverage_dir\"><code>NODE_V8_COVERAGE</code></a>.</p>\n<p>When the process is about to exit, one last coverage will still be written to\ndisk unless <a href=\"#v8_v8_stopcoverage\"><code>v8.stopCoverage()</code></a> is invoked before the process exits.</p>"
         },
         {
           "textRaw": "`v8.writeHeapSnapshot([filename])`",

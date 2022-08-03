@@ -115,12 +115,24 @@ The properties included on each object include:
       idle: 1070905480,
       irq: 20
     }
-  }
+  },
 ]
 ```
 
 `nice` values are POSIX-only. On Windows, the `nice` values of all processors
 are always 0.
+
+## `os.devNull`
+<!-- YAML
+added: v14.18.0
+-->
+
+* {string}
+
+The platform-specific file path of the null device.
+
+* `\\.\nul` on Windows
+* `/dev/null` on POSIX
 
 ## `os.endianness()`
 <!-- YAML
@@ -1267,7 +1279,7 @@ The following process scheduling constants are exported by
   </tr>
 </table>
 
-[Android building]: https://github.com/nodejs/node/blob/master/BUILDING.md#androidandroid-based-devices-eg-firefox-os
+[Android building]: https://github.com/nodejs/node/blob/HEAD/BUILDING.md#androidandroid-based-devices-eg-firefox-os
 [EUID]: https://en.wikipedia.org/wiki/User_identifier#Effective_user_ID
 [`SystemError`]: errors.md#errors_class_systemerror
 [`process.arch`]: process.md#process_process_arch

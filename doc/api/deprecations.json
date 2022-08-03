@@ -183,7 +183,7 @@
                     "description": "Runtime deprecation."
                   },
                   {
-                    "version": "v0.5.11",
+                    "version": "v0.5.10",
                     "description": "Documentation-only deprecation."
                   }
                 ]
@@ -898,7 +898,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"events.html#events_eventemitter_listenercount_emitter_eventname\"><code>EventEmitter.listenerCount(emitter, eventName)</code></a> API is\ndeprecated. Please use <a href=\"events.html#events_emitter_listenercount_eventname\"><code>emitter.listenerCount(eventName)</code></a> instead.</p>",
+              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"events.html#events_events_listenercount_emitter_eventname\"><code>events.listenerCount(emitter, eventName)</code></a> API is\ndeprecated. Please use <a href=\"events.html#events_emitter_listenercount_eventname\"><code>emitter.listenerCount(eventName)</code></a> instead.</p>",
               "type": "module",
               "displayName": "DEP0033: `EventEmitter.listenerCount()`"
             },
@@ -1752,7 +1752,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Runtime</p>\n<p>The <code>http</code> module <code>OutgoingMessage.prototype._headers</code> and\n<code>OutgoingMessage.prototype._headerNames</code> properties are deprecated. Use one of\nthe public methods (e.g. <code>OutgoingMessage.prototype.getHeader()</code>,\n<code>OutgoingMessage.prototype.getHeaders()</code>,\n<code>OutgoingMessage.prototype.getHeaderNames()</code>,\n<code>OutgoingMessage.prototype.hasHeader()</code>,\n<code>OutgoingMessage.prototype.removeHeader()</code>,\n<code>OutgoingMessage.prototype.setHeader()</code>) for working with outgoing headers.</p>\n<p>The <code>OutgoingMessage.prototype._headers</code> and\n<code>OutgoingMessage.prototype._headerNames</code> properties were never documented as\nofficially supported properties.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <code>http</code> module <code>OutgoingMessage.prototype._headers</code> and\n<code>OutgoingMessage.prototype._headerNames</code> properties are deprecated. Use one of\nthe public methods (e.g. <code>OutgoingMessage.prototype.getHeader()</code>,\n<code>OutgoingMessage.prototype.getHeaders()</code>,\n<code>OutgoingMessage.prototype.getHeaderNames()</code>,\n<code>OutgoingMessage.prototype.getRawHeaderNames()</code>,\n<code>OutgoingMessage.prototype.hasHeader()</code>,\n<code>OutgoingMessage.prototype.removeHeader()</code>,\n<code>OutgoingMessage.prototype.setHeader()</code>) for working with outgoing headers.</p>\n<p>The <code>OutgoingMessage.prototype._headers</code> and\n<code>OutgoingMessage.prototype._headerNames</code> properties were never documented as\nofficially supported properties.</p>",
               "type": "module",
               "displayName": "DEP0066: `OutgoingMessage.prototype._headers, OutgoingMessage.prototype._headerNames`"
             },
@@ -2225,8 +2225,8 @@
               "displayName": "DEP0092: Top-level `this` bound to `module.exports`"
             },
             {
-              "textRaw": "DEP0093: `crypto.fips` is deprecated and replaced.",
-              "name": "dep0093:_`crypto.fips`_is_deprecated_and_replaced.",
+              "textRaw": "DEP0093: `crypto.fips` is deprecated and replaced",
+              "name": "dep0093:_`crypto.fips`_is_deprecated_and_replaced",
               "meta": {
                 "changes": [
                   {
@@ -2238,11 +2238,11 @@
               },
               "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"crypto.html#crypto_crypto_fips\"><code>crypto.fips</code></a> property is deprecated. Please use <code>crypto.setFips()</code>\nand <code>crypto.getFips()</code> instead.</p>",
               "type": "module",
-              "displayName": "DEP0093: `crypto.fips` is deprecated and replaced."
+              "displayName": "DEP0093: `crypto.fips` is deprecated and replaced"
             },
             {
-              "textRaw": "DEP0094: Using `assert.fail()` with more than one argument.",
-              "name": "dep0094:_using_`assert.fail()`_with_more_than_one_argument.",
+              "textRaw": "DEP0094: Using `assert.fail()` with more than one argument",
+              "name": "dep0094:_using_`assert.fail()`_with_more_than_one_argument",
               "meta": {
                 "changes": [
                   {
@@ -2254,7 +2254,7 @@
               },
               "desc": "<p>Type: Runtime</p>\n<p>Using <code>assert.fail()</code> with more than one argument is deprecated. Use\n<code>assert.fail()</code> with only one argument or use a different <code>assert</code> module\nmethod.</p>",
               "type": "module",
-              "displayName": "DEP0094: Using `assert.fail()` with more than one argument."
+              "displayName": "DEP0094: Using `assert.fail()` with more than one argument"
             },
             {
               "textRaw": "DEP0095: `timers.enroll()`",
@@ -2382,8 +2382,8 @@
               "displayName": "DEP0101: `--with-lttng`"
             },
             {
-              "textRaw": "DEP0102: Using `noAssert` in `Buffer#(read|write)` operations.",
-              "name": "dep0102:_using_`noassert`_in_`buffer#(read|write)`_operations.",
+              "textRaw": "DEP0102: Using `noAssert` in `Buffer#(read|write)` operations",
+              "name": "dep0102:_using_`noassert`_in_`buffer#(read|write)`_operations",
               "meta": {
                 "changes": [
                   {
@@ -2395,7 +2395,7 @@
               },
               "desc": "<p>Type: End-of-Life</p>\n<p>Using the <code>noAssert</code> argument has no functionality anymore. All input is going\nto be verified, no matter if it is set to true or not. Skipping the verification\ncould lead to hard to find errors and crashes.</p>",
               "type": "module",
-              "displayName": "DEP0102: Using `noAssert` in `Buffer#(read|write)` operations."
+              "displayName": "DEP0102: Using `noAssert` in `Buffer#(read|write)` operations"
             },
             {
               "textRaw": "DEP0103: `process.binding('util').is[...]` typechecks",
@@ -2654,13 +2654,18 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v14.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/37784",
+                    "description": "Deprecation revoked. Status changed to \"Legacy\"."
+                  },
+                  {
                     "version": "v11.0.0",
                     "pr-url": "https://github.com/nodejs/node/pull/22715",
                     "description": "Documentation-only deprecation."
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"url.html#url_legacy_url_api\">Legacy URL API</a> is deprecated. This includes <a href=\"url.html#url_url_format_urlobject\"><code>url.format()</code></a>,\n<a href=\"url.html#url_url_parse_urlstring_parsequerystring_slashesdenotehost\"><code>url.parse()</code></a>, <a href=\"url.html#url_url_resolve_from_to\"><code>url.resolve()</code></a>, and the <a href=\"url.html#url_legacy_urlobject\">legacy <code>urlObject</code></a>. Please\nuse the <a href=\"url.html#url_the_whatwg_url_api\">WHATWG URL API</a> instead.</p>",
+              "desc": "<p>Type: Deprecation revoked</p>\n<p>The <a href=\"url.html#url_legacy_url_api\">Legacy URL API</a> is deprecated. This includes <a href=\"url.html#url_url_format_urlobject\"><code>url.format()</code></a>,\n<a href=\"url.html#url_url_parse_urlstring_parsequerystring_slashesdenotehost\"><code>url.parse()</code></a>, <a href=\"url.html#url_url_resolve_from_to\"><code>url.resolve()</code></a>, and the <a href=\"url.html#url_legacy_urlobject\">legacy <code>urlObject</code></a>. Please\nuse the <a href=\"url.html#url_the_whatwg_url_api\">WHATWG URL API</a> instead.</p>",
               "type": "module",
               "displayName": "DEP0116: Legacy URL API"
             },
@@ -3008,7 +3013,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p><a href=\"http.html#http_response_finished\"><code>response.finished</code></a> indicates whether <a href=\"http.html#http_response_end_data_encoding_callback\"><code>response.end()</code></a> has been\ncalled, not whether <code>'finish'</code> has been emitted and the underlying data\nis flushed.</p>\n<p>Use <a href=\"http.html#http_response_writablefinished\"><code>response.writableFinished</code></a> or <a href=\"http.html#http_response_writableended\"><code>response.writableEnded</code></a>\naccordingly instead to avoid the ambigiuty.</p>\n<p>To maintain existing behaviour <code>response.finished</code> should be replaced with\n<code>response.writableEnded</code>.</p>",
+              "desc": "<p>Type: Documentation-only</p>\n<p><a href=\"http.html#http_response_finished\"><code>response.finished</code></a> indicates whether <a href=\"http.html#http_response_end_data_encoding_callback\"><code>response.end()</code></a> has been\ncalled, not whether <code>'finish'</code> has been emitted and the underlying data\nis flushed.</p>\n<p>Use <a href=\"http.html#http_response_writablefinished\"><code>response.writableFinished</code></a> or <a href=\"http.html#http_response_writableended\"><code>response.writableEnded</code></a>\naccordingly instead to avoid the ambiguity.</p>\n<p>To maintain existing behaviour <code>response.finished</code> should be replaced with\n<code>response.writableEnded</code>.</p>",
               "type": "module",
               "displayName": "DEP0136: `http` `finished`"
             },
@@ -3196,6 +3201,22 @@
               "desc": "<p>Type: Documentation-only</p>\n<p>In future versions of Node.js, <code>fs.rmdir(path, { recursive: true })</code> will throw\non nonexistent paths, or when given a file as a target.\nUse <code>fs.rm(path, { recursive: true, force: true })</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0147: `fs.rmdir(path, { recursive: true })`"
+            },
+            {
+              "textRaw": "DEP0151: Main index lookup and extension searching",
+              "name": "dep0151:_main_index_lookup_and_extension_searching",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v14.18.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/36918",
+                    "description": "Documentation-only deprecation with `--pending-deprecation` support."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only (supports <a href=\"cli.html#cli_pending_deprecation\"><code>--pending-deprecation</code></a>)</p>\n<p>Previously, <code>index.js</code> and extension searching lookups would apply to\n<code>import 'pkg'</code> main entry point resolution, even when resolving ES modules.</p>\n<p>With this deprecation, all ES module main entry point resolutions require\nan explicit <a href=\"packages.html#packages_main_entry_point_export\"><code>\"exports\"</code> or <code>\"main\"</code> entry</a> with the exact file extension.</p>",
+              "type": "module",
+              "displayName": "DEP0151: Main index lookup and extension searching"
             }
           ],
           "type": "misc",

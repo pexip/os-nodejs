@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/dns.js\">lib/dns.js</a></p>\n<p>The <code>dns</code> module enables name resolution. For example, use it to look up IP\naddresses of host names.</p>\n<p>Although named for the <a href=\"https://en.wikipedia.org/wiki/Domain_Name_System\">Domain Name System (DNS)</a>, it does not always use the\nDNS protocol for lookups. <a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a> uses the operating system\nfacilities to perform name resolution. It may not need to perform any network\ncommunication. To perform name resolution the way other applications on the same\nsystem do, use <a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a>.</p>\n<pre><code class=\"language-js\">const dns = require('dns');\n\ndns.lookup('example.org', (err, address, family) => {\n  console.log('address: %j family: IPv%s', address, family);\n});\n// address: \"93.184.216.34\" family: IPv4\n</code></pre>\n<p>All other functions in the <code>dns</code> module connect to an actual DNS server to\nperform name resolution. They will always use the network to perform DNS\nqueries. These functions do not use the same set of configuration files used by\n<a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a> (e.g. <code>/etc/hosts</code>). Use these functions to always perform\nDNS queries, bypassing other name-resolution facilities.</p>\n<pre><code class=\"language-js\">const dns = require('dns');\n\ndns.resolve4('archive.org', (err, addresses) => {\n  if (err) throw err;\n\n  console.log(`addresses: ${JSON.stringify(addresses)}`);\n\n  addresses.forEach((a) => {\n    dns.reverse(a, (err, hostnames) => {\n      if (err) {\n        throw err;\n      }\n      console.log(`reverse for ${a}: ${JSON.stringify(hostnames)}`);\n    });\n  });\n});\n</code></pre>\n<p>See the <a href=\"#dns_implementation_considerations\">Implementation considerations section</a> for more information.</p>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/dns.js\">lib/dns.js</a></p>\n<p>The <code>dns</code> module enables name resolution. For example, use it to look up IP\naddresses of host names.</p>\n<p>Although named for the <a href=\"https://en.wikipedia.org/wiki/Domain_Name_System\">Domain Name System (DNS)</a>, it does not always use the\nDNS protocol for lookups. <a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a> uses the operating system\nfacilities to perform name resolution. It may not need to perform any network\ncommunication. To perform name resolution the way other applications on the same\nsystem do, use <a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a>.</p>\n<pre><code class=\"language-js\">const dns = require('dns');\n\ndns.lookup('example.org', (err, address, family) => {\n  console.log('address: %j family: IPv%s', address, family);\n});\n// address: \"93.184.216.34\" family: IPv4\n</code></pre>\n<p>All other functions in the <code>dns</code> module connect to an actual DNS server to\nperform name resolution. They will always use the network to perform DNS\nqueries. These functions do not use the same set of configuration files used by\n<a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a> (e.g. <code>/etc/hosts</code>). Use these functions to always perform\nDNS queries, bypassing other name-resolution facilities.</p>\n<pre><code class=\"language-js\">const dns = require('dns');\n\ndns.resolve4('archive.org', (err, addresses) => {\n  if (err) throw err;\n\n  console.log(`addresses: ${JSON.stringify(addresses)}`);\n\n  addresses.forEach((a) => {\n    dns.reverse(a, (err, hostnames) => {\n      if (err) {\n        throw err;\n      }\n      console.log(`reverse for ${a}: ${JSON.stringify(hostnames)}`);\n    });\n  });\n});\n</code></pre>\n<p>See the <a href=\"#dns_implementation_considerations\">Implementation considerations section</a> for more information.</p>",
       "classes": [
         {
           "textRaw": "Class: `dns.Resolver`",
@@ -20,7 +20,7 @@
             ],
             "changes": []
           },
-          "desc": "<p>An independent resolver for DNS requests.</p>\n<p>Creating a new resolver uses the default server settings. Setting\nthe servers used for a resolver using\n<a href=\"#dns_dns_setservers_servers\"><code>resolver.setServers()</code></a> does not affect\nother resolvers:</p>\n<pre><code class=\"language-js\">const { Resolver } = require('dns');\nconst resolver = new Resolver();\nresolver.setServers(['4.4.4.4']);\n\n// This request will use the server at 4.4.4.4, independent of global settings.\nresolver.resolve4('example.org', (err, addresses) => {\n  // ...\n});\n</code></pre>\n<p>The following methods from the <code>dns</code> module are available:</p>\n<ul>\n<li><a href=\"#dns_dns_getservers\"><code>resolver.getServers()</code></a></li>\n<li><a href=\"#dns_dns_resolve_hostname_rrtype_callback\"><code>resolver.resolve()</code></a></li>\n<li><a href=\"#dns_dns_resolve4_hostname_options_callback\"><code>resolver.resolve4()</code></a></li>\n<li><a href=\"#dns_dns_resolve6_hostname_options_callback\"><code>resolver.resolve6()</code></a></li>\n<li><a href=\"#dns_dns_resolveany_hostname_callback\"><code>resolver.resolveAny()</code></a></li>\n<li><a href=\"#dns_dns_resolvecname_hostname_callback\"><code>resolver.resolveCname()</code></a></li>\n<li><a href=\"#dns_dns_resolvemx_hostname_callback\"><code>resolver.resolveMx()</code></a></li>\n<li><a href=\"#dns_dns_resolvenaptr_hostname_callback\"><code>resolver.resolveNaptr()</code></a></li>\n<li><a href=\"#dns_dns_resolvens_hostname_callback\"><code>resolver.resolveNs()</code></a></li>\n<li><a href=\"#dns_dns_resolveptr_hostname_callback\"><code>resolver.resolvePtr()</code></a></li>\n<li><a href=\"#dns_dns_resolvesoa_hostname_callback\"><code>resolver.resolveSoa()</code></a></li>\n<li><a href=\"#dns_dns_resolvesrv_hostname_callback\"><code>resolver.resolveSrv()</code></a></li>\n<li><a href=\"#dns_dns_resolvetxt_hostname_callback\"><code>resolver.resolveTxt()</code></a></li>\n<li><a href=\"#dns_dns_reverse_ip_callback\"><code>resolver.reverse()</code></a></li>\n<li><a href=\"#dns_dns_setservers_servers\"><code>resolver.setServers()</code></a></li>\n</ul>",
+          "desc": "<p>An independent resolver for DNS requests.</p>\n<p>Creating a new resolver uses the default server settings. Setting\nthe servers used for a resolver using\n<a href=\"#dns_dns_setservers_servers\"><code>resolver.setServers()</code></a> does not affect\nother resolvers:</p>\n<pre><code class=\"language-js\">const { Resolver } = require('dns');\nconst resolver = new Resolver();\nresolver.setServers(['4.4.4.4']);\n\n// This request will use the server at 4.4.4.4, independent of global settings.\nresolver.resolve4('example.org', (err, addresses) => {\n  // ...\n});\n</code></pre>\n<p>The following methods from the <code>dns</code> module are available:</p>\n<ul>\n<li><a href=\"#dns_dns_getservers\"><code>resolver.getServers()</code></a></li>\n<li><a href=\"#dns_dns_resolve_hostname_rrtype_callback\"><code>resolver.resolve()</code></a></li>\n<li><a href=\"#dns_dns_resolve4_hostname_options_callback\"><code>resolver.resolve4()</code></a></li>\n<li><a href=\"#dns_dns_resolve6_hostname_options_callback\"><code>resolver.resolve6()</code></a></li>\n<li><a href=\"#dns_dns_resolveany_hostname_callback\"><code>resolver.resolveAny()</code></a></li>\n<li><a href=\"#dns_dns_resolvecaa_hostname_callback\"><code>resolver.resolveCaa()</code></a></li>\n<li><a href=\"#dns_dns_resolvecname_hostname_callback\"><code>resolver.resolveCname()</code></a></li>\n<li><a href=\"#dns_dns_resolvemx_hostname_callback\"><code>resolver.resolveMx()</code></a></li>\n<li><a href=\"#dns_dns_resolvenaptr_hostname_callback\"><code>resolver.resolveNaptr()</code></a></li>\n<li><a href=\"#dns_dns_resolvens_hostname_callback\"><code>resolver.resolveNs()</code></a></li>\n<li><a href=\"#dns_dns_resolveptr_hostname_callback\"><code>resolver.resolvePtr()</code></a></li>\n<li><a href=\"#dns_dns_resolvesoa_hostname_callback\"><code>resolver.resolveSoa()</code></a></li>\n<li><a href=\"#dns_dns_resolvesrv_hostname_callback\"><code>resolver.resolveSrv()</code></a></li>\n<li><a href=\"#dns_dns_resolvetxt_hostname_callback\"><code>resolver.resolveTxt()</code></a></li>\n<li><a href=\"#dns_dns_reverse_ip_callback\"><code>resolver.reverse()</code></a></li>\n<li><a href=\"#dns_dns_setservers_servers\"><code>resolver.setServers()</code></a></li>\n</ul>",
           "methods": [
             {
               "textRaw": "`Resolver([options])`",
@@ -31,6 +31,11 @@
                   "v8.3.0"
                 ],
                 "changes": [
+                  {
+                    "version": "v14.18.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/39610",
+                    "description": "The `options` object now accepts a `tries` option."
+                  },
                   {
                     "version": "v14.5.0",
                     "pr-url": "https://github.com/nodejs/node/pull/33472",
@@ -43,7 +48,7 @@
                   "params": []
                 }
               ],
-              "desc": "<p>Create a new resolver.</p>\n<ul>\n<li><code>options</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a>\n<ul>\n<li><code>timeout</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Query timeout in milliseconds, or <code>-1</code> to use the\ndefault timeout.</li>\n</ul>\n</li>\n</ul>"
+              "desc": "<p>Create a new resolver.</p>\n<ul>\n<li><code>options</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a>\n<ul>\n<li><code>timeout</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Query timeout in milliseconds, or <code>-1</code> to use the\ndefault timeout.</li>\n<li><code>tries</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> The number of tries the resolver will try contacting\neach name server before giving up. <strong>Default:</strong> <code>4</code></li>\n</ul>\n</li>\n</ul>"
             },
             {
               "textRaw": "`resolver.cancel()`",
@@ -61,6 +66,38 @@
                 }
               ],
               "desc": "<p>Cancel all outstanding DNS queries made by this resolver. The corresponding\ncallbacks will be called with an error with code <code>ECANCELLED</code>.</p>"
+            },
+            {
+              "textRaw": "`resolver.setLocalAddress([ipv4][, ipv6])`",
+              "type": "method",
+              "name": "setLocalAddress",
+              "meta": {
+                "added": [
+                  "v14.17.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "params": [
+                    {
+                      "textRaw": "`ipv4` {string} A string representation of an IPv4 address. **Default:** `'0.0.0.0'`",
+                      "name": "ipv4",
+                      "type": "string",
+                      "default": "`'0.0.0.0'`",
+                      "desc": "A string representation of an IPv4 address."
+                    },
+                    {
+                      "textRaw": "`ipv6` {string} A string representation of an IPv6 address. **Default:** `'::0'`",
+                      "name": "ipv6",
+                      "type": "string",
+                      "default": "`'::0'`",
+                      "desc": "A string representation of an IPv6 address."
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>The resolver instance will send its requests from the specified IP address.\nThis allows programs to specify outbound interfaces when used on multi-homed\nsystems.</p>\n<p>If a v4 or v6 address is not specified, it is set to the default, and the\noperating system will choose a local address automatically.</p>\n<p>The resolver will use the v4 local address when making requests to IPv4 DNS\nservers, and the v6 local address when making requests to IPv6 DNS servers.\nThe <code>rrtype</code> of resolution requests has no impact on the local address used.</p>"
             }
           ]
         }
@@ -86,7 +123,7 @@
               "params": []
             }
           ],
-          "desc": "<p>Returns an array of IP address strings, formatted according to <a href=\"https://tools.ietf.org/html/rfc5952#section-6\">RFC 5952</a>,\nthat are currently configured for DNS resolution. A string will include a port\nsection if a custom port is used.</p>\n<!-- eslint-disable semi-->\n<pre><code class=\"language-js\">[\n  '4.4.4.4',\n  '2001:4860:4860::8888',\n  '4.4.4.4:1053',\n  '[2001:4860:4860::8888]:1053'\n]\n</code></pre>"
+          "desc": "<p>Returns an array of IP address strings, formatted according to <a href=\"https://tools.ietf.org/html/rfc5952#section-6\">RFC 5952</a>,\nthat are currently configured for DNS resolution. A string will include a port\nsection if a custom port is used.</p>\n<!-- eslint-disable semi-->\n<pre><code class=\"language-js\">[\n  '4.4.4.4',\n  '2001:4860:4860::8888',\n  '4.4.4.4:1053',\n  '[2001:4860:4860::8888]:1053',\n]\n</code></pre>"
         },
         {
           "textRaw": "`dns.lookup(hostname[, options], callback)`",
@@ -143,10 +180,10 @@
                       "desc": "When `true`, the callback returns all resolved addresses in an array. Otherwise, returns a single address."
                     },
                     {
-                      "textRaw": "`verbatim` {boolean} When `true`, the callback receives IPv4 and IPv6 addresses in the order the DNS resolver returned them. When `false`, IPv4 addresses are placed before IPv6 addresses. **Default:** currently `false` (addresses are reordered) but this is expected to change in the not too distant future. New code should use `{ verbatim: true }`.",
+                      "textRaw": "`verbatim` {boolean} When `true`, the callback receives IPv4 and IPv6 addresses in the order the DNS resolver returned them. When `false`, IPv4 addresses are placed before IPv6 addresses. **Default:** currently `false` (addresses are reordered) but this is expected to change in the not too distant future. Default value is configurable using [`dns.setDefaultResultOrder()`][] or [`--dns-result-order`][]. New code should use `{ verbatim: true }`.",
                       "name": "verbatim",
                       "type": "boolean",
-                      "default": "currently `false` (addresses are reordered) but this is expected to change in the not too distant future. New code should use `{ verbatim: true }`",
+                      "default": "currently `false` (addresses are reordered) but this is expected to change in the not too distant future. Default value is configurable using [`dns.setDefaultResultOrder()`][] or [`--dns-result-order`][]. New code should use `{ verbatim: true }`",
                       "desc": "When `true`, the callback receives IPv4 and IPv6 addresses in the order the DNS resolver returned them. When `false`, IPv4 addresses are placed before IPv6 addresses."
                     }
                   ]
@@ -296,7 +333,7 @@
               ]
             }
           ],
-          "desc": "<p>Uses the DNS protocol to resolve a host name (e.g. <code>'nodejs.org'</code>) into an array\nof the resource records. The <code>callback</code> function has arguments\n<code>(err, records)</code>. When successful, <code>records</code> will be an array of resource\nrecords. The type and structure of individual results varies based on <code>rrtype</code>:</p>\n<table>\n<thead>\n<tr>\n<th><code>rrtype</code></th>\n<th><code>records</code> contains</th>\n<th>Result type</th>\n<th>Shorthand method</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>'A'</code></td>\n<td>IPv4 addresses (default)</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolve4_hostname_options_callback\"><code>dns.resolve4()</code></a></td>\n</tr>\n<tr>\n<td><code>'AAAA'</code></td>\n<td>IPv6 addresses</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolve6_hostname_options_callback\"><code>dns.resolve6()</code></a></td>\n</tr>\n<tr>\n<td><code>'ANY'</code></td>\n<td>any records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolveany_hostname_callback\"><code>dns.resolveAny()</code></a></td>\n</tr>\n<tr>\n<td><code>'CNAME'</code></td>\n<td>canonical name records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolvecname_hostname_callback\"><code>dns.resolveCname()</code></a></td>\n</tr>\n<tr>\n<td><code>'MX'</code></td>\n<td>mail exchange records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvemx_hostname_callback\"><code>dns.resolveMx()</code></a></td>\n</tr>\n<tr>\n<td><code>'NAPTR'</code></td>\n<td>name authority pointer records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvenaptr_hostname_callback\"><code>dns.resolveNaptr()</code></a></td>\n</tr>\n<tr>\n<td><code>'NS'</code></td>\n<td>name server records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolvens_hostname_callback\"><code>dns.resolveNs()</code></a></td>\n</tr>\n<tr>\n<td><code>'PTR'</code></td>\n<td>pointer records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolveptr_hostname_callback\"><code>dns.resolvePtr()</code></a></td>\n</tr>\n<tr>\n<td><code>'SOA'</code></td>\n<td>start of authority records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvesoa_hostname_callback\"><code>dns.resolveSoa()</code></a></td>\n</tr>\n<tr>\n<td><code>'SRV'</code></td>\n<td>service records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvesrv_hostname_callback\"><code>dns.resolveSrv()</code></a></td>\n</tr>\n<tr>\n<td><code>'TXT'</code></td>\n<td>text records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string[]&gt;</a></td>\n<td><a href=\"#dns_dns_resolvetxt_hostname_callback\"><code>dns.resolveTxt()</code></a></td>\n</tr>\n</tbody>\n</table>\n<p>On error, <code>err</code> is an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> object, where <code>err.code</code> is one of the\n<a href=\"#dns_error_codes\">DNS error codes</a>.</p>"
+          "desc": "<p>Uses the DNS protocol to resolve a host name (e.g. <code>'nodejs.org'</code>) into an array\nof the resource records. The <code>callback</code> function has arguments\n<code>(err, records)</code>. When successful, <code>records</code> will be an array of resource\nrecords. The type and structure of individual results varies based on <code>rrtype</code>:</p>\n<table>\n<thead>\n<tr>\n<th><code>rrtype</code></th>\n<th><code>records</code> contains</th>\n<th>Result type</th>\n<th>Shorthand method</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>'A'</code></td>\n<td>IPv4 addresses (default)</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolve4_hostname_options_callback\"><code>dns.resolve4()</code></a></td>\n</tr>\n<tr>\n<td><code>'AAAA'</code></td>\n<td>IPv6 addresses</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolve6_hostname_options_callback\"><code>dns.resolve6()</code></a></td>\n</tr>\n<tr>\n<td><code>'ANY'</code></td>\n<td>any records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolveany_hostname_callback\"><code>dns.resolveAny()</code></a></td>\n</tr>\n<tr>\n<td><code>'CAA'</code></td>\n<td>CA authorization records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvecaa_hostname_callback\"><code>dns.resolveCaa()</code></a></td>\n</tr>\n<tr>\n<td><code>'CNAME'</code></td>\n<td>canonical name records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolvecname_hostname_callback\"><code>dns.resolveCname()</code></a></td>\n</tr>\n<tr>\n<td><code>'MX'</code></td>\n<td>mail exchange records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvemx_hostname_callback\"><code>dns.resolveMx()</code></a></td>\n</tr>\n<tr>\n<td><code>'NAPTR'</code></td>\n<td>name authority pointer records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvenaptr_hostname_callback\"><code>dns.resolveNaptr()</code></a></td>\n</tr>\n<tr>\n<td><code>'NS'</code></td>\n<td>name server records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolvens_hostname_callback\"><code>dns.resolveNs()</code></a></td>\n</tr>\n<tr>\n<td><code>'PTR'</code></td>\n<td>pointer records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dns_resolveptr_hostname_callback\"><code>dns.resolvePtr()</code></a></td>\n</tr>\n<tr>\n<td><code>'SOA'</code></td>\n<td>start of authority records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvesoa_hostname_callback\"><code>dns.resolveSoa()</code></a></td>\n</tr>\n<tr>\n<td><code>'SRV'</code></td>\n<td>service records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dns_resolvesrv_hostname_callback\"><code>dns.resolveSrv()</code></a></td>\n</tr>\n<tr>\n<td><code>'TXT'</code></td>\n<td>text records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string[]&gt;</a></td>\n<td><a href=\"#dns_dns_resolvetxt_hostname_callback\"><code>dns.resolveTxt()</code></a></td>\n</tr>\n</tbody>\n</table>\n<p>On error, <code>err</code> is an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> object, where <code>err.code</code> is one of the\n<a href=\"#dns_error_codes\">DNS error codes</a>.</p>"
         },
         {
           "textRaw": "`dns.resolve4(hostname[, options], callback)`",
@@ -491,6 +528,46 @@
             }
           ],
           "desc": "<p>Uses the DNS protocol to resolve <code>CNAME</code> records for the <code>hostname</code>. The\n<code>addresses</code> argument passed to the <code>callback</code> function\nwill contain an array of canonical name records available for the <code>hostname</code>\n(e.g. <code>['bar.example.com']</code>).</p>"
+        },
+        {
+          "textRaw": "`dns.resolveCaa(hostname, callback)`",
+          "type": "method",
+          "name": "resolveCaa",
+          "meta": {
+            "added": [
+              "v14.17.0"
+            ],
+            "changes": []
+          },
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`hostname` {string}",
+                  "name": "hostname",
+                  "type": "string"
+                },
+                {
+                  "textRaw": "`callback` {Function}",
+                  "name": "callback",
+                  "type": "Function",
+                  "options": [
+                    {
+                      "textRaw": "`err` {Error}",
+                      "name": "err",
+                      "type": "Error"
+                    },
+                    {
+                      "textRaw": "`records` {Object[]}",
+                      "name": "records",
+                      "type": "Object[]"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "desc": "<p>Uses the DNS protocol to resolve <code>CAA</code> records for the <code>hostname</code>. The\n<code>addresses</code> argument passed to the <code>callback</code> function\nwill contain an array of certification authority authorization records\navailable for the <code>hostname</code> (e.g. <code>[{critical: 0, iodef: 'mailto:pki@example.com'}, {critical: 128, issue: 'pki.example.com'}]</code>).</p>"
         },
         {
           "textRaw": "`dns.resolveMx(hostname, callback)`",
@@ -790,6 +867,30 @@
           "desc": "<p>Performs a reverse DNS query that resolves an IPv4 or IPv6 address to an\narray of host names.</p>\n<p>On error, <code>err</code> is an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> object, where <code>err.code</code> is\none of the <a href=\"#dns_error_codes\">DNS error codes</a>.</p>"
         },
         {
+          "textRaw": "`dns.setDefaultResultOrder(order)`",
+          "type": "method",
+          "name": "setDefaultResultOrder",
+          "meta": {
+            "added": [
+              "v14.18.0"
+            ],
+            "changes": []
+          },
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`order` {string} must be `'ipv4first'` or `'verbatim'`.",
+                  "name": "order",
+                  "type": "string",
+                  "desc": "must be `'ipv4first'` or `'verbatim'`."
+                }
+              ]
+            }
+          ],
+          "desc": "<p>Set the default value of <code>verbatim</code> in <a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a> and\n<a href=\"#dns_dnspromises_lookup_hostname_options\"><code>dnsPromises.lookup()</code></a>. The value could be:</p>\n<ul>\n<li><code>ipv4first</code>: sets default <code>verbatim</code> <code>false</code>.</li>\n<li><code>verbatim</code>: sets default <code>verbatim</code> <code>true</code>.</li>\n</ul>\n<p>The default is <code>ipv4first</code> and <a href=\"#dns_dns_setdefaultresultorder_order\"><code>dns.setDefaultResultOrder()</code></a> have higher\npriority than <a href=\"cli.html#cli_dns_result_order_order\"><code>--dns-result-order</code></a>. When using <a href=\"worker_threads.html\">worker threads</a>,\n<a href=\"#dns_dns_setdefaultresultorder_order\"><code>dns.setDefaultResultOrder()</code></a> from the main thread won't affect the default\ndns orders in workers.</p>"
+        },
+        {
           "textRaw": "`dns.setServers(servers)`",
           "type": "method",
           "name": "setServers",
@@ -811,13 +912,28 @@
               ]
             }
           ],
-          "desc": "<p>Sets the IP address and port of servers to be used when performing DNS\nresolution. The <code>servers</code> argument is an array of <a href=\"https://tools.ietf.org/html/rfc5952#section-6\">RFC 5952</a> formatted\naddresses. If the port is the IANA default DNS port (53) it can be omitted.</p>\n<pre><code class=\"language-js\">dns.setServers([\n  '4.4.4.4',\n  '[2001:4860:4860::8888]',\n  '4.4.4.4:1053',\n  '[2001:4860:4860::8888]:1053'\n]);\n</code></pre>\n<p>An error will be thrown if an invalid address is provided.</p>\n<p>The <code>dns.setServers()</code> method must not be called while a DNS query is in\nprogress.</p>\n<p>The <a href=\"#dns_dns_setservers_servers\"><code>dns.setServers()</code></a> method affects only <a href=\"#dns_dns_resolve_hostname_rrtype_callback\"><code>dns.resolve()</code></a>,\n<code>dns.resolve*()</code> and <a href=\"#dns_dns_reverse_ip_callback\"><code>dns.reverse()</code></a> (and specifically <em>not</em>\n<a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a>).</p>\n<p>This method works much like\n<a href=\"https://man7.org/linux/man-pages/man5/resolv.conf.5.html\">resolve.conf</a>.\nThat is, if attempting to resolve with the first server provided results in a\n<code>NOTFOUND</code> error, the <code>resolve()</code> method will <em>not</em> attempt to resolve with\nsubsequent servers provided. Fallback DNS servers will only be used if the\nearlier ones time out or result in some other error.</p>"
+          "desc": "<p>Sets the IP address and port of servers to be used when performing DNS\nresolution. The <code>servers</code> argument is an array of <a href=\"https://tools.ietf.org/html/rfc5952#section-6\">RFC 5952</a> formatted\naddresses. If the port is the IANA default DNS port (53) it can be omitted.</p>\n<pre><code class=\"language-js\">dns.setServers([\n  '4.4.4.4',\n  '[2001:4860:4860::8888]',\n  '4.4.4.4:1053',\n  '[2001:4860:4860::8888]:1053',\n]);\n</code></pre>\n<p>An error will be thrown if an invalid address is provided.</p>\n<p>The <code>dns.setServers()</code> method must not be called while a DNS query is in\nprogress.</p>\n<p>The <a href=\"#dns_dns_setservers_servers\"><code>dns.setServers()</code></a> method affects only <a href=\"#dns_dns_resolve_hostname_rrtype_callback\"><code>dns.resolve()</code></a>,\n<code>dns.resolve*()</code> and <a href=\"#dns_dns_reverse_ip_callback\"><code>dns.reverse()</code></a> (and specifically <em>not</em>\n<a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a>).</p>\n<p>This method works much like\n<a href=\"https://man7.org/linux/man-pages/man5/resolv.conf.5.html\">resolve.conf</a>.\nThat is, if attempting to resolve with the first server provided results in a\n<code>NOTFOUND</code> error, the <code>resolve()</code> method will <em>not</em> attempt to resolve with\nsubsequent servers provided. Fallback DNS servers will only be used if the\nearlier ones time out or result in some other error.</p>"
         }
       ],
       "modules": [
         {
           "textRaw": "DNS promises API",
           "name": "dns_promises_api",
+          "meta": {
+            "added": [
+              "v10.6.0"
+            ],
+            "changes": [
+              {
+                "version": [
+                  "v11.14.0",
+                  "v10.17.0"
+                ],
+                "pr-url": "https://github.com/nodejs/node/pull/26592",
+                "description": "This API is no longer experimental."
+              }
+            ]
+          },
           "desc": "<p>The <code>dns.promises</code> API provides an alternative set of asynchronous DNS methods\nthat return <code>Promise</code> objects rather than using callbacks. The API is accessible\nvia <code>require('dns').promises</code>.</p>",
           "classes": [
             {
@@ -830,10 +946,27 @@
                 ],
                 "changes": []
               },
-              "desc": "<p>An independent resolver for DNS requests.</p>\n<p>Creating a new resolver uses the default server settings. Setting\nthe servers used for a resolver using\n<a href=\"#dns_dnspromises_setservers_servers\"><code>resolver.setServers()</code></a> does not affect\nother resolvers:</p>\n<pre><code class=\"language-js\">const { Resolver } = require('dns').promises;\nconst resolver = new Resolver();\nresolver.setServers(['4.4.4.4']);\n\n// This request will use the server at 4.4.4.4, independent of global settings.\nresolver.resolve4('example.org').then((addresses) => {\n  // ...\n});\n\n// Alternatively, the same code can be written using async-await style.\n(async function() {\n  const addresses = await resolver.resolve4('example.org');\n})();\n</code></pre>\n<p>The following methods from the <code>dnsPromises</code> API are available:</p>\n<ul>\n<li><a href=\"#dns_dnspromises_getservers\"><code>resolver.getServers()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolve_hostname_rrtype\"><code>resolver.resolve()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolve4_hostname_options\"><code>resolver.resolve4()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolve6_hostname_options\"><code>resolver.resolve6()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolveany_hostname\"><code>resolver.resolveAny()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvecname_hostname\"><code>resolver.resolveCname()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvemx_hostname\"><code>resolver.resolveMx()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvenaptr_hostname\"><code>resolver.resolveNaptr()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvens_hostname\"><code>resolver.resolveNs()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolveptr_hostname\"><code>resolver.resolvePtr()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvesoa_hostname\"><code>resolver.resolveSoa()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvesrv_hostname\"><code>resolver.resolveSrv()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvetxt_hostname\"><code>resolver.resolveTxt()</code></a></li>\n<li><a href=\"#dns_dnspromises_reverse_ip\"><code>resolver.reverse()</code></a></li>\n<li><a href=\"#dns_dnspromises_setservers_servers\"><code>resolver.setServers()</code></a></li>\n</ul>"
+              "desc": "<p>An independent resolver for DNS requests.</p>\n<p>Creating a new resolver uses the default server settings. Setting\nthe servers used for a resolver using\n<a href=\"#dns_dnspromises_setservers_servers\"><code>resolver.setServers()</code></a> does not affect\nother resolvers:</p>\n<pre><code class=\"language-js\">const { Resolver } = require('dns').promises;\nconst resolver = new Resolver();\nresolver.setServers(['4.4.4.4']);\n\n// This request will use the server at 4.4.4.4, independent of global settings.\nresolver.resolve4('example.org').then((addresses) => {\n  // ...\n});\n\n// Alternatively, the same code can be written using async-await style.\n(async function() {\n  const addresses = await resolver.resolve4('example.org');\n})();\n</code></pre>\n<p>The following methods from the <code>dnsPromises</code> API are available:</p>\n<ul>\n<li><a href=\"#dns_dnspromises_getservers\"><code>resolver.getServers()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolve_hostname_rrtype\"><code>resolver.resolve()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolve4_hostname_options\"><code>resolver.resolve4()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolve6_hostname_options\"><code>resolver.resolve6()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolveany_hostname\"><code>resolver.resolveAny()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvecaa_hostname\"><code>resolver.resolveCaa()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvecname_hostname\"><code>resolver.resolveCname()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvemx_hostname\"><code>resolver.resolveMx()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvenaptr_hostname\"><code>resolver.resolveNaptr()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvens_hostname\"><code>resolver.resolveNs()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolveptr_hostname\"><code>resolver.resolvePtr()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvesoa_hostname\"><code>resolver.resolveSoa()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvesrv_hostname\"><code>resolver.resolveSrv()</code></a></li>\n<li><a href=\"#dns_dnspromises_resolvetxt_hostname\"><code>resolver.resolveTxt()</code></a></li>\n<li><a href=\"#dns_dnspromises_reverse_ip\"><code>resolver.reverse()</code></a></li>\n<li><a href=\"#dns_dnspromises_setservers_servers\"><code>resolver.setServers()</code></a></li>\n</ul>"
             }
           ],
           "methods": [
+            {
+              "textRaw": "`resolver.cancel()`",
+              "type": "method",
+              "name": "cancel",
+              "meta": {
+                "added": [
+                  "v14.17.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "params": []
+                }
+              ],
+              "desc": "<p>Cancel all outstanding DNS queries made by this resolver. The corresponding\npromises will be rejected with an error with code <code>ECANCELLED</code>.</p>"
+            },
             {
               "textRaw": "`dnsPromises.getServers()`",
               "type": "method",
@@ -854,7 +987,7 @@
                   "params": []
                 }
               ],
-              "desc": "<p>Returns an array of IP address strings, formatted according to <a href=\"https://tools.ietf.org/html/rfc5952#section-6\">RFC 5952</a>,\nthat are currently configured for DNS resolution. A string will include a port\nsection if a custom port is used.</p>\n<!-- eslint-disable semi-->\n<pre><code class=\"language-js\">[\n  '4.4.4.4',\n  '2001:4860:4860::8888',\n  '4.4.4.4:1053',\n  '[2001:4860:4860::8888]:1053'\n]\n</code></pre>"
+              "desc": "<p>Returns an array of IP address strings, formatted according to <a href=\"https://tools.ietf.org/html/rfc5952#section-6\">RFC 5952</a>,\nthat are currently configured for DNS resolution. A string will include a port\nsection if a custom port is used.</p>\n<!-- eslint-disable semi-->\n<pre><code class=\"language-js\">[\n  '4.4.4.4',\n  '2001:4860:4860::8888',\n  '4.4.4.4:1053',\n  '[2001:4860:4860::8888]:1053',\n]\n</code></pre>"
             },
             {
               "textRaw": "`dnsPromises.lookup(hostname[, options])`",
@@ -900,10 +1033,10 @@
                           "desc": "When `true`, the `Promise` is resolved with all addresses in an array. Otherwise, returns a single address."
                         },
                         {
-                          "textRaw": "`verbatim` {boolean} When `true`, the `Promise` is resolved with IPv4 and IPv6 addresses in the order the DNS resolver returned them. When `false`, IPv4 addresses are placed before IPv6 addresses. **Default:** currently `false` (addresses are reordered) but this is expected to change in the not too distant future. New code should use `{ verbatim: true }`.",
+                          "textRaw": "`verbatim` {boolean} When `true`, the `Promise` is resolved with IPv4 and IPv6 addresses in the order the DNS resolver returned them. When `false`, IPv4 addresses are placed before IPv6 addresses. **Default:** currently `false` (addresses are reordered) but this is expected to change in the not too distant future. Default value is configurable using [`dns.setDefaultResultOrder()`][] or [`--dns-result-order`][]. New code should use `{ verbatim: true }`.",
                           "name": "verbatim",
                           "type": "boolean",
-                          "default": "currently `false` (addresses are reordered) but this is expected to change in the not too distant future. New code should use `{ verbatim: true }`",
+                          "default": "currently `false` (addresses are reordered) but this is expected to change in the not too distant future. Default value is configurable using [`dns.setDefaultResultOrder()`][] or [`--dns-result-order`][]. New code should use `{ verbatim: true }`",
                           "desc": "When `true`, the `Promise` is resolved with IPv4 and IPv6 addresses in the order the DNS resolver returned them. When `false`, IPv4 addresses are placed before IPv6 addresses."
                         }
                       ]
@@ -970,7 +1103,7 @@
                   ]
                 }
               ],
-              "desc": "<p>Uses the DNS protocol to resolve a host name (e.g. <code>'nodejs.org'</code>) into an array\nof the resource records. When successful, the <code>Promise</code> is resolved with an\narray of resource records. The type and structure of individual results vary\nbased on <code>rrtype</code>:</p>\n<table>\n<thead>\n<tr>\n<th><code>rrtype</code></th>\n<th><code>records</code> contains</th>\n<th>Result type</th>\n<th>Shorthand method</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>'A'</code></td>\n<td>IPv4 addresses (default)</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolve4_hostname_options\"><code>dnsPromises.resolve4()</code></a></td>\n</tr>\n<tr>\n<td><code>'AAAA'</code></td>\n<td>IPv6 addresses</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolve6_hostname_options\"><code>dnsPromises.resolve6()</code></a></td>\n</tr>\n<tr>\n<td><code>'ANY'</code></td>\n<td>any records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolveany_hostname\"><code>dnsPromises.resolveAny()</code></a></td>\n</tr>\n<tr>\n<td><code>'CNAME'</code></td>\n<td>canonical name records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvecname_hostname\"><code>dnsPromises.resolveCname()</code></a></td>\n</tr>\n<tr>\n<td><code>'MX'</code></td>\n<td>mail exchange records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvemx_hostname\"><code>dnsPromises.resolveMx()</code></a></td>\n</tr>\n<tr>\n<td><code>'NAPTR'</code></td>\n<td>name authority pointer records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvenaptr_hostname\"><code>dnsPromises.resolveNaptr()</code></a></td>\n</tr>\n<tr>\n<td><code>'NS'</code></td>\n<td>name server records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvens_hostname\"><code>dnsPromises.resolveNs()</code></a></td>\n</tr>\n<tr>\n<td><code>'PTR'</code></td>\n<td>pointer records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolveptr_hostname\"><code>dnsPromises.resolvePtr()</code></a></td>\n</tr>\n<tr>\n<td><code>'SOA'</code></td>\n<td>start of authority records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvesoa_hostname\"><code>dnsPromises.resolveSoa()</code></a></td>\n</tr>\n<tr>\n<td><code>'SRV'</code></td>\n<td>service records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvesrv_hostname\"><code>dnsPromises.resolveSrv()</code></a></td>\n</tr>\n<tr>\n<td><code>'TXT'</code></td>\n<td>text records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string[]&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvetxt_hostname\"><code>dnsPromises.resolveTxt()</code></a></td>\n</tr>\n</tbody>\n</table>\n<p>On error, the <code>Promise</code> is rejected with an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> object, where <code>err.code</code>\nis one of the <a href=\"#dns_error_codes\">DNS error codes</a>.</p>"
+              "desc": "<p>Uses the DNS protocol to resolve a host name (e.g. <code>'nodejs.org'</code>) into an array\nof the resource records. When successful, the <code>Promise</code> is resolved with an\narray of resource records. The type and structure of individual results vary\nbased on <code>rrtype</code>:</p>\n<table>\n<thead>\n<tr>\n<th><code>rrtype</code></th>\n<th><code>records</code> contains</th>\n<th>Result type</th>\n<th>Shorthand method</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>'A'</code></td>\n<td>IPv4 addresses (default)</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolve4_hostname_options\"><code>dnsPromises.resolve4()</code></a></td>\n</tr>\n<tr>\n<td><code>'AAAA'</code></td>\n<td>IPv6 addresses</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolve6_hostname_options\"><code>dnsPromises.resolve6()</code></a></td>\n</tr>\n<tr>\n<td><code>'ANY'</code></td>\n<td>any records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolveany_hostname\"><code>dnsPromises.resolveAny()</code></a></td>\n</tr>\n<tr>\n<td><code>'CAA'</code></td>\n<td>CA authorization records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvecaa_hostname\"><code>dnsPromises.resolveCaa()</code></a></td>\n</tr>\n<tr>\n<td><code>'CNAME'</code></td>\n<td>canonical name records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvecname_hostname\"><code>dnsPromises.resolveCname()</code></a></td>\n</tr>\n<tr>\n<td><code>'MX'</code></td>\n<td>mail exchange records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvemx_hostname\"><code>dnsPromises.resolveMx()</code></a></td>\n</tr>\n<tr>\n<td><code>'NAPTR'</code></td>\n<td>name authority pointer records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvenaptr_hostname\"><code>dnsPromises.resolveNaptr()</code></a></td>\n</tr>\n<tr>\n<td><code>'NS'</code></td>\n<td>name server records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvens_hostname\"><code>dnsPromises.resolveNs()</code></a></td>\n</tr>\n<tr>\n<td><code>'PTR'</code></td>\n<td>pointer records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolveptr_hostname\"><code>dnsPromises.resolvePtr()</code></a></td>\n</tr>\n<tr>\n<td><code>'SOA'</code></td>\n<td>start of authority records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvesoa_hostname\"><code>dnsPromises.resolveSoa()</code></a></td>\n</tr>\n<tr>\n<td><code>'SRV'</code></td>\n<td>service records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvesrv_hostname\"><code>dnsPromises.resolveSrv()</code></a></td>\n</tr>\n<tr>\n<td><code>'TXT'</code></td>\n<td>text records</td>\n<td><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string[]&gt;</a></td>\n<td><a href=\"#dns_dnspromises_resolvetxt_hostname\"><code>dnsPromises.resolveTxt()</code></a></td>\n</tr>\n</tbody>\n</table>\n<p>On error, the <code>Promise</code> is rejected with an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> object, where <code>err.code</code>\nis one of the <a href=\"#dns_error_codes\">DNS error codes</a>.</p>"
             },
             {
               "textRaw": "`dnsPromises.resolve4(hostname[, options])`",
@@ -1068,6 +1201,29 @@
                 }
               ],
               "desc": "<p>Uses the DNS protocol to resolve all records (also known as <code>ANY</code> or <code>*</code> query).\nOn success, the <code>Promise</code> is resolved with an array containing various types of\nrecords. Each object has a property <code>type</code> that indicates the type of the\ncurrent record. And depending on the <code>type</code>, additional properties will be\npresent on the object:</p>\n<table>\n<thead>\n<tr>\n<th>Type</th>\n<th>Properties</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>'A'</code></td>\n<td><code>address</code>/<code>ttl</code></td>\n</tr>\n<tr>\n<td><code>'AAAA'</code></td>\n<td><code>address</code>/<code>ttl</code></td>\n</tr>\n<tr>\n<td><code>'CNAME'</code></td>\n<td><code>value</code></td>\n</tr>\n<tr>\n<td><code>'MX'</code></td>\n<td>Refer to <a href=\"#dns_dnspromises_resolvemx_hostname\"><code>dnsPromises.resolveMx()</code></a></td>\n</tr>\n<tr>\n<td><code>'NAPTR'</code></td>\n<td>Refer to <a href=\"#dns_dnspromises_resolvenaptr_hostname\"><code>dnsPromises.resolveNaptr()</code></a></td>\n</tr>\n<tr>\n<td><code>'NS'</code></td>\n<td><code>value</code></td>\n</tr>\n<tr>\n<td><code>'PTR'</code></td>\n<td><code>value</code></td>\n</tr>\n<tr>\n<td><code>'SOA'</code></td>\n<td>Refer to <a href=\"#dns_dnspromises_resolvesoa_hostname\"><code>dnsPromises.resolveSoa()</code></a></td>\n</tr>\n<tr>\n<td><code>'SRV'</code></td>\n<td>Refer to <a href=\"#dns_dnspromises_resolvesrv_hostname\"><code>dnsPromises.resolveSrv()</code></a></td>\n</tr>\n<tr>\n<td><code>'TXT'</code></td>\n<td>This type of record contains an array property called <code>entries</code> which refers to <a href=\"#dns_dnspromises_resolvetxt_hostname\"><code>dnsPromises.resolveTxt()</code></a>, e.g. <code>{ entries: ['...'], type: 'TXT' }</code></td>\n</tr>\n</tbody>\n</table>\n<p>Here is an example of the result object:</p>\n<!-- eslint-disable semi -->\n<pre><code class=\"language-js\">[ { type: 'A', address: '127.0.0.1', ttl: 299 },\n  { type: 'CNAME', value: 'example.com' },\n  { type: 'MX', exchange: 'alt4.aspmx.l.example.com', priority: 50 },\n  { type: 'NS', value: 'ns1.example.com' },\n  { type: 'TXT', entries: [ 'v=spf1 include:_spf.example.com ~all' ] },\n  { type: 'SOA',\n    nsname: 'ns1.example.com',\n    hostmaster: 'admin.example.com',\n    serial: 156696742,\n    refresh: 900,\n    retry: 900,\n    expire: 1800,\n    minttl: 60 } ]\n</code></pre>"
+            },
+            {
+              "textRaw": "`dnsPromises.resolveCaa(hostname)`",
+              "type": "method",
+              "name": "resolveCaa",
+              "meta": {
+                "added": [
+                  "v14.17.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "params": [
+                    {
+                      "textRaw": "`hostname` {string}",
+                      "name": "hostname",
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Uses the DNS protocol to resolve <code>CAA</code> records for the <code>hostname</code>. On success,\nthe <code>Promise</code> is resolved with an array of objects containing available\ncertification authority authorization records available for the <code>hostname</code>\n(e.g. <code>[{critical: 0, iodef: 'mailto:pki@example.com'},{critical: 128, issue: 'pki.example.com'}]</code>).</p>"
             },
             {
               "textRaw": "`dnsPromises.resolveCname(hostname)`",
@@ -1277,6 +1433,30 @@
               "desc": "<p>Performs a reverse DNS query that resolves an IPv4 or IPv6 address to an\narray of host names.</p>\n<p>On error, the <code>Promise</code> is rejected with an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> object, where <code>err.code</code>\nis one of the <a href=\"#dns_error_codes\">DNS error codes</a>.</p>"
             },
             {
+              "textRaw": "`dnsPromises.setDefaultResultOrder(order)`",
+              "type": "method",
+              "name": "setDefaultResultOrder",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "params": [
+                    {
+                      "textRaw": "`order` {string} must be `'ipv4first'` or `'verbatim'`.",
+                      "name": "order",
+                      "type": "string",
+                      "desc": "must be `'ipv4first'` or `'verbatim'`."
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Set the default value of <code>verbatim</code> in <a href=\"#dns_dns_lookup_hostname_options_callback\"><code>dns.lookup()</code></a> and\n<a href=\"#dns_dnspromises_lookup_hostname_options\"><code>dnsPromises.lookup()</code></a>. The value could be:</p>\n<ul>\n<li><code>ipv4first</code>: sets default <code>verbatim</code> <code>false</code>.</li>\n<li><code>verbatim</code>: sets default <code>verbatim</code> <code>true</code>.</li>\n</ul>\n<p>The default is <code>ipv4first</code> and <a href=\"#dns_dnspromises_setdefaultresultorder_order\"><code>dnsPromises.setDefaultResultOrder()</code></a> have\nhigher priority than <a href=\"cli.html#cli_dns_result_order_order\"><code>--dns-result-order</code></a>. When using <a href=\"worker_threads.html\">worker threads</a>,\n<a href=\"#dns_dnspromises_setdefaultresultorder_order\"><code>dnsPromises.setDefaultResultOrder()</code></a> from the main thread won't affect the\ndefault dns orders in workers.</p>"
+            },
+            {
               "textRaw": "`dnsPromises.setServers(servers)`",
               "type": "method",
               "name": "setServers",
@@ -1298,7 +1478,7 @@
                   ]
                 }
               ],
-              "desc": "<p>Sets the IP address and port of servers to be used when performing DNS\nresolution. The <code>servers</code> argument is an array of <a href=\"https://tools.ietf.org/html/rfc5952#section-6\">RFC 5952</a> formatted\naddresses. If the port is the IANA default DNS port (53) it can be omitted.</p>\n<pre><code class=\"language-js\">dnsPromises.setServers([\n  '4.4.4.4',\n  '[2001:4860:4860::8888]',\n  '4.4.4.4:1053',\n  '[2001:4860:4860::8888]:1053'\n]);\n</code></pre>\n<p>An error will be thrown if an invalid address is provided.</p>\n<p>The <code>dnsPromises.setServers()</code> method must not be called while a DNS query is in\nprogress.</p>\n<p>This method works much like\n<a href=\"https://man7.org/linux/man-pages/man5/resolv.conf.5.html\">resolve.conf</a>.\nThat is, if attempting to resolve with the first server provided results in a\n<code>NOTFOUND</code> error, the <code>resolve()</code> method will <em>not</em> attempt to resolve with\nsubsequent servers provided. Fallback DNS servers will only be used if the\nearlier ones time out or result in some other error.</p>"
+              "desc": "<p>Sets the IP address and port of servers to be used when performing DNS\nresolution. The <code>servers</code> argument is an array of <a href=\"https://tools.ietf.org/html/rfc5952#section-6\">RFC 5952</a> formatted\naddresses. If the port is the IANA default DNS port (53) it can be omitted.</p>\n<pre><code class=\"language-js\">dnsPromises.setServers([\n  '4.4.4.4',\n  '[2001:4860:4860::8888]',\n  '4.4.4.4:1053',\n  '[2001:4860:4860::8888]:1053',\n]);\n</code></pre>\n<p>An error will be thrown if an invalid address is provided.</p>\n<p>The <code>dnsPromises.setServers()</code> method must not be called while a DNS query is in\nprogress.</p>\n<p>This method works much like\n<a href=\"https://man7.org/linux/man-pages/man5/resolv.conf.5.html\">resolve.conf</a>.\nThat is, if attempting to resolve with the first server provided results in a\n<code>NOTFOUND</code> error, the <code>resolve()</code> method will <em>not</em> attempt to resolve with\nsubsequent servers provided. Fallback DNS servers will only be used if the\nearlier ones time out or result in some other error.</p>"
             }
           ],
           "type": "module",
