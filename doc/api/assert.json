@@ -8,7 +8,7 @@
       "introduced_in": "v0.1.21",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/assert.js\">lib/assert.js</a></p>\n<p>The <code>assert</code> module provides a set of assertion functions for verifying\ninvariants.</p>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/assert.js\">lib/assert.js</a></p>\n<p>The <code>assert</code> module provides a set of assertion functions for verifying\ninvariants.</p>",
       "modules": [
         {
           "textRaw": "Strict assertion mode",
@@ -277,6 +277,11 @@
             ],
             "changes": [
               {
+                "version": "v14.18.0",
+                "pr-url": "https://github.com/nodejs/node/pull/38113",
+                "description": "In Legacy assertion mode, changed status from Deprecated to Legacy."
+              },
+              {
                 "version": "v14.0.0",
                 "pr-url": "https://github.com/nodejs/node/pull/30766",
                 "description": "NaN is now treated as being identical in case both sides are NaN."
@@ -343,7 +348,7 @@
               ]
             }
           ],
-          "desc": "<p><strong>Strict assertion mode</strong></p>\n<p>An alias of <a href=\"#assert_assert_deepstrictequal_actual_expected_message\"><code>assert.deepStrictEqual()</code></a>.</p>\n<p><strong>Legacy assertion mode</strong></p>\n<blockquote>\n<p>Stability: 0 - Deprecated: Use <a href=\"#assert_assert_deepstrictequal_actual_expected_message\"><code>assert.deepStrictEqual()</code></a> instead.</p>\n</blockquote>\n<p>Tests for deep equality between the <code>actual</code> and <code>expected</code> parameters. Consider\nusing <a href=\"#assert_assert_deepstrictequal_actual_expected_message\"><code>assert.deepStrictEqual()</code></a> instead. <a href=\"#assert_assert_deepequal_actual_expected_message\"><code>assert.deepEqual()</code></a> can have\nsurprising results.</p>\n<p><em>Deep equality</em> means that the enumerable \"own\" properties of child objects\nare also recursively evaluated by the following rules.</p>",
+          "desc": "<p><strong>Strict assertion mode</strong></p>\n<p>An alias of <a href=\"#assert_assert_deepstrictequal_actual_expected_message\"><code>assert.deepStrictEqual()</code></a>.</p>\n<p><strong>Legacy assertion mode</strong></p>\n<blockquote>\n<p>Stability: 3 - Legacy: Use <a href=\"#assert_assert_deepstrictequal_actual_expected_message\"><code>assert.deepStrictEqual()</code></a> instead.</p>\n</blockquote>\n<p>Tests for deep equality between the <code>actual</code> and <code>expected</code> parameters. Consider\nusing <a href=\"#assert_assert_deepstrictequal_actual_expected_message\"><code>assert.deepStrictEqual()</code></a> instead. <a href=\"#assert_assert_deepequal_actual_expected_message\"><code>assert.deepEqual()</code></a> can have\nsurprising results.</p>\n<p><em>Deep equality</em> means that the enumerable \"own\" properties of child objects\nare also recursively evaluated by the following rules.</p>",
           "modules": [
             {
               "textRaw": "Comparison details",
@@ -564,6 +569,11 @@
             ],
             "changes": [
               {
+                "version": "v14.18.0",
+                "pr-url": "https://github.com/nodejs/node/pull/38113",
+                "description": "In Legacy assertion mode, changed status from Deprecated to Legacy."
+              },
+              {
                 "version": "v14.0.0",
                 "pr-url": "https://github.com/nodejs/node/pull/30766",
                 "description": "NaN is now treated as being identical in case both sides are NaN."
@@ -591,7 +601,7 @@
               ]
             }
           ],
-          "desc": "<p><strong>Strict assertion mode</strong></p>\n<p>An alias of <a href=\"#assert_assert_strictequal_actual_expected_message\"><code>assert.strictEqual()</code></a>.</p>\n<p><strong>Legacy assertion mode</strong></p>\n<blockquote>\n<p>Stability: 0 - Deprecated: Use <a href=\"#assert_assert_strictequal_actual_expected_message\"><code>assert.strictEqual()</code></a> instead.</p>\n</blockquote>\n<p>Tests shallow, coercive equality between the <code>actual</code> and <code>expected</code> parameters\nusing the <a href=\"https://tc39.github.io/ecma262/#sec-abstract-equality-comparison\">Abstract Equality Comparison</a> ( <code>==</code> ). <code>NaN</code> is special handled\nand treated as being identical in case both sides are <code>NaN</code>.</p>\n<pre><code class=\"language-js\">const assert = require('assert');\n\nassert.equal(1, 1);\n// OK, 1 == 1\nassert.equal(1, '1');\n// OK, 1 == '1'\nassert.equal(NaN, NaN);\n// OK\n\nassert.equal(1, 2);\n// AssertionError: 1 == 2\nassert.equal({ a: { b: 1 } }, { a: { b: 1 } });\n// AssertionError: { a: { b: 1 } } == { a: { b: 1 } }\n</code></pre>\n<p>If the values are not equal, an <a href=\"#assert_class_assert_assertionerror\"><code>AssertionError</code></a> is thrown with a <code>message</code>\nproperty set equal to the value of the <code>message</code> parameter. If the <code>message</code>\nparameter is undefined, a default error message is assigned. If the <code>message</code>\nparameter is an instance of an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> then it will be thrown instead of the\n<code>AssertionError</code>.</p>"
+          "desc": "<p><strong>Strict assertion mode</strong></p>\n<p>An alias of <a href=\"#assert_assert_strictequal_actual_expected_message\"><code>assert.strictEqual()</code></a>.</p>\n<p><strong>Legacy assertion mode</strong></p>\n<blockquote>\n<p>Stability: 3 - Legacy: Use <a href=\"#assert_assert_strictequal_actual_expected_message\"><code>assert.strictEqual()</code></a> instead.</p>\n</blockquote>\n<p>Tests shallow, coercive equality between the <code>actual</code> and <code>expected</code> parameters\nusing the <a href=\"https://tc39.github.io/ecma262/#sec-abstract-equality-comparison\">Abstract Equality Comparison</a> ( <code>==</code> ). <code>NaN</code> is special handled\nand treated as being identical in case both sides are <code>NaN</code>.</p>\n<pre><code class=\"language-js\">const assert = require('assert');\n\nassert.equal(1, 1);\n// OK, 1 == 1\nassert.equal(1, '1');\n// OK, 1 == '1'\nassert.equal(NaN, NaN);\n// OK\n\nassert.equal(1, 2);\n// AssertionError: 1 == 2\nassert.equal({ a: { b: 1 } }, { a: { b: 1 } });\n// AssertionError: { a: { b: 1 } } == { a: { b: 1 } }\n</code></pre>\n<p>If the values are not equal, an <a href=\"#assert_class_assert_assertionerror\"><code>AssertionError</code></a> is thrown with a <code>message</code>\nproperty set equal to the value of the <code>message</code> parameter. If the <code>message</code>\nparameter is undefined, a default error message is assigned. If the <code>message</code>\nparameter is an instance of an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> then it will be thrown instead of the\n<code>AssertionError</code>.</p>"
         },
         {
           "textRaw": "`assert.fail([message])`",
@@ -750,6 +760,11 @@
             ],
             "changes": [
               {
+                "version": "v14.18.0",
+                "pr-url": "https://github.com/nodejs/node/pull/38113",
+                "description": "In Legacy assertion mode, changed status from Deprecated to Legacy."
+              },
+              {
                 "version": "v14.0.0",
                 "pr-url": "https://github.com/nodejs/node/pull/30766",
                 "description": "NaN is now treated as being identical in case both sides are NaN."
@@ -811,7 +826,7 @@
               ]
             }
           ],
-          "desc": "<p><strong>Strict assertion mode</strong></p>\n<p>An alias of <a href=\"#assert_assert_notdeepstrictequal_actual_expected_message\"><code>assert.notDeepStrictEqual()</code></a>.</p>\n<p><strong>Legacy assertion mode</strong></p>\n<blockquote>\n<p>Stability: 0 - Deprecated: Use <a href=\"#assert_assert_notdeepstrictequal_actual_expected_message\"><code>assert.notDeepStrictEqual()</code></a> instead.</p>\n</blockquote>\n<p>Tests for any deep inequality. Opposite of <a href=\"#assert_assert_deepequal_actual_expected_message\"><code>assert.deepEqual()</code></a>.</p>\n<pre><code class=\"language-js\">const assert = require('assert');\n\nconst obj1 = {\n  a: {\n    b: 1\n  }\n};\nconst obj2 = {\n  a: {\n    b: 2\n  }\n};\nconst obj3 = {\n  a: {\n    b: 1\n  }\n};\nconst obj4 = Object.create(obj1);\n\nassert.notDeepEqual(obj1, obj1);\n// AssertionError: { a: { b: 1 } } notDeepEqual { a: { b: 1 } }\n\nassert.notDeepEqual(obj1, obj2);\n// OK\n\nassert.notDeepEqual(obj1, obj3);\n// AssertionError: { a: { b: 1 } } notDeepEqual { a: { b: 1 } }\n\nassert.notDeepEqual(obj1, obj4);\n// OK\n</code></pre>\n<p>If the values are deeply equal, an <a href=\"#assert_class_assert_assertionerror\"><code>AssertionError</code></a> is thrown with a\n<code>message</code> property set equal to the value of the <code>message</code> parameter. If the\n<code>message</code> parameter is undefined, a default error message is assigned. If the\n<code>message</code> parameter is an instance of an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> then it will be thrown\ninstead of the <code>AssertionError</code>.</p>"
+          "desc": "<p><strong>Strict assertion mode</strong></p>\n<p>An alias of <a href=\"#assert_assert_notdeepstrictequal_actual_expected_message\"><code>assert.notDeepStrictEqual()</code></a>.</p>\n<p><strong>Legacy assertion mode</strong></p>\n<blockquote>\n<p>Stability: 3 - Legacy: Use <a href=\"#assert_assert_notdeepstrictequal_actual_expected_message\"><code>assert.notDeepStrictEqual()</code></a> instead.</p>\n</blockquote>\n<p>Tests for any deep inequality. Opposite of <a href=\"#assert_assert_deepequal_actual_expected_message\"><code>assert.deepEqual()</code></a>.</p>\n<pre><code class=\"language-js\">const assert = require('assert');\n\nconst obj1 = {\n  a: {\n    b: 1\n  }\n};\nconst obj2 = {\n  a: {\n    b: 2\n  }\n};\nconst obj3 = {\n  a: {\n    b: 1\n  }\n};\nconst obj4 = Object.create(obj1);\n\nassert.notDeepEqual(obj1, obj1);\n// AssertionError: { a: { b: 1 } } notDeepEqual { a: { b: 1 } }\n\nassert.notDeepEqual(obj1, obj2);\n// OK\n\nassert.notDeepEqual(obj1, obj3);\n// AssertionError: { a: { b: 1 } } notDeepEqual { a: { b: 1 } }\n\nassert.notDeepEqual(obj1, obj4);\n// OK\n</code></pre>\n<p>If the values are deeply equal, an <a href=\"#assert_class_assert_assertionerror\"><code>AssertionError</code></a> is thrown with a\n<code>message</code> property set equal to the value of the <code>message</code> parameter. If the\n<code>message</code> parameter is undefined, a default error message is assigned. If the\n<code>message</code> parameter is an instance of an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> then it will be thrown\ninstead of the <code>AssertionError</code>.</p>"
         },
         {
           "textRaw": "`assert.notDeepStrictEqual(actual, expected[, message])`",
@@ -898,6 +913,11 @@
             ],
             "changes": [
               {
+                "version": "v14.18.0",
+                "pr-url": "https://github.com/nodejs/node/pull/38113",
+                "description": "In Legacy assertion mode, changed status from Deprecated to Legacy."
+              },
+              {
                 "version": "v14.0.0",
                 "pr-url": "https://github.com/nodejs/node/pull/30766",
                 "description": "NaN is now treated as being identical in case both sides are NaN."
@@ -925,7 +945,7 @@
               ]
             }
           ],
-          "desc": "<p><strong>Strict assertion mode</strong></p>\n<p>An alias of <a href=\"#assert_assert_notstrictequal_actual_expected_message\"><code>assert.notStrictEqual()</code></a>.</p>\n<p><strong>Legacy assertion mode</strong></p>\n<blockquote>\n<p>Stability: 0 - Deprecated: Use <a href=\"#assert_assert_notstrictequal_actual_expected_message\"><code>assert.notStrictEqual()</code></a> instead.</p>\n</blockquote>\n<p>Tests shallow, coercive inequality with the <a href=\"https://tc39.github.io/ecma262/#sec-abstract-equality-comparison\">Abstract Equality Comparison</a>\n(<code>!=</code> ). <code>NaN</code> is special handled and treated as being identical in case both\nsides are <code>NaN</code>.</p>\n<pre><code class=\"language-js\">const assert = require('assert');\n\nassert.notEqual(1, 2);\n// OK\n\nassert.notEqual(1, 1);\n// AssertionError: 1 != 1\n\nassert.notEqual(1, '1');\n// AssertionError: 1 != '1'\n</code></pre>\n<p>If the values are equal, an <a href=\"#assert_class_assert_assertionerror\"><code>AssertionError</code></a> is thrown with a <code>message</code>\nproperty set equal to the value of the <code>message</code> parameter. If the <code>message</code>\nparameter is undefined, a default error message is assigned. If the <code>message</code>\nparameter is an instance of an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> then it will be thrown instead of the\n<code>AssertionError</code>.</p>"
+          "desc": "<p><strong>Strict assertion mode</strong></p>\n<p>An alias of <a href=\"#assert_assert_notstrictequal_actual_expected_message\"><code>assert.notStrictEqual()</code></a>.</p>\n<p><strong>Legacy assertion mode</strong></p>\n<blockquote>\n<p>Stability: 3 - Legacy: Use <a href=\"#assert_assert_notstrictequal_actual_expected_message\"><code>assert.notStrictEqual()</code></a> instead.</p>\n</blockquote>\n<p>Tests shallow, coercive inequality with the <a href=\"https://tc39.github.io/ecma262/#sec-abstract-equality-comparison\">Abstract Equality Comparison</a>\n(<code>!=</code> ). <code>NaN</code> is special handled and treated as being identical in case both\nsides are <code>NaN</code>.</p>\n<pre><code class=\"language-js\">const assert = require('assert');\n\nassert.notEqual(1, 2);\n// OK\n\nassert.notEqual(1, 1);\n// AssertionError: 1 != 1\n\nassert.notEqual(1, '1');\n// AssertionError: 1 != '1'\n</code></pre>\n<p>If the values are equal, an <a href=\"#assert_class_assert_assertionerror\"><code>AssertionError</code></a> is thrown with a <code>message</code>\nproperty set equal to the value of the <code>message</code> parameter. If the <code>message</code>\nparameter is undefined, a default error message is assigned. If the <code>message</code>\nparameter is an instance of an <a href=\"errors.html#errors_class_error\"><code>Error</code></a> then it will be thrown instead of the\n<code>AssertionError</code>.</p>"
         },
         {
           "textRaw": "`assert.notStrictEqual(actual, expected[, message])`",

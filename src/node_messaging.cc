@@ -6,7 +6,7 @@
 #include "node_contextify.h"
 #include "node_buffer.h"
 #include "node_errors.h"
-#include "node_process.h"
+#include "node_process-inl.h"
 #include "util-inl.h"
 
 using node::contextify::ContextifyContext;
@@ -736,7 +736,7 @@ void MessagePort::OnMessage() {
       // interruption that were already present when the OnMessage() call was
       // first triggered, but at least 1000 messages because otherwise the
       // overhead of repeatedly triggering the uv_async_t instance becomes
-      // noticable, at least on Windows.
+      // noticeable, at least on Windows.
       // (That might require more investigation by somebody more familiar with
       // Windows.)
       TriggerAsync();
@@ -824,11 +824,11 @@ BaseObjectPtr<BaseObject> MessagePortData::Deserialize(
 }
 
 Maybe<bool> MessagePort::PostMessage(Environment* env,
+                                     Local<Context> context,
                                      Local<Value> message_v,
                                      const TransferList& transfer_v) {
   Isolate* isolate = env->isolate();
   Local<Object> obj = object(isolate);
-  Local<Context> context = obj->CreationContext();
 
   Message msg;
 
@@ -970,7 +970,9 @@ void MessagePort::PostMessage(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  port->PostMessage(env, args[0], transfer_list);
+  Maybe<bool> res = port->PostMessage(env, context, args[0], transfer_list);
+  if (res.IsJust())
+    args.GetReturnValue().Set(res.FromJust());
 }
 
 void MessagePort::Start() {
@@ -1040,7 +1042,11 @@ void MessagePort::MoveToContext(const FunctionCallbackInfo<Value>& args) {
         "The \"port\" argument must be a MessagePort instance");
   }
   MessagePort* port = Unwrap<MessagePort>(args[0].As<Object>());
-  CHECK_NOT_NULL(port);
+  if (port == nullptr || port->IsHandleClosing()) {
+    Isolate* isolate = env->isolate();
+    THROW_ERR_CLOSED_MESSAGE_PORT(isolate);
+    return;
+  }
 
   Local<Value> context_arg = args[1];
   ContextifyContext* context_wrapper;
@@ -1310,32 +1316,24 @@ static void InitMessaging(Local<Object> target,
   Environment* env = Environment::GetCurrent(context);
 
   {
-    Local<String> message_channel_string =
-        FIXED_ONE_BYTE_STRING(env->isolate(), "MessageChannel");
-    Local<FunctionTemplate> templ = env->NewFunctionTemplate(MessageChannel);
-    templ->SetClassName(message_channel_string);
-    target->Set(context,
-                message_channel_string,
-                templ->GetFunction(context).ToLocalChecked()).Check();
+    env->SetConstructorFunction(
+        target,
+        "MessageChannel",
+        env->NewFunctionTemplate(MessageChannel));
   }
 
   {
-    Local<String> js_transferable_string =
-        FIXED_ONE_BYTE_STRING(env->isolate(), "JSTransferable");
     Local<FunctionTemplate> t = env->NewFunctionTemplate(JSTransferable::New);
     t->Inherit(BaseObject::GetConstructorTemplate(env));
-    t->SetClassName(js_transferable_string);
     t->InstanceTemplate()->SetInternalFieldCount(
         JSTransferable::kInternalFieldCount);
-    target->Set(context,
-                js_transferable_string,
-                t->GetFunction(context).ToLocalChecked()).Check();
+    env->SetConstructorFunction(target, "JSTransferable", t);
   }
 
-  target->Set(context,
-              env->message_port_constructor_string(),
-              GetMessagePortConstructorTemplate(env)
-                  ->GetFunction(context).ToLocalChecked()).Check();
+  env->SetConstructorFunction(
+      target,
+      env->message_port_constructor_string(),
+      GetMessagePortConstructorTemplate(env));
 
   // These are not methods on the MessagePort prototype, because
   // the browser equivalents do not provide them.

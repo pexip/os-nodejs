@@ -1,10 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v14.16.0">
-  <title>Assert | Node.js v14.16.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v14.18.1">
+  <title>Assert | Node.js v14.18.1 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -28,7 +28,7 @@
 <li><a href="async_hooks.html" class="nav-async_hooks">Async hooks</a></li>
 <li><a href="buffer.html" class="nav-buffer">Buffer</a></li>
 <li><a href="addons.html" class="nav-addons">C++ addons</a></li>
-<li><a href="n-api.html" class="nav-n-api">C/C++ addons with N-API</a></li>
+<li><a href="n-api.html" class="nav-n-api">C/C++ addons with Node-API</a></li>
 <li><a href="embedding.html" class="nav-embedding">C++ embedder API</a></li>
 <li><a href="child_process.html" class="nav-child_process">Child processes</a></li>
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
@@ -37,6 +37,7 @@
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
+<li><a href="diagnostics_channel.html" class="nav-diagnostics_channel">Diagnostics Channel</a></li>
 <li><a href="dns.html" class="nav-dns">DNS</a></li>
 <li><a href="domain.html" class="nav-domain">Domain</a></li>
 <li><a href="errors.html" class="nav-errors">Errors</a></li>
@@ -86,7 +87,20 @@
 
     <div id="column1" data-id="assert" class="interior">
       <header>
-        <h1>Node.js v14.16.0 Documentation</h1>
+        <div class="header-container">
+          <h1>Node.js v14.18.1 documentation</h1>
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
+              <path fill="none" d="M0 0h24v24H0z" />
+              <path d="M11.1 12.08c-2.33-4.51-.5-8.48.53-10.07C6.27 2.2 1.98 6.59 1.98 12c0 .14.02.28.02.42.62-.27 1.29-.42 2-.42 1.66 0 3.18.83 4.1 2.15A4.01 4.01 0 0111 18c0 1.52-.87 2.83-2.12 3.51.98.32 2.03.5 3.11.5 3.5 0 6.58-1.8 8.37-4.52-2.36.23-6.98-.97-9.26-5.41z"/>
+              <path d="M7 16h-.18C6.4 14.84 5.3 14 4 14c-1.66 0-3 1.34-3 3s1.34 3 3 3h3c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon light-icon" height="24" width="24">
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+            </svg>
+          </button>
+        </div>
         <div id="gtoc">
           <ul>
             <li>
@@ -101,12 +115,13 @@
             
     <li class="version-picker">
       <a href="#">View another version <span>&#x25bc;</span></a>
-      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v15.x/api/assert.html">15.x</a></li>
+      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v16.x/api/assert.html">16.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v15.x/api/assert.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/assert.html">14.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/assert.html">13.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v12.x/api/assert.html">12.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v11.x/api/assert.html">11.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v10.x/api/assert.html">10.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v10.x/api/assert.html">10.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v9.x/api/assert.html">9.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v8.x/api/assert.html">8.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v7.x/api/assert.html">7.x</a></li>
@@ -117,15 +132,13 @@
 <li><a href="https://nodejs.org/docs/latest-v0.10.x/api/assert.html">0.10.x</a></li></ol>
     </li>
   
-            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/assert.md"><span class="github_icon"><svg height="16" width="16" viewBox="0 0 16.1 16.1" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2 .4-2.5-.5-2.7-1 0-.1-.5-.9-.8-1-.3-.2-.7-.6 0-.6.6 0 1 .6 1.2.8.7 1.2 1.9 1 2.4.7 0-.5.2-.9.5-1-1.8-.3-3.7-1-3.7-4 0-.9.3-1.6.8-2.2 0-.2-.3-1 .1-2 0 0 .7-.3 2.2.7a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.5 1.1.2 2 .1 2.1.5.6.8 1.3.8 2.2 0 3-1.9 3.7-3.6 4 .3.2.5.7.5 1.4v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8a8 8 0 0 0-8-8z"/></svg></span>Edit on GitHub</a></li>
+            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/assert.md">Edit on GitHub</a></li>
           </ul>
         </div>
         <hr>
       </header>
 
-      <div id="toc">
-        <h2>Table of Contents</h2>
-        <ul>
+      <details id="toc" open><summary>Table of contents</summary><ul>
 <li><span class="stability_2"><a href="#assert_assert">Assert</a></span>
 <ul>
 <li><a href="#assert_strict_assertion_mode">Strict assertion mode</a></li>
@@ -172,17 +185,16 @@
 <li><a href="#assert_assert_throws_fn_error_message"><code>assert.throws(fn[, error][, message])</code></a></li>
 </ul>
 </li>
-</ul>
-      </div>
+</ul></details>
 
       <div id="apicontent">
-        <h1>Assert<span><a class="mark" href="#assert_assert" id="assert_assert">#</a></span></h1>
+        <h2>Assert<span><a class="mark" href="#assert_assert" id="assert_assert">#</a></span></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#documentation_stability_index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.16.0/lib/assert.js">lib/assert.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.18.1/lib/assert.js">lib/assert.js</a></p>
 <p>The <code>assert</code> module provides a set of assertion functions for verifying
 invariants.</p>
-<h2>Strict assertion mode<span><a class="mark" href="#assert_strict_assertion_mode" id="assert_strict_assertion_mode">#</a></span></h2>
+<section><h3>Strict assertion mode<span><a class="mark" href="#assert_strict_assertion_mode" id="assert_strict_assertion_mode">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -204,11 +216,11 @@ strict methods. For example, <a href="#assert_assert_deepequal_actual_expected_m
 <p>In strict assertion mode, error messages for objects display a diff. In legacy
 assertion mode, error messages for objects display the objects, often truncated.</p>
 <p>To use strict assertion mode:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;</code></pre>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;</code></pre>
 <p>Example error diff:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.deepEqual([[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]], <span class="hljs-number">4</span>, <span class="hljs-number">5</span>], [[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-string">'3'</span>]], <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]);
+assert.<span class="hljs-title function_">deepEqual</span>([[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]], <span class="hljs-number">4</span>, <span class="hljs-number">5</span>], [[[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-string">'3'</span>]], <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]);
 <span class="hljs-comment">// AssertionError: Expected inputs to be strictly deep-equal:</span>
 <span class="hljs-comment">// + actual - expected ... Lines skipped</span>
 <span class="hljs-comment">//</span>
@@ -226,7 +238,7 @@ assert.deepEqual([[[<span class="hljs-number">1</span>, <span class="hljs-number
 environment variables. This will also deactivate the colors in the REPL. For
 more on color support in terminal environments, read the tty
 <a href="tty.html#tty_writestream_getcolordepth_env">getColorDepth()</a> documentation.</p>
-<h2>Legacy assertion mode<span><a class="mark" href="#assert_legacy_assertion_mode" id="assert_legacy_assertion_mode">#</a></span></h2>
+</section><section><h3>Legacy assertion mode<span><a class="mark" href="#assert_legacy_assertion_mode" id="assert_legacy_assertion_mode">#</a></span></h3>
 <p>Legacy assertion mode uses the <a href="https://tc39.github.io/ecma262/#sec-abstract-equality-comparison">Abstract Equality Comparison</a> in:</p>
 <ul>
 <li><a href="#assert_assert_deepequal_actual_expected_message"><code>assert.deepEqual()</code></a></li>
@@ -241,14 +253,14 @@ more on color support in terminal environments, read the tty
 especially true for <a href="#assert_assert_deepequal_actual_expected_message"><code>assert.deepEqual()</code></a>, where the comparison rules are
 lax:</p>
 <pre><code class="language-js"><span class="hljs-comment">// WARNING: This does not throw an AssertionError!</span>
-assert.deepEqual(<span class="hljs-regexp">/a/gi</span>, <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>());</code></pre>
-<h2>Class: assert.AssertionError<a class="srclink" href="https://github.com/nodejs/node/blob/bd60e93357a118204ea238d94e7a9e4209d93062/lib/assert.js#L151">[src]</a><span><a class="mark" href="#assert_class_assert_assertionerror" id="assert_class_assert_assertionerror">#</a></span></h2>
+assert.<span class="hljs-title function_">deepEqual</span>(<span class="hljs-regexp">/a/gi</span>, <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>());</code></pre>
+</section><section><h3>Class: assert.AssertionError<a class="srclink" href="https://github.com/nodejs/node/blob/657fb9a77ca36f729da484f55899dad7a13759b0/lib/assert.js#L172">[src]</a><span><a class="mark" href="#assert_class_assert_assertionerror" id="assert_class_assert_assertionerror">#</a></span></h3>
 <ul>
 <li>Extends: <a href="errors.html#errors_class_error" class="type">&#x3C;errors.Error></a></li>
 </ul>
 <p>Indicates the failure of an assertion. All errors thrown by the <code>assert</code> module
 will be instances of the <code>AssertionError</code> class.</p>
-<h3><code>new assert.AssertionError(options)</code><span><a class="mark" href="#assert_new_assert_assertionerror_options" id="assert_new_assert_assertionerror_options">#</a></span></h3>
+<h4><code>new assert.AssertionError(options)</code><span><a class="mark" href="#assert_new_assert_assertionerror_options" id="assert_new_assert_assertionerror_options">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.1.21</span>
 </div>
@@ -281,7 +293,7 @@ assertion error.</li>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
 
 <span class="hljs-comment">// Generate an AssertionError to compare the error message later:</span>
-<span class="hljs-keyword">const</span> { message } = <span class="hljs-keyword">new</span> assert.AssertionError({
+<span class="hljs-keyword">const</span> { message } = <span class="hljs-keyword">new</span> assert.<span class="hljs-title class_">AssertionError</span>({
   <span class="hljs-attr">actual</span>: <span class="hljs-number">1</span>,
   <span class="hljs-attr">expected</span>: <span class="hljs-number">2</span>,
   <span class="hljs-attr">operator</span>: <span class="hljs-string">'strictEqual'</span>
@@ -289,24 +301,24 @@ assertion error.</li>
 
 <span class="hljs-comment">// Verify error output:</span>
 <span class="hljs-keyword">try</span> {
-  assert.strictEqual(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
+  assert.<span class="hljs-title function_">strictEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
 } <span class="hljs-keyword">catch</span> (err) {
-  assert(err <span class="hljs-keyword">instanceof</span> assert.AssertionError);
-  assert.strictEqual(err.message, message);
-  assert.strictEqual(err.name, <span class="hljs-string">'AssertionError'</span>);
-  assert.strictEqual(err.actual, <span class="hljs-number">1</span>);
-  assert.strictEqual(err.expected, <span class="hljs-number">2</span>);
-  assert.strictEqual(err.code, <span class="hljs-string">'ERR_ASSERTION'</span>);
-  assert.strictEqual(err.operator, <span class="hljs-string">'strictEqual'</span>);
-  assert.strictEqual(err.generatedMessage, <span class="hljs-literal">true</span>);
+  <span class="hljs-title function_">assert</span>(err <span class="hljs-keyword">instanceof</span> assert.<span class="hljs-property">AssertionError</span>);
+  assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">message</span>, message);
+  assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">name</span>, <span class="hljs-string">'AssertionError'</span>);
+  assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">actual</span>, <span class="hljs-number">1</span>);
+  assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">expected</span>, <span class="hljs-number">2</span>);
+  assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">code</span>, <span class="hljs-string">'ERR_ASSERTION'</span>);
+  assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">operator</span>, <span class="hljs-string">'strictEqual'</span>);
+  assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">generatedMessage</span>, <span class="hljs-literal">true</span>);
 }</code></pre>
-<h2>Class: <code>assert.CallTracker</code><span><a class="mark" href="#assert_class_assert_calltracker" id="assert_class_assert_calltracker">#</a></span></h2>
+</section><section><h3>Class: <code>assert.CallTracker</code><span><a class="mark" href="#assert_class_assert_calltracker" id="assert_class_assert_calltracker">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v14.2.0</span>
 </div>
 <p></p><div class="api_stability api_stability_1"><a href="documentation.html#documentation_stability_index">Stability: 1</a> - Experimental</div><p></p>
 <p>This feature is currently experimental and behavior might still change.</p>
-<h3><code>new assert.CallTracker()</code><span><a class="mark" href="#assert_new_assert_calltracker" id="assert_new_assert_calltracker">#</a></span></h3>
+<h4><code>new assert.CallTracker()</code><span><a class="mark" href="#assert_new_assert_calltracker" id="assert_new_assert_calltracker">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v14.2.0</span>
 </div>
@@ -316,21 +328,21 @@ for the verification to take place. The usual pattern would be to call it in a
 <a href="process.html#process_event_exit"><code>process.on('exit')</code></a> handler.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
 
-<span class="hljs-keyword">const</span> tracker = <span class="hljs-keyword">new</span> assert.CallTracker();
+<span class="hljs-keyword">const</span> tracker = <span class="hljs-keyword">new</span> assert.<span class="hljs-title class_">CallTracker</span>();
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">func</span>(<span class="hljs-params"></span>) </span>{}
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">func</span>(<span class="hljs-params"></span>) {}
 
 <span class="hljs-comment">// callsfunc() must be called exactly 1 time before tracker.verify().</span>
-<span class="hljs-keyword">const</span> callsfunc = tracker.calls(func, <span class="hljs-number">1</span>);
+<span class="hljs-keyword">const</span> callsfunc = tracker.<span class="hljs-title function_">calls</span>(func, <span class="hljs-number">1</span>);
 
-callsfunc();
+<span class="hljs-title function_">callsfunc</span>();
 
 <span class="hljs-comment">// Calls tracker.verify() and verifies if all tracker.calls() functions have</span>
 <span class="hljs-comment">// been called exact times.</span>
-process.on(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
-  tracker.verify();
+process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
+  tracker.<span class="hljs-title function_">verify</span>();
 });</code></pre>
-<h3><code>tracker.calls([fn][, exact])</code><span><a class="mark" href="#assert_tracker_calls_fn_exact" id="assert_tracker_calls_fn_exact">#</a></span></h3>
+<h4><code>tracker.calls([fn][, exact])</code><span><a class="mark" href="#assert_tracker_calls_fn_exact" id="assert_tracker_calls_fn_exact">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v14.2.0</span>
 </div>
@@ -346,14 +358,14 @@ error.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
 
 <span class="hljs-comment">// Creates call tracker.</span>
-<span class="hljs-keyword">const</span> tracker = <span class="hljs-keyword">new</span> assert.CallTracker();
+<span class="hljs-keyword">const</span> tracker = <span class="hljs-keyword">new</span> assert.<span class="hljs-title class_">CallTracker</span>();
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">func</span>(<span class="hljs-params"></span>) </span>{}
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">func</span>(<span class="hljs-params"></span>) {}
 
 <span class="hljs-comment">// Returns a function that wraps func() that must be called exact times</span>
 <span class="hljs-comment">// before tracker.verify().</span>
-<span class="hljs-keyword">const</span> callsfunc = tracker.calls(func);</code></pre>
-<h3><code>tracker.report()</code><span><a class="mark" href="#assert_tracker_report" id="assert_tracker_report">#</a></span></h3>
+<span class="hljs-keyword">const</span> callsfunc = tracker.<span class="hljs-title function_">calls</span>(func);</code></pre>
+<h4><code>tracker.report()</code><span><a class="mark" href="#assert_tracker_report" id="assert_tracker_report">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v14.2.0</span>
 </div>
@@ -376,18 +388,18 @@ the functions that have not been called the expected number of times.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
 
 <span class="hljs-comment">// Creates call tracker.</span>
-<span class="hljs-keyword">const</span> tracker = <span class="hljs-keyword">new</span> assert.CallTracker();
+<span class="hljs-keyword">const</span> tracker = <span class="hljs-keyword">new</span> assert.<span class="hljs-title class_">CallTracker</span>();
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">func</span>(<span class="hljs-params"></span>) </span>{}
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">func</span>(<span class="hljs-params"></span>) {}
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">foo</span>(<span class="hljs-params"></span>) </span>{}
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">foo</span>(<span class="hljs-params"></span>) {}
 
 <span class="hljs-comment">// Returns a function that wraps func() that must be called exact times</span>
 <span class="hljs-comment">// before tracker.verify().</span>
-<span class="hljs-keyword">const</span> callsfunc = tracker.calls(func, <span class="hljs-number">2</span>);
+<span class="hljs-keyword">const</span> callsfunc = tracker.<span class="hljs-title function_">calls</span>(func, <span class="hljs-number">2</span>);
 
 <span class="hljs-comment">// Returns an array containing information on callsfunc()</span>
-tracker.report();
+tracker.<span class="hljs-title function_">report</span>();
 <span class="hljs-comment">// [</span>
 <span class="hljs-comment">//  {</span>
 <span class="hljs-comment">//    message: 'Expected the func function to be executed 2 time(s) but was</span>
@@ -398,7 +410,7 @@ tracker.report();
 <span class="hljs-comment">//    stack: stack trace</span>
 <span class="hljs-comment">//  }</span>
 <span class="hljs-comment">// ]</span></code></pre>
-<h3><code>tracker.verify()</code><span><a class="mark" href="#assert_tracker_verify" id="assert_tracker_verify">#</a></span></h3>
+<h4><code>tracker.verify()</code><span><a class="mark" href="#assert_tracker_verify" id="assert_tracker_verify">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v14.2.0</span>
 </div>
@@ -408,19 +420,19 @@ have not been called the expected number of times.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
 
 <span class="hljs-comment">// Creates call tracker.</span>
-<span class="hljs-keyword">const</span> tracker = <span class="hljs-keyword">new</span> assert.CallTracker();
+<span class="hljs-keyword">const</span> tracker = <span class="hljs-keyword">new</span> assert.<span class="hljs-title class_">CallTracker</span>();
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">func</span>(<span class="hljs-params"></span>) </span>{}
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">func</span>(<span class="hljs-params"></span>) {}
 
 <span class="hljs-comment">// Returns a function that wraps func() that must be called exact times</span>
 <span class="hljs-comment">// before tracker.verify().</span>
-<span class="hljs-keyword">const</span> callsfunc = tracker.calls(func, <span class="hljs-number">2</span>);
+<span class="hljs-keyword">const</span> callsfunc = tracker.<span class="hljs-title function_">calls</span>(func, <span class="hljs-number">2</span>);
 
-callsfunc();
+<span class="hljs-title function_">callsfunc</span>();
 
 <span class="hljs-comment">// Will throw an error since callsfunc() was only called once.</span>
-tracker.verify();</code></pre>
-<h2><code>assert(value[, message])</code><span><a class="mark" href="#assert_assert_value_message" id="assert_assert_value_message">#</a></span></h2>
+tracker.<span class="hljs-title function_">verify</span>();</code></pre>
+</section><section><h3><code>assert(value[, message])</code><span><a class="mark" href="#assert_assert_value_message" id="assert_assert_value_message">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.5.9</span>
 </div>
@@ -429,11 +441,13 @@ tracker.verify();</code></pre>
 <li><code>message</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error" class="type">&#x3C;Error></a></li>
 </ul>
 <p>An alias of <a href="#assert_assert_ok_value_message"><code>assert.ok()</code></a>.</p>
-<h2><code>assert.deepEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_deepequal_actual_expected_message" id="assert_assert_deepequal_actual_expected_message">#</a></span></h2>
+</section><section><h3><code>assert.deepEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_deepequal_actual_expected_message" id="assert_assert_deepequal_actual_expected_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v14.18.0</td>
+<td><p>In Legacy assertion mode, changed status from Deprecated to Legacy.</p></td></tr>
 <tr><td>v14.0.0</td>
 <td><p>NaN is now treated as being identical in case both sides are NaN.</p></td></tr>
 <tr><td>v12.0.0</td>
@@ -461,13 +475,13 @@ tracker.verify();</code></pre>
 <p><strong>Strict assertion mode</strong></p>
 <p>An alias of <a href="#assert_assert_deepstrictequal_actual_expected_message"><code>assert.deepStrictEqual()</code></a>.</p>
 <p><strong>Legacy assertion mode</strong></p>
-<p></p><div class="api_stability api_stability_0"><a href="documentation.html#documentation_stability_index">Stability: 0</a> - Deprecated: Use <a href="#assert_assert_deepstrictequal_actual_expected_message"><code>assert.deepStrictEqual()</code></a> instead.</div><p></p>
+<p></p><div class="api_stability api_stability_3"><a href="documentation.html#documentation_stability_index">Stability: 3</a> - Legacy: Use <a href="#assert_assert_deepstrictequal_actual_expected_message"><code>assert.deepStrictEqual()</code></a> instead.</div><p></p>
 <p>Tests for deep equality between the <code>actual</code> and <code>expected</code> parameters. Consider
 using <a href="#assert_assert_deepstrictequal_actual_expected_message"><code>assert.deepStrictEqual()</code></a> instead. <a href="#assert_assert_deepequal_actual_expected_message"><code>assert.deepEqual()</code></a> can have
 surprising results.</p>
 <p><em>Deep equality</em> means that the enumerable "own" properties of child objects
 are also recursively evaluated by the following rules.</p>
-<h3>Comparison details<span><a class="mark" href="#assert_comparison_details" id="assert_comparison_details">#</a></span></h3>
+<h4>Comparison details<span><a class="mark" href="#assert_comparison_details" id="assert_comparison_details">#</a></span></h4>
 <ul>
 <li>Primitive values are compared with the <a href="https://tc39.github.io/ecma262/#sec-abstract-equality-comparison">Abstract Equality Comparison</a>
 ( <code>==</code> ) with the exception of <code>NaN</code>. It is treated as being identical in case
@@ -490,7 +504,7 @@ objects.</li>
 primitives are considered equal by the <a href="https://tc39.github.io/ecma262/#sec-abstract-equality-comparison">Abstract Equality Comparison</a>
 ( <code>==</code> ).</p>
 <pre><code class="language-js"><span class="hljs-comment">// WARNING: This does not throw an AssertionError!</span>
-assert.deepEqual(<span class="hljs-string">'+00000000'</span>, <span class="hljs-literal">false</span>);</code></pre>
+assert.<span class="hljs-title function_">deepEqual</span>(<span class="hljs-string">'+00000000'</span>, <span class="hljs-literal">false</span>);</code></pre>
 <p>"Deep" equality means that the enumerable "own" properties of child objects
 are evaluated also:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
@@ -510,27 +524,27 @@ are evaluated also:</p>
     <span class="hljs-attr">b</span>: <span class="hljs-number">1</span>
   }
 };
-<span class="hljs-keyword">const</span> obj4 = <span class="hljs-built_in">Object</span>.create(obj1);
+<span class="hljs-keyword">const</span> obj4 = <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">create</span>(obj1);
 
-assert.deepEqual(obj1, obj1);
+assert.<span class="hljs-title function_">deepEqual</span>(obj1, obj1);
 <span class="hljs-comment">// OK</span>
 
 <span class="hljs-comment">// Values of b are different:</span>
-assert.deepEqual(obj1, obj2);
+assert.<span class="hljs-title function_">deepEqual</span>(obj1, obj2);
 <span class="hljs-comment">// AssertionError: { a: { b: 1 } } deepEqual { a: { b: 2 } }</span>
 
-assert.deepEqual(obj1, obj3);
+assert.<span class="hljs-title function_">deepEqual</span>(obj1, obj3);
 <span class="hljs-comment">// OK</span>
 
 <span class="hljs-comment">// Prototypes are ignored:</span>
-assert.deepEqual(obj1, obj4);
+assert.<span class="hljs-title function_">deepEqual</span>(obj1, obj4);
 <span class="hljs-comment">// AssertionError: { a: { b: 1 } } deepEqual {}</span></code></pre>
 <p>If the values are not equal, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown with a <code>message</code>
 property set equal to the value of the <code>message</code> parameter. If the <code>message</code>
 parameter is undefined, a default error message is assigned. If the <code>message</code>
 parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown instead of the
 <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>.</p>
-<h2><code>assert.deepStrictEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_deepstrictequal_actual_expected_message" id="assert_assert_deepstrictequal_actual_expected_message">#</a></span></h2>
+</section><section><h3><code>assert.deepStrictEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_deepstrictequal_actual_expected_message" id="assert_assert_deepstrictequal_actual_expected_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -562,7 +576,7 @@ parameter is an instance of an <a href="errors.html#errors_class_error"><code>Er
 <p>Tests for deep equality between the <code>actual</code> and <code>expected</code> parameters.
 "Deep" equality means that the enumerable "own" properties of child objects
 are recursively evaluated also by the following rules.</p>
-<h3>Comparison details<span><a class="mark" href="#assert_comparison_details_1" id="assert_comparison_details_1">#</a></span></h3>
+<h4>Comparison details<span><a class="mark" href="#assert_comparison_details_1" id="assert_comparison_details_1">#</a></span></h4>
 <ul>
 <li>Primitive values are compared using the <a href="https://tc39.github.io/ecma262/#sec-samevalue">SameValue Comparison</a>, used by
 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is"><code>Object.is()</code></a>.</li>
@@ -581,10 +595,10 @@ reference.</li>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap"><code>WeakMap</code></a> and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet"><code>WeakSet</code></a> comparison does not rely on their values. See
 below for further details.</li>
 </ul>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
 <span class="hljs-comment">// This fails because 1 !== '1'.</span>
-assert.deepStrictEqual({ <span class="hljs-attr">a</span>: <span class="hljs-number">1</span> }, { <span class="hljs-attr">a</span>: <span class="hljs-string">'1'</span> });
+assert.<span class="hljs-title function_">deepStrictEqual</span>({ <span class="hljs-attr">a</span>: <span class="hljs-number">1</span> }, { <span class="hljs-attr">a</span>: <span class="hljs-string">'1'</span> });
 <span class="hljs-comment">// AssertionError: Expected inputs to be strictly deep-equal:</span>
 <span class="hljs-comment">// + actual - expected</span>
 <span class="hljs-comment">//</span>
@@ -594,13 +608,13 @@ assert.deepStrictEqual({ <span class="hljs-attr">a</span>: <span class="hljs-num
 <span class="hljs-comment">//   }</span>
 
 <span class="hljs-comment">// The following objects don't have own properties</span>
-<span class="hljs-keyword">const</span> date = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+<span class="hljs-keyword">const</span> date = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>();
 <span class="hljs-keyword">const</span> object = {};
 <span class="hljs-keyword">const</span> fakeDate = {};
-<span class="hljs-built_in">Object</span>.setPrototypeOf(fakeDate, <span class="hljs-built_in">Date</span>.prototype);
+<span class="hljs-title class_">Object</span>.<span class="hljs-title function_">setPrototypeOf</span>(fakeDate, <span class="hljs-title class_">Date</span>.<span class="hljs-property"><span class="hljs-keyword">prototype</span></span>);
 
 <span class="hljs-comment">// Different [[Prototype]]:</span>
-assert.deepStrictEqual(object, fakeDate);
+assert.<span class="hljs-title function_">deepStrictEqual</span>(object, fakeDate);
 <span class="hljs-comment">// AssertionError: Expected inputs to be strictly deep-equal:</span>
 <span class="hljs-comment">// + actual - expected</span>
 <span class="hljs-comment">//</span>
@@ -608,60 +622,60 @@ assert.deepStrictEqual(object, fakeDate);
 <span class="hljs-comment">// - Date {}</span>
 
 <span class="hljs-comment">// Different type tags:</span>
-assert.deepStrictEqual(date, fakeDate);
+assert.<span class="hljs-title function_">deepStrictEqual</span>(date, fakeDate);
 <span class="hljs-comment">// AssertionError: Expected inputs to be strictly deep-equal:</span>
 <span class="hljs-comment">// + actual - expected</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">// + 2018-04-26T00:49:08.604Z</span>
 <span class="hljs-comment">// - Date {}</span>
 
-assert.deepStrictEqual(<span class="hljs-literal">NaN</span>, <span class="hljs-literal">NaN</span>);
+assert.<span class="hljs-title function_">deepStrictEqual</span>(<span class="hljs-title class_">Na</span>N, <span class="hljs-title class_">Na</span>N);
 <span class="hljs-comment">// OK, because of the SameValue comparison</span>
 
 <span class="hljs-comment">// Different unwrapped numbers:</span>
-assert.deepStrictEqual(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Number</span>(<span class="hljs-number">1</span>), <span class="hljs-keyword">new</span> <span class="hljs-built_in">Number</span>(<span class="hljs-number">2</span>));
+assert.<span class="hljs-title function_">deepStrictEqual</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Number</span>(<span class="hljs-number">1</span>), <span class="hljs-keyword">new</span> <span class="hljs-title class_">Number</span>(<span class="hljs-number">2</span>));
 <span class="hljs-comment">// AssertionError: Expected inputs to be strictly deep-equal:</span>
 <span class="hljs-comment">// + actual - expected</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">// + [Number: 1]</span>
 <span class="hljs-comment">// - [Number: 2]</span>
 
-assert.deepStrictEqual(<span class="hljs-keyword">new</span> <span class="hljs-built_in">String</span>(<span class="hljs-string">'foo'</span>), <span class="hljs-built_in">Object</span>(<span class="hljs-string">'foo'</span>));
+assert.<span class="hljs-title function_">deepStrictEqual</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">String</span>(<span class="hljs-string">'foo'</span>), <span class="hljs-title class_">Object</span>(<span class="hljs-string">'foo'</span>));
 <span class="hljs-comment">// OK because the object and the string are identical when unwrapped.</span>
 
-assert.deepStrictEqual(<span class="hljs-number">-0</span>, <span class="hljs-number">-0</span>);
+assert.<span class="hljs-title function_">deepStrictEqual</span>(-<span class="hljs-number">0</span>, -<span class="hljs-number">0</span>);
 <span class="hljs-comment">// OK</span>
 
 <span class="hljs-comment">// Different zeros using the SameValue Comparison:</span>
-assert.deepStrictEqual(<span class="hljs-number">0</span>, <span class="hljs-number">-0</span>);
+assert.<span class="hljs-title function_">deepStrictEqual</span>(<span class="hljs-number">0</span>, -<span class="hljs-number">0</span>);
 <span class="hljs-comment">// AssertionError: Expected inputs to be strictly deep-equal:</span>
 <span class="hljs-comment">// + actual - expected</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">// + 0</span>
 <span class="hljs-comment">// - -0</span>
 
-<span class="hljs-keyword">const</span> symbol1 = <span class="hljs-built_in">Symbol</span>();
-<span class="hljs-keyword">const</span> symbol2 = <span class="hljs-built_in">Symbol</span>();
-assert.deepStrictEqual({ [symbol1]: <span class="hljs-number">1</span> }, { [symbol1]: <span class="hljs-number">1</span> });
+<span class="hljs-keyword">const</span> symbol1 = <span class="hljs-title class_">Symbol</span>();
+<span class="hljs-keyword">const</span> symbol2 = <span class="hljs-title class_">Symbol</span>();
+assert.<span class="hljs-title function_">deepStrictEqual</span>({ [symbol1]: <span class="hljs-number">1</span> }, { [symbol1]: <span class="hljs-number">1</span> });
 <span class="hljs-comment">// OK, because it is the same symbol on both objects.</span>
 
-assert.deepStrictEqual({ [symbol1]: <span class="hljs-number">1</span> }, { [symbol2]: <span class="hljs-number">1</span> });
+assert.<span class="hljs-title function_">deepStrictEqual</span>({ [symbol1]: <span class="hljs-number">1</span> }, { [symbol2]: <span class="hljs-number">1</span> });
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: Inputs identical but not reference equal:</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">// {</span>
 <span class="hljs-comment">//   [Symbol()]: 1</span>
 <span class="hljs-comment">// }</span>
 
-<span class="hljs-keyword">const</span> weakMap1 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">WeakMap</span>();
-<span class="hljs-keyword">const</span> weakMap2 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">WeakMap</span>([[{}, {}]]);
-<span class="hljs-keyword">const</span> weakMap3 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">WeakMap</span>();
-weakMap3.unequal = <span class="hljs-literal">true</span>;
+<span class="hljs-keyword">const</span> weakMap1 = <span class="hljs-keyword">new</span> <span class="hljs-title class_">WeakMap</span>();
+<span class="hljs-keyword">const</span> weakMap2 = <span class="hljs-keyword">new</span> <span class="hljs-title class_">WeakMap</span>([[{}, {}]]);
+<span class="hljs-keyword">const</span> weakMap3 = <span class="hljs-keyword">new</span> <span class="hljs-title class_">WeakMap</span>();
+weakMap3.<span class="hljs-property">unequal</span> = <span class="hljs-literal">true</span>;
 
-assert.deepStrictEqual(weakMap1, weakMap2);
+assert.<span class="hljs-title function_">deepStrictEqual</span>(weakMap1, weakMap2);
 <span class="hljs-comment">// OK, because it is impossible to compare the entries</span>
 
 <span class="hljs-comment">// Fails because weakMap3 has a property that weakMap1 does not contain:</span>
-assert.deepStrictEqual(weakMap1, weakMap3);
+assert.<span class="hljs-title function_">deepStrictEqual</span>(weakMap1, weakMap3);
 <span class="hljs-comment">// AssertionError: Expected inputs to be strictly deep-equal:</span>
 <span class="hljs-comment">// + actual - expected</span>
 <span class="hljs-comment">//</span>
@@ -675,7 +689,7 @@ property set equal to the value of the <code>message</code> parameter. If the <c
 parameter is undefined, a default error message is assigned. If the <code>message</code>
 parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown instead of the
 <code>AssertionError</code>.</p>
-<h2><code>assert.doesNotMatch(string, regexp[, message])</code><span><a class="mark" href="#assert_assert_doesnotmatch_string_regexp_message" id="assert_assert_doesnotmatch_string_regexp_message">#</a></span></h2>
+</section><section><h3><code>assert.doesNotMatch(string, regexp[, message])</code><span><a class="mark" href="#assert_assert_doesnotmatch_string_regexp_message" id="assert_assert_doesnotmatch_string_regexp_message">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v13.6.0, v12.16.0</span>
 </div>
@@ -688,15 +702,15 @@ parameter is an instance of an <a href="errors.html#errors_class_error"><code>Er
 <p>Expects the <code>string</code> input not to match the regular expression.</p>
 <p>This feature is currently experimental and the name might change or it might be
 completely removed again.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.doesNotMatch(<span class="hljs-string">'I will fail'</span>, <span class="hljs-regexp">/fail/</span>);
+assert.<span class="hljs-title function_">doesNotMatch</span>(<span class="hljs-string">'I will fail'</span>, <span class="hljs-regexp">/fail/</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: The input was expected to not match the ...</span>
 
-assert.doesNotMatch(<span class="hljs-number">123</span>, <span class="hljs-regexp">/pass/</span>);
+assert.<span class="hljs-title function_">doesNotMatch</span>(<span class="hljs-number">123</span>, <span class="hljs-regexp">/pass/</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: The "string" argument must be of type string.</span>
 
-assert.doesNotMatch(<span class="hljs-string">'I will pass'</span>, <span class="hljs-regexp">/different/</span>);
+assert.<span class="hljs-title function_">doesNotMatch</span>(<span class="hljs-string">'I will pass'</span>, <span class="hljs-regexp">/different/</span>);
 <span class="hljs-comment">// OK</span></code></pre>
 <p>If the values do match, or if the <code>string</code> argument is of another type than
 <code>string</code>, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown with a <code>message</code> property set equal
@@ -704,7 +718,7 @@ to the value of the <code>message</code> parameter. If the <code>message</code> 
 undefined, a default error message is assigned. If the <code>message</code> parameter is an
 instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown instead of the
 <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>.</p>
-<h2><code>assert.doesNotReject(asyncFn[, error][, message])</code><span><a class="mark" href="#assert_assert_doesnotreject_asyncfn_error_message" id="assert_assert_doesnotreject_asyncfn_error_message">#</a></span></h2>
+</section><section><h3><code>assert.doesNotReject(asyncFn[, error][, message])</code><span><a class="mark" href="#assert_assert_doesnotreject_asyncfn_error_message" id="assert_assert_doesnotreject_asyncfn_error_message">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v10.0.0</span>
 </div>
@@ -731,19 +745,19 @@ function. See <a href="#assert_assert_throws_fn_error_message"><code>assert.thro
 <a href="#assert_assert_doesnotthrow_fn_error_message"><code>assert.doesNotThrow()</code></a>.</p>
 <!-- eslint-disable no-restricted-syntax -->
 <pre><code class="language-js">(<span class="hljs-keyword">async</span> () => {
-  <span class="hljs-keyword">await</span> assert.doesNotReject(
+  <span class="hljs-keyword">await</span> assert.<span class="hljs-title function_">doesNotReject</span>(
     <span class="hljs-keyword">async</span> () => {
-      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
     },
-    <span class="hljs-built_in">SyntaxError</span>
+    <span class="hljs-title class_">SyntaxError</span>
   );
 })();</code></pre>
 <!-- eslint-disable no-restricted-syntax -->
-<pre><code class="language-js">assert.doesNotReject(<span class="hljs-built_in">Promise</span>.reject(<span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Wrong value'</span>)))
-  .then(<span class="hljs-function">() =></span> {
+<pre><code class="language-js">assert.<span class="hljs-title function_">doesNotReject</span>(<span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">reject</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Wrong value'</span>)))
+  .<span class="hljs-title function_">then</span>(<span class="hljs-function">() =></span> {
     <span class="hljs-comment">// ...</span>
   });</code></pre>
-<h2><code>assert.doesNotThrow(fn[, error][, message])</code><span><a class="mark" href="#assert_assert_doesnotthrow_fn_error_message" id="assert_assert_doesnotthrow_fn_error_message">#</a></span></h2>
+</section><section><h3><code>assert.doesNotThrow(fn[, error][, message])</code><span><a class="mark" href="#assert_assert_doesnotthrow_fn_error_message" id="assert_assert_doesnotthrow_fn_error_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -778,38 +792,40 @@ function. See <a href="#assert_assert_throws_fn_error_message"><code>assert.thro
 <p>The following, for instance, will throw the <a href="errors.html#errors_class_typeerror"><code>TypeError</code></a> because there is no
 matching error type in the assertion:</p>
 <!-- eslint-disable no-restricted-syntax -->
-<pre><code class="language-js">assert.doesNotThrow(
+<pre><code class="language-js">assert.<span class="hljs-title function_">doesNotThrow</span>(
   <span class="hljs-function">() =></span> {
-    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
   },
-  <span class="hljs-built_in">SyntaxError</span>
+  <span class="hljs-title class_">SyntaxError</span>
 );</code></pre>
 <p>However, the following will result in an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> with the message
 'Got unwanted exception...':</p>
 <!-- eslint-disable no-restricted-syntax -->
-<pre><code class="language-js">assert.doesNotThrow(
+<pre><code class="language-js">assert.<span class="hljs-title function_">doesNotThrow</span>(
   <span class="hljs-function">() =></span> {
-    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
   },
-  <span class="hljs-built_in">TypeError</span>
+  <span class="hljs-title class_">TypeError</span>
 );</code></pre>
 <p>If an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown and a value is provided for the <code>message</code>
 parameter, the value of <code>message</code> will be appended to the <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>
 message:</p>
 <!-- eslint-disable no-restricted-syntax -->
-<pre><code class="language-js">assert.doesNotThrow(
+<pre><code class="language-js">assert.<span class="hljs-title function_">doesNotThrow</span>(
   <span class="hljs-function">() =></span> {
-    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
   },
   <span class="hljs-regexp">/Wrong value/</span>,
   <span class="hljs-string">'Whoops'</span>
 );
 <span class="hljs-comment">// Throws: AssertionError: Got unwanted exception: Whoops</span></code></pre>
-<h2><code>assert.equal(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_equal_actual_expected_message" id="assert_assert_equal_actual_expected_message">#</a></span></h2>
+</section><section><h3><code>assert.equal(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_equal_actual_expected_message" id="assert_assert_equal_actual_expected_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v14.18.0</td>
+<td><p>In Legacy assertion mode, changed status from Deprecated to Legacy.</p></td></tr>
 <tr><td>v14.0.0</td>
 <td><p>NaN is now treated as being identical in case both sides are NaN.</p></td></tr>
 <tr><td>v0.1.21</td>
@@ -825,29 +841,29 @@ message:</p>
 <p><strong>Strict assertion mode</strong></p>
 <p>An alias of <a href="#assert_assert_strictequal_actual_expected_message"><code>assert.strictEqual()</code></a>.</p>
 <p><strong>Legacy assertion mode</strong></p>
-<p></p><div class="api_stability api_stability_0"><a href="documentation.html#documentation_stability_index">Stability: 0</a> - Deprecated: Use <a href="#assert_assert_strictequal_actual_expected_message"><code>assert.strictEqual()</code></a> instead.</div><p></p>
+<p></p><div class="api_stability api_stability_3"><a href="documentation.html#documentation_stability_index">Stability: 3</a> - Legacy: Use <a href="#assert_assert_strictequal_actual_expected_message"><code>assert.strictEqual()</code></a> instead.</div><p></p>
 <p>Tests shallow, coercive equality between the <code>actual</code> and <code>expected</code> parameters
 using the <a href="https://tc39.github.io/ecma262/#sec-abstract-equality-comparison">Abstract Equality Comparison</a> ( <code>==</code> ). <code>NaN</code> is special handled
 and treated as being identical in case both sides are <code>NaN</code>.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
 
-assert.equal(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
+assert.<span class="hljs-title function_">equal</span>(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
 <span class="hljs-comment">// OK, 1 == 1</span>
-assert.equal(<span class="hljs-number">1</span>, <span class="hljs-string">'1'</span>);
+assert.<span class="hljs-title function_">equal</span>(<span class="hljs-number">1</span>, <span class="hljs-string">'1'</span>);
 <span class="hljs-comment">// OK, 1 == '1'</span>
-assert.equal(<span class="hljs-literal">NaN</span>, <span class="hljs-literal">NaN</span>);
+assert.<span class="hljs-title function_">equal</span>(<span class="hljs-title class_">Na</span>N, <span class="hljs-title class_">Na</span>N);
 <span class="hljs-comment">// OK</span>
 
-assert.equal(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
+assert.<span class="hljs-title function_">equal</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
 <span class="hljs-comment">// AssertionError: 1 == 2</span>
-assert.equal({ <span class="hljs-attr">a</span>: { <span class="hljs-attr">b</span>: <span class="hljs-number">1</span> } }, { <span class="hljs-attr">a</span>: { <span class="hljs-attr">b</span>: <span class="hljs-number">1</span> } });
+assert.<span class="hljs-title function_">equal</span>({ <span class="hljs-attr">a</span>: { <span class="hljs-attr">b</span>: <span class="hljs-number">1</span> } }, { <span class="hljs-attr">a</span>: { <span class="hljs-attr">b</span>: <span class="hljs-number">1</span> } });
 <span class="hljs-comment">// AssertionError: { a: { b: 1 } } == { a: { b: 1 } }</span></code></pre>
 <p>If the values are not equal, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown with a <code>message</code>
 property set equal to the value of the <code>message</code> parameter. If the <code>message</code>
 parameter is undefined, a default error message is assigned. If the <code>message</code>
 parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown instead of the
 <code>AssertionError</code>.</p>
-<h2><code>assert.fail([message])</code><span><a class="mark" href="#assert_assert_fail_message" id="assert_assert_fail_message">#</a></span></h2>
+</section><section><h3><code>assert.fail([message])</code><span><a class="mark" href="#assert_assert_fail_message" id="assert_assert_fail_message">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.21</span>
 </div>
@@ -857,19 +873,19 @@ parameter is an instance of an <a href="errors.html#errors_class_error"><code>Er
 <p>Throws an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> with the provided error message or a default
 error message. If the <code>message</code> parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then
 it will be thrown instead of the <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.fail();
+assert.<span class="hljs-title function_">fail</span>();
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: Failed</span>
 
-assert.fail(<span class="hljs-string">'boom'</span>);
+assert.<span class="hljs-title function_">fail</span>(<span class="hljs-string">'boom'</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: boom</span>
 
-assert.fail(<span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'need array'</span>));
+assert.<span class="hljs-title function_">fail</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'need array'</span>));
 <span class="hljs-comment">// TypeError: need array</span></code></pre>
 <p>Using <code>assert.fail()</code> with more than two arguments is possible but deprecated.
 See below for further details.</p>
-<h2><code>assert.fail(actual, expected[, message[, operator[, stackStartFn]]])</code><span><a class="mark" href="#assert_assert_fail_actual_expected_message_operator_stackstartfn" id="assert_assert_fail_actual_expected_message_operator_stackstartfn">#</a></span></h2>
+</section><section><h3><code>assert.fail(actual, expected[, message[, operator[, stackStartFn]]])</code><span><a class="mark" href="#assert_assert_fail_actual_expected_message_operator_stackstartfn" id="assert_assert_fail_actual_expected_message_operator_stackstartfn">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -898,34 +914,34 @@ the other arguments will be stored as properties on the thrown object. If
 <code>stackStartFn</code> is provided, all stack frames above that function will be
 removed from stacktrace (see <a href="errors.html#errors_error_capturestacktrace_targetobject_constructoropt"><code>Error.captureStackTrace</code></a>). If no arguments are
 given, the default message <code>Failed</code> will be used.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.fail(<span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>);
+assert.<span class="hljs-title function_">fail</span>(<span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: 'a' != 'b'</span>
 
-assert.fail(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-literal">undefined</span>, <span class="hljs-string">'>'</span>);
+assert.<span class="hljs-title function_">fail</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-literal">undefined</span>, <span class="hljs-string">'>'</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: 1 > 2</span>
 
-assert.fail(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-string">'fail'</span>);
+assert.<span class="hljs-title function_">fail</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-string">'fail'</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: fail</span>
 
-assert.fail(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-string">'whoops'</span>, <span class="hljs-string">'>'</span>);
+assert.<span class="hljs-title function_">fail</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-string">'whoops'</span>, <span class="hljs-string">'>'</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: whoops</span>
 
-assert.fail(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'need array'</span>));
+assert.<span class="hljs-title function_">fail</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'need array'</span>));
 <span class="hljs-comment">// TypeError: need array</span></code></pre>
 <p>In the last three cases <code>actual</code>, <code>expected</code>, and <code>operator</code> have no
 influence on the error message.</p>
 <p>Example use of <code>stackStartFn</code> for truncating the exception's stacktrace:</p>
-<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">suppressFrame</span>(<span class="hljs-params"></span>) </span>{
-  assert.fail(<span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>, <span class="hljs-literal">undefined</span>, <span class="hljs-string">'!=='</span>, suppressFrame);
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">suppressFrame</span>(<span class="hljs-params"></span>) {
+  assert.<span class="hljs-title function_">fail</span>(<span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>, <span class="hljs-literal">undefined</span>, <span class="hljs-string">'!=='</span>, suppressFrame);
 }
-suppressFrame();
+<span class="hljs-title function_">suppressFrame</span>();
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: 'a' !== 'b'</span>
 <span class="hljs-comment">//     at repl:1:1</span>
 <span class="hljs-comment">//     at ContextifyScript.Script.runInThisContext (vm.js:44:33)</span>
 <span class="hljs-comment">//     ...</span></code></pre>
-<h2><code>assert.ifError(value)</code><span><a class="mark" href="#assert_assert_iferror_value" id="assert_assert_iferror_value">#</a></span></h2>
+</section><section><h3><code>assert.ifError(value)</code><span><a class="mark" href="#assert_assert_iferror_value" id="assert_assert_iferror_value">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -946,30 +962,30 @@ suppressFrame();
 testing the <code>error</code> argument in callbacks. The stack trace contains all frames
 from the error passed to <code>ifError()</code> including the potential new frames for
 <code>ifError()</code> itself.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.ifError(<span class="hljs-literal">null</span>);
+assert.<span class="hljs-title function_">ifError</span>(<span class="hljs-literal">null</span>);
 <span class="hljs-comment">// OK</span>
-assert.ifError(<span class="hljs-number">0</span>);
+assert.<span class="hljs-title function_">ifError</span>(<span class="hljs-number">0</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: ifError got unwanted exception: 0</span>
-assert.ifError(<span class="hljs-string">'error'</span>);
+assert.<span class="hljs-title function_">ifError</span>(<span class="hljs-string">'error'</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: ifError got unwanted exception: 'error'</span>
-assert.ifError(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>());
+assert.<span class="hljs-title function_">ifError</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>());
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: ifError got unwanted exception: Error</span>
 
 <span class="hljs-comment">// Create some random error frames.</span>
 <span class="hljs-keyword">let</span> err;
-(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">errorFrame</span>(<span class="hljs-params"></span>) </span>{
-  err = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'test error'</span>);
+(<span class="hljs-keyword">function</span> <span class="hljs-title function_">errorFrame</span>(<span class="hljs-params"></span>) {
+  err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'test error'</span>);
 })();
 
-(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">ifErrorFrame</span>(<span class="hljs-params"></span>) </span>{
-  assert.ifError(err);
+(<span class="hljs-keyword">function</span> <span class="hljs-title function_">ifErrorFrame</span>(<span class="hljs-params"></span>) {
+  assert.<span class="hljs-title function_">ifError</span>(err);
 })();
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: ifError got unwanted exception: test error</span>
 <span class="hljs-comment">//     at ifErrorFrame</span>
 <span class="hljs-comment">//     at errorFrame</span></code></pre>
-<h2><code>assert.match(string, regexp[, message])</code><span><a class="mark" href="#assert_assert_match_string_regexp_message" id="assert_assert_match_string_regexp_message">#</a></span></h2>
+</section><section><h3><code>assert.match(string, regexp[, message])</code><span><a class="mark" href="#assert_assert_match_string_regexp_message" id="assert_assert_match_string_regexp_message">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v13.6.0, v12.16.0</span>
 </div>
@@ -982,15 +998,15 @@ assert.ifError(<span class="hljs-keyword">new</span> <span class="hljs-built_in"
 <p>Expects the <code>string</code> input to match the regular expression.</p>
 <p>This feature is currently experimental and the name might change or it might be
 completely removed again.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.match(<span class="hljs-string">'I will fail'</span>, <span class="hljs-regexp">/pass/</span>);
+assert.<span class="hljs-title function_">match</span>(<span class="hljs-string">'I will fail'</span>, <span class="hljs-regexp">/pass/</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: The input did not match the regular ...</span>
 
-assert.match(<span class="hljs-number">123</span>, <span class="hljs-regexp">/pass/</span>);
+assert.<span class="hljs-title function_">match</span>(<span class="hljs-number">123</span>, <span class="hljs-regexp">/pass/</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: The "string" argument must be of type string.</span>
 
-assert.match(<span class="hljs-string">'I will pass'</span>, <span class="hljs-regexp">/pass/</span>);
+assert.<span class="hljs-title function_">match</span>(<span class="hljs-string">'I will pass'</span>, <span class="hljs-regexp">/pass/</span>);
 <span class="hljs-comment">// OK</span></code></pre>
 <p>If the values do not match, or if the <code>string</code> argument is of another type than
 <code>string</code>, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown with a <code>message</code> property set equal
@@ -998,11 +1014,13 @@ to the value of the <code>message</code> parameter. If the <code>message</code> 
 undefined, a default error message is assigned. If the <code>message</code> parameter is an
 instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown instead of the
 <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>.</p>
-<h2><code>assert.notDeepEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_notdeepequal_actual_expected_message" id="assert_assert_notdeepequal_actual_expected_message">#</a></span></h2>
+</section><section><h3><code>assert.notDeepEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_notdeepequal_actual_expected_message" id="assert_assert_notdeepequal_actual_expected_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v14.18.0</td>
+<td><p>In Legacy assertion mode, changed status from Deprecated to Legacy.</p></td></tr>
 <tr><td>v14.0.0</td>
 <td><p>NaN is now treated as being identical in case both sides are NaN.</p></td></tr>
 <tr><td>v9.0.0</td>
@@ -1028,7 +1046,7 @@ instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> t
 <p><strong>Strict assertion mode</strong></p>
 <p>An alias of <a href="#assert_assert_notdeepstrictequal_actual_expected_message"><code>assert.notDeepStrictEqual()</code></a>.</p>
 <p><strong>Legacy assertion mode</strong></p>
-<p></p><div class="api_stability api_stability_0"><a href="documentation.html#documentation_stability_index">Stability: 0</a> - Deprecated: Use <a href="#assert_assert_notdeepstrictequal_actual_expected_message"><code>assert.notDeepStrictEqual()</code></a> instead.</div><p></p>
+<p></p><div class="api_stability api_stability_3"><a href="documentation.html#documentation_stability_index">Stability: 3</a> - Legacy: Use <a href="#assert_assert_notdeepstrictequal_actual_expected_message"><code>assert.notDeepStrictEqual()</code></a> instead.</div><p></p>
 <p>Tests for any deep inequality. Opposite of <a href="#assert_assert_deepequal_actual_expected_message"><code>assert.deepEqual()</code></a>.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
 
@@ -1047,25 +1065,25 @@ instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> t
     <span class="hljs-attr">b</span>: <span class="hljs-number">1</span>
   }
 };
-<span class="hljs-keyword">const</span> obj4 = <span class="hljs-built_in">Object</span>.create(obj1);
+<span class="hljs-keyword">const</span> obj4 = <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">create</span>(obj1);
 
-assert.notDeepEqual(obj1, obj1);
+assert.<span class="hljs-title function_">notDeepEqual</span>(obj1, obj1);
 <span class="hljs-comment">// AssertionError: { a: { b: 1 } } notDeepEqual { a: { b: 1 } }</span>
 
-assert.notDeepEqual(obj1, obj2);
+assert.<span class="hljs-title function_">notDeepEqual</span>(obj1, obj2);
 <span class="hljs-comment">// OK</span>
 
-assert.notDeepEqual(obj1, obj3);
+assert.<span class="hljs-title function_">notDeepEqual</span>(obj1, obj3);
 <span class="hljs-comment">// AssertionError: { a: { b: 1 } } notDeepEqual { a: { b: 1 } }</span>
 
-assert.notDeepEqual(obj1, obj4);
+assert.<span class="hljs-title function_">notDeepEqual</span>(obj1, obj4);
 <span class="hljs-comment">// OK</span></code></pre>
 <p>If the values are deeply equal, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown with a
 <code>message</code> property set equal to the value of the <code>message</code> parameter. If the
 <code>message</code> parameter is undefined, a default error message is assigned. If the
 <code>message</code> parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown
 instead of the <code>AssertionError</code>.</p>
-<h2><code>assert.notDeepStrictEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_notdeepstrictequal_actual_expected_message" id="assert_assert_notdeepstrictequal_actual_expected_message">#</a></span></h2>
+</section><section><h3><code>assert.notDeepStrictEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_notdeepstrictequal_actual_expected_message" id="assert_assert_notdeepstrictequal_actual_expected_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1095,20 +1113,22 @@ instead of the <code>AssertionError</code>.</p>
 <li><code>message</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error" class="type">&#x3C;Error></a></li>
 </ul>
 <p>Tests for deep strict inequality. Opposite of <a href="#assert_assert_deepstrictequal_actual_expected_message"><code>assert.deepStrictEqual()</code></a>.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.notDeepStrictEqual({ <span class="hljs-attr">a</span>: <span class="hljs-number">1</span> }, { <span class="hljs-attr">a</span>: <span class="hljs-string">'1'</span> });
+assert.<span class="hljs-title function_">notDeepStrictEqual</span>({ <span class="hljs-attr">a</span>: <span class="hljs-number">1</span> }, { <span class="hljs-attr">a</span>: <span class="hljs-string">'1'</span> });
 <span class="hljs-comment">// OK</span></code></pre>
 <p>If the values are deeply and strictly equal, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown
 with a <code>message</code> property set equal to the value of the <code>message</code> parameter. If
 the <code>message</code> parameter is undefined, a default error message is assigned. If
 the <code>message</code> parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown
 instead of the <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>.</p>
-<h2><code>assert.notEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_notequal_actual_expected_message" id="assert_assert_notequal_actual_expected_message">#</a></span></h2>
+</section><section><h3><code>assert.notEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_notequal_actual_expected_message" id="assert_assert_notequal_actual_expected_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v14.18.0</td>
+<td><p>In Legacy assertion mode, changed status from Deprecated to Legacy.</p></td></tr>
 <tr><td>v14.0.0</td>
 <td><p>NaN is now treated as being identical in case both sides are NaN.</p></td></tr>
 <tr><td>v0.1.21</td>
@@ -1124,26 +1144,26 @@ instead of the <a href="#assert_class_assert_assertionerror"><code>AssertionErro
 <p><strong>Strict assertion mode</strong></p>
 <p>An alias of <a href="#assert_assert_notstrictequal_actual_expected_message"><code>assert.notStrictEqual()</code></a>.</p>
 <p><strong>Legacy assertion mode</strong></p>
-<p></p><div class="api_stability api_stability_0"><a href="documentation.html#documentation_stability_index">Stability: 0</a> - Deprecated: Use <a href="#assert_assert_notstrictequal_actual_expected_message"><code>assert.notStrictEqual()</code></a> instead.</div><p></p>
+<p></p><div class="api_stability api_stability_3"><a href="documentation.html#documentation_stability_index">Stability: 3</a> - Legacy: Use <a href="#assert_assert_notstrictequal_actual_expected_message"><code>assert.notStrictEqual()</code></a> instead.</div><p></p>
 <p>Tests shallow, coercive inequality with the <a href="https://tc39.github.io/ecma262/#sec-abstract-equality-comparison">Abstract Equality Comparison</a>
 (<code>!=</code> ). <code>NaN</code> is special handled and treated as being identical in case both
 sides are <code>NaN</code>.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>);
 
-assert.notEqual(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
+assert.<span class="hljs-title function_">notEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
 <span class="hljs-comment">// OK</span>
 
-assert.notEqual(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
+assert.<span class="hljs-title function_">notEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
 <span class="hljs-comment">// AssertionError: 1 != 1</span>
 
-assert.notEqual(<span class="hljs-number">1</span>, <span class="hljs-string">'1'</span>);
+assert.<span class="hljs-title function_">notEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-string">'1'</span>);
 <span class="hljs-comment">// AssertionError: 1 != '1'</span></code></pre>
 <p>If the values are equal, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown with a <code>message</code>
 property set equal to the value of the <code>message</code> parameter. If the <code>message</code>
 parameter is undefined, a default error message is assigned. If the <code>message</code>
 parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown instead of the
 <code>AssertionError</code>.</p>
-<h2><code>assert.notStrictEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_notstrictequal_actual_expected_message" id="assert_assert_notstrictequal_actual_expected_message">#</a></span></h2>
+</section><section><h3><code>assert.notStrictEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_notstrictequal_actual_expected_message" id="assert_assert_notstrictequal_actual_expected_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1162,24 +1182,24 @@ parameter is an instance of an <a href="errors.html#errors_class_error"><code>Er
 </ul>
 <p>Tests strict inequality between the <code>actual</code> and <code>expected</code> parameters as
 determined by the <a href="https://tc39.github.io/ecma262/#sec-samevalue">SameValue Comparison</a>.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.notStrictEqual(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
+assert.<span class="hljs-title function_">notStrictEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
 <span class="hljs-comment">// OK</span>
 
-assert.notStrictEqual(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
+assert.<span class="hljs-title function_">notStrictEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to:</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">// 1</span>
 
-assert.notStrictEqual(<span class="hljs-number">1</span>, <span class="hljs-string">'1'</span>);
+assert.<span class="hljs-title function_">notStrictEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-string">'1'</span>);
 <span class="hljs-comment">// OK</span></code></pre>
 <p>If the values are strictly equal, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown with a
 <code>message</code> property set equal to the value of the <code>message</code> parameter. If the
 <code>message</code> parameter is undefined, a default error message is assigned. If the
 <code>message</code> parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown
 instead of the <code>AssertionError</code>.</p>
-<h2><code>assert.ok(value[, message])</code><span><a class="mark" href="#assert_assert_ok_value_message" id="assert_assert_ok_value_message">#</a></span></h2>
+</section><section><h3><code>assert.ok(value[, message])</code><span><a class="mark" href="#assert_assert_ok_value_message" id="assert_assert_ok_value_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1206,45 +1226,45 @@ If no arguments are passed in at all <code>message</code> will be set to the str
 <code>'No value argument passed to `assert.ok()`'</code>.</p>
 <p>Be aware that in the <code>repl</code> the error message will be different to the one
 thrown in a file! See below for further details.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.ok(<span class="hljs-literal">true</span>);
+assert.<span class="hljs-title function_">ok</span>(<span class="hljs-literal">true</span>);
 <span class="hljs-comment">// OK</span>
-assert.ok(<span class="hljs-number">1</span>);
+assert.<span class="hljs-title function_">ok</span>(<span class="hljs-number">1</span>);
 <span class="hljs-comment">// OK</span>
 
-assert.ok();
+assert.<span class="hljs-title function_">ok</span>();
 <span class="hljs-comment">// AssertionError: No value argument passed to `assert.ok()`</span>
 
-assert.ok(<span class="hljs-literal">false</span>, <span class="hljs-string">'it\'s false'</span>);
+assert.<span class="hljs-title function_">ok</span>(<span class="hljs-literal">false</span>, <span class="hljs-string">'it\'s false'</span>);
 <span class="hljs-comment">// AssertionError: it's false</span>
 
 <span class="hljs-comment">// In the repl:</span>
-assert.ok(<span class="hljs-keyword">typeof</span> <span class="hljs-number">123</span> === <span class="hljs-string">'string'</span>);
+assert.<span class="hljs-title function_">ok</span>(<span class="hljs-keyword">typeof</span> <span class="hljs-number">123</span> === <span class="hljs-string">'string'</span>);
 <span class="hljs-comment">// AssertionError: false == true</span>
 
 <span class="hljs-comment">// In a file (e.g. test.js):</span>
-assert.ok(<span class="hljs-keyword">typeof</span> <span class="hljs-number">123</span> === <span class="hljs-string">'string'</span>);
+assert.<span class="hljs-title function_">ok</span>(<span class="hljs-keyword">typeof</span> <span class="hljs-number">123</span> === <span class="hljs-string">'string'</span>);
 <span class="hljs-comment">// AssertionError: The expression evaluated to a falsy value:</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">//   assert.ok(typeof 123 === 'string')</span>
 
-assert.ok(<span class="hljs-literal">false</span>);
+assert.<span class="hljs-title function_">ok</span>(<span class="hljs-literal">false</span>);
 <span class="hljs-comment">// AssertionError: The expression evaluated to a falsy value:</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">//   assert.ok(false)</span>
 
-assert.ok(<span class="hljs-number">0</span>);
+assert.<span class="hljs-title function_">ok</span>(<span class="hljs-number">0</span>);
 <span class="hljs-comment">// AssertionError: The expression evaluated to a falsy value:</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">//   assert.ok(0)</span>
 
 <span class="hljs-comment">// Using `assert()` works the same:</span>
-assert(<span class="hljs-number">0</span>);
+<span class="hljs-title function_">assert</span>(<span class="hljs-number">0</span>);
 <span class="hljs-comment">// AssertionError: The expression evaluated to a falsy value:</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">//   assert(0)</span></code></pre>
-<h2><code>assert.rejects(asyncFn[, error][, message])</code><span><a class="mark" href="#assert_assert_rejects_asyncfn_error_message" id="assert_assert_rejects_asyncfn_error_message">#</a></span></h2>
+</section><section><h3><code>assert.rejects(asyncFn[, error][, message])</code><span><a class="mark" href="#assert_assert_rejects_asyncfn_error_message" id="assert_assert_rejects_asyncfn_error_message">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v10.0.0</span>
 </div>
@@ -1270,9 +1290,9 @@ each property will be tested for including the non-enumerable <code>message</cod
 <p>If specified, <code>message</code> will be the message provided by the <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>
 if the <code>asyncFn</code> fails to reject.</p>
 <pre><code class="language-js">(<span class="hljs-keyword">async</span> () => {
-  <span class="hljs-keyword">await</span> assert.rejects(
+  <span class="hljs-keyword">await</span> assert.<span class="hljs-title function_">rejects</span>(
     <span class="hljs-keyword">async</span> () => {
-      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
     },
     {
       <span class="hljs-attr">name</span>: <span class="hljs-string">'TypeError'</span>,
@@ -1281,21 +1301,21 @@ if the <code>asyncFn</code> fails to reject.</p>
   );
 })();</code></pre>
 <pre><code class="language-js">(<span class="hljs-keyword">async</span> () => {
-  <span class="hljs-keyword">await</span> assert.rejects(
+  <span class="hljs-keyword">await</span> assert.<span class="hljs-title function_">rejects</span>(
     <span class="hljs-keyword">async</span> () => {
-      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
     },
     <span class="hljs-function">(<span class="hljs-params">err</span>) =></span> {
-      assert.strictEqual(err.name, <span class="hljs-string">'TypeError'</span>);
-      assert.strictEqual(err.message, <span class="hljs-string">'Wrong value'</span>);
+      assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">name</span>, <span class="hljs-string">'TypeError'</span>);
+      assert.<span class="hljs-title function_">strictEqual</span>(err.<span class="hljs-property">message</span>, <span class="hljs-string">'Wrong value'</span>);
       <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
     }
   );
 })();</code></pre>
-<pre><code class="language-js">assert.rejects(
-  <span class="hljs-built_in">Promise</span>.reject(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Wrong value'</span>)),
-  <span class="hljs-built_in">Error</span>
-).then(<span class="hljs-function">() =></span> {
+<pre><code class="language-js">assert.<span class="hljs-title function_">rejects</span>(
+  <span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">reject</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Wrong value'</span>)),
+  <span class="hljs-title class_">Error</span>
+).<span class="hljs-title function_">then</span>(<span class="hljs-function">() =></span> {
   <span class="hljs-comment">// ...</span>
 });</code></pre>
 <p><code>error</code> cannot be a string. If a string is provided as the second
@@ -1303,7 +1323,7 @@ argument, then <code>error</code> is assumed to be omitted and the string will b
 <code>message</code> instead. This can lead to easy-to-miss mistakes. Please read the
 example in <a href="#assert_assert_throws_fn_error_message"><code>assert.throws()</code></a> carefully if using a string as the second
 argument gets considered.</p>
-<h2><code>assert.strictEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_strictequal_actual_expected_message" id="assert_assert_strictequal_actual_expected_message">#</a></span></h2>
+</section><section><h3><code>assert.strictEqual(actual, expected[, message])</code><span><a class="mark" href="#assert_assert_strictequal_actual_expected_message" id="assert_assert_strictequal_actual_expected_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1322,17 +1342,17 @@ argument gets considered.</p>
 </ul>
 <p>Tests strict equality between the <code>actual</code> and <code>expected</code> parameters as
 determined by the <a href="https://tc39.github.io/ecma262/#sec-samevalue">SameValue Comparison</a>.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).strict;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>).<span class="hljs-property">strict</span>;
 
-assert.strictEqual(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
+assert.<span class="hljs-title function_">strictEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: Expected inputs to be strictly equal:</span>
 <span class="hljs-comment">//</span>
 <span class="hljs-comment">// 1 !== 2</span>
 
-assert.strictEqual(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
+assert.<span class="hljs-title function_">strictEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
 <span class="hljs-comment">// OK</span>
 
-assert.strictEqual(<span class="hljs-string">'Hello foobar'</span>, <span class="hljs-string">'Hello World!'</span>);
+assert.<span class="hljs-title function_">strictEqual</span>(<span class="hljs-string">'Hello foobar'</span>, <span class="hljs-string">'Hello World!'</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: Expected inputs to be strictly equal:</span>
 <span class="hljs-comment">// + actual - expected</span>
 <span class="hljs-comment">//</span>
@@ -1342,17 +1362,17 @@ assert.strictEqual(<span class="hljs-string">'Hello foobar'</span>, <span class=
 
 <span class="hljs-keyword">const</span> apples = <span class="hljs-number">1</span>;
 <span class="hljs-keyword">const</span> oranges = <span class="hljs-number">2</span>;
-assert.strictEqual(apples, oranges, <span class="hljs-string">`apples <span class="hljs-subst">${apples}</span> !== oranges <span class="hljs-subst">${oranges}</span>`</span>);
+assert.<span class="hljs-title function_">strictEqual</span>(apples, oranges, <span class="hljs-string">`apples <span class="hljs-subst">${apples}</span> !== oranges <span class="hljs-subst">${oranges}</span>`</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: apples 1 !== oranges 2</span>
 
-assert.strictEqual(<span class="hljs-number">1</span>, <span class="hljs-string">'1'</span>, <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Inputs are not identical'</span>));
+assert.<span class="hljs-title function_">strictEqual</span>(<span class="hljs-number">1</span>, <span class="hljs-string">'1'</span>, <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Inputs are not identical'</span>));
 <span class="hljs-comment">// TypeError: Inputs are not identical</span></code></pre>
 <p>If the values are not strictly equal, an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a> is thrown with a
 <code>message</code> property set equal to the value of the <code>message</code> parameter. If the
 <code>message</code> parameter is undefined, a default error message is assigned. If the
 <code>message</code> parameter is an instance of an <a href="errors.html#errors_class_error"><code>Error</code></a> then it will be thrown
 instead of the <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>.</p>
-<h2><code>assert.throws(fn[, error][, message])</code><span><a class="mark" href="#assert_assert_throws_fn_error_message" id="assert_assert_throws_fn_error_message">#</a></span></h2>
+</section><section><h3><code>assert.throws(fn[, error][, message])</code><span><a class="mark" href="#assert_assert_throws_fn_error_message" id="assert_assert_throws_fn_error_message">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1384,16 +1404,16 @@ validating against a string property. See below for examples.</p>
 <code>AssertionError</code> if the <code>fn</code> call fails to throw or in case the error validation
 fails.</p>
 <p>Custom validation object/error instance:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
-err.code = <span class="hljs-number">404</span>;
-err.foo = <span class="hljs-string">'bar'</span>;
-err.info = {
+<pre><code class="language-js"><span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">TypeError</span>(<span class="hljs-string">'Wrong value'</span>);
+err.<span class="hljs-property">code</span> = <span class="hljs-number">404</span>;
+err.<span class="hljs-property">foo</span> = <span class="hljs-string">'bar'</span>;
+err.<span class="hljs-property">info</span> = {
   <span class="hljs-attr">nested</span>: <span class="hljs-literal">true</span>,
   <span class="hljs-attr">baz</span>: <span class="hljs-string">'text'</span>
 };
-err.reg = <span class="hljs-regexp">/abc/i</span>;
+err.<span class="hljs-property">reg</span> = <span class="hljs-regexp">/abc/i</span>;
 
-assert.throws(
+assert.<span class="hljs-title function_">throws</span>(
   <span class="hljs-function">() =></span> {
     <span class="hljs-keyword">throw</span> err;
   },
@@ -1411,7 +1431,7 @@ assert.throws(
 );
 
 <span class="hljs-comment">// Using regular expressions to validate error properties:</span>
-assert.throws(
+assert.<span class="hljs-title function_">throws</span>(
   <span class="hljs-function">() =></span> {
     <span class="hljs-keyword">throw</span> err;
   },
@@ -1420,8 +1440,8 @@ assert.throws(
     <span class="hljs-comment">// expressions on those will match against the string. If they fail, an</span>
     <span class="hljs-comment">// error is thrown.</span>
     <span class="hljs-attr">name</span>: <span class="hljs-regexp">/^TypeError$/</span>,
-    message: <span class="hljs-regexp">/Wrong/</span>,
-    foo: <span class="hljs-string">'bar'</span>,
+    <span class="hljs-attr">message</span>: <span class="hljs-regexp">/Wrong/</span>,
+    <span class="hljs-attr">foo</span>: <span class="hljs-string">'bar'</span>,
     <span class="hljs-attr">info</span>: {
       <span class="hljs-attr">nested</span>: <span class="hljs-literal">true</span>,
       <span class="hljs-comment">// It is not possible to use regular expressions for nested properties!</span>
@@ -1435,11 +1455,11 @@ assert.throws(
 );
 
 <span class="hljs-comment">// Fails due to the different `message` and `name` properties:</span>
-assert.throws(
+assert.<span class="hljs-title function_">throws</span>(
   <span class="hljs-function">() =></span> {
-    <span class="hljs-keyword">const</span> otherErr = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Not found'</span>);
+    <span class="hljs-keyword">const</span> otherErr = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Not found'</span>);
     <span class="hljs-comment">// Copy all enumerable properties from `err` to `otherErr`.</span>
-    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> [key, value] <span class="hljs-keyword">of</span> <span class="hljs-built_in">Object</span>.entries(err)) {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> [key, value] <span class="hljs-keyword">of</span> <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">entries</span>(err)) {
       otherErr[key] = value;
     }
     <span class="hljs-keyword">throw</span> otherErr;
@@ -1449,31 +1469,31 @@ assert.throws(
   err
 );</code></pre>
 <p>Validate instanceof using constructor:</p>
-<pre><code class="language-js">assert.throws(
+<pre><code class="language-js">assert.<span class="hljs-title function_">throws</span>(
   <span class="hljs-function">() =></span> {
-    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Wrong value'</span>);
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Wrong value'</span>);
   },
-  <span class="hljs-built_in">Error</span>
+  <span class="hljs-title class_">Error</span>
 );</code></pre>
 <p>Validate error message using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions"><code>RegExp</code></a>:</p>
 <p>Using a regular expression runs <code>.toString</code> on the error object, and will
 therefore also include the error name.</p>
-<pre><code class="language-js">assert.throws(
+<pre><code class="language-js">assert.<span class="hljs-title function_">throws</span>(
   <span class="hljs-function">() =></span> {
-    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Wrong value'</span>);
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Wrong value'</span>);
   },
   <span class="hljs-regexp">/^Error: Wrong value$/</span>
 );</code></pre>
 <p>Custom error validation:</p>
 <p>The function must return <code>true</code> to indicate all internal validations passed.
 It will otherwise fail with an <a href="#assert_class_assert_assertionerror"><code>AssertionError</code></a>.</p>
-<pre><code class="language-js">assert.throws(
+<pre><code class="language-js">assert.<span class="hljs-title function_">throws</span>(
   <span class="hljs-function">() =></span> {
-    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Wrong value'</span>);
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Wrong value'</span>);
   },
   <span class="hljs-function">(<span class="hljs-params">err</span>) =></span> {
-    assert(err <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Error</span>);
-    assert(<span class="hljs-regexp">/value/</span>.test(err));
+    <span class="hljs-title function_">assert</span>(err <span class="hljs-keyword">instanceof</span> <span class="hljs-title class_">Error</span>);
+    <span class="hljs-title function_">assert</span>(<span class="hljs-regexp">/value/</span>.<span class="hljs-title function_">test</span>(err));
     <span class="hljs-comment">// Avoid returning anything from validation functions besides `true`.</span>
     <span class="hljs-comment">// Otherwise, it's not clear what part of the validation failed. Instead,</span>
     <span class="hljs-comment">// throw an error about the specific validation that failed (as done in this</span>
@@ -1490,42 +1510,78 @@ message as the thrown error message is going to result in an
 <code>ERR_AMBIGUOUS_ARGUMENT</code> error. Please read the example below carefully if using
 a string as the second argument gets considered:</p>
 <!-- eslint-disable no-restricted-syntax -->
-<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">throwingFirst</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'First'</span>);
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">throwingFirst</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'First'</span>);
 }
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">throwingSecond</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Second'</span>);
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">throwingSecond</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Second'</span>);
 }
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">notThrowing</span>(<span class="hljs-params"></span>) </span>{}
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">notThrowing</span>(<span class="hljs-params"></span>) {}
 
 <span class="hljs-comment">// The second argument is a string and the input function threw an Error.</span>
 <span class="hljs-comment">// The first case will not throw as it does not match for the error message</span>
 <span class="hljs-comment">// thrown by the input function!</span>
-assert.throws(throwingFirst, <span class="hljs-string">'Second'</span>);
+assert.<span class="hljs-title function_">throws</span>(throwingFirst, <span class="hljs-string">'Second'</span>);
 <span class="hljs-comment">// In the next example the message has no benefit over the message from the</span>
 <span class="hljs-comment">// error and since it is not clear if the user intended to actually match</span>
 <span class="hljs-comment">// against the error message, Node.js throws an `ERR_AMBIGUOUS_ARGUMENT` error.</span>
-assert.throws(throwingSecond, <span class="hljs-string">'Second'</span>);
+assert.<span class="hljs-title function_">throws</span>(throwingSecond, <span class="hljs-string">'Second'</span>);
 <span class="hljs-comment">// TypeError [ERR_AMBIGUOUS_ARGUMENT]</span>
 
 <span class="hljs-comment">// The string is only used (as message) in case the function does not throw:</span>
-assert.throws(notThrowing, <span class="hljs-string">'Second'</span>);
+assert.<span class="hljs-title function_">throws</span>(notThrowing, <span class="hljs-string">'Second'</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]: Missing expected exception: Second</span>
 
 <span class="hljs-comment">// If it was intended to match for the error message do this instead:</span>
 <span class="hljs-comment">// It does not throw because the error messages match.</span>
-assert.throws(throwingSecond, <span class="hljs-regexp">/Second$/</span>);
+assert.<span class="hljs-title function_">throws</span>(throwingSecond, <span class="hljs-regexp">/Second$/</span>);
 
 <span class="hljs-comment">// If the error message does not match, an AssertionError is thrown.</span>
-assert.throws(throwingFirst, <span class="hljs-regexp">/Second$/</span>);
+assert.<span class="hljs-title function_">throws</span>(throwingFirst, <span class="hljs-regexp">/Second$/</span>);
 <span class="hljs-comment">// AssertionError [ERR_ASSERTION]</span></code></pre>
 <p>Due to the confusing error-prone notation, avoid a string as the second
-argument.</p>
+argument.</p></section>
         <!-- API END -->
       </div>
     </div>
   </div>
+  <script>
+    'use strict';
+    {
+      const kCustomPreference = 'customDarkTheme';
+      const userSettings = sessionStorage.getItem(kCustomPreference);
+      const themeToggleButton = document.getElementById('theme-toggle-btn');
+      if (userSettings === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if ('onchange' in mq) {
+          function mqChangeListener(e) {
+            document.body.classList.toggle('dark-mode', e.matches);
+          }
+          mq.addEventListener('change', mqChangeListener);
+          if (themeToggleButton) {
+            themeToggleButton.addEventListener('click', function() {
+              mq.removeEventListener('change', mqChangeListener);
+            }, { once: true });
+          }
+        }
+        if (mq.matches) {
+          document.body.classList.add('dark-mode');
+        }
+      } else if (userSettings === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+      if (themeToggleButton) {
+        themeToggleButton.hidden = false;
+        themeToggleButton.addEventListener('click', function() {
+          sessionStorage.setItem(
+            kCustomPreference,
+            document.body.classList.toggle('dark-mode')
+          );
+        });
+      }
+    }
+  </script>
 </body>
 </html>

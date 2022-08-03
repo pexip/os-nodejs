@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/util.js\">lib/util.js</a></p>\n<p>The <code>util</code> module supports the needs of Node.js internal APIs. Many of the\nutilities are useful for application and module developers as well. To access\nit:</p>\n<pre><code class=\"language-js\">const util = require('util');\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/util.js\">lib/util.js</a></p>\n<p>The <code>util</code> module supports the needs of Node.js internal APIs. Many of the\nutilities are useful for application and module developers as well. To access\nit:</p>\n<pre><code class=\"language-js\">const util = require('util');\n</code></pre>",
       "methods": [
         {
           "textRaw": "`util.callbackify(original)`",
@@ -278,6 +278,28 @@
           "desc": "<p>Returns the string name for a numeric error code that comes from a Node.js API.\nThe mapping between error codes and error names is platform-dependent.\nSee <a href=\"errors.html#errors_common_system_errors\">Common System Errors</a> for the names of common errors.</p>\n<pre><code class=\"language-js\">fs.access('file/that/does/not/exist', (err) => {\n  const name = util.getSystemErrorName(err.errno);\n  console.error(name);  // ENOENT\n});\n</code></pre>"
         },
         {
+          "textRaw": "`util.getSystemErrorMap()`",
+          "type": "method",
+          "name": "getSystemErrorMap",
+          "meta": {
+            "added": [
+              "v14.17.0"
+            ],
+            "changes": []
+          },
+          "signatures": [
+            {
+              "return": {
+                "textRaw": "Returns: {Map}",
+                "name": "return",
+                "type": "Map"
+              },
+              "params": []
+            }
+          ],
+          "desc": "<p>Returns a Map of all system error codes available from the Node.js API.\nThe mapping between error codes and error names is platform-dependent.\nSee <a href=\"errors.html#errors_common_system_errors\">Common System Errors</a> for the names of common errors.</p>\n<pre><code class=\"language-js\">fs.access('file/that/does/not/exist', (err) => {\n  const errorMap = util.getSystemErrorMap();\n  const name = errorMap.get(err.errno);\n  console.error(name);  // ENOENT\n});\n</code></pre>"
+        },
+        {
           "textRaw": "`util.inherits(constructor, superConstructor)`",
           "type": "method",
           "name": "inherits",
@@ -293,6 +315,8 @@
               }
             ]
           },
+          "stability": 3,
+          "stabilityText": "Legacy: Use ES2015 class syntax and `extends` keyword instead.",
           "signatures": [
             {
               "params": [
@@ -919,6 +943,29 @@
               "shortDesc": "that can be used to declare custom promisified variants of functions, see [Custom promisified functions][]."
             }
           ]
+        },
+        {
+          "textRaw": "`util.toUSVString(string)`",
+          "type": "method",
+          "name": "toUSVString",
+          "meta": {
+            "added": [
+              "v14.18.0"
+            ],
+            "changes": []
+          },
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`string` {string}",
+                  "name": "string",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "desc": "<p>Returns the <code>string</code> after replacing any surrogate code points\n(or equivalently, any unpaired surrogate code units) with the\nUnicode \"replacement character\" U+FFFD.</p>"
         }
       ],
       "classes": [

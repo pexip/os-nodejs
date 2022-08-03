@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/readline.js\">lib/readline.js</a></p>\n<p>The <code>readline</code> module provides an interface for reading data from a <a href=\"stream.html#stream_readable_streams\">Readable</a>\nstream (such as <a href=\"process.html#process_process_stdin\"><code>process.stdin</code></a>) one line at a time. It can be accessed\nusing:</p>\n<pre><code class=\"language-js\">const readline = require('readline');\n</code></pre>\n<p>The following simple example illustrates the basic use of the <code>readline</code> module.</p>\n<pre><code class=\"language-js\">const readline = require('readline');\n\nconst rl = readline.createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n\nrl.question('What do you think of Node.js? ', (answer) => {\n  // TODO: Log the answer in a database\n  console.log(`Thank you for your valuable feedback: ${answer}`);\n\n  rl.close();\n});\n</code></pre>\n<p>Once this code is invoked, the Node.js application will not terminate until the\n<code>readline.Interface</code> is closed because the interface waits for data to be\nreceived on the <code>input</code> stream.</p>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/readline.js\">lib/readline.js</a></p>\n<p>The <code>readline</code> module provides an interface for reading data from a <a href=\"stream.html#stream_readable_streams\">Readable</a>\nstream (such as <a href=\"process.html#process_process_stdin\"><code>process.stdin</code></a>) one line at a time. It can be accessed\nusing:</p>\n<pre><code class=\"language-js\">const readline = require('readline');\n</code></pre>\n<p>The following simple example illustrates the basic use of the <code>readline</code> module.</p>\n<pre><code class=\"language-js\">const readline = require('readline');\n\nconst rl = readline.createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n\nrl.question('What do you think of Node.js? ', (answer) => {\n  // TODO: Log the answer in a database\n  console.log(`Thank you for your valuable feedback: ${answer}`);\n\n  rl.close();\n});\n</code></pre>\n<p>Once this code is invoked, the Node.js application will not terminate until the\n<code>readline.Interface</code> is closed because the interface waits for data to be\nreceived on the <code>input</code> stream.</p>",
       "classes": [
         {
           "textRaw": "Class: `Interface`",
@@ -49,6 +49,19 @@
               "desc": "<p>The <code>'line'</code> event is emitted whenever the <code>input</code> stream receives an\nend-of-line input (<code>\\n</code>, <code>\\r</code>, or <code>\\r\\n</code>). This usually occurs when the user\npresses <kbd>Enter</kbd> or <kbd>Return</kbd>.</p>\n<p>The listener function is called with a string containing the single line of\nreceived input.</p>\n<pre><code class=\"language-js\">rl.on('line', (input) => {\n  console.log(`Received: ${input}`);\n});\n</code></pre>"
             },
             {
+              "textRaw": "Event: `'history'`",
+              "type": "event",
+              "name": "history",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "params": [],
+              "desc": "<p>The <code>'history'</code> event is emitted whenever the history array has changed.</p>\n<p>The listener function is called with an array containing the history array.\nIt will reflect all changes, added lines and removed lines due to\n<code>historySize</code> and <code>removeHistoryDuplicates</code>.</p>\n<p>The primary purpose is to allow a listener to persist the history.\nIt is also possible for the listener to change the history object. This\ncould be useful to prevent certain lines to be added to the history, like\na password.</p>\n<pre><code class=\"language-js\">rl.on('history', (history) => {\n  console.log(`Received: ${history}`);\n});\n</code></pre>"
+            },
+            {
               "textRaw": "Event: `'pause'`",
               "type": "event",
               "name": "pause",
@@ -59,7 +72,7 @@
                 "changes": []
               },
               "params": [],
-              "desc": "<p>The <code>'pause'</code> event is emitted when one of the following occur:</p>\n<ul>\n<li>The <code>input</code> stream is paused.</li>\n<li>The <code>input</code> stream is not paused and receives the <code>'SIGCONT'</code> event. (See\nevents <a href=\"readline.html#readline_event_sigtstp\"><code>'SIGTSTP'</code></a> and <a href=\"readline.html#readline_event_sigcont\"><code>'SIGCONT'</code></a>.)</li>\n</ul>\n<p>The listener function is called without passing any arguments.</p>\n<pre><code class=\"language-js\">rl.on('pause', () => {\n  console.log('Readline paused.');\n});\n</code></pre>"
+              "desc": "<p>The <code>'pause'</code> event is emitted when one of the following occur:</p>\n<ul>\n<li>The <code>input</code> stream is paused.</li>\n<li>The <code>input</code> stream is not paused and receives the <code>'SIGCONT'</code> event. (See\nevents <a href=\"#readline_event_sigtstp\"><code>'SIGTSTP'</code></a> and <a href=\"#readline_event_sigcont\"><code>'SIGCONT'</code></a>.)</li>\n</ul>\n<p>The listener function is called without passing any arguments.</p>\n<pre><code class=\"language-js\">rl.on('pause', () => {\n  console.log('Readline paused.');\n});\n</code></pre>"
             },
             {
               "textRaw": "Event: `'resume'`",
@@ -174,7 +187,7 @@
               "desc": "<p>The <code>rl.prompt()</code> method writes the <code>readline.Interface</code> instances configured\n<code>prompt</code> to a new line in <code>output</code> in order to provide a user with a new\nlocation at which to provide input.</p>\n<p>When called, <code>rl.prompt()</code> will resume the <code>input</code> stream if it has been\npaused.</p>\n<p>If the <code>readline.Interface</code> was created with <code>output</code> set to <code>null</code> or\n<code>undefined</code> the prompt is not written.</p>"
             },
             {
-              "textRaw": "`rl.question(query, callback)`",
+              "textRaw": "`rl.question(query[, options], callback)`",
               "type": "method",
               "name": "question",
               "meta": {
@@ -193,6 +206,19 @@
                       "desc": "A statement or query to write to `output`, prepended to the prompt."
                     },
                     {
+                      "textRaw": "`options` {Object}",
+                      "name": "options",
+                      "type": "Object",
+                      "options": [
+                        {
+                          "textRaw": "`signal` {AbortSignal} Optionally allows the `question()` to be canceled using an `AbortController`.",
+                          "name": "signal",
+                          "type": "AbortSignal",
+                          "desc": "Optionally allows the `question()` to be canceled using an `AbortController`."
+                        }
+                      ]
+                    },
+                    {
                       "textRaw": "`callback` {Function} A callback function that is invoked with the user's input in response to the `query`.",
                       "name": "callback",
                       "type": "Function",
@@ -201,7 +227,7 @@
                   ]
                 }
               ],
-              "desc": "<p>The <code>rl.question()</code> method displays the <code>query</code> by writing it to the <code>output</code>,\nwaits for user input to be provided on <code>input</code>, then invokes the <code>callback</code>\nfunction passing the provided input as the first argument.</p>\n<p>When called, <code>rl.question()</code> will resume the <code>input</code> stream if it has been\npaused.</p>\n<p>If the <code>readline.Interface</code> was created with <code>output</code> set to <code>null</code> or\n<code>undefined</code> the <code>query</code> is not written.</p>\n<p>Example usage:</p>\n<pre><code class=\"language-js\">rl.question('What is your favorite food? ', (answer) => {\n  console.log(`Oh, so your favorite food is ${answer}`);\n});\n</code></pre>\n<p>The <code>callback</code> function passed to <code>rl.question()</code> does not follow the typical\npattern of accepting an <code>Error</code> object or <code>null</code> as the first argument.\nThe <code>callback</code> is called with the provided answer as the only argument.</p>"
+              "desc": "<p>The <code>rl.question()</code> method displays the <code>query</code> by writing it to the <code>output</code>,\nwaits for user input to be provided on <code>input</code>, then invokes the <code>callback</code>\nfunction passing the provided input as the first argument.</p>\n<p>When called, <code>rl.question()</code> will resume the <code>input</code> stream if it has been\npaused.</p>\n<p>If the <code>readline.Interface</code> was created with <code>output</code> set to <code>null</code> or\n<code>undefined</code> the <code>query</code> is not written.</p>\n<p>The <code>callback</code> function passed to <code>rl.question()</code> does not follow the typical\npattern of accepting an <code>Error</code> object or <code>null</code> as the first argument.\nThe <code>callback</code> is called with the provided answer as the only argument.</p>\n<p>Example usage:</p>\n<pre><code class=\"language-js\">rl.question('What is your favorite food? ', (answer) => {\n  console.log(`Oh, so your favorite food is ${answer}`);\n});\n</code></pre>\n<p>Using an <code>AbortController</code> to cancel a question.</p>\n<pre><code class=\"language-js\">const ac = new AbortController();\nconst signal = ac.signal;\n\nrl.question('What is your favorite food? ', { signal }, (answer) => {\n  console.log(`Oh, so your favorite food is ${answer}`);\n});\n\nsignal.addEventListener('abort', () => {\n  console.log('The food question timed out');\n}, { once: true });\n\nsetTimeout(() => ac.abort(), 10000);\n</code></pre>\n<p>If this method is invoked as it's util.promisify()ed version, it returns a\nPromise that fulfills with the answer. If the question is canceled using\nan <code>AbortController</code> it will reject with an <code>AbortError</code>.</p>\n<pre><code class=\"language-js\">const util = require('util');\nconst question = util.promisify(rl.question).bind(rl);\n\nasync function questionExample() {\n  try {\n    const answer = await question('What is you favorite food? ');\n    console.log(`Oh, so your favorite food is ${answer}`);\n  } catch (err) {\n    console.error('Question rejected', err);\n  }\n}\nquestionExample();\n</code></pre>"
             },
             {
               "textRaw": "`rl.resume()`",
@@ -242,6 +268,29 @@
                 }
               ],
               "desc": "<p>The <code>rl.setPrompt()</code> method sets the prompt that will be written to <code>output</code>\nwhenever <code>rl.prompt()</code> is called.</p>"
+            },
+            {
+              "textRaw": "`rl.getPrompt()`",
+              "type": "method",
+              "name": "getPrompt",
+              "meta": {
+                "added": [
+                  "v14.17.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "return": {
+                    "textRaw": "Returns: {string} the current prompt string",
+                    "name": "return",
+                    "type": "string",
+                    "desc": "the current prompt string"
+                  },
+                  "params": []
+                }
+              ],
+              "desc": "<p>The <code>rl.getPrompt()</code> method returns the current prompt used by <code>rl.prompt()</code>.</p>"
             },
             {
               "textRaw": "`rl.write(data[, key])`",
@@ -369,14 +418,20 @@
           ],
           "properties": [
             {
-              "textRaw": "`line` {string|undefined}",
-              "type": "string|undefined",
+              "textRaw": "`line` {string}",
+              "type": "string",
               "name": "line",
               "meta": {
                 "added": [
                   "v0.1.98"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v14.18.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/33676",
+                    "description": "Value will always be a string, never undefined."
+                  }
+                ]
               },
               "desc": "<p>The current input data being processed by node.</p>\n<p>This can be used when collecting input from a TTY stream to retrieve the\ncurrent value that has been processed thus far, prior to the <code>line</code> event\nbeing emitted. Once the <code>line</code> event has been emitted, this property will\nbe an empty string.</p>\n<p>Be aware that modifying the value during the instance runtime may have\nunintended consequences if <code>rl.cursor</code> is not also controlled.</p>\n<p><strong>If not using a TTY stream for input, use the <a href=\"#readline_event_line\"><code>'line'</code></a> event.</strong></p>\n<p>One possible use case would be as follows:</p>\n<pre><code class=\"language-js\">const values = ['lorem ipsum', 'dolor sit amet'];\nconst rl = readline.createInterface(process.stdin);\nconst showResults = debounce(() => {\n  console.log(\n    '\\n',\n    values.filter((val) => val.startsWith(rl.line)).join(' ')\n  );\n}, 300);\nprocess.stdin.on('keypress', (c, k) => {\n  showResults();\n});\n</code></pre>"
             },
@@ -510,6 +565,16 @@
             ],
             "changes": [
               {
+                "version": "v14.18.0",
+                "pr-url": "https://github.com/nodejs/node/pull/37932",
+                "description": "The `signal` option is supported now."
+              },
+              {
+                "version": "v14.18.0",
+                "pr-url": "https://github.com/nodejs/node/pull/33662",
+                "description": "The `history` option is supported now."
+              },
+              {
                 "version": "v13.9.0",
                 "pr-url": "https://github.com/nodejs/node/pull/31318",
                 "description": "The `tabSize` option is supported now."
@@ -541,6 +606,11 @@
           },
           "signatures": [
             {
+              "return": {
+                "textRaw": "Returns: {readline.Interface}",
+                "name": "return",
+                "type": "readline.Interface"
+              },
               "params": [
                 {
                   "textRaw": "`options` {Object}",
@@ -573,11 +643,25 @@
                       "desc": "`true` if the `input` and `output` streams should be treated like a TTY, and have ANSI/VT100 escape codes written to it."
                     },
                     {
+                      "textRaw": "`history` {string[]} Initial list of history lines. This option makes sense only if `terminal` is set to `true` by the user or by an internal `output` check, otherwise the history caching mechanism is not initialized at all. **Default:** `[]`.",
+                      "name": "history",
+                      "type": "string[]",
+                      "default": "`[]`",
+                      "desc": "Initial list of history lines. This option makes sense only if `terminal` is set to `true` by the user or by an internal `output` check, otherwise the history caching mechanism is not initialized at all."
+                    },
+                    {
                       "textRaw": "`historySize` {number} Maximum number of history lines retained. To disable the history set this value to `0`. This option makes sense only if `terminal` is set to `true` by the user or by an internal `output` check, otherwise the history caching mechanism is not initialized at all. **Default:** `30`.",
                       "name": "historySize",
                       "type": "number",
                       "default": "`30`",
                       "desc": "Maximum number of history lines retained. To disable the history set this value to `0`. This option makes sense only if `terminal` is set to `true` by the user or by an internal `output` check, otherwise the history caching mechanism is not initialized at all."
+                    },
+                    {
+                      "textRaw": "`removeHistoryDuplicates` {boolean} If `true`, when a new input line added to the history list duplicates an older one, this removes the older line from the list. **Default:** `false`.",
+                      "name": "removeHistoryDuplicates",
+                      "type": "boolean",
+                      "default": "`false`",
+                      "desc": "If `true`, when a new input line added to the history list duplicates an older one, this removes the older line from the list."
                     },
                     {
                       "textRaw": "`prompt` {string} The prompt string to use. **Default:** `'> '`.",
@@ -594,13 +678,6 @@
                       "desc": "If the delay between `\\r` and `\\n` exceeds `crlfDelay` milliseconds, both `\\r` and `\\n` will be treated as separate end-of-line input. `crlfDelay` will be coerced to a number no less than `100`. It can be set to `Infinity`, in which case `\\r` followed by `\\n` will always be considered a single newline (which may be reasonable for [reading files][] with `\\r\\n` line delimiter)."
                     },
                     {
-                      "textRaw": "`removeHistoryDuplicates` {boolean} If `true`, when a new input line added to the history list duplicates an older one, this removes the older line from the list. **Default:** `false`.",
-                      "name": "removeHistoryDuplicates",
-                      "type": "boolean",
-                      "default": "`false`",
-                      "desc": "If `true`, when a new input line added to the history list duplicates an older one, this removes the older line from the list."
-                    },
-                    {
                       "textRaw": "`escapeCodeTimeout` {number} The duration `readline` will wait for a character (when reading an ambiguous key sequence in milliseconds one that can both form a complete key sequence using the input read so far and can take additional input to complete a longer key sequence). **Default:** `500`.",
                       "name": "escapeCodeTimeout",
                       "type": "number",
@@ -613,13 +690,19 @@
                       "type": "integer",
                       "default": "`8`",
                       "desc": "The number of spaces a tab is equal to (minimum 1)."
+                    },
+                    {
+                      "textRaw": "`signal` {AbortSignal} Allows closing the interface using an AbortSignal. Aborting the signal will internally call `close` on the interface.",
+                      "name": "signal",
+                      "type": "AbortSignal",
+                      "desc": "Allows closing the interface using an AbortSignal. Aborting the signal will internally call `close` on the interface."
                     }
                   ]
                 }
               ]
             }
           ],
-          "desc": "<p>The <code>readline.createInterface()</code> method creates a new <code>readline.Interface</code>\ninstance.</p>\n<pre><code class=\"language-js\">const readline = require('readline');\nconst rl = readline.createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n</code></pre>\n<p>Once the <code>readline.Interface</code> instance is created, the most common case is to\nlisten for the <code>'line'</code> event:</p>\n<pre><code class=\"language-js\">rl.on('line', (line) => {\n  console.log(`Received: ${line}`);\n});\n</code></pre>\n<p>If <code>terminal</code> is <code>true</code> for this instance then the <code>output</code> stream will get\nthe best compatibility if it defines an <code>output.columns</code> property and emits\na <code>'resize'</code> event on the <code>output</code> if or when the columns ever change\n(<a href=\"process.html#process_process_stdout\"><code>process.stdout</code></a> does this automatically when it is a TTY).</p>",
+          "desc": "<p>The <code>readline.createInterface()</code> method creates a new <code>readline.Interface</code>\ninstance.</p>\n<pre><code class=\"language-js\">const readline = require('readline');\nconst rl = readline.createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n</code></pre>\n<p>Once the <code>readline.Interface</code> instance is created, the most common case is to\nlisten for the <code>'line'</code> event:</p>\n<pre><code class=\"language-js\">rl.on('line', (line) => {\n  console.log(`Received: ${line}`);\n});\n</code></pre>\n<p>If <code>terminal</code> is <code>true</code> for this instance then the <code>output</code> stream will get\nthe best compatibility if it defines an <code>output.columns</code> property and emits\na <code>'resize'</code> event on the <code>output</code> if or when the columns ever change\n(<a href=\"process.html#process_process_stdout\"><code>process.stdout</code></a> does this automatically when it is a TTY).</p>\n<p>When creating a <code>readline.Interface</code> using <code>stdin</code> as input, the program\nwill not terminate until it receives <code>EOF</code> (<kbd>Ctrl</kbd>+<kbd>D</kbd> on\nLinux/macOS, <kbd>Ctrl</kbd>+<kbd>Z</kbd> followed by <kbd>Return</kbd> on\nWindows).\nIf you want your application to exit without waiting for user input, you can\n<a href=\"net.html#net_socket_unref\"><code>unref()</code></a> the standard input stream:</p>\n<pre><code class=\"language-js\">process.stdin.unref();\n</code></pre>",
           "modules": [
             {
               "textRaw": "Use of the `completer` function",

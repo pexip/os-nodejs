@@ -1,27 +1,24 @@
 'use strict';
 
-const resolve = require('@rollup/plugin-node-resolve');
+const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const json = require('@rollup/plugin-json');
 
 module.exports = {
-  input: 'src/cli-entry.js',
+  input: 'src/cli-entry.mjs',
   output: {
-    file: 'dist/index.js',
-    format: 'cjs',
+    file: 'dist/index.mjs',
+    format: 'es',
     sourcemap: false,
+    exports: 'none',
   },
   external: [
-    'stream',
-    'path',
-    'module',
-    'util',
-    'tty',
-    'os',
-    'fs',
-    'fsevents',
-    'events',
-    'assert',
+    'node:events',
+    'node:fs',
+    'node:path',
+    'node:process',
+    'node:stream',
+    'node:url',
   ],
   plugins: [
     {
@@ -39,13 +36,15 @@ module.exports = {
             'fsevents = require(\'fsevents\');', 'fsevents = undefined;'
           );
         }
+        // Remove circular dependency in glob that messes up rollup
+        return code.replace("var Glob = require('./glob.js').Glob", '');
       }
     },
     json({
       preferConst: true
     }),
-    resolve(), // tells Rollup how to find date-fns in node_modules
-    commonjs(), // Converts date-fns to ES modules
+    nodeResolve({ exportConditions: ['node'] }),
+    commonjs(),
     {
       name: 'banner',
       renderChunk(code) {

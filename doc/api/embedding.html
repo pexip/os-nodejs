@@ -1,10 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v14.16.0">
-  <title>C++ embedder API | Node.js v14.16.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v14.18.1">
+  <title>C++ embedder API | Node.js v14.18.1 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -28,7 +28,7 @@
 <li><a href="async_hooks.html" class="nav-async_hooks">Async hooks</a></li>
 <li><a href="buffer.html" class="nav-buffer">Buffer</a></li>
 <li><a href="addons.html" class="nav-addons">C++ addons</a></li>
-<li><a href="n-api.html" class="nav-n-api">C/C++ addons with N-API</a></li>
+<li><a href="n-api.html" class="nav-n-api">C/C++ addons with Node-API</a></li>
 <li><a href="embedding.html" class="nav-embedding active">C++ embedder API</a></li>
 <li><a href="child_process.html" class="nav-child_process">Child processes</a></li>
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
@@ -37,6 +37,7 @@
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
+<li><a href="diagnostics_channel.html" class="nav-diagnostics_channel">Diagnostics Channel</a></li>
 <li><a href="dns.html" class="nav-dns">DNS</a></li>
 <li><a href="domain.html" class="nav-domain">Domain</a></li>
 <li><a href="errors.html" class="nav-errors">Errors</a></li>
@@ -86,7 +87,20 @@
 
     <div id="column1" data-id="embedding" class="interior">
       <header>
-        <h1>Node.js v14.16.0 Documentation</h1>
+        <div class="header-container">
+          <h1>Node.js v14.18.1 documentation</h1>
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
+              <path fill="none" d="M0 0h24v24H0z" />
+              <path d="M11.1 12.08c-2.33-4.51-.5-8.48.53-10.07C6.27 2.2 1.98 6.59 1.98 12c0 .14.02.28.02.42.62-.27 1.29-.42 2-.42 1.66 0 3.18.83 4.1 2.15A4.01 4.01 0 0111 18c0 1.52-.87 2.83-2.12 3.51.98.32 2.03.5 3.11.5 3.5 0 6.58-1.8 8.37-4.52-2.36.23-6.98-.97-9.26-5.41z"/>
+              <path d="M7 16h-.18C6.4 14.84 5.3 14 4 14c-1.66 0-3 1.34-3 3s1.34 3 3 3h3c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon light-icon" height="24" width="24">
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+            </svg>
+          </button>
+        </div>
         <div id="gtoc">
           <ul>
             <li>
@@ -101,19 +115,18 @@
             
     <li class="version-picker">
       <a href="#">View another version <span>&#x25bc;</span></a>
-      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v15.x/api/embedding.html">15.x</a></li>
+      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v16.x/api/embedding.html">16.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v15.x/api/embedding.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/embedding.html">14.x <b>LTS</b></a></li></ol>
     </li>
   
-            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/embedding.md"><span class="github_icon"><svg height="16" width="16" viewBox="0 0 16.1 16.1" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2 .4-2.5-.5-2.7-1 0-.1-.5-.9-.8-1-.3-.2-.7-.6 0-.6.6 0 1 .6 1.2.8.7 1.2 1.9 1 2.4.7 0-.5.2-.9.5-1-1.8-.3-3.7-1-3.7-4 0-.9.3-1.6.8-2.2 0-.2-.3-1 .1-2 0 0 .7-.3 2.2.7a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.5 1.1.2 2 .1 2.1.5.6.8 1.3.8 2.2 0 3-1.9 3.7-3.6 4 .3.2.5.7.5 1.4v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8a8 8 0 0 0-8-8z"/></svg></span>Edit on GitHub</a></li>
+            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/embedding.md">Edit on GitHub</a></li>
           </ul>
         </div>
         <hr>
       </header>
 
-      <div id="toc">
-        <h2>Table of Contents</h2>
-        <ul>
+      <details id="toc" open><summary>Table of contents</summary><ul>
 <li><a href="#embedding_c_embedder_api">C++ embedder API</a>
 <ul>
 <li><a href="#embedding_example_embedding_application">Example embedding application</a>
@@ -124,28 +137,27 @@
 </li>
 </ul>
 </li>
-</ul>
-      </div>
+</ul></details>
 
       <div id="apicontent">
-        <h1>C++ embedder API<span><a class="mark" href="#embedding_c_embedder_api" id="embedding_c_embedder_api">#</a></span></h1>
+        <h2>C++ embedder API<span><a class="mark" href="#embedding_c_embedder_api" id="embedding_c_embedder_api">#</a></span></h2>
 
 <p>Node.js provides a number of C++ APIs that can be used to execute JavaScript
 in a Node.js environment from other C++ software.</p>
-<p>The documentation for these APIs can be found in <a href="https://github.com/nodejs/node/blob/master/src/node.h">src/node.h</a> in the Node.js
+<p>The documentation for these APIs can be found in <a href="https://github.com/nodejs/node/blob/HEAD/src/node.h">src/node.h</a> in the Node.js
 source tree. In addition to the APIs exposed by Node.js, some required concepts
 are provided by the V8 embedder API.</p>
 <p>Because using Node.js as an embedded library is different from writing code
 that is executed by Node.js, breaking changes do not follow typical Node.js
 <a href="deprecations.html">deprecation policy</a> and may occur on each semver-major release without prior
 warning.</p>
-<h2>Example embedding application<span><a class="mark" href="#embedding_example_embedding_application" id="embedding_example_embedding_application">#</a></span></h2>
+<section><h3>Example embedding application<span><a class="mark" href="#embedding_example_embedding_application" id="embedding_example_embedding_application">#</a></span></h3>
 <p>The following sections will provide an overview over how to use these APIs
 to create an application from scratch that will perform the equivalent of
 <code>node -e &#x3C;code></code>, i.e. that will take a piece of JavaScript and run it in
 a Node.js-specific environment.</p>
-<p>The full code can be found <a href="https://github.com/nodejs/node/blob/master/test/embedding/embedtest.cc">in the Node.js source tree</a>.</p>
-<h3>Setting up per-process state<span><a class="mark" href="#embedding_setting_up_per_process_state" id="embedding_setting_up_per_process_state">#</a></span></h3>
+<p>The full code can be found <a href="https://github.com/nodejs/node/blob/HEAD/test/embedding/embedtest.cc">in the Node.js source tree</a>.</p>
+<h4>Setting up per-process state<span><a class="mark" href="#embedding_setting_up_per_process_state" id="embedding_setting_up_per_process_state">#</a></span></h4>
 <p>Node.js requires some per-process state management in order to run:</p>
 <ul>
 <li>Arguments parsing for Node.js <a href="cli.html">CLI options</a>,</li>
@@ -153,16 +165,16 @@ a Node.js-specific environment.</p>
 </ul>
 <p>The following example shows how these can be set up. Some class names are from
 the <code>node</code> and <code>v8</code> C++ namespaces, respectively.</p>
-<pre><code class="language-cpp"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">int</span> argc, <span class="hljs-keyword">char</span>** argv)</span> </span>{
-  argv = uv_setup_args(argc, argv);
-  <span class="hljs-function"><span class="hljs-built_in">std</span>::<span class="hljs-built_in">vector</span>&#x3C;<span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span>> <span class="hljs-title">args</span><span class="hljs-params">(argv, argv + argc)</span></span>;
-  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">vector</span>&#x3C;<span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span>> exec_args;
-  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">vector</span>&#x3C;<span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span>> errors;
+<pre><code class="language-cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">char</span>** argv)</span> </span>{
+  argv = <span class="hljs-built_in">uv_setup_args</span>(argc, argv);
+  <span class="hljs-function">std::vector&#x3C;std::string> <span class="hljs-title">args</span><span class="hljs-params">(argv, argv + argc)</span></span>;
+  std::vector&#x3C;std::string> exec_args;
+  std::vector&#x3C;std::string> errors;
   <span class="hljs-comment">// Parse Node.js CLI options, and print any errors that have occurred while</span>
   <span class="hljs-comment">// trying to parse them.</span>
-  <span class="hljs-keyword">int</span> exit_code = node::InitializeNodeWithArgs(&#x26;args, &#x26;exec_args, &#x26;errors);
-  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span>&#x26; error : errors)
-    <span class="hljs-built_in">fprintf</span>(<span class="hljs-built_in">stderr</span>, <span class="hljs-string">"%s: %s\n"</span>, args[<span class="hljs-number">0</span>].c_str(), error.c_str());
+  <span class="hljs-type">int</span> exit_code = node::<span class="hljs-built_in">InitializeNodeWithArgs</span>(&#x26;args, &#x26;exec_args, &#x26;errors);
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> std::string&#x26; error : errors)
+    <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"%s: %s\n"</span>, args[<span class="hljs-number">0</span>].<span class="hljs-built_in">c_str</span>(), error.<span class="hljs-built_in">c_str</span>());
   <span class="hljs-keyword">if</span> (exit_code != <span class="hljs-number">0</span>) {
     <span class="hljs-keyword">return</span> exit_code;
   }
@@ -171,19 +183,19 @@ the <code>node</code> and <code>v8</code> C++ namespaces, respectively.</p>
   <span class="hljs-comment">// to create a v8::Platform instance that Node.js can use when creating</span>
   <span class="hljs-comment">// Worker threads. When no `MultiIsolatePlatform` instance is present,</span>
   <span class="hljs-comment">// Worker threads are disabled.</span>
-  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">unique_ptr</span>&#x3C;MultiIsolatePlatform> platform =
-      MultiIsolatePlatform::Create(<span class="hljs-number">4</span>);
-  V8::InitializePlatform(platform.get());
-  V8::Initialize();
+  std::unique_ptr&#x3C;MultiIsolatePlatform> platform =
+      MultiIsolatePlatform::<span class="hljs-built_in">Create</span>(<span class="hljs-number">4</span>);
+  V8::<span class="hljs-built_in">InitializePlatform</span>(platform.<span class="hljs-built_in">get</span>());
+  V8::<span class="hljs-built_in">Initialize</span>();
 
   <span class="hljs-comment">// See below for the contents of this function.</span>
-  <span class="hljs-keyword">int</span> ret = RunNodeInstance(platform.get(), args, exec_args);
+  <span class="hljs-type">int</span> ret = <span class="hljs-built_in">RunNodeInstance</span>(platform.<span class="hljs-built_in">get</span>(), args, exec_args);
 
-  V8::Dispose();
-  V8::ShutdownPlatform();
+  V8::<span class="hljs-built_in">Dispose</span>();
+  V8::<span class="hljs-built_in">ShutdownPlatform</span>();
   <span class="hljs-keyword">return</span> ret;
 }</code></pre>
-<h3>Per-instance state<span><a class="mark" href="#embedding_per_instance_state" id="embedding_per_instance_state">#</a></span></h3>
+<h4>Per-instance state<span><a class="mark" href="#embedding_per_instance_state" id="embedding_per_instance_state">#</a></span></h4>
 <p>Node.js has a concept of a “Node.js instance”, that is commonly being referred
 to as <code>node::Environment</code>. Each <code>node::Environment</code> is associated with:</p>
 <ul>
@@ -207,132 +219,169 @@ for tasks scheduled by the <code>v8::Isolate</code>.</p>
 <p>The <code>node::NewIsolate()</code> helper function creates a <code>v8::Isolate</code>,
 sets it up with some Node.js-specific hooks (e.g. the Node.js error handler),
 and registers it with the platform automatically.</p>
-<pre><code class="language-cpp">int RunNodeInstance(MultiIsolatePlatform* platform,
-                    const std::vector&#x3C;std::string>&#x26; args,
-                    const std::vector&#x3C;std::string>&#x26; exec_args) {
-  int exit_code = 0;
-  // Set up a libuv event loop.
-  uv_loop_t loop;
-  int ret = uv_loop_init(&#x26;loop);
-  if (ret != 0) {
-    fprintf(stderr, "%s: Failed to initialize loop: %s\n",
-            args[0].c_str(),
-            uv_err_name(ret));
-    return 1;
+<pre><code class="language-cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">RunNodeInstance</span><span class="hljs-params">(MultiIsolatePlatform* platform,
+                    <span class="hljs-keyword">const</span> std::vector&#x3C;std::string>&#x26; args,
+                    <span class="hljs-keyword">const</span> std::vector&#x3C;std::string>&#x26; exec_args)</span> </span>{
+  <span class="hljs-type">int</span> exit_code = <span class="hljs-number">0</span>;
+  <span class="hljs-comment">// Set up a libuv event loop.</span>
+  <span class="hljs-type">uv_loop_t</span> loop;
+  <span class="hljs-type">int</span> ret = <span class="hljs-built_in">uv_loop_init</span>(&#x26;loop);
+  <span class="hljs-keyword">if</span> (ret != <span class="hljs-number">0</span>) {
+    <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"%s: Failed to initialize loop: %s\n"</span>,
+            args[<span class="hljs-number">0</span>].<span class="hljs-built_in">c_str</span>(),
+            <span class="hljs-built_in">uv_err_name</span>(ret));
+    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
   }
 
   std::shared_ptr&#x3C;ArrayBufferAllocator> allocator =
-      ArrayBufferAllocator::Create();
+      ArrayBufferAllocator::<span class="hljs-built_in">Create</span>();
 
-  Isolate* isolate = NewIsolate(allocator, &#x26;loop, platform);
-  if (isolate == nullptr) {
-    fprintf(stderr, "%s: Failed to initialize V8 Isolate\n", args[0].c_str());
-    return 1;
+  Isolate* isolate = <span class="hljs-built_in">NewIsolate</span>(allocator, &#x26;loop, platform);
+  <span class="hljs-keyword">if</span> (isolate == <span class="hljs-literal">nullptr</span>) {
+    <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"%s: Failed to initialize V8 Isolate\n"</span>, args[<span class="hljs-number">0</span>].<span class="hljs-built_in">c_str</span>());
+    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
   }
 
   {
-    Locker locker(isolate);
-    Isolate::Scope isolate_scope(isolate);
+    <span class="hljs-function">Locker <span class="hljs-title">locker</span><span class="hljs-params">(isolate)</span></span>;
+    <span class="hljs-function">Isolate::Scope <span class="hljs-title">isolate_scope</span><span class="hljs-params">(isolate)</span></span>;
 
-    // Create a node::IsolateData instance that will later be released using
-    // node::FreeIsolateData().
-    std::unique_ptr&#x3C;IsolateData, decltype(&#x26;node::FreeIsolateData)> isolate_data(
+    <span class="hljs-comment">// Create a node::IsolateData instance that will later be released using</span>
+    <span class="hljs-comment">// node::FreeIsolateData().</span>
+    <span class="hljs-function">std::unique_ptr&#x3C;IsolateData, <span class="hljs-title">decltype</span><span class="hljs-params">(&#x26;node::FreeIsolateData)</span>> <span class="hljs-title">isolate_data</span><span class="hljs-params">(
         node::CreateIsolateData(isolate, &#x26;loop, platform, allocator.get()),
-        node::FreeIsolateData);
+        node::FreeIsolateData)</span></span>;
 
-    // Set up a new v8::Context.
-    HandleScope handle_scope(isolate);
-    Local&#x3C;Context> context = node::NewContext(isolate);
-    if (context.IsEmpty()) {
-      fprintf(stderr, "%s: Failed to initialize V8 Context\n", args[0].c_str());
-      return 1;
+    <span class="hljs-comment">// Set up a new v8::Context.</span>
+    <span class="hljs-function">HandleScope <span class="hljs-title">handle_scope</span><span class="hljs-params">(isolate)</span></span>;
+    Local&#x3C;Context> context = node::<span class="hljs-built_in">NewContext</span>(isolate);
+    <span class="hljs-keyword">if</span> (context.<span class="hljs-built_in">IsEmpty</span>()) {
+      <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"%s: Failed to initialize V8 Context\n"</span>, args[<span class="hljs-number">0</span>].<span class="hljs-built_in">c_str</span>());
+      <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
     }
 
-    // The v8::Context needs to be entered when node::CreateEnvironment() and
-    // node::LoadEnvironment() are being called.
-    Context::Scope context_scope(context);
+    <span class="hljs-comment">// The v8::Context needs to be entered when node::CreateEnvironment() and</span>
+    <span class="hljs-comment">// node::LoadEnvironment() are being called.</span>
+    <span class="hljs-function">Context::Scope <span class="hljs-title">context_scope</span><span class="hljs-params">(context)</span></span>;
 
-    // Create a node::Environment instance that will later be released using
-    // node::FreeEnvironment().
-    std::unique_ptr&#x3C;Environment, decltype(&#x26;node::FreeEnvironment)> env(
+    <span class="hljs-comment">// Create a node::Environment instance that will later be released using</span>
+    <span class="hljs-comment">// node::FreeEnvironment().</span>
+    <span class="hljs-function">std::unique_ptr&#x3C;Environment, <span class="hljs-title">decltype</span><span class="hljs-params">(&#x26;node::FreeEnvironment)</span>> <span class="hljs-title">env</span><span class="hljs-params">(
         node::CreateEnvironment(isolate_data.get(), context, args, exec_args),
-        node::FreeEnvironment);
+        node::FreeEnvironment)</span></span>;
 
-    // Set up the Node.js instance for execution, and run code inside of it.
-    // There is also a variant that takes a callback and provides it with
-    // the `require` and `process` objects, so that it can manually compile
-    // and run scripts as needed.
-    // The `require` function inside this script does *not* access the file
-    // system, and can only load built-in Node.js modules.
-    // `module.createRequire()` is being used to create one that is able to
-    // load files from the disk, and uses the standard CommonJS file loader
-    // instead of the internal-only `require` function.
-    MaybeLocal&#x3C;Value> loadenv_ret = node::LoadEnvironment(
-        env.get(),
-        "const publicRequire ="
-        "  require('module').createRequire(process.cwd() + '/');"
-        "globalThis.require = publicRequire;"
-        "require('vm').runInThisContext(process.argv[1]);");
+    <span class="hljs-comment">// Set up the Node.js instance for execution, and run code inside of it.</span>
+    <span class="hljs-comment">// There is also a variant that takes a callback and provides it with</span>
+    <span class="hljs-comment">// the `require` and `process` objects, so that it can manually compile</span>
+    <span class="hljs-comment">// and run scripts as needed.</span>
+    <span class="hljs-comment">// The `require` function inside this script does *not* access the file</span>
+    <span class="hljs-comment">// system, and can only load built-in Node.js modules.</span>
+    <span class="hljs-comment">// `module.createRequire()` is being used to create one that is able to</span>
+    <span class="hljs-comment">// load files from the disk, and uses the standard CommonJS file loader</span>
+    <span class="hljs-comment">// instead of the internal-only `require` function.</span>
+    MaybeLocal&#x3C;Value> loadenv_ret = node::<span class="hljs-built_in">LoadEnvironment</span>(
+        env.<span class="hljs-built_in">get</span>(),
+        <span class="hljs-string">"const publicRequire ="</span>
+        <span class="hljs-string">"  require('module').createRequire(process.cwd() + '/');"</span>
+        <span class="hljs-string">"globalThis.require = publicRequire;"</span>
+        <span class="hljs-string">"require('vm').runInThisContext(process.argv[1]);"</span>);
 
-    if (loadenv_ret.IsEmpty())  // There has been a JS exception.
-      return 1;
+    <span class="hljs-keyword">if</span> (loadenv_ret.<span class="hljs-built_in">IsEmpty</span>())  <span class="hljs-comment">// There has been a JS exception.</span>
+      <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
 
     {
-      // SealHandleScope protects against handle leaks from callbacks.
-      SealHandleScope seal(isolate);
-      bool more;
-      do {
-        uv_run(&#x26;loop, UV_RUN_DEFAULT);
+      <span class="hljs-comment">// SealHandleScope protects against handle leaks from callbacks.</span>
+      <span class="hljs-function">SealHandleScope <span class="hljs-title">seal</span><span class="hljs-params">(isolate)</span></span>;
+      <span class="hljs-type">bool</span> more;
+      <span class="hljs-keyword">do</span> {
+        <span class="hljs-built_in">uv_run</span>(&#x26;loop, UV_RUN_DEFAULT);
 
-        // V8 tasks on background threads may end up scheduling new tasks in the
-        // foreground, which in turn can keep the event loop going. For example,
-        // WebAssembly.compile() may do so.
-        platform->DrainTasks(isolate);
+        <span class="hljs-comment">// V8 tasks on background threads may end up scheduling new tasks in the</span>
+        <span class="hljs-comment">// foreground, which in turn can keep the event loop going. For example,</span>
+        <span class="hljs-comment">// WebAssembly.compile() may do so.</span>
+        platform-><span class="hljs-built_in">DrainTasks</span>(isolate);
 
-        // If there are new tasks, continue.
-        more = uv_loop_alive(&#x26;loop);
-        if (more) continue;
+        <span class="hljs-comment">// If there are new tasks, continue.</span>
+        more = <span class="hljs-built_in">uv_loop_alive</span>(&#x26;loop);
+        <span class="hljs-keyword">if</span> (more) <span class="hljs-keyword">continue</span>;
 
-        // node::EmitBeforeExit() is used to emit the 'beforeExit' event on
-        // the `process` object.
-        node::EmitBeforeExit(env.get());
+        <span class="hljs-comment">// node::EmitProcessBeforeExit() is used to emit the 'beforeExit' event</span>
+        <span class="hljs-comment">// on the `process` object.</span>
+        <span class="hljs-keyword">if</span> (node::<span class="hljs-built_in">EmitProcessBeforeExit</span>(env.<span class="hljs-built_in">get</span>()).<span class="hljs-built_in">IsNothing</span>())
+          <span class="hljs-keyword">break</span>;
 
-        // 'beforeExit' can also schedule new work that keeps the event loop
-        // running.
-        more = uv_loop_alive(&#x26;loop);
-      } while (more == true);
+        <span class="hljs-comment">// 'beforeExit' can also schedule new work that keeps the event loop</span>
+        <span class="hljs-comment">// running.</span>
+        more = <span class="hljs-built_in">uv_loop_alive</span>(&#x26;loop);
+      } <span class="hljs-keyword">while</span> (more == <span class="hljs-literal">true</span>);
     }
 
-    // node::EmitExit() returns the current exit code.
-    exit_code = node::EmitExit(env.get());
+    <span class="hljs-comment">// node::EmitProcessExit() returns the current exit code.</span>
+    exit_code = node::<span class="hljs-built_in">EmitProcessExit</span>(env.<span class="hljs-built_in">get</span>()).<span class="hljs-built_in">FromMaybe</span>(<span class="hljs-number">1</span>);
 
-    // node::Stop() can be used to explicitly stop the event loop and keep
-    // further JavaScript from running. It can be called from any thread,
-    // and will act like worker.terminate() if called from another thread.
-    node::Stop(env.get());
+    <span class="hljs-comment">// node::Stop() can be used to explicitly stop the event loop and keep</span>
+    <span class="hljs-comment">// further JavaScript from running. It can be called from any thread,</span>
+    <span class="hljs-comment">// and will act like worker.terminate() if called from another thread.</span>
+    node::<span class="hljs-built_in">Stop</span>(env.<span class="hljs-built_in">get</span>());
   }
 
-  // Unregister the Isolate with the platform and add a listener that is called
-  // when the Platform is done cleaning up any state it had associated with
-  // the Isolate.
-  bool platform_finished = false;
-  platform->AddIsolateFinishedCallback(isolate, [](void* data) {
-    *static_cast&#x3C;bool*>(data) = true;
+  <span class="hljs-comment">// Unregister the Isolate with the platform and add a listener that is called</span>
+  <span class="hljs-comment">// when the Platform is done cleaning up any state it had associated with</span>
+  <span class="hljs-comment">// the Isolate.</span>
+  <span class="hljs-type">bool</span> platform_finished = <span class="hljs-literal">false</span>;
+  platform-><span class="hljs-built_in">AddIsolateFinishedCallback</span>(isolate, [](<span class="hljs-type">void</span>* data) {
+    *<span class="hljs-built_in">static_cast</span>&#x3C;<span class="hljs-type">bool</span>*>(data) = <span class="hljs-literal">true</span>;
   }, &#x26;platform_finished);
-  platform->UnregisterIsolate(isolate);
-  isolate->Dispose();
+  platform-><span class="hljs-built_in">UnregisterIsolate</span>(isolate);
+  isolate-><span class="hljs-built_in">Dispose</span>();
 
-  // Wait until the platform has cleaned up all relevant resources.
-  while (!platform_finished)
-    uv_run(&#x26;loop, UV_RUN_ONCE);
-  int err = uv_loop_close(&#x26;loop);
-  assert(err == 0);
+  <span class="hljs-comment">// Wait until the platform has cleaned up all relevant resources.</span>
+  <span class="hljs-keyword">while</span> (!platform_finished)
+    <span class="hljs-built_in">uv_run</span>(&#x26;loop, UV_RUN_ONCE);
+  <span class="hljs-type">int</span> err = <span class="hljs-built_in">uv_loop_close</span>(&#x26;loop);
+  <span class="hljs-built_in">assert</span>(err == <span class="hljs-number">0</span>);
 
-  return exit_code;
-}</code></pre>
+  <span class="hljs-keyword">return</span> exit_code;
+}</code></pre></section>
         <!-- API END -->
       </div>
     </div>
   </div>
+  <script>
+    'use strict';
+    {
+      const kCustomPreference = 'customDarkTheme';
+      const userSettings = sessionStorage.getItem(kCustomPreference);
+      const themeToggleButton = document.getElementById('theme-toggle-btn');
+      if (userSettings === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if ('onchange' in mq) {
+          function mqChangeListener(e) {
+            document.body.classList.toggle('dark-mode', e.matches);
+          }
+          mq.addEventListener('change', mqChangeListener);
+          if (themeToggleButton) {
+            themeToggleButton.addEventListener('click', function() {
+              mq.removeEventListener('change', mqChangeListener);
+            }, { once: true });
+          }
+        }
+        if (mq.matches) {
+          document.body.classList.add('dark-mode');
+        }
+      } else if (userSettings === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+      if (themeToggleButton) {
+        themeToggleButton.hidden = false;
+        themeToggleButton.addEventListener('click', function() {
+          sessionStorage.setItem(
+            kCustomPreference,
+            document.body.classList.toggle('dark-mode')
+          );
+        });
+      }
+    }
+  </script>
 </body>
 </html>

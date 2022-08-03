@@ -6,9 +6,9 @@
       "textRaw": "Inspector",
       "name": "inspector",
       "introduced_in": "v8.0.0",
-      "stability": 1,
-      "stabilityText": "Experimental",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/inspector.js\">lib/inspector.js</a></p>\n<p>The <code>inspector</code> module provides an API for interacting with the V8 inspector.</p>\n<p>It can be accessed using:</p>\n<pre><code class=\"language-js\">const inspector = require('inspector');\n</code></pre>",
+      "stability": 2,
+      "stabilityText": "Stable",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/inspector.js\">lib/inspector.js</a></p>\n<p>The <code>inspector</code> module provides an API for interacting with the V8 inspector.</p>\n<p>It can be accessed using:</p>\n<pre><code class=\"language-js\">const inspector = require('inspector');\n</code></pre>",
       "methods": [
         {
           "textRaw": "`inspector.close()`",
