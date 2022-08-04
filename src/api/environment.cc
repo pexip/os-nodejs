@@ -228,9 +228,11 @@ void SetIsolateErrorHandlers(v8::Isolate* isolate, const IsolateSettings& s) {
       s.fatal_error_callback : OnFatalError;
   isolate->SetFatalErrorHandler(fatal_error_cb);
 
-  auto* prepare_stack_trace_cb = s.prepare_stack_trace_callback ?
-      s.prepare_stack_trace_callback : PrepareStackTraceCallback;
-  isolate->SetPrepareStackTraceCallback(prepare_stack_trace_cb);
+  if ((s.flags & SHOULD_NOT_SET_PREPARE_STACK_TRACE_CALLBACK) == 0) {
+    auto* prepare_stack_trace_cb = s.prepare_stack_trace_callback ?
+        s.prepare_stack_trace_callback : PrepareStackTraceCallback;
+    isolate->SetPrepareStackTraceCallback(prepare_stack_trace_cb);
+  }
 }
 
 void SetIsolateMiscHandlers(v8::Isolate* isolate, const IsolateSettings& s) {
@@ -464,6 +466,14 @@ MultiIsolatePlatform* GetMainThreadMultiIsolatePlatform() {
   return per_process::v8_platform.Platform();
 }
 
+IsolateData* GetEnvironmentIsolateData(Environment* env) {
+  return env->isolate_data();
+}
+
+ArrayBufferAllocator* GetArrayBufferAllocator(IsolateData* isolate_data) {
+  return isolate_data->node_allocator();
+}
+
 MultiIsolatePlatform* GetMultiIsolatePlatform(Environment* env) {
   return GetMultiIsolatePlatform(env->isolate_data());
 }
@@ -671,10 +681,10 @@ void AddLinkedBinding(Environment* env, const node_module& mod) {
   CHECK_NOT_NULL(env);
   Mutex::ScopedLock lock(env->extra_linked_bindings_mutex());
 
-  node_module* prev_head = env->extra_linked_bindings_head();
+  node_module* prev_tail = env->extra_linked_bindings_tail();
   env->extra_linked_bindings()->push_back(mod);
-  if (prev_head != nullptr)
-    prev_head->nm_link = &env->extra_linked_bindings()->back();
+  if (prev_tail != nullptr)
+    prev_tail->nm_link = &env->extra_linked_bindings()->back();
 }
 
 void AddLinkedBinding(Environment* env, const napi_module& mod) {

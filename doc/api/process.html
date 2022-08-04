@@ -1,10 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v14.16.0">
-  <title>Process | Node.js v14.16.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v14.18.1">
+  <title>Process | Node.js v14.18.1 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -28,7 +28,7 @@
 <li><a href="async_hooks.html" class="nav-async_hooks">Async hooks</a></li>
 <li><a href="buffer.html" class="nav-buffer">Buffer</a></li>
 <li><a href="addons.html" class="nav-addons">C++ addons</a></li>
-<li><a href="n-api.html" class="nav-n-api">C/C++ addons with N-API</a></li>
+<li><a href="n-api.html" class="nav-n-api">C/C++ addons with Node-API</a></li>
 <li><a href="embedding.html" class="nav-embedding">C++ embedder API</a></li>
 <li><a href="child_process.html" class="nav-child_process">Child processes</a></li>
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
@@ -37,6 +37,7 @@
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
+<li><a href="diagnostics_channel.html" class="nav-diagnostics_channel">Diagnostics Channel</a></li>
 <li><a href="dns.html" class="nav-dns">DNS</a></li>
 <li><a href="domain.html" class="nav-domain">Domain</a></li>
 <li><a href="errors.html" class="nav-errors">Errors</a></li>
@@ -86,7 +87,20 @@
 
     <div id="column1" data-id="process" class="interior">
       <header>
-        <h1>Node.js v14.16.0 Documentation</h1>
+        <div class="header-container">
+          <h1>Node.js v14.18.1 documentation</h1>
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
+              <path fill="none" d="M0 0h24v24H0z" />
+              <path d="M11.1 12.08c-2.33-4.51-.5-8.48.53-10.07C6.27 2.2 1.98 6.59 1.98 12c0 .14.02.28.02.42.62-.27 1.29-.42 2-.42 1.66 0 3.18.83 4.1 2.15A4.01 4.01 0 0111 18c0 1.52-.87 2.83-2.12 3.51.98.32 2.03.5 3.11.5 3.5 0 6.58-1.8 8.37-4.52-2.36.23-6.98-.97-9.26-5.41z"/>
+              <path d="M7 16h-.18C6.4 14.84 5.3 14 4 14c-1.66 0-3 1.34-3 3s1.34 3 3 3h3c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon light-icon" height="24" width="24">
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+            </svg>
+          </button>
+        </div>
         <div id="gtoc">
           <ul>
             <li>
@@ -101,12 +115,13 @@
             
     <li class="version-picker">
       <a href="#">View another version <span>&#x25bc;</span></a>
-      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v15.x/api/process.html">15.x</a></li>
+      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v16.x/api/process.html">16.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v15.x/api/process.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/process.html">14.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/process.html">13.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v12.x/api/process.html">12.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v11.x/api/process.html">11.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v10.x/api/process.html">10.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v10.x/api/process.html">10.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v9.x/api/process.html">9.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v8.x/api/process.html">8.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v7.x/api/process.html">7.x</a></li>
@@ -117,15 +132,13 @@
 <li><a href="https://nodejs.org/docs/latest-v0.10.x/api/process.html">0.10.x</a></li></ol>
     </li>
   
-            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/process.md"><span class="github_icon"><svg height="16" width="16" viewBox="0 0 16.1 16.1" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2 .4-2.5-.5-2.7-1 0-.1-.5-.9-.8-1-.3-.2-.7-.6 0-.6.6 0 1 .6 1.2.8.7 1.2 1.9 1 2.4.7 0-.5.2-.9.5-1-1.8-.3-3.7-1-3.7-4 0-.9.3-1.6.8-2.2 0-.2-.3-1 .1-2 0 0 .7-.3 2.2.7a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.5 1.1.2 2 .1 2.1.5.6.8 1.3.8 2.2 0 3-1.9 3.7-3.6 4 .3.2.5.7.5 1.4v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8a8 8 0 0 0-8-8z"/></svg></span>Edit on GitHub</a></li>
+            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/process.md">Edit on GitHub</a></li>
           </ul>
         </div>
         <hr>
       </header>
 
-      <div id="toc">
-        <h2>Table of Contents</h2>
-        <ul>
+      <details id="toc" open><summary>Table of contents</summary><ul>
 <li><a href="#process_process">Process</a>
 <ul>
 <li><a href="#process_process_events">Process events</a>
@@ -143,9 +156,11 @@
 </li>
 <li><a href="#process_event_uncaughtexceptionmonitor">Event: <code>'uncaughtExceptionMonitor'</code></a></li>
 <li><a href="#process_event_unhandledrejection">Event: <code>'unhandledRejection'</code></a></li>
-<li><a href="#process_event_warning">Event: <code>'warning'</code></a>
+<li><a href="#process_event_warning">Event: <code>'warning'</code></a></li>
+<li><a href="#process_event_worker">Event: <code>'worker'</code></a>
 <ul>
 <li><a href="#process_emitting_custom_warnings">Emitting custom warnings</a></li>
+<li><a href="#process_node_js_warning_names">Node.js warning names</a></li>
 </ul>
 </li>
 <li><a href="#process_signal_events">Signal events</a></li>
@@ -187,13 +202,18 @@
 <li><a href="#process_process_getgroups"><code>process.getgroups()</code></a></li>
 <li><a href="#process_process_getuid"><code>process.getuid()</code></a></li>
 <li><a href="#process_process_hasuncaughtexceptioncapturecallback"><code>process.hasUncaughtExceptionCaptureCallback()</code></a></li>
-<li><a href="#process_process_hrtime_time"><code>process.hrtime([time])</code></a></li>
+<li><span class="stability_3"><a href="#process_process_hrtime_time"><code>process.hrtime([time])</code></a></span></li>
 <li><a href="#process_process_hrtime_bigint"><code>process.hrtime.bigint()</code></a></li>
 <li><a href="#process_process_initgroups_user_extragroup"><code>process.initgroups(user, extraGroup)</code></a></li>
 <li><a href="#process_process_kill_pid_signal"><code>process.kill(pid[, signal])</code></a></li>
 <li><span class="stability_0"><a href="#process_process_mainmodule"><code>process.mainModule</code></a></span></li>
 <li><a href="#process_process_memoryusage"><code>process.memoryUsage()</code></a></li>
-<li><a href="#process_process_nexttick_callback_args"><code>process.nextTick(callback[, ...args])</code></a></li>
+<li><a href="#process_process_memoryusage_rss"><code>process.memoryUsage.rss()</code></a></li>
+<li><a href="#process_process_nexttick_callback_args"><code>process.nextTick(callback[, ...args])</code></a>
+<ul>
+<li><a href="#process_when_to_use_queuemicrotask_vs_process_nexttick">When to use <code>queueMicrotask()</code> vs. <code>process.nextTick()</code></a></li>
+</ul>
+</li>
 <li><a href="#process_process_nodeprecation"><code>process.noDeprecation</code></a></li>
 <li><a href="#process_process_pid"><code>process.pid</code></a></li>
 <li><a href="#process_process_platform"><code>process.platform</code></a></li>
@@ -205,7 +225,7 @@
 <li><a href="#process_process_report_directory"><code>process.report.directory</code></a></li>
 <li><a href="#process_process_report_filename"><code>process.report.filename</code></a></li>
 <li><a href="#process_process_report_getreport_err"><code>process.report.getReport([err])</code></a></li>
-<li><span class="stability_1"><a href="#process_process_report_reportonfatalerror"><code>process.report.reportOnFatalError</code></a></span></li>
+<li><a href="#process_process_report_reportonfatalerror"><code>process.report.reportOnFatalError</code></a></li>
 <li><a href="#process_process_report_reportonsignal"><code>process.report.reportOnSignal</code></a></li>
 <li><a href="#process_process_report_reportonuncaughtexception"><code>process.report.reportOnUncaughtException</code></a></li>
 <li><a href="#process_process_report_signal"><code>process.report.signal</code></a></li>
@@ -219,6 +239,7 @@
 <li><a href="#process_process_setgid_id"><code>process.setgid(id)</code></a></li>
 <li><a href="#process_process_setgroups_groups"><code>process.setgroups(groups)</code></a></li>
 <li><a href="#process_process_setuid_id"><code>process.setuid(id)</code></a></li>
+<li><span class="stability_1"><a href="#process_process_setsourcemapsenabled_val"><code>process.setSourceMapsEnabled(val)</code></a></span></li>
 <li><a href="#process_process_setuncaughtexceptioncapturecallback_fn"><code>process.setUncaughtExceptionCaptureCallback(fn)</code></a></li>
 <li><a href="#process_process_stderr"><code>process.stderr</code></a>
 <ul>
@@ -247,22 +268,21 @@
 <li><a href="#process_exit_codes">Exit codes</a></li>
 </ul>
 </li>
-</ul>
-      </div>
+</ul></details>
 
       <div id="apicontent">
-        <h1>Process<span><a class="mark" href="#process_process" id="process_process">#</a></span></h1>
+        <h2>Process<span><a class="mark" href="#process_process" id="process_process">#</a></span></h2>
 
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.16.0/lib/process.js">lib/process.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.18.1/lib/process.js">lib/process.js</a></p>
 <p>The <code>process</code> object is a <code>global</code> that provides information about, and control
 over, the current Node.js process. As a global, it is always available to
 Node.js applications without using <code>require()</code>. It can also be explicitly
 accessed using <code>require()</code>:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> process = <span class="hljs-built_in">require</span>(<span class="hljs-string">'process'</span>);</code></pre>
-<h2>Process events<span><a class="mark" href="#process_process_events" id="process_process_events">#</a></span></h2>
+<section><h3>Process events<span><a class="mark" href="#process_process_events" id="process_process_events">#</a></span></h3>
 <p>The <code>process</code> object is an instance of <a href="events.html#events_class_eventemitter"><code>EventEmitter</code></a>.</p>
-<h3>Event: <code>'beforeExit'</code><span><a class="mark" href="#process_event_beforeexit" id="process_event_beforeexit">#</a></span></h3>
+<h4>Event: <code>'beforeExit'</code><span><a class="mark" href="#process_event_beforeexit" id="process_event_beforeexit">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.11.12</span>
 </div>
@@ -277,28 +297,28 @@ continue.</p>
 termination, such as calling <a href="#process_process_exit_code"><code>process.exit()</code></a> or uncaught exceptions.</p>
 <p>The <code>'beforeExit'</code> should <em>not</em> be used as an alternative to the <code>'exit'</code> event
 unless the intention is to schedule additional work.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'beforeExit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Process beforeExit event with code: '</span>, code);
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'beforeExit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Process beforeExit event with code: '</span>, code);
 });
 
-process.on(<span class="hljs-string">'exit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Process exit event with code: '</span>, code);
+process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Process exit event with code: '</span>, code);
 });
 
-<span class="hljs-built_in">console</span>.log(<span class="hljs-string">'This message is displayed first.'</span>);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'This message is displayed first.'</span>);
 
 <span class="hljs-comment">// Prints:</span>
 <span class="hljs-comment">// This message is displayed first.</span>
 <span class="hljs-comment">// Process beforeExit event with code: 0</span>
 <span class="hljs-comment">// Process exit event with code: 0</span></code></pre>
-<h3>Event: <code>'disconnect'</code><span><a class="mark" href="#process_event_disconnect" id="process_event_disconnect">#</a></span></h3>
+<h4>Event: <code>'disconnect'</code><span><a class="mark" href="#process_event_disconnect" id="process_event_disconnect">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.7.7</span>
 </div>
 <p>If the Node.js process is spawned with an IPC channel (see the <a href="child_process.html">Child Process</a>
 and <a href="cluster.html">Cluster</a> documentation), the <code>'disconnect'</code> event will be emitted when
 the IPC channel is closed.</p>
-<h3>Event: <code>'exit'</code><span><a class="mark" href="#process_event_exit" id="process_event_exit">#</a></span></h3>
+<h4>Event: <code>'exit'</code><span><a class="mark" href="#process_event_exit" id="process_event_exit">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.1.7</span>
 </div>
@@ -316,19 +336,19 @@ all <code>'exit'</code> listeners have finished running the Node.js process will
 <p>The listener callback function is invoked with the exit code specified either
 by the <a href="#process_process_exitcode"><code>process.exitCode</code></a> property, or the <code>exitCode</code> argument passed to the
 <a href="#process_process_exit_code"><code>process.exit()</code></a> method.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'exit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`About to exit with code: <span class="hljs-subst">${code}</span>`</span>);
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`About to exit with code: <span class="hljs-subst">${code}</span>`</span>);
 });</code></pre>
 <p>Listener functions <strong>must</strong> only perform <strong>synchronous</strong> operations. The Node.js
 process will exit immediately after calling the <code>'exit'</code> event listeners
 causing any additional work still queued in the event loop to be abandoned.
 In the following example, for instance, the timeout will never occur:</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'exit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
   <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =></span> {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'This will not run'</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'This will not run'</span>);
   }, <span class="hljs-number">0</span>);
 });</code></pre>
-<h3>Event: <code>'message'</code><span><a class="mark" href="#process_event_message" id="process_event_message">#</a></span></h3>
+<h4>Event: <code>'message'</code><span><a class="mark" href="#process_event_message" id="process_event_message">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.5.10</span>
 </div>
@@ -348,7 +368,7 @@ not be the same as what is originally sent.</p>
 process, the <code>message</code> argument can contain data that JSON is not able
 to represent.
 See <a href="child_process.html#child_process_advanced_serialization">Advanced serialization for <code>child_process</code></a> for more details.</p>
-<h3>Event: <code>'multipleResolves'</code><span><a class="mark" href="#process_event_multipleresolves" id="process_event_multipleresolves">#</a></span></h3>
+<h4>Event: <code>'multipleResolves'</code><span><a class="mark" href="#process_event_multipleresolves" id="process_event_multipleresolves">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v10.12.0</span>
 </div>
@@ -369,31 +389,31 @@ rejected after the original resolve.</li>
 <code>Promise</code> constructor, as multiple resolutions are silently swallowed. However,
 the occurrence of this event does not necessarily indicate an error. For
 example, <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race"><code>Promise.race()</code></a> can trigger a <code>'multipleResolves'</code> event.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'multipleResolves'</span>, <span class="hljs-function">(<span class="hljs-params">type, promise, reason</span>) =></span> {
-  <span class="hljs-built_in">console</span>.error(type, promise, reason);
-  setImmediate(<span class="hljs-function">() =></span> process.exit(<span class="hljs-number">1</span>));
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'multipleResolves'</span>, <span class="hljs-function">(<span class="hljs-params">type, promise, reason</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(type, promise, reason);
+  <span class="hljs-title function_">setImmediate</span>(<span class="hljs-function">() =></span> process.<span class="hljs-title function_">exit</span>(<span class="hljs-number">1</span>));
 });
 
-<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">main</span>(<span class="hljs-params"></span>) </span>{
+<span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">main</span>(<span class="hljs-params"></span>) {
   <span class="hljs-keyword">try</span> {
-    <span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =></span> {
-      resolve(<span class="hljs-string">'First call'</span>);
-      resolve(<span class="hljs-string">'Swallowed resolve'</span>);
-      reject(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Swallowed reject'</span>));
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =></span> {
+      <span class="hljs-title function_">resolve</span>(<span class="hljs-string">'First call'</span>);
+      <span class="hljs-title function_">resolve</span>(<span class="hljs-string">'Swallowed resolve'</span>);
+      <span class="hljs-title function_">reject</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Swallowed reject'</span>));
     });
   } <span class="hljs-keyword">catch</span> {
-    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Failed'</span>);
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Failed'</span>);
   }
 }
 
-main().then(<span class="hljs-built_in">console</span>.log);
+<span class="hljs-title function_">main</span>().<span class="hljs-title function_">then</span>(<span class="hljs-variable language_">console</span>.<span class="hljs-property">log</span>);
 <span class="hljs-comment">// resolve: Promise { 'First call' } 'Swallowed resolve'</span>
 <span class="hljs-comment">// reject: Promise { 'First call' } Error: Swallowed reject</span>
 <span class="hljs-comment">//     at Promise (*)</span>
 <span class="hljs-comment">//     at new Promise (&#x3C;anonymous>)</span>
 <span class="hljs-comment">//     at main (*)</span>
 <span class="hljs-comment">// First call</span></code></pre>
-<h3>Event: <code>'rejectionHandled'</code><span><a class="mark" href="#process_event_rejectionhandled" id="process_event_rejectionhandled">#</a></span></h3>
+<h4>Event: <code>'rejectionHandled'</code><span><a class="mark" href="#process_event_rejectionhandled" id="process_event_rejectionhandled">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v1.4.1</span>
 </div>
@@ -418,19 +438,19 @@ unhandled exceptions grows.</p>
 <p>In asynchronous code, the <code>'unhandledRejection'</code> event is emitted when the list
 of unhandled rejections grows, and the <code>'rejectionHandled'</code> event is emitted
 when the list of unhandled rejections shrinks.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> unhandledRejections = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Map</span>();
-process.on(<span class="hljs-string">'unhandledRejection'</span>, <span class="hljs-function">(<span class="hljs-params">reason, promise</span>) =></span> {
-  unhandledRejections.set(promise, reason);
+<pre><code class="language-js"><span class="hljs-keyword">const</span> unhandledRejections = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Map</span>();
+process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'unhandledRejection'</span>, <span class="hljs-function">(<span class="hljs-params">reason, promise</span>) =></span> {
+  unhandledRejections.<span class="hljs-title function_">set</span>(promise, reason);
 });
-process.on(<span class="hljs-string">'rejectionHandled'</span>, <span class="hljs-function">(<span class="hljs-params">promise</span>) =></span> {
-  unhandledRejections.delete(promise);
+process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'rejectionHandled'</span>, <span class="hljs-function">(<span class="hljs-params">promise</span>) =></span> {
+  unhandledRejections.<span class="hljs-title function_">delete</span>(promise);
 });</code></pre>
 <p>In this example, the <code>unhandledRejections</code> <code>Map</code> will grow and shrink over time,
 reflecting rejections that start unhandled and then become handled. It is
 possible to record such errors in an error log, either periodically (which is
 likely best for long-running application) or upon process exit (which is likely
 most convenient for scripts).</p>
-<h3>Event: <code>'uncaughtException'</code><span><a class="mark" href="#process_event_uncaughtexception" id="process_event_uncaughtexception">#</a></span></h3>
+<h4>Event: <code>'uncaughtException'</code><span><a class="mark" href="#process_event_uncaughtexception" id="process_event_uncaughtexception">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -459,25 +479,25 @@ behavior. Alternatively, change the <a href="#process_process_exitcode"><code>pr
 <code>'uncaughtException'</code> handler which will result in the process exiting with the
 provided exit code. Otherwise, in the presence of such handler the process will
 exit with 0.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'uncaughtException'</span>, <span class="hljs-function">(<span class="hljs-params">err, origin</span>) =></span> {
-  fs.writeSync(
-    process.stderr.fd,
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'uncaughtException'</span>, <span class="hljs-function">(<span class="hljs-params">err, origin</span>) =></span> {
+  fs.<span class="hljs-title function_">writeSync</span>(
+    process.<span class="hljs-property">stderr</span>.<span class="hljs-property">fd</span>,
     <span class="hljs-string">`Caught exception: <span class="hljs-subst">${err}</span>\n`</span> +
     <span class="hljs-string">`Exception origin: <span class="hljs-subst">${origin}</span>`</span>
   );
 });
 
 <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'This will still run.'</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'This will still run.'</span>);
 }, <span class="hljs-number">500</span>);
 
 <span class="hljs-comment">// Intentionally cause an exception, but don't catch it.</span>
-nonexistentFunc();
-<span class="hljs-built_in">console</span>.log(<span class="hljs-string">'This will not run.'</span>);</code></pre>
+<span class="hljs-title function_">nonexistentFunc</span>();
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'This will not run.'</span>);</code></pre>
 <p>It is possible to monitor <code>'uncaughtException'</code> events without overriding the
 default behavior to exit the process by installing a
 <code>'uncaughtExceptionMonitor'</code> listener.</p>
-<h4>Warning: Using <code>'uncaughtException'</code> correctly<span><a class="mark" href="#process_warning_using_uncaughtexception_correctly" id="process_warning_using_uncaughtexception_correctly">#</a></span></h4>
+<h5>Warning: Using <code>'uncaughtException'</code> correctly<span><a class="mark" href="#process_warning_using_uncaughtexception_correctly" id="process_warning_using_uncaughtexception_correctly">#</a></span></h5>
 <p><code>'uncaughtException'</code> is a crude mechanism for exception handling
 intended to be used only as a last resort. The event <em>should not</em> be used as
 an equivalent to <code>On Error Resume Next</code>. Unhandled exceptions inherently mean
@@ -498,7 +518,7 @@ down the process. <strong>It is not safe to resume normal operation after
 <code>'uncaughtException'</code> is emitted or not, an external monitor should be employed
 in a separate process to detect application failures and recover or restart as
 needed.</p>
-<h3>Event: <code>'uncaughtExceptionMonitor'</code><span><a class="mark" href="#process_event_uncaughtexceptionmonitor" id="process_event_uncaughtexceptionmonitor">#</a></span></h3>
+<h4>Event: <code>'uncaughtExceptionMonitor'</code><span><a class="mark" href="#process_event_uncaughtexceptionmonitor" id="process_event_uncaughtexceptionmonitor">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v13.7.0</span>
 </div>
@@ -512,18 +532,18 @@ an unhandled rejection.</li>
 </ul>
 <p>The <code>'uncaughtExceptionMonitor'</code> event is emitted before an
 <code>'uncaughtException'</code> event is emitted or a hook installed via
-<a href="process.html#process_process_setuncaughtexceptioncapturecallback_fn"><code>process.setUncaughtExceptionCaptureCallback()</code></a> is called.</p>
+<a href="#process_process_setuncaughtexceptioncapturecallback_fn"><code>process.setUncaughtExceptionCaptureCallback()</code></a> is called.</p>
 <p>Installing an <code>'uncaughtExceptionMonitor'</code> listener does not change the behavior
 once an <code>'uncaughtException'</code> event is emitted. The process will
 still crash if no <code>'uncaughtException'</code> listener is installed.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'uncaughtExceptionMonitor'</span>, <span class="hljs-function">(<span class="hljs-params">err, origin</span>) =></span> {
-  MyMonitoringTool.logSync(err, origin);
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'uncaughtExceptionMonitor'</span>, <span class="hljs-function">(<span class="hljs-params">err, origin</span>) =></span> {
+  <span class="hljs-title class_">MyMonitoringTool</span>.<span class="hljs-title function_">logSync</span>(err, origin);
 });
 
 <span class="hljs-comment">// Intentionally cause an exception, but don't catch it.</span>
-nonexistentFunc();
+<span class="hljs-title function_">nonexistentFunc</span>();
 <span class="hljs-comment">// Still crashes Node.js</span></code></pre>
-<h3>Event: <code>'unhandledRejection'</code><span><a class="mark" href="#process_event_unhandledrejection" id="process_event_unhandledrejection">#</a></span></h3>
+<h4>Event: <code>'unhandledRejection'</code><span><a class="mark" href="#process_event_unhandledrejection" id="process_event_unhandledrejection">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -549,22 +569,22 @@ promises". Rejections can be caught and handled using <a href="https://developer
 are propagated through a <code>Promise</code> chain. The <code>'unhandledRejection'</code> event is
 useful for detecting and keeping track of promises that were rejected whose
 rejections have not yet been handled.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'unhandledRejection'</span>, <span class="hljs-function">(<span class="hljs-params">reason, promise</span>) =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Unhandled Rejection at:'</span>, promise, <span class="hljs-string">'reason:'</span>, reason);
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'unhandledRejection'</span>, <span class="hljs-function">(<span class="hljs-params">reason, promise</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Unhandled Rejection at:'</span>, promise, <span class="hljs-string">'reason:'</span>, reason);
   <span class="hljs-comment">// Application specific logging, throwing an error, or other logic here</span>
 });
 
-somePromise.then(<span class="hljs-function">(<span class="hljs-params">res</span>) =></span> {
-  <span class="hljs-keyword">return</span> reportToUser(<span class="hljs-built_in">JSON</span>.pasre(res)); <span class="hljs-comment">// Note the typo (`pasre`)</span>
+somePromise.<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">res</span>) =></span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-title function_">reportToUser</span>(<span class="hljs-variable constant_">JSON</span>.<span class="hljs-title function_">pasre</span>(res)); <span class="hljs-comment">// Note the typo (`pasre`)</span>
 }); <span class="hljs-comment">// No `.catch()` or `.then()`</span></code></pre>
 <p>The following will also trigger the <code>'unhandledRejection'</code> event to be
 emitted:</p>
-<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">SomeResource</span>(<span class="hljs-params"></span>) </span>{
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">SomeResource</span>(<span class="hljs-params"></span>) {
   <span class="hljs-comment">// Initially set the loaded status to a rejected promise</span>
-  <span class="hljs-built_in">this</span>.loaded = <span class="hljs-built_in">Promise</span>.reject(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Resource not yet loaded!'</span>));
+  <span class="hljs-variable language_">this</span>.<span class="hljs-property">loaded</span> = <span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">reject</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Resource not yet loaded!'</span>));
 }
 
-<span class="hljs-keyword">const</span> resource = <span class="hljs-keyword">new</span> SomeResource();
+<span class="hljs-keyword">const</span> resource = <span class="hljs-keyword">new</span> <span class="hljs-title class_">SomeResource</span>();
 <span class="hljs-comment">// no .catch or .then on resource.loaded for at least a turn</span></code></pre>
 <p>In this example case, it is possible to track the rejection as a developer error
 as would typically be the case for other <code>'unhandledRejection'</code> events. To
@@ -572,7 +592,7 @@ address such failures, a non-operational
 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch"><code>.catch(() => { })</code></a> handler may be attached to
 <code>resource.loaded</code>, which would prevent the <code>'unhandledRejection'</code> event from
 being emitted.</p>
-<h3>Event: <code>'warning'</code><span><a class="mark" href="#process_event_warning" id="process_event_warning">#</a></span></h3>
+<h4>Event: <code>'warning'</code><span><a class="mark" href="#process_event_warning" id="process_event_warning">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v6.0.0</span>
 </div>
@@ -592,30 +612,30 @@ conditions that are being brought to the user's attention. However, warnings
 are not part of the normal Node.js and JavaScript error handling flow.
 Node.js can emit warnings whenever it detects bad coding practices that could
 lead to sub-optimal application performance, bugs, or security vulnerabilities.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'warning'</span>, <span class="hljs-function">(<span class="hljs-params">warning</span>) =></span> {
-  <span class="hljs-built_in">console</span>.warn(warning.name);    <span class="hljs-comment">// Print the warning name</span>
-  <span class="hljs-built_in">console</span>.warn(warning.message); <span class="hljs-comment">// Print the warning message</span>
-  <span class="hljs-built_in">console</span>.warn(warning.stack);   <span class="hljs-comment">// Print the stack trace</span>
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'warning'</span>, <span class="hljs-function">(<span class="hljs-params">warning</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">name</span>);    <span class="hljs-comment">// Print the warning name</span>
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">message</span>); <span class="hljs-comment">// Print the warning message</span>
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">stack</span>);   <span class="hljs-comment">// Print the stack trace</span>
 });</code></pre>
 <p>By default, Node.js will print process warnings to <code>stderr</code>. The <code>--no-warnings</code>
 command-line option can be used to suppress the default console output but the
 <code>'warning'</code> event will still be emitted by the <code>process</code> object.</p>
 <p>The following example illustrates the warning that is printed to <code>stderr</code> when
 too many listeners have been added to an event:</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node</span>
-<span class="hljs-meta">></span><span class="bash"> events.defaultMaxListeners = 1;</span>
-<span class="hljs-meta">></span><span class="bash"> process.on(<span class="hljs-string">'foo'</span>, () => {});</span>
-<span class="hljs-meta">></span><span class="bash"> process.on(<span class="hljs-string">'foo'</span>, () => {});</span>
-<span class="hljs-meta">></span><span class="bash"> (node:38638) MaxListenersExceededWarning: Possible EventEmitter memory leak</span>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node</span>
+<span class="hljs-meta">> </span><span class="language-bash">events.defaultMaxListeners = 1;</span>
+<span class="hljs-meta">> </span><span class="language-bash">process.on(<span class="hljs-string">'foo'</span>, () => {});</span>
+<span class="hljs-meta">> </span><span class="language-bash">process.on(<span class="hljs-string">'foo'</span>, () => {});</span>
+<span class="hljs-meta">> </span><span class="language-bash">(node:38638) MaxListenersExceededWarning: Possible EventEmitter memory leak</span>
 detected. 2 foo listeners added. Use emitter.setMaxListeners() to increase limit</code></pre>
 <p>In contrast, the following example turns off the default warning output and
 adds a custom handler to the <code>'warning'</code> event:</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node --no-warnings</span>
-<span class="hljs-meta">></span><span class="bash"> const p = process.on(<span class="hljs-string">'warning'</span>, (warning) => console.warn(<span class="hljs-string">'Do not do that!'</span>));</span>
-<span class="hljs-meta">></span><span class="bash"> events.defaultMaxListeners = 1;</span>
-<span class="hljs-meta">></span><span class="bash"> process.on(<span class="hljs-string">'foo'</span>, () => {});</span>
-<span class="hljs-meta">></span><span class="bash"> process.on(<span class="hljs-string">'foo'</span>, () => {});</span>
-<span class="hljs-meta">></span><span class="bash"> Do not <span class="hljs-keyword">do</span> that!</span></code></pre>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node --no-warnings</span>
+<span class="hljs-meta">> </span><span class="language-bash">const p = process.on(<span class="hljs-string">'warning'</span>, (warning) => console.warn(<span class="hljs-string">'Do not do that!'</span>));</span>
+<span class="hljs-meta">> </span><span class="language-bash">events.defaultMaxListeners = 1;</span>
+<span class="hljs-meta">> </span><span class="language-bash">process.on(<span class="hljs-string">'foo'</span>, () => {});</span>
+<span class="hljs-meta">> </span><span class="language-bash">process.on(<span class="hljs-string">'foo'</span>, () => {});</span>
+<span class="hljs-meta">> </span><span class="language-bash">Do not <span class="hljs-keyword">do</span> that!</span></code></pre>
 <p>The <code>--trace-warnings</code> command-line option can be used to have the default
 console output for warnings include the full stack trace of the warning.</p>
 <p>Launching Node.js using the <code>--throw-deprecation</code> command-line flag will
@@ -626,10 +646,40 @@ deprecation to be printed to <code>stderr</code> along with the stack trace.</p>
 of the custom deprecation.</p>
 <p>The <code>*-deprecation</code> command-line flags only affect warnings that use the name
 <code>'DeprecationWarning'</code>.</p>
-<h4>Emitting custom warnings<span><a class="mark" href="#process_emitting_custom_warnings" id="process_emitting_custom_warnings">#</a></span></h4>
+<h4>Event: <code>'worker'</code><span><a class="mark" href="#process_event_worker" id="process_event_worker">#</a></span></h4>
+<div class="api_metadata">
+<span>Added in: v14.18.0</span>
+</div>
+<ul>
+<li><code>worker</code> <a href="worker_threads.html#worker_threads_class_worker" class="type">&#x3C;Worker></a> The <a href="worker_threads.html#worker_threads_class_worker" class="type">&#x3C;Worker></a> that was created.</li>
+</ul>
+<p>The <code>'worker'</code> event is emitted after a new <a href="worker_threads.html#worker_threads_class_worker" class="type">&#x3C;Worker></a> thread has been created.</p>
+<h5>Emitting custom warnings<span><a class="mark" href="#process_emitting_custom_warnings" id="process_emitting_custom_warnings">#</a></span></h5>
 <p>See the <a href="#process_process_emitwarning_warning_type_code_ctor"><code>process.emitWarning()</code></a> method for issuing
 custom or application-specific warnings.</p>
-<h3>Signal events<span><a class="mark" href="#process_signal_events" id="process_signal_events">#</a></span></h3>
+<h5>Node.js warning names<span><a class="mark" href="#process_node_js_warning_names" id="process_node_js_warning_names">#</a></span></h5>
+<p>There are no strict guidelines for warning types (as identified by the <code>name</code>
+property) emitted by Node.js. New types of warnings can be added at any time.
+A few of the warning types that are most common include:</p>
+<ul>
+<li><code>'DeprecationWarning'</code> - Indicates use of a deprecated Node.js API or feature.
+Such warnings must include a <code>'code'</code> property identifying the
+<a href="deprecations.html">deprecation code</a>.</li>
+<li><code>'ExperimentalWarning'</code> - Indicates use of an experimental Node.js API or
+feature. Such features must be used with caution as they may change at any
+time and are not subject to the same strict semantic-versioning and long-term
+support policies as supported features.</li>
+<li><code>'MaxListenersExceededWarning'</code> - Indicates that too many listeners for a
+given event have been registered on either an <code>EventEmitter</code> or <code>EventTarget</code>.
+This is often an indication of a memory leak.</li>
+<li><code>'TimeoutOverflowWarning'</code> - Indicates that a numeric value that cannot fit
+within a 32-bit signed integer has been provided to either the <code>setTimeout()</code>
+or <code>setInterval()</code> functions.</li>
+<li><code>'UnsupportedWarning'</code> - Indicates use of an unsupported option or feature
+that will be ignored rather than treated as an error. One example is use of
+the HTTP response status message when using the HTTP/2 compatibility API.</li>
+</ul>
+<h4>Signal events<span><a class="mark" href="#process_signal_events" id="process_signal_events">#</a></span></h4>
 
 
 <p>Signal events will be emitted when the Node.js process receives a signal. Please
@@ -641,19 +691,19 @@ refer to <a href="http://man7.org/linux/man-pages/man7/signal.7.html"><code>sign
 <p>The name of each event will be the uppercase common name for the signal (e.g.
 <code>'SIGINT'</code> for <code>SIGINT</code> signals).</p>
 <pre><code class="language-js"><span class="hljs-comment">// Begin reading from stdin so the process does not exit.</span>
-process.stdin.resume();
+process.<span class="hljs-property">stdin</span>.<span class="hljs-title function_">resume</span>();
 
-process.on(<span class="hljs-string">'SIGINT'</span>, <span class="hljs-function">() =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Received SIGINT. Press Control-D to exit.'</span>);
+process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'SIGINT'</span>, <span class="hljs-function">() =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Received SIGINT. Press Control-D to exit.'</span>);
 });
 
 <span class="hljs-comment">// Using a single function to handle multiple signals</span>
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle</span>(<span class="hljs-params">signal</span>) </span>{
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Received <span class="hljs-subst">${signal}</span>`</span>);
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">handle</span>(<span class="hljs-params">signal</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Received <span class="hljs-subst">${signal}</span>`</span>);
 }
 
-process.on(<span class="hljs-string">'SIGINT'</span>, handle);
-process.on(<span class="hljs-string">'SIGTERM'</span>, handle);</code></pre>
+process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'SIGINT'</span>, handle);
+process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'SIGTERM'</span>, handle);</code></pre>
 <ul>
 <li><code>'SIGUSR1'</code> is reserved by Node.js to start the <a href="debugger.html">debugger</a>. It's possible to
 install a listener but doing so might interfere with the debugger.</li>
@@ -699,14 +749,14 @@ the process was terminated by signal.</li>
 <li>Sending signal <code>0</code> can be used as a platform independent way to test for the
 existence of a process.</li>
 </ul>
-<h2><code>process.abort()</code><span><a class="mark" href="#process_process_abort" id="process_process_abort">#</a></span></h2>
+</section><section><h3><code>process.abort()</code><span><a class="mark" href="#process_process_abort" id="process_process_abort">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.0</span>
 </div>
 <p>The <code>process.abort()</code> method causes the Node.js process to exit immediately and
 generate a core file.</p>
 <p>This feature is not available in <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.</p>
-<h2><code>process.allowedNodeEnvironmentFlags</code><span><a class="mark" href="#process_process_allowednodeenvironmentflags" id="process_process_allowednodeenvironmentflags">#</a></span></h2>
+</section><section><h3><code>process.allowedNodeEnvironmentFlags</code><span><a class="mark" href="#process_process_allowednodeenvironmentflags" id="process_process_allowednodeenvironmentflags">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v10.10.0</span>
 </div>
@@ -736,7 +786,7 @@ e.g., <code>--stack-trace-limit=100</code>.</li>
 appear only <em>once</em>; each will begin with one or more dashes. Flags
 passed through to V8 will contain underscores instead of non-leading
 dashes:</p>
-<pre><code class="language-js">process.allowedNodeEnvironmentFlags.forEach(<span class="hljs-function">(<span class="hljs-params">flag</span>) =></span> {
+<pre><code class="language-js">process.<span class="hljs-property">allowedNodeEnvironmentFlags</span>.<span class="hljs-title function_">forEach</span>(<span class="hljs-function">(<span class="hljs-params">flag</span>) =></span> {
   <span class="hljs-comment">// -r</span>
   <span class="hljs-comment">// --inspect-brk</span>
   <span class="hljs-comment">// --abort_on_uncaught_exception</span>
@@ -748,7 +798,7 @@ silently.</p>
 <p>If Node.js was compiled <em>without</em> <a href="cli.html#cli_node_options_options"><code>NODE_OPTIONS</code></a> support (shown in
 <a href="#process_process_config"><code>process.config</code></a>), <code>process.allowedNodeEnvironmentFlags</code> will
 contain what <em>would have</em> been allowable.</p>
-<h2><code>process.arch</code><span><a class="mark" href="#process_process_arch" id="process_process_arch">#</a></span></h2>
+</section><section><h3><code>process.arch</code><span><a class="mark" href="#process_process_arch" id="process_process_arch">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.5.0</span>
 </div>
@@ -758,8 +808,8 @@ contain what <em>would have</em> been allowable.</p>
 <p>The operating system CPU architecture for which the Node.js binary was compiled.
 Possible values are: <code>'arm'</code>, <code>'arm64'</code>, <code>'ia32'</code>, <code>'mips'</code>,<code>'mipsel'</code>, <code>'ppc'</code>,
 <code>'ppc64'</code>, <code>'s390'</code>, <code>'s390x'</code>, <code>'x32'</code>, and <code>'x64'</code>.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`This processor architecture is <span class="hljs-subst">${process.arch}</span>`</span>);</code></pre>
-<h2><code>process.argv</code><span><a class="mark" href="#process_process_argv" id="process_process_argv">#</a></span></h2>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`This processor architecture is <span class="hljs-subst">${process.arch}</span>`</span>);</code></pre>
+</section><section><h3><code>process.argv</code><span><a class="mark" href="#process_process_argv" id="process_process_argv">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.27</span>
 </div>
@@ -774,18 +824,18 @@ file being executed. The remaining elements will be any additional command-line
 arguments.</p>
 <p>For example, assuming the following script for <code>process-args.js</code>:</p>
 <pre><code class="language-js"><span class="hljs-comment">// print process.argv</span>
-process.argv.forEach(<span class="hljs-function">(<span class="hljs-params">val, index</span>) =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`<span class="hljs-subst">${index}</span>: <span class="hljs-subst">${val}</span>`</span>);
+process.<span class="hljs-property">argv</span>.<span class="hljs-title function_">forEach</span>(<span class="hljs-function">(<span class="hljs-params">val, index</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`<span class="hljs-subst">${index}</span>: <span class="hljs-subst">${val}</span>`</span>);
 });</code></pre>
 <p>Launching the Node.js process as:</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node process-args.js one two=three four</span></code></pre>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node process-args.js one two=three four</span></code></pre>
 <p>Would generate the output:</p>
 <pre><code class="language-text">0: /usr/local/bin/node
 1: /Users/mjr/work/node/process-args.js
 2: one
 3: two=three
 4: four</code></pre>
-<h2><code>process.argv0</code><span><a class="mark" href="#process_process_argv0" id="process_process_argv0">#</a></span></h2>
+</section><section><h3><code>process.argv0</code><span><a class="mark" href="#process_process_argv0" id="process_process_argv0">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v6.4.0</span>
 </div>
@@ -794,12 +844,12 @@ process.argv.forEach(<span class="hljs-function">(<span class="hljs-params">val,
 </ul>
 <p>The <code>process.argv0</code> property stores a read-only copy of the original value of
 <code>argv[0]</code> passed when Node.js starts.</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> bash -c <span class="hljs-string">'exec -a customArgv0 ./node'</span></span>
-<span class="hljs-meta">></span><span class="bash"> process.argv[0]</span>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">bash -c <span class="hljs-string">'exec -a customArgv0 ./node'</span></span>
+<span class="hljs-meta">> </span><span class="language-bash">process.argv[0]</span>
 '/Volumes/code/external/node/out/Release/node'
-<span class="hljs-meta">></span><span class="bash"> process.argv0</span>
+<span class="hljs-meta">> </span><span class="language-bash">process.argv0</span>
 'customArgv0'</code></pre>
-<h2><code>process.channel</code><span><a class="mark" href="#process_process_channel" id="process_process_channel">#</a></span></h2>
+</section><section><h3><code>process.channel</code><span><a class="mark" href="#process_process_channel" id="process_process_channel">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -818,7 +868,7 @@ process.argv.forEach(<span class="hljs-function">(<span class="hljs-params">val,
 <a href="child_process.html">Child Process</a> documentation), the <code>process.channel</code>
 property is a reference to the IPC channel. If no IPC channel exists, this
 property is <code>undefined</code>.</p>
-<h3><code>process.channel.ref()</code><span><a class="mark" href="#process_process_channel_ref" id="process_process_channel_ref">#</a></span></h3>
+<h4><code>process.channel.ref()</code><span><a class="mark" href="#process_process_channel_ref" id="process_process_channel_ref">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v7.1.0</span>
 </div>
@@ -827,7 +877,7 @@ running if <code>.unref()</code> has been called before.</p>
 <p>Typically, this is managed through the number of <code>'disconnect'</code> and <code>'message'</code>
 listeners on the <code>process</code> object. However, this method can be used to
 explicitly request a specific behavior.</p>
-<h3><code>process.channel.unref()</code><span><a class="mark" href="#process_process_channel_unref" id="process_process_channel_unref">#</a></span></h3>
+<h4><code>process.channel.unref()</code><span><a class="mark" href="#process_process_channel_unref" id="process_process_channel_unref">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v7.1.0</span>
 </div>
@@ -836,7 +886,7 @@ running, and lets it finish even while the channel is open.</p>
 <p>Typically, this is managed through the number of <code>'disconnect'</code> and <code>'message'</code>
 listeners on the <code>process</code> object. However, this method can be used to
 explicitly request a specific behavior.</p>
-<h2><code>process.chdir(directory)</code><span><a class="mark" href="#process_process_chdir_directory" id="process_process_chdir_directory">#</a></span></h2>
+</section><section><h3><code>process.chdir(directory)</code><span><a class="mark" href="#process_process_chdir_directory" id="process_process_chdir_directory">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.17</span>
 </div>
@@ -846,15 +896,15 @@ explicitly request a specific behavior.</p>
 <p>The <code>process.chdir()</code> method changes the current working directory of the
 Node.js process or throws an exception if doing so fails (for instance, if
 the specified <code>directory</code> does not exist).</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Starting directory: <span class="hljs-subst">${process.cwd()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Starting directory: <span class="hljs-subst">${process.cwd()}</span>`</span>);
 <span class="hljs-keyword">try</span> {
-  process.chdir(<span class="hljs-string">'/tmp'</span>);
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`New directory: <span class="hljs-subst">${process.cwd()}</span>`</span>);
+  process.<span class="hljs-title function_">chdir</span>(<span class="hljs-string">'/tmp'</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`New directory: <span class="hljs-subst">${process.cwd()}</span>`</span>);
 } <span class="hljs-keyword">catch</span> (err) {
-  <span class="hljs-built_in">console</span>.error(<span class="hljs-string">`chdir: <span class="hljs-subst">${err}</span>`</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">`chdir: <span class="hljs-subst">${err}</span>`</span>);
 }</code></pre>
 <p>This feature is not available in <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.</p>
-<h2><code>process.config</code><span><a class="mark" href="#process_process_config" id="process_process_config">#</a></span></h2>
+</section><section><h3><code>process.config</code><span><a class="mark" href="#process_process_config" id="process_process_config">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.7</span>
 </div>
@@ -895,7 +945,7 @@ running the <code>./configure</code> script.</p>
 <p>The <code>process.config</code> property is <strong>not</strong> read-only and there are existing
 modules in the ecosystem that are known to extend, modify, or entirely replace
 the value of <code>process.config</code>.</p>
-<h2><code>process.connected</code><span><a class="mark" href="#process_process_connected" id="process_process_connected">#</a></span></h2>
+</section><section><h3><code>process.connected</code><span><a class="mark" href="#process_process_connected" id="process_process_connected">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.2</span>
 </div>
@@ -908,7 +958,7 @@ and <a href="cluster.html">Cluster</a> documentation), the <code>process.connect
 <code>process.disconnect()</code> is called.</p>
 <p>Once <code>process.connected</code> is <code>false</code>, it is no longer possible to send messages
 over the IPC channel using <code>process.send()</code>.</p>
-<h2><code>process.cpuUsage([previousValue])</code><span><a class="mark" href="#process_process_cpuusage_previousvalue" id="process_process_cpuusage_previousvalue">#</a></span></h2>
+</section><section><h3><code>process.cpuUsage([previousValue])</code><span><a class="mark" href="#process_process_cpuusage_previousvalue" id="process_process_cpuusage_previousvalue">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v6.1.0</span>
 </div>
@@ -929,16 +979,16 @@ spent in user and system code respectively, and may end up being greater than
 actual elapsed time if multiple CPU cores are performing work for this process.</p>
 <p>The result of a previous call to <code>process.cpuUsage()</code> can be passed as the
 argument to the function, to get a diff reading.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> startUsage = process.cpuUsage();
+<pre><code class="language-js"><span class="hljs-keyword">const</span> startUsage = process.<span class="hljs-title function_">cpuUsage</span>();
 <span class="hljs-comment">// { user: 38579, system: 6986 }</span>
 
 <span class="hljs-comment">// spin the CPU for 500 milliseconds</span>
-<span class="hljs-keyword">const</span> now = <span class="hljs-built_in">Date</span>.now();
-<span class="hljs-keyword">while</span> (<span class="hljs-built_in">Date</span>.now() - now &#x3C; <span class="hljs-number">500</span>);
+<span class="hljs-keyword">const</span> now = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>();
+<span class="hljs-keyword">while</span> (<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - now &#x3C; <span class="hljs-number">500</span>);
 
-<span class="hljs-built_in">console</span>.log(process.cpuUsage(startUsage));
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-title function_">cpuUsage</span>(startUsage));
 <span class="hljs-comment">// { user: 514883, system: 11226 }</span></code></pre>
-<h2><code>process.cwd()</code><span><a class="mark" href="#process_process_cwd" id="process_process_cwd">#</a></span></h2>
+</section><section><h3><code>process.cwd()</code><span><a class="mark" href="#process_process_cwd" id="process_process_cwd">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.8</span>
 </div>
@@ -947,8 +997,8 @@ argument to the function, to get a diff reading.</p>
 </ul>
 <p>The <code>process.cwd()</code> method returns the current working directory of the Node.js
 process.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current directory: <span class="hljs-subst">${process.cwd()}</span>`</span>);</code></pre>
-<h2><code>process.debugPort</code><span><a class="mark" href="#process_process_debugport" id="process_process_debugport">#</a></span></h2>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current directory: <span class="hljs-subst">${process.cwd()}</span>`</span>);</code></pre>
+</section><section><h3><code>process.debugPort</code><span><a class="mark" href="#process_process_debugport" id="process_process_debugport">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.2</span>
 </div>
@@ -956,8 +1006,8 @@ process.</p>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
 </ul>
 <p>The port used by the Node.js debugger when enabled.</p>
-<pre><code class="language-js">process.debugPort = <span class="hljs-number">5858</span>;</code></pre>
-<h2><code>process.disconnect()</code><span><a class="mark" href="#process_process_disconnect" id="process_process_disconnect">#</a></span></h2>
+<pre><code class="language-js">process.<span class="hljs-property">debugPort</span> = <span class="hljs-number">5858</span>;</code></pre>
+</section><section><h3><code>process.disconnect()</code><span><a class="mark" href="#process_process_disconnect" id="process_process_disconnect">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.2</span>
 </div>
@@ -969,7 +1019,7 @@ once there are no other connections keeping it alive.</p>
 <a href="child_process.html#child_process_subprocess_disconnect"><code>ChildProcess.disconnect()</code></a> from the parent process.</p>
 <p>If the Node.js process was not spawned with an IPC channel,
 <code>process.disconnect()</code> will be <code>undefined</code>.</p>
-<h2><code>process.dlopen(module, filename[, flags])</code><span><a class="mark" href="#process_process_dlopen_module_filename_flags" id="process_process_dlopen_module_filename_flags">#</a></span></h2>
+</section><section><h3><code>process.dlopen(module, filename[, flags])</code><span><a class="mark" href="#process_process_dlopen_module_filename_flags" id="process_process_dlopen_module_filename_flags">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1002,11 +1052,11 @@ the call returns, by passing the <code>RTLD_NOW</code> constant. In this example
 the constant is assumed to be available.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> os = <span class="hljs-built_in">require</span>(<span class="hljs-string">'os'</span>);
 <span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">'path'</span>);
-<span class="hljs-keyword">const</span> <span class="hljs-built_in">module</span> = { <span class="hljs-attr">exports</span>: {} };
-process.dlopen(<span class="hljs-built_in">module</span>, path.join(__dirname, <span class="hljs-string">'local.node'</span>),
-               os.constants.dlopen.RTLD_NOW);
-<span class="hljs-built_in">module</span>.exports.foo();</code></pre>
-<h2><code>process.emitWarning(warning[, options])</code><span><a class="mark" href="#process_process_emitwarning_warning_options" id="process_process_emitwarning_warning_options">#</a></span></h2>
+<span class="hljs-keyword">const</span> <span class="hljs-variable language_">module</span> = { <span class="hljs-attr">exports</span>: {} };
+process.<span class="hljs-title function_">dlopen</span>(<span class="hljs-variable language_">module</span>, path.<span class="hljs-title function_">join</span>(__dirname, <span class="hljs-string">'local.node'</span>),
+               os.<span class="hljs-property">constants</span>.<span class="hljs-property">dlopen</span>.<span class="hljs-property">RTLD_NOW</span>);
+<span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span>.<span class="hljs-title function_">foo</span>();</code></pre>
+</section><section><h3><code>process.emitWarning(warning[, options])</code><span><a class="mark" href="#process_process_emitwarning_warning_options" id="process_process_emitwarning_warning_options">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v8.0.0</span>
 </div>
@@ -1028,7 +1078,7 @@ function used to limit the generated stack trace. <strong>Default:</strong>
 specific process warnings. These can be listened for by adding a handler to the
 <a href="#process_event_warning"><code>'warning'</code></a> event.</p>
 <pre><code class="language-js"><span class="hljs-comment">// Emit a warning with a code and additional detail.</span>
-process.emitWarning(<span class="hljs-string">'Something happened!'</span>, {
+process.<span class="hljs-title function_">emitWarning</span>(<span class="hljs-string">'Something happened!'</span>, {
   <span class="hljs-attr">code</span>: <span class="hljs-string">'MY_WARNING'</span>,
   <span class="hljs-attr">detail</span>: <span class="hljs-string">'This is some additional information'</span>
 });
@@ -1038,15 +1088,15 @@ process.emitWarning(<span class="hljs-string">'Something happened!'</span>, {
 <p>In this example, an <code>Error</code> object is generated internally by
 <code>process.emitWarning()</code> and passed through to the
 <a href="#process_event_warning"><code>'warning'</code></a> handler.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'warning'</span>, <span class="hljs-function">(<span class="hljs-params">warning</span>) =></span> {
-  <span class="hljs-built_in">console</span>.warn(warning.name);    <span class="hljs-comment">// 'Warning'</span>
-  <span class="hljs-built_in">console</span>.warn(warning.message); <span class="hljs-comment">// 'Something happened!'</span>
-  <span class="hljs-built_in">console</span>.warn(warning.code);    <span class="hljs-comment">// 'MY_WARNING'</span>
-  <span class="hljs-built_in">console</span>.warn(warning.stack);   <span class="hljs-comment">// Stack trace</span>
-  <span class="hljs-built_in">console</span>.warn(warning.detail);  <span class="hljs-comment">// 'This is some additional information'</span>
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'warning'</span>, <span class="hljs-function">(<span class="hljs-params">warning</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">name</span>);    <span class="hljs-comment">// 'Warning'</span>
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">message</span>); <span class="hljs-comment">// 'Something happened!'</span>
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">code</span>);    <span class="hljs-comment">// 'MY_WARNING'</span>
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">stack</span>);   <span class="hljs-comment">// Stack trace</span>
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">detail</span>);  <span class="hljs-comment">// 'This is some additional information'</span>
 });</code></pre>
 <p>If <code>warning</code> is passed as an <code>Error</code> object, the <code>options</code> argument is ignored.</p>
-<h2><code>process.emitWarning(warning[, type[, code]][, ctor])</code><span><a class="mark" href="#process_process_emitwarning_warning_type_code_ctor" id="process_process_emitwarning_warning_type_code_ctor">#</a></span></h2>
+</section><section><h3><code>process.emitWarning(warning[, type[, code]][, ctor])</code><span><a class="mark" href="#process_process_emitwarning_warning_type_code_ctor" id="process_process_emitwarning_warning_type_code_ctor">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v6.0.0</span>
 </div>
@@ -1063,32 +1113,32 @@ function used to limit the generated stack trace. <strong>Default:</strong>
 specific process warnings. These can be listened for by adding a handler to the
 <a href="#process_event_warning"><code>'warning'</code></a> event.</p>
 <pre><code class="language-js"><span class="hljs-comment">// Emit a warning using a string.</span>
-process.emitWarning(<span class="hljs-string">'Something happened!'</span>);
+process.<span class="hljs-title function_">emitWarning</span>(<span class="hljs-string">'Something happened!'</span>);
 <span class="hljs-comment">// Emits: (node: 56338) Warning: Something happened!</span></code></pre>
 <pre><code class="language-js"><span class="hljs-comment">// Emit a warning using a string and a type.</span>
-process.emitWarning(<span class="hljs-string">'Something Happened!'</span>, <span class="hljs-string">'CustomWarning'</span>);
+process.<span class="hljs-title function_">emitWarning</span>(<span class="hljs-string">'Something Happened!'</span>, <span class="hljs-string">'CustomWarning'</span>);
 <span class="hljs-comment">// Emits: (node:56338) CustomWarning: Something Happened!</span></code></pre>
-<pre><code class="language-js">process.emitWarning(<span class="hljs-string">'Something happened!'</span>, <span class="hljs-string">'CustomWarning'</span>, <span class="hljs-string">'WARN001'</span>);
+<pre><code class="language-js">process.<span class="hljs-title function_">emitWarning</span>(<span class="hljs-string">'Something happened!'</span>, <span class="hljs-string">'CustomWarning'</span>, <span class="hljs-string">'WARN001'</span>);
 <span class="hljs-comment">// Emits: (node:56338) [WARN001] CustomWarning: Something happened!</span></code></pre>
 <p>In each of the previous examples, an <code>Error</code> object is generated internally by
 <code>process.emitWarning()</code> and passed through to the <a href="#process_event_warning"><code>'warning'</code></a>
 handler.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'warning'</span>, <span class="hljs-function">(<span class="hljs-params">warning</span>) =></span> {
-  <span class="hljs-built_in">console</span>.warn(warning.name);
-  <span class="hljs-built_in">console</span>.warn(warning.message);
-  <span class="hljs-built_in">console</span>.warn(warning.code);
-  <span class="hljs-built_in">console</span>.warn(warning.stack);
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'warning'</span>, <span class="hljs-function">(<span class="hljs-params">warning</span>) =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">name</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">message</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">code</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(warning.<span class="hljs-property">stack</span>);
 });</code></pre>
 <p>If <code>warning</code> is passed as an <code>Error</code> object, it will be passed through to the
 <code>'warning'</code> event handler unmodified (and the optional <code>type</code>,
 <code>code</code> and <code>ctor</code> arguments will be ignored):</p>
 <pre><code class="language-js"><span class="hljs-comment">// Emit a warning using an Error object.</span>
-<span class="hljs-keyword">const</span> myWarning = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Something happened!'</span>);
+<span class="hljs-keyword">const</span> myWarning = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">'Something happened!'</span>);
 <span class="hljs-comment">// Use the Error name property to specify the type name</span>
-myWarning.name = <span class="hljs-string">'CustomWarning'</span>;
-myWarning.code = <span class="hljs-string">'WARN001'</span>;
+myWarning.<span class="hljs-property">name</span> = <span class="hljs-string">'CustomWarning'</span>;
+myWarning.<span class="hljs-property">code</span> = <span class="hljs-string">'WARN001'</span>;
 
-process.emitWarning(myWarning);
+process.<span class="hljs-title function_">emitWarning</span>(myWarning);
 <span class="hljs-comment">// Emits: (node:56338) [WARN001] CustomWarning: Something happened!</span></code></pre>
 <p>A <code>TypeError</code> is thrown if <code>warning</code> is anything other than a string or <code>Error</code>
 object.</p>
@@ -1104,21 +1154,21 @@ warning is suppressed.</li>
 <li>If the <code>--trace-deprecation</code> command-line flag is used, the deprecation
 warning is printed to <code>stderr</code> along with the full stack trace.</li>
 </ul>
-<h3>Avoiding duplicate warnings<span><a class="mark" href="#process_avoiding_duplicate_warnings" id="process_avoiding_duplicate_warnings">#</a></span></h3>
+<h4>Avoiding duplicate warnings<span><a class="mark" href="#process_avoiding_duplicate_warnings" id="process_avoiding_duplicate_warnings">#</a></span></h4>
 <p>As a best practice, warnings should be emitted only once per process. To do
 so, it is recommended to place the <code>emitWarning()</code> behind a simple boolean
 flag as illustrated in the example below:</p>
-<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">emitMyWarning</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-keyword">if</span> (!emitMyWarning.warned) {
-    emitMyWarning.warned = <span class="hljs-literal">true</span>;
-    process.emitWarning(<span class="hljs-string">'Only warn once!'</span>);
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">emitMyWarning</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">if</span> (!emitMyWarning.<span class="hljs-property">warned</span>) {
+    emitMyWarning.<span class="hljs-property">warned</span> = <span class="hljs-literal">true</span>;
+    process.<span class="hljs-title function_">emitWarning</span>(<span class="hljs-string">'Only warn once!'</span>);
   }
 }
-emitMyWarning();
+<span class="hljs-title function_">emitMyWarning</span>();
 <span class="hljs-comment">// Emits: (node: 56339) Warning: Only warn once!</span>
-emitMyWarning();
+<span class="hljs-title function_">emitMyWarning</span>();
 <span class="hljs-comment">// Emits nothing</span></code></pre>
-<h2><code>process.env</code><span><a class="mark" href="#process_process_env" id="process_process_env">#</a></span></h2>
+</section><section><h3><code>process.env</code><span><a class="mark" href="#process_process_env" id="process_process_env">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1155,27 +1205,27 @@ See <a href="http://man7.org/linux/man-pages/man7/environ.7.html"><code>environ(
 reflected outside the Node.js process, or (unless explicitly requested)
 to other <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.
 In other words, the following example would not work:</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node -e <span class="hljs-string">'process.env.foo = "bar"'</span> &#x26;&#x26; <span class="hljs-built_in">echo</span> <span class="hljs-variable">$foo</span></span></code></pre>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node -e <span class="hljs-string">'process.env.foo = "bar"'</span> &#x26;&#x26; <span class="hljs-built_in">echo</span> <span class="hljs-variable">$foo</span></span></code></pre>
 <p>While the following will:</p>
-<pre><code class="language-js">process.env.foo = <span class="hljs-string">'bar'</span>;
-<span class="hljs-built_in">console</span>.log(process.env.foo);</code></pre>
+<pre><code class="language-js">process.<span class="hljs-property">env</span>.<span class="hljs-property">foo</span> = <span class="hljs-string">'bar'</span>;
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">foo</span>);</code></pre>
 <p>Assigning a property on <code>process.env</code> will implicitly convert the value
 to a string. <strong>This behavior is deprecated.</strong> Future versions of Node.js may
 throw an error when the value is not a string, number, or boolean.</p>
-<pre><code class="language-js">process.env.test = <span class="hljs-literal">null</span>;
-<span class="hljs-built_in">console</span>.log(process.env.test);
+<pre><code class="language-js">process.<span class="hljs-property">env</span>.<span class="hljs-property">test</span> = <span class="hljs-literal">null</span>;
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">test</span>);
 <span class="hljs-comment">// => 'null'</span>
-process.env.test = <span class="hljs-literal">undefined</span>;
-<span class="hljs-built_in">console</span>.log(process.env.test);
+process.<span class="hljs-property">env</span>.<span class="hljs-property">test</span> = <span class="hljs-literal">undefined</span>;
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">test</span>);
 <span class="hljs-comment">// => 'undefined'</span></code></pre>
 <p>Use <code>delete</code> to delete a property from <code>process.env</code>.</p>
-<pre><code class="language-js">process.env.TEST = <span class="hljs-number">1</span>;
-<span class="hljs-keyword">delete</span> process.env.TEST;
-<span class="hljs-built_in">console</span>.log(process.env.TEST);
+<pre><code class="language-js">process.<span class="hljs-property">env</span>.<span class="hljs-property">TEST</span> = <span class="hljs-number">1</span>;
+<span class="hljs-keyword">delete</span> process.<span class="hljs-property">env</span>.<span class="hljs-property">TEST</span>;
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">TEST</span>);
 <span class="hljs-comment">// => undefined</span></code></pre>
 <p>On Windows operating systems, environment variables are case-insensitive.</p>
-<pre><code class="language-js">process.env.TEST = <span class="hljs-number">1</span>;
-<span class="hljs-built_in">console</span>.log(process.env.test);
+<pre><code class="language-js">process.<span class="hljs-property">env</span>.<span class="hljs-property">TEST</span> = <span class="hljs-number">1</span>;
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">test</span>);
 <span class="hljs-comment">// => 1</span></code></pre>
 <p>Unless explicitly specified when creating a <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> instance,
 each <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> thread has its own copy of <code>process.env</code>, based on its
@@ -1183,7 +1233,7 @@ parent thread’s <code>process.env</code>, or whatever was specified as the <co
 to the <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> constructor. Changes to <code>process.env</code> will not be visible
 across <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads, and only the main thread can make changes that
 are visible to the operating system or to native add-ons.</p>
-<h2><code>process.execArgv</code><span><a class="mark" href="#process_process_execargv" id="process_process_execargv">#</a></span></h2>
+</section><section><h3><code>process.execArgv</code><span><a class="mark" href="#process_process_execargv" id="process_process_execargv">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.7</span>
 </div>
@@ -1196,7 +1246,7 @@ appear in the array returned by the <a href="#process_process_argv"><code>proces
 include the Node.js executable, the name of the script, or any options following
 the script name. These options are useful in order to spawn child processes with
 the same execution environment as the parent.</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node --harmony script.js --version</span></code></pre>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node --harmony script.js --version</span></code></pre>
 <p>Results in <code>process.execArgv</code>:</p>
 <!-- eslint-disable semi -->
 <pre><code class="language-js">[<span class="hljs-string">'--harmony'</span>]</code></pre>
@@ -1205,7 +1255,7 @@ the same execution environment as the parent.</p>
 <pre><code class="language-js">[<span class="hljs-string">'/usr/local/bin/node'</span>, <span class="hljs-string">'script.js'</span>, <span class="hljs-string">'--version'</span>]</code></pre>
 <p>Refer to <a href="worker_threads.html#worker_threads_new_worker_filename_options"><code>Worker</code> constructor</a> for the detailed behavior of worker
 threads with this property.</p>
-<h2><code>process.execPath</code><span><a class="mark" href="#process_process_execpath" id="process_process_execpath">#</a></span></h2>
+</section><section><h3><code>process.execPath</code><span><a class="mark" href="#process_process_execpath" id="process_process_execpath">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.100</span>
 </div>
@@ -1216,7 +1266,7 @@ threads with this property.</p>
 that started the Node.js process. Symbolic links, if any, are resolved.</p>
 <!-- eslint-disable semi -->
 <pre><code class="language-js"><span class="hljs-string">'/usr/local/bin/node'</span></code></pre>
-<h2><code>process.exit([code])</code><span><a class="mark" href="#process_process_exit_code" id="process_process_exit_code">#</a></span></h2>
+</section><section><h3><code>process.exit([code])</code><span><a class="mark" href="#process_process_exit_code" id="process_process_exit_code">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.13</span>
 </div>
@@ -1229,7 +1279,7 @@ either the 'success' code <code>0</code> or the value of <code>process.exitCode<
 set. Node.js will not terminate until all the <a href="#process_event_exit"><code>'exit'</code></a> event listeners are
 called.</p>
 <p>To exit with a 'failure' code:</p>
-<pre><code class="language-js">process.exit(<span class="hljs-number">1</span>);</code></pre>
+<pre><code class="language-js">process.<span class="hljs-title function_">exit</span>(<span class="hljs-number">1</span>);</code></pre>
 <p>The shell that executed Node.js should see the exit code as <code>1</code>.</p>
 <p>Calling <code>process.exit()</code> will force the process to exit as quickly as possible
 even if there are still asynchronous operations pending that have not yet
@@ -1243,9 +1293,9 @@ tell the process which exit code to use when the process exits gracefully.</p>
 <code>process.exit()</code> method that could lead to data printed to stdout being
 truncated and lost:</p>
 <pre><code class="language-js"><span class="hljs-comment">// This is an example of what *not* to do:</span>
-<span class="hljs-keyword">if</span> (someConditionNotMet()) {
-  printUsageToStdout();
-  process.exit(<span class="hljs-number">1</span>);
+<span class="hljs-keyword">if</span> (<span class="hljs-title function_">someConditionNotMet</span>()) {
+  <span class="hljs-title function_">printUsageToStdout</span>();
+  process.<span class="hljs-title function_">exit</span>(<span class="hljs-number">1</span>);
 }</code></pre>
 <p>The reason this is problematic is because writes to <code>process.stdout</code> in Node.js
 are sometimes <em>asynchronous</em> and may occur over multiple ticks of the Node.js
@@ -1256,16 +1306,16 @@ event loop. Calling <code>process.exit()</code>, however, forces the process to 
 scheduling any additional work for the event loop:</p>
 <pre><code class="language-js"><span class="hljs-comment">// How to properly set the exit code while letting</span>
 <span class="hljs-comment">// the process exit gracefully.</span>
-<span class="hljs-keyword">if</span> (someConditionNotMet()) {
-  printUsageToStdout();
-  process.exitCode = <span class="hljs-number">1</span>;
+<span class="hljs-keyword">if</span> (<span class="hljs-title function_">someConditionNotMet</span>()) {
+  <span class="hljs-title function_">printUsageToStdout</span>();
+  process.<span class="hljs-property">exitCode</span> = <span class="hljs-number">1</span>;
 }</code></pre>
 <p>If it is necessary to terminate the Node.js process due to an error condition,
 throwing an <em>uncaught</em> error and allowing the process to terminate accordingly
 is safer than calling <code>process.exit()</code>.</p>
 <p>In <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads, this function stops the current thread rather
 than the current process.</p>
-<h2><code>process.exitCode</code><span><a class="mark" href="#process_process_exitcode" id="process_process_exitcode">#</a></span></h2>
+</section><section><h3><code>process.exitCode</code><span><a class="mark" href="#process_process_exitcode" id="process_process_exitcode">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.11.8</span>
 </div>
@@ -1277,18 +1327,18 @@ exits gracefully, or is exited via <a href="#process_process_exit_code"><code>pr
 a code.</p>
 <p>Specifying a code to <a href="#process_process_exit_code"><code>process.exit(code)</code></a> will override any
 previous setting of <code>process.exitCode</code>.</p>
-<h2><code>process.getegid()</code><span><a class="mark" href="#process_process_getegid" id="process_process_getegid">#</a></span></h2>
+</section><section><h3><code>process.getegid()</code><span><a class="mark" href="#process_process_getegid" id="process_process_getegid">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v2.0.0</span>
 </div>
 <p>The <code>process.getegid()</code> method returns the numerical effective group identity
 of the Node.js process. (See <a href="http://man7.org/linux/man-pages/man2/getegid.2.html"><code>getegid(2)</code></a>.)</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.getegid) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current gid: <span class="hljs-subst">${process.getegid()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">getegid</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current gid: <span class="hljs-subst">${process.getegid()}</span>`</span>);
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).</p>
-<h2><code>process.geteuid()</code><span><a class="mark" href="#process_process_geteuid" id="process_process_geteuid">#</a></span></h2>
+</section><section><h3><code>process.geteuid()</code><span><a class="mark" href="#process_process_geteuid" id="process_process_geteuid">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v2.0.0</span>
 </div>
@@ -1297,12 +1347,12 @@ Android).</p>
 </ul>
 <p>The <code>process.geteuid()</code> method returns the numerical effective user identity of
 the process. (See <a href="http://man7.org/linux/man-pages/man2/geteuid.2.html"><code>geteuid(2)</code></a>.)</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.geteuid) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.geteuid()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">geteuid</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.geteuid()}</span>`</span>);
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).</p>
-<h2><code>process.getgid()</code><span><a class="mark" href="#process_process_getgid" id="process_process_getgid">#</a></span></h2>
+</section><section><h3><code>process.getgid()</code><span><a class="mark" href="#process_process_getgid" id="process_process_getgid">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.31</span>
 </div>
@@ -1311,12 +1361,12 @@ Android).</p>
 </ul>
 <p>The <code>process.getgid()</code> method returns the numerical group identity of the
 process. (See <a href="http://man7.org/linux/man-pages/man2/getgid.2.html"><code>getgid(2)</code></a>.)</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.getgid) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current gid: <span class="hljs-subst">${process.getgid()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">getgid</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current gid: <span class="hljs-subst">${process.getgid()}</span>`</span>);
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).</p>
-<h2><code>process.getgroups()</code><span><a class="mark" href="#process_process_getgroups" id="process_process_getgroups">#</a></span></h2>
+</section><section><h3><code>process.getgroups()</code><span><a class="mark" href="#process_process_getgroups" id="process_process_getgroups">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.9.4</span>
 </div>
@@ -1326,12 +1376,12 @@ Android).</p>
 <p>The <code>process.getgroups()</code> method returns an array with the supplementary group
 IDs. POSIX leaves it unspecified if the effective group ID is included but
 Node.js ensures it always is.</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.getgroups) {
-  <span class="hljs-built_in">console</span>.log(process.getgroups()); <span class="hljs-comment">// [ 16, 21, 297 ]</span>
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">getgroups</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-title function_">getgroups</span>()); <span class="hljs-comment">// [ 16, 21, 297 ]</span>
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).</p>
-<h2><code>process.getuid()</code><span><a class="mark" href="#process_process_getuid" id="process_process_getuid">#</a></span></h2>
+</section><section><h3><code>process.getuid()</code><span><a class="mark" href="#process_process_getuid" id="process_process_getuid">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.28</span>
 </div>
@@ -1340,12 +1390,12 @@ Android).</p>
 </ul>
 <p>The <code>process.getuid()</code> method returns the numeric user identity of the process.
 (See <a href="http://man7.org/linux/man-pages/man2/getuid.2.html"><code>getuid(2)</code></a>.)</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.getuid) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.getuid()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">getuid</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.getuid()}</span>`</span>);
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).</p>
-<h2><code>process.hasUncaughtExceptionCaptureCallback()</code><span><a class="mark" href="#process_process_hasuncaughtexceptioncapturecallback" id="process_process_hasuncaughtexceptioncapturecallback">#</a></span></h2>
+</section><section><h3><code>process.hasUncaughtExceptionCaptureCallback()</code><span><a class="mark" href="#process_process_hasuncaughtexceptioncapturecallback" id="process_process_hasuncaughtexceptioncapturecallback">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v9.3.0</span>
 </div>
@@ -1353,11 +1403,12 @@ Android).</p>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>Indicates whether a callback has been set using
-<a href="process.html#process_process_setuncaughtexceptioncapturecallback_fn"><code>process.setUncaughtExceptionCaptureCallback()</code></a>.</p>
-<h2><code>process.hrtime([time])</code><span><a class="mark" href="#process_process_hrtime_time" id="process_process_hrtime_time">#</a></span></h2>
+<a href="#process_process_setuncaughtexceptioncapturecallback_fn"><code>process.setUncaughtExceptionCaptureCallback()</code></a>.</p>
+</section><section><h3><code>process.hrtime([time])</code><span><a class="mark" href="#process_process_hrtime_time" id="process_process_hrtime_time">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.6</span>
 </div>
+<p></p><div class="api_stability api_stability_3"><a href="documentation.html#documentation_stability_index">Stability: 3</a> - Legacy. Use <a href="#process_process_hrtime_bigint"><code>process.hrtime.bigint()</code></a> instead.</div><p></p>
 <ul>
 <li><code>time</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;integer[]></a> The result of a previous call to <code>process.hrtime()</code></li>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;integer[]></a></li>
@@ -1375,18 +1426,18 @@ user-defined array instead of the result of a previous call to
 <p>These times are relative to an arbitrary time in the
 past, and not related to the time of day and therefore not subject to clock
 drift. The primary use is for measuring performance between intervals:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> NS_PER_SEC = <span class="hljs-number">1e9</span>;
-<span class="hljs-keyword">const</span> time = process.hrtime();
+<pre><code class="language-js"><span class="hljs-keyword">const</span> <span class="hljs-variable constant_">NS_PER_SEC</span> = <span class="hljs-number">1e9</span>;
+<span class="hljs-keyword">const</span> time = process.<span class="hljs-title function_">hrtime</span>();
 <span class="hljs-comment">// [ 1800216, 25 ]</span>
 
 <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =></span> {
-  <span class="hljs-keyword">const</span> diff = process.hrtime(time);
+  <span class="hljs-keyword">const</span> diff = process.<span class="hljs-title function_">hrtime</span>(time);
   <span class="hljs-comment">// [ 1, 552 ]</span>
 
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Benchmark took <span class="hljs-subst">${diff[<span class="hljs-number">0</span>] * NS_PER_SEC + diff[<span class="hljs-number">1</span>]}</span> nanoseconds`</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Benchmark took <span class="hljs-subst">${diff[<span class="hljs-number">0</span>] * NS_PER_SEC + diff[<span class="hljs-number">1</span>]}</span> nanoseconds`</span>);
   <span class="hljs-comment">// Benchmark took 1000000552 nanoseconds</span>
 }, <span class="hljs-number">1000</span>);</code></pre>
-<h2><code>process.hrtime.bigint()</code><span><a class="mark" href="#process_process_hrtime_bigint" id="process_process_hrtime_bigint">#</a></span></h2>
+</section><section><h3><code>process.hrtime.bigint()</code><span><a class="mark" href="#process_process_hrtime_bigint" id="process_process_hrtime_bigint">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v10.7.0</span>
 </div>
@@ -1398,17 +1449,17 @@ current high-resolution real time in nanoseconds as a <code>bigint</code>.</p>
 <p>Unlike <a href="#process_process_hrtime_time"><code>process.hrtime()</code></a>, it does not support an additional <code>time</code>
 argument since the difference can just be computed directly
 by subtraction of the two <code>bigint</code>s.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> start = process.hrtime.bigint();
+<pre><code class="language-js"><span class="hljs-keyword">const</span> start = process.<span class="hljs-property">hrtime</span>.<span class="hljs-title function_">bigint</span>();
 <span class="hljs-comment">// 191051479007711n</span>
 
 <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =></span> {
-  <span class="hljs-keyword">const</span> end = process.hrtime.bigint();
+  <span class="hljs-keyword">const</span> end = process.<span class="hljs-property">hrtime</span>.<span class="hljs-title function_">bigint</span>();
   <span class="hljs-comment">// 191052633396993n</span>
 
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Benchmark took <span class="hljs-subst">${end - start}</span> nanoseconds`</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Benchmark took <span class="hljs-subst">${end - start}</span> nanoseconds`</span>);
   <span class="hljs-comment">// Benchmark took 1154389282 nanoseconds</span>
 }, <span class="hljs-number">1000</span>);</code></pre>
-<h2><code>process.initgroups(user, extraGroup)</code><span><a class="mark" href="#process_process_initgroups_user_extragroup" id="process_process_initgroups_user_extragroup">#</a></span></h2>
+</section><section><h3><code>process.initgroups(user, extraGroup)</code><span><a class="mark" href="#process_process_initgroups_user_extragroup" id="process_process_initgroups_user_extragroup">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.9.4</span>
 </div>
@@ -1421,15 +1472,15 @@ the group access list, using all groups of which the user is a member. This is
 a privileged operation that requires that the Node.js process either have <code>root</code>
 access or the <code>CAP_SETGID</code> capability.</p>
 <p>Use care when dropping privileges:</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(process.getgroups());         <span class="hljs-comment">// [ 0 ]</span>
-process.initgroups(<span class="hljs-string">'nodeuser'</span>, <span class="hljs-number">1000</span>);     <span class="hljs-comment">// switch user</span>
-<span class="hljs-built_in">console</span>.log(process.getgroups());         <span class="hljs-comment">// [ 27, 30, 46, 1000, 0 ]</span>
-process.setgid(<span class="hljs-number">1000</span>);                     <span class="hljs-comment">// drop root gid</span>
-<span class="hljs-built_in">console</span>.log(process.getgroups());         <span class="hljs-comment">// [ 27, 30, 46, 1000 ]</span></code></pre>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-title function_">getgroups</span>());         <span class="hljs-comment">// [ 0 ]</span>
+process.<span class="hljs-title function_">initgroups</span>(<span class="hljs-string">'nodeuser'</span>, <span class="hljs-number">1000</span>);     <span class="hljs-comment">// switch user</span>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-title function_">getgroups</span>());         <span class="hljs-comment">// [ 27, 30, 46, 1000, 0 ]</span>
+process.<span class="hljs-title function_">setgid</span>(<span class="hljs-number">1000</span>);                     <span class="hljs-comment">// drop root gid</span>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-title function_">getgroups</span>());         <span class="hljs-comment">// [ 27, 30, 46, 1000 ]</span></code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).
 This feature is not available in <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.</p>
-<h2><code>process.kill(pid[, signal])</code><span><a class="mark" href="#process_process_kill_pid_signal" id="process_process_kill_pid_signal">#</a></span></h2>
+</section><section><h3><code>process.kill(pid[, signal])</code><span><a class="mark" href="#process_process_kill_pid_signal" id="process_process_kill_pid_signal">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.0.6</span>
 </div>
@@ -1449,19 +1500,19 @@ group.</p>
 <p>Even though the name of this function is <code>process.kill()</code>, it is really just a
 signal sender, like the <code>kill</code> system call. The signal sent may do something
 other than kill the target process.</p>
-<pre><code class="language-js">process.on(<span class="hljs-string">'SIGHUP'</span>, <span class="hljs-function">() =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Got SIGHUP signal.'</span>);
+<pre><code class="language-js">process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'SIGHUP'</span>, <span class="hljs-function">() =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Got SIGHUP signal.'</span>);
 });
 
 <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Exiting.'</span>);
-  process.exit(<span class="hljs-number">0</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Exiting.'</span>);
+  process.<span class="hljs-title function_">exit</span>(<span class="hljs-number">0</span>);
 }, <span class="hljs-number">100</span>);
 
-process.kill(process.pid, <span class="hljs-string">'SIGHUP'</span>);</code></pre>
+process.<span class="hljs-title function_">kill</span>(process.<span class="hljs-property">pid</span>, <span class="hljs-string">'SIGHUP'</span>);</code></pre>
 <p>When <code>SIGUSR1</code> is received by a Node.js process, Node.js will start the
 debugger. See <a href="#process_signal_events">Signal Events</a>.</p>
-<h2><code>process.mainModule</code><span><a class="mark" href="#process_process_mainmodule" id="process_process_mainmodule">#</a></span></h2>
+</section><section><h3><code>process.mainModule</code><span><a class="mark" href="#process_process_mainmodule" id="process_process_mainmodule">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.17</span><span>Deprecated since: v14.0.0</span>
 </div>
@@ -1476,7 +1527,7 @@ modules that were required before the change occurred. Generally, it's
 safe to assume that the two refer to the same module.</p>
 <p>As with <a href="modules.html#modules_accessing_the_main_module"><code>require.main</code></a>, <code>process.mainModule</code> will be <code>undefined</code> if there
 is no entry script.</p>
-<h2><code>process.memoryUsage()</code><span><a class="mark" href="#process_process_memoryusage" id="process_process_memoryusage">#</a></span></h2>
+</section><section><h3><code>process.memoryUsage()</code><span><a class="mark" href="#process_process_memoryusage" id="process_process_memoryusage">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1501,19 +1552,17 @@ is no entry script.</p>
 </ul>
 </li>
 </ul>
-<p>The <code>process.memoryUsage()</code> method returns an object describing the memory usage
-of the Node.js process measured in bytes.</p>
-<p>For example, the code:</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(process.memoryUsage());</code></pre>
-<p>Will generate:</p>
-<!-- eslint-skip -->
-<pre><code class="language-js">{
-  <span class="hljs-attr">rss</span>: <span class="hljs-number">4935680</span>,
-  <span class="hljs-attr">heapTotal</span>: <span class="hljs-number">1826816</span>,
-  <span class="hljs-attr">heapUsed</span>: <span class="hljs-number">650472</span>,
-  <span class="hljs-attr">external</span>: <span class="hljs-number">49879</span>,
-  <span class="hljs-attr">arrayBuffers</span>: <span class="hljs-number">9386</span>
-}</code></pre>
+<p>Returns an object describing the memory usage of the Node.js process measured in
+bytes.</p>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-title function_">memoryUsage</span>());
+<span class="hljs-comment">// Prints:</span>
+<span class="hljs-comment">// {</span>
+<span class="hljs-comment">//  rss: 4935680,</span>
+<span class="hljs-comment">//  heapTotal: 1826816,</span>
+<span class="hljs-comment">//  heapUsed: 650472,</span>
+<span class="hljs-comment">//  external: 49879,</span>
+<span class="hljs-comment">//  arrayBuffers: 9386</span>
+<span class="hljs-comment">// }</span></code></pre>
 <ul>
 <li><code>heapTotal</code> and <code>heapUsed</code> refer to V8's memory usage.</li>
 <li><code>external</code> refers to the memory usage of C++ objects bound to JavaScript
@@ -1529,7 +1578,26 @@ may not be tracked in that case.</li>
 </ul>
 <p>When using <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads, <code>rss</code> will be a value that is valid for the
 entire process, while the other fields will only refer to the current thread.</p>
-<h2><code>process.nextTick(callback[, ...args])</code><span><a class="mark" href="#process_process_nexttick_callback_args" id="process_process_nexttick_callback_args">#</a></span></h2>
+<p>The <code>process.memoryUsage()</code> method iterates over each page to gather
+information about memory usage which might be slow depending on the
+program memory allocations.</p>
+</section><section><h3><code>process.memoryUsage.rss()</code><span><a class="mark" href="#process_process_memoryusage_rss" id="process_process_memoryusage_rss">#</a></span></h3>
+<div class="api_metadata">
+<span>Added in: v14.18.0</span>
+</div>
+<ul>
+<li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;integer></a></li>
+</ul>
+<p>The <code>process.memoryUsage.rss()</code> method returns an integer representing the
+Resident Set Size (RSS) in bytes.</p>
+<p>The Resident Set Size, is the amount of space occupied in the main
+memory device (that is a subset of the total allocated memory) for the
+process, including all C++ and JavaScript objects and code.</p>
+<p>This is the same value as the <code>rss</code> property provided by <code>process.memoryUsage()</code>
+but <code>process.memoryUsage.rss()</code> is faster.</p>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">memoryUsage</span>.<span class="hljs-title function_">rss</span>());
+<span class="hljs-comment">// 35655680</span></code></pre>
+</section><section><h3><code>process.nextTick(callback[, ...args])</code><span><a class="mark" href="#process_process_nexttick_callback_args" id="process_process_nexttick_callback_args">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1550,11 +1618,11 @@ fully drained after the current operation on the JavaScript stack runs to
 completion and before the event loop is allowed to continue. It's possible to
 create an infinite loop if one were to recursively call <code>process.nextTick()</code>.
 See the <a href="https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/#process-nexttick">Event Loop</a> guide for more background.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'start'</span>);
-process.nextTick(<span class="hljs-function">() =></span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'nextTick callback'</span>);
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'start'</span>);
+process.<span class="hljs-title function_">nextTick</span>(<span class="hljs-function">() =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'nextTick callback'</span>);
 });
-<span class="hljs-built_in">console</span>.log(<span class="hljs-string">'scheduled'</span>);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'scheduled'</span>);
 <span class="hljs-comment">// Output:</span>
 <span class="hljs-comment">// start</span>
 <span class="hljs-comment">// scheduled</span>
@@ -1562,48 +1630,97 @@ process.nextTick(<span class="hljs-function">() =></span> {
 <p>This is important when developing APIs in order to give users the opportunity
 to assign event handlers <em>after</em> an object has been constructed but before any
 I/O has occurred:</p>
-<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">MyThing</span>(<span class="hljs-params">options</span>) </span>{
-  <span class="hljs-built_in">this</span>.setupOptions(options);
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">MyThing</span>(<span class="hljs-params">options</span>) {
+  <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">setupOptions</span>(options);
 
-  process.nextTick(<span class="hljs-function">() =></span> {
-    <span class="hljs-built_in">this</span>.startDoingStuff();
+  process.<span class="hljs-title function_">nextTick</span>(<span class="hljs-function">() =></span> {
+    <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">startDoingStuff</span>();
   });
 }
 
-<span class="hljs-keyword">const</span> thing = <span class="hljs-keyword">new</span> MyThing();
-thing.getReadyForStuff();
+<span class="hljs-keyword">const</span> thing = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MyThing</span>();
+thing.<span class="hljs-title function_">getReadyForStuff</span>();
 
 <span class="hljs-comment">// thing.startDoingStuff() gets called now, not before.</span></code></pre>
 <p>It is very important for APIs to be either 100% synchronous or 100%
 asynchronous. Consider this example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// WARNING!  DO NOT USE!  BAD UNSAFE HAZARD!</span>
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">maybeSync</span>(<span class="hljs-params">arg, cb</span>) </span>{
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">maybeSync</span>(<span class="hljs-params">arg, cb</span>) {
   <span class="hljs-keyword">if</span> (arg) {
-    cb();
+    <span class="hljs-title function_">cb</span>();
     <span class="hljs-keyword">return</span>;
   }
 
-  fs.stat(<span class="hljs-string">'file'</span>, cb);
+  fs.<span class="hljs-title function_">stat</span>(<span class="hljs-string">'file'</span>, cb);
 }</code></pre>
 <p>This API is hazardous because in the following case:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> maybeTrue = <span class="hljs-built_in">Math</span>.random() > <span class="hljs-number">0.5</span>;
+<pre><code class="language-js"><span class="hljs-keyword">const</span> maybeTrue = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">random</span>() > <span class="hljs-number">0.5</span>;
 
-maybeSync(maybeTrue, <span class="hljs-function">() =></span> {
-  foo();
+<span class="hljs-title function_">maybeSync</span>(maybeTrue, <span class="hljs-function">() =></span> {
+  <span class="hljs-title function_">foo</span>();
 });
 
-bar();</code></pre>
+<span class="hljs-title function_">bar</span>();</code></pre>
 <p>It is not clear whether <code>foo()</code> or <code>bar()</code> will be called first.</p>
 <p>The following approach is much better:</p>
-<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">definitelyAsync</span>(<span class="hljs-params">arg, cb</span>) </span>{
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">definitelyAsync</span>(<span class="hljs-params">arg, cb</span>) {
   <span class="hljs-keyword">if</span> (arg) {
-    process.nextTick(cb);
+    process.<span class="hljs-title function_">nextTick</span>(cb);
     <span class="hljs-keyword">return</span>;
   }
 
-  fs.stat(<span class="hljs-string">'file'</span>, cb);
+  fs.<span class="hljs-title function_">stat</span>(<span class="hljs-string">'file'</span>, cb);
 }</code></pre>
-<h2><code>process.noDeprecation</code><span><a class="mark" href="#process_process_nodeprecation" id="process_process_nodeprecation">#</a></span></h2>
+<h4>When to use <code>queueMicrotask()</code> vs. <code>process.nextTick()</code><span><a class="mark" href="#process_when_to_use_queuemicrotask_vs_process_nexttick" id="process_when_to_use_queuemicrotask_vs_process_nexttick">#</a></span></h4>
+<p>The <a href="globals.html#globals_queuemicrotask_callback"><code>queueMicrotask()</code></a> API is an alternative to <code>process.nextTick()</code> that
+also defers execution of a function using the same microtask queue used to
+execute the then, catch, and finally handlers of resolved promises. Within
+Node.js, every time the "next tick queue" is drained, the microtask queue
+is drained immediately after.</p>
+<pre><code class="language-js"><span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">resolve</span>().<span class="hljs-title function_">then</span>(<span class="hljs-function">() =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-number">2</span>));
+<span class="hljs-title function_">queueMicrotask</span>(<span class="hljs-function">() =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-number">3</span>));
+process.<span class="hljs-title function_">nextTick</span>(<span class="hljs-function">() =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-number">1</span>));
+<span class="hljs-comment">// Output:</span>
+<span class="hljs-comment">// 1</span>
+<span class="hljs-comment">// 2</span>
+<span class="hljs-comment">// 3</span></code></pre>
+<p>For <em>most</em> userland use cases, the <code>queueMicrotask()</code> API provides a portable
+and reliable mechanism for deferring execution that works across multiple
+JavaScript platform environments and should be favored over <code>process.nextTick()</code>.
+In simple scenarios, <code>queueMicrotask()</code> can be a drop-in replacement for
+<code>process.nextTick()</code>.</p>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'start'</span>);
+<span class="hljs-title function_">queueMicrotask</span>(<span class="hljs-function">() =></span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'microtask callback'</span>);
+});
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'scheduled'</span>);
+<span class="hljs-comment">// Output:</span>
+<span class="hljs-comment">// start</span>
+<span class="hljs-comment">// scheduled</span>
+<span class="hljs-comment">// microtask callback</span></code></pre>
+<p>One note-worthy difference between the two APIs is that <code>process.nextTick()</code>
+allows specifying additional values that will be passed as arguments to the
+deferred function when it is called. Achieving the same result with
+<code>queueMicrotask()</code> requires using either a closure or a bound function:</p>
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">deferred</span>(<span class="hljs-params">a, b</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'microtask'</span>, a + b);
+}
+
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'start'</span>);
+<span class="hljs-title function_">queueMicrotask</span>(deferred.<span class="hljs-title function_">bind</span>(<span class="hljs-literal">undefined</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>));
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'scheduled'</span>);
+<span class="hljs-comment">// Output:</span>
+<span class="hljs-comment">// start</span>
+<span class="hljs-comment">// scheduled</span>
+<span class="hljs-comment">// microtask 3</span></code></pre>
+<p>There are minor differences in the way errors raised from within the next tick
+queue and microtask queue are handled. Errors thrown within a queued microtask
+callback should be handled within the queued callback when possible. If they are
+not, the <code>process.on('uncaughtException')</code> event handler can be used to capture
+and handle the errors.</p>
+<p>When in doubt, unless the specific capabilities of <code>process.nextTick()</code> are
+needed, use <code>queueMicrotask()</code>.</p>
+</section><section><h3><code>process.noDeprecation</code><span><a class="mark" href="#process_process_nodeprecation" id="process_process_nodeprecation">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.8.0</span>
 </div>
@@ -1615,7 +1732,7 @@ flag is set on the current Node.js process. See the documentation for
 the <a href="#process_event_warning"><code>'warning'</code> event</a> and the
 <a href="#process_process_emitwarning_warning_type_code_ctor"><code>emitWarning()</code> method</a> for more information about this
 flag's behavior.</p>
-<h2><code>process.pid</code><span><a class="mark" href="#process_process_pid" id="process_process_pid">#</a></span></h2>
+</section><section><h3><code>process.pid</code><span><a class="mark" href="#process_process_pid" id="process_process_pid">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.15</span>
 </div>
@@ -1623,8 +1740,8 @@ flag's behavior.</p>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;integer></a></li>
 </ul>
 <p>The <code>process.pid</code> property returns the PID of the process.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`This process is pid <span class="hljs-subst">${process.pid}</span>`</span>);</code></pre>
-<h2><code>process.platform</code><span><a class="mark" href="#process_process_platform" id="process_process_platform">#</a></span></h2>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`This process is pid <span class="hljs-subst">${process.pid}</span>`</span>);</code></pre>
+</section><section><h3><code>process.platform</code><span><a class="mark" href="#process_process_platform" id="process_process_platform">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.16</span>
 </div>
@@ -1643,11 +1760,11 @@ system platform on which the Node.js process is running.</p>
 <li><code>'sunos'</code></li>
 <li><code>'win32'</code></li>
 </ul>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`This platform is <span class="hljs-subst">${process.platform}</span>`</span>);</code></pre>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`This platform is <span class="hljs-subst">${process.platform}</span>`</span>);</code></pre>
 <p>The value <code>'android'</code> may also be returned if the Node.js is built on the
 Android operating system. However, Android support in Node.js
-<a href="https://github.com/nodejs/node/blob/master/BUILDING.md#androidandroid-based-devices-eg-firefox-os">is experimental</a>.</p>
-<h2><code>process.ppid</code><span><a class="mark" href="#process_process_ppid" id="process_process_ppid">#</a></span></h2>
+<a href="https://github.com/nodejs/node/blob/HEAD/BUILDING.md#androidandroid-based-devices-eg-firefox-os">is experimental</a>.</p>
+</section><section><h3><code>process.ppid</code><span><a class="mark" href="#process_process_ppid" id="process_process_ppid">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v9.2.0, v8.10.0, v6.13.0</span>
 </div>
@@ -1656,8 +1773,8 @@ Android operating system. However, Android support in Node.js
 </ul>
 <p>The <code>process.ppid</code> property returns the PID of the parent of the
 current process.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`The parent process is pid <span class="hljs-subst">${process.ppid}</span>`</span>);</code></pre>
-<h2><code>process.release</code><span><a class="mark" href="#process_process_release" id="process_process_release">#</a></span></h2>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`The parent process is pid <span class="hljs-subst">${process.ppid}</span>`</span>);</code></pre>
+</section><section><h3><code>process.release</code><span><a class="mark" href="#process_process_release" id="process_process_release">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1691,14 +1808,13 @@ builds of Node.js and will be missing on all other platforms.</em></li>
 <li><code>lts</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> a string label identifying the <a href="https://github.com/nodejs/Release">LTS</a> label for this release.
 This property only exists for LTS releases and is <code>undefined</code> for all other
 release types, including <em>Current</em> releases.
-Valid values include the LTS Release Codenames (including those
-that are no longer supported). A non-exhaustive example of
-these codenames includes:
+Valid values include the LTS Release code names (including those
+that are no longer supported).
 <ul>
 <li><code>'Dubnium'</code> for the 10.x LTS line beginning with 10.13.0.</li>
 <li><code>'Erbium'</code> for the 12.x LTS line beginning with 12.13.0.</li>
 </ul>
-For other LTS Release Codenames, see <a href="https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_ARCHIVE.md">Node.js Changelog Archive</a></li>
+For other LTS Release code names, see <a href="https://github.com/nodejs/node/blob/HEAD/doc/changelogs/CHANGELOG_ARCHIVE.md">Node.js Changelog Archive</a></li>
 </ul>
 <!-- eslint-skip -->
 <pre><code class="language-js">{
@@ -1711,7 +1827,7 @@ For other LTS Release Codenames, see <a href="https://github.com/nodejs/node/blo
 <p>In custom builds from non-release versions of the source tree, only the
 <code>name</code> property may be present. The additional properties should not be
 relied upon to exist.</p>
-<h2><code>process.report</code><span><a class="mark" href="#process_process_report" id="process_process_report">#</a></span></h2>
+</section><section><h3><code>process.report</code><span><a class="mark" href="#process_process_report" id="process_process_report">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1729,7 +1845,7 @@ relied upon to exist.</p>
 <p><code>process.report</code> is an object whose methods are used to generate diagnostic
 reports for the current process. Additional documentation is available in the
 <a href="report.html">report documentation</a>.</p>
-<h3><code>process.report.compact</code><span><a class="mark" href="#process_process_report_compact" id="process_process_report_compact">#</a></span></h3>
+<h4><code>process.report.compact</code><span><a class="mark" href="#process_process_report_compact" id="process_process_report_compact">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v13.12.0</span>
 </div>
@@ -1739,8 +1855,8 @@ reports for the current process. Additional documentation is available in the
 <p>Write reports in a compact format, single-line JSON, more easily consumable
 by log processing systems than the default multi-line format designed for
 human consumption.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Reports are compact? <span class="hljs-subst">${process.report.compact}</span>`</span>);</code></pre>
-<h3><code>process.report.directory</code><span><a class="mark" href="#process_process_report_directory" id="process_process_report_directory">#</a></span></h3>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Reports are compact? <span class="hljs-subst">${process.report.compact}</span>`</span>);</code></pre>
+<h4><code>process.report.directory</code><span><a class="mark" href="#process_process_report_directory" id="process_process_report_directory">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1758,8 +1874,8 @@ human consumption.</p>
 <p>Directory where the report is written. The default value is the empty string,
 indicating that reports are written to the current working directory of the
 Node.js process.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Report directory is <span class="hljs-subst">${process.report.directory}</span>`</span>);</code></pre>
-<h3><code>process.report.filename</code><span><a class="mark" href="#process_process_report_filename" id="process_process_report_filename">#</a></span></h3>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report directory is <span class="hljs-subst">${process.report.directory}</span>`</span>);</code></pre>
+<h4><code>process.report.filename</code><span><a class="mark" href="#process_process_report_filename" id="process_process_report_filename">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1777,8 +1893,8 @@ Node.js process.</p>
 <p>Filename where the report is written. If set to the empty string, the output
 filename will be comprised of a timestamp, PID, and sequence number. The default
 value is the empty string.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Report filename is <span class="hljs-subst">${process.report.filename}</span>`</span>);</code></pre>
-<h3><code>process.report.getReport([err])</code><span><a class="mark" href="#process_process_report_getreport_err" id="process_process_report_getreport_err">#</a></span></h3>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report filename is <span class="hljs-subst">${process.report.filename}</span>`</span>);</code></pre>
+<h4><code>process.report.getReport([err])</code><span><a class="mark" href="#process_process_report_getreport_err" id="process_process_report_getreport_err">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1797,25 +1913,32 @@ value is the empty string.</p>
 <p>Returns a JavaScript Object representation of a diagnostic report for the
 running process. The report's JavaScript stack trace is taken from <code>err</code>, if
 present.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> data = process.report.getReport();
-<span class="hljs-built_in">console</span>.log(data.header.nodejsVersion);
+<pre><code class="language-js"><span class="hljs-keyword">const</span> data = process.<span class="hljs-property">report</span>.<span class="hljs-title function_">getReport</span>();
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(data.<span class="hljs-property">header</span>.<span class="hljs-property">nodejsVersion</span>);
 
 <span class="hljs-comment">// Similar to process.report.writeReport()</span>
 <span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>);
-fs.writeFileSync(util.inspect(data), <span class="hljs-string">'my-report.log'</span>, <span class="hljs-string">'utf8'</span>);</code></pre>
+fs.<span class="hljs-title function_">writeFileSync</span>(<span class="hljs-string">'my-report.log'</span>, util.<span class="hljs-title function_">inspect</span>(data), <span class="hljs-string">'utf8'</span>);</code></pre>
 <p>Additional documentation is available in the <a href="report.html">report documentation</a>.</p>
-<h3><code>process.report.reportOnFatalError</code><span><a class="mark" href="#process_process_report_reportonfatalerror" id="process_process_report_reportonfatalerror">#</a></span></h3>
+<h4><code>process.report.reportOnFatalError</code><span><a class="mark" href="#process_process_report_reportonfatalerror" id="process_process_report_reportonfatalerror">#</a></span></h4>
 <div class="api_metadata">
-<span>Added in: v11.12.0</span>
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v14.17.0</td>
+<td><p>This API is no longer experimental.</p></td></tr>
+<tr><td>v11.12.0</td>
+<td><p><span>Added in: v11.12.0</span></p></td></tr>
+</tbody></table>
+</details>
 </div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#documentation_stability_index">Stability: 1</a> - Experimental</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>If <code>true</code>, a diagnostic report is generated on fatal errors, such as out of
 memory errors or failed C++ assertions.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Report on fatal error: <span class="hljs-subst">${process.report.reportOnFatalError}</span>`</span>);</code></pre>
-<h3><code>process.report.reportOnSignal</code><span><a class="mark" href="#process_process_report_reportonsignal" id="process_process_report_reportonsignal">#</a></span></h3>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on fatal error: <span class="hljs-subst">${process.report.reportOnFatalError}</span>`</span>);</code></pre>
+<h4><code>process.report.reportOnSignal</code><span><a class="mark" href="#process_process_report_reportonsignal" id="process_process_report_reportonsignal">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1832,8 +1955,8 @@ memory errors or failed C++ assertions.</p>
 </ul>
 <p>If <code>true</code>, a diagnostic report is generated when the process receives the
 signal specified by <code>process.report.signal</code>.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Report on signal: <span class="hljs-subst">${process.report.reportOnSignal}</span>`</span>);</code></pre>
-<h3><code>process.report.reportOnUncaughtException</code><span><a class="mark" href="#process_process_report_reportonuncaughtexception" id="process_process_report_reportonuncaughtexception">#</a></span></h3>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on signal: <span class="hljs-subst">${process.report.reportOnSignal}</span>`</span>);</code></pre>
+<h4><code>process.report.reportOnUncaughtException</code><span><a class="mark" href="#process_process_report_reportonuncaughtexception" id="process_process_report_reportonuncaughtexception">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1849,8 +1972,8 @@ signal specified by <code>process.report.signal</code>.</p>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>If <code>true</code>, a diagnostic report is generated on uncaught exception.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Report on exception: <span class="hljs-subst">${process.report.reportOnUncaughtException}</span>`</span>);</code></pre>
-<h3><code>process.report.signal</code><span><a class="mark" href="#process_process_report_signal" id="process_process_report_signal">#</a></span></h3>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on exception: <span class="hljs-subst">${process.report.reportOnUncaughtException}</span>`</span>);</code></pre>
+<h4><code>process.report.signal</code><span><a class="mark" href="#process_process_report_signal" id="process_process_report_signal">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1867,8 +1990,8 @@ signal specified by <code>process.report.signal</code>.</p>
 </ul>
 <p>The signal used to trigger the creation of a diagnostic report. Defaults to
 <code>'SIGUSR2'</code>.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Report signal: <span class="hljs-subst">${process.report.signal}</span>`</span>);</code></pre>
-<h3><code>process.report.writeReport([filename][, err])</code><span><a class="mark" href="#process_process_report_writereport_filename_err" id="process_process_report_writereport_filename_err">#</a></span></h3>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report signal: <span class="hljs-subst">${process.report.signal}</span>`</span>);</code></pre>
+<h4><code>process.report.writeReport([filename][, err])</code><span><a class="mark" href="#process_process_report_writereport_filename_err" id="process_process_report_writereport_filename_err">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -1897,9 +2020,9 @@ process, if unspecified.</p>
 <p>Writes a diagnostic report to a file. If <code>filename</code> is not provided, the default
 filename includes the date, time, PID, and a sequence number. The report's
 JavaScript stack trace is taken from <code>err</code>, if present.</p>
-<pre><code class="language-js">process.report.writeReport();</code></pre>
+<pre><code class="language-js">process.<span class="hljs-property">report</span>.<span class="hljs-title function_">writeReport</span>();</code></pre>
 <p>Additional documentation is available in the <a href="report.html">report documentation</a>.</p>
-<h2><code>process.resourceUsage()</code><span><a class="mark" href="#process_process_resourceusage" id="process_process_resourceusage">#</a></span></h2>
+</section><section><h3><code>process.resourceUsage()</code><span><a class="mark" href="#process_process_resourceusage" id="process_process_resourceusage">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v12.6.0</span>
 </div>
@@ -1950,7 +2073,7 @@ time slice. This field is not supported on Windows.</li>
 </ul>
 </li>
 </ul>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(process.resourceUsage());
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-title function_">resourceUsage</span>());
 <span class="hljs-comment">/*
   Will output:
   {
@@ -1972,7 +2095,7 @@ time slice. This field is not supported on Windows.</li>
     involuntaryContextSwitches: 1
   }
 */</span></code></pre>
-<h2><code>process.send(message[, sendHandle[, options]][, callback])</code><span><a class="mark" href="#process_process_send_message_sendhandle_options_callback" id="process_process_send_message_sendhandle_options_callback">#</a></span></h2>
+</section><section><h3><code>process.send(message[, sendHandle[, options]][, callback])</code><span><a class="mark" href="#process_process_send_message_sendhandle_options_callback" id="process_process_send_message_sendhandle_options_callback">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.5.9</span>
 </div>
@@ -1997,7 +2120,7 @@ used to send messages to the parent process. Messages will be received as a
 <code>undefined</code>.</p>
 <p>The message goes through serialization and parsing. The resulting message might
 not be the same as what is originally sent.</p>
-<h2><code>process.setegid(id)</code><span><a class="mark" href="#process_process_setegid_id" id="process_process_setegid_id">#</a></span></h2>
+</section><section><h3><code>process.setegid(id)</code><span><a class="mark" href="#process_process_setegid_id" id="process_process_setegid_id">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v2.0.0</span>
 </div>
@@ -2008,19 +2131,19 @@ not be the same as what is originally sent.</p>
 (See <a href="http://man7.org/linux/man-pages/man2/setegid.2.html"><code>setegid(2)</code></a>.) The <code>id</code> can be passed as either a numeric ID or a group
 name string. If a group name is specified, this method blocks while resolving
 the associated a numeric ID.</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.getegid &#x26;&#x26; process.setegid) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current gid: <span class="hljs-subst">${process.getegid()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">getegid</span> &#x26;&#x26; process.<span class="hljs-property">setegid</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current gid: <span class="hljs-subst">${process.getegid()}</span>`</span>);
   <span class="hljs-keyword">try</span> {
-    process.setegid(<span class="hljs-number">501</span>);
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`New gid: <span class="hljs-subst">${process.getegid()}</span>`</span>);
+    process.<span class="hljs-title function_">setegid</span>(<span class="hljs-number">501</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`New gid: <span class="hljs-subst">${process.getegid()}</span>`</span>);
   } <span class="hljs-keyword">catch</span> (err) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Failed to set gid: <span class="hljs-subst">${err}</span>`</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Failed to set gid: <span class="hljs-subst">${err}</span>`</span>);
   }
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).
 This feature is not available in <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.</p>
-<h2><code>process.seteuid(id)</code><span><a class="mark" href="#process_process_seteuid_id" id="process_process_seteuid_id">#</a></span></h2>
+</section><section><h3><code>process.seteuid(id)</code><span><a class="mark" href="#process_process_seteuid_id" id="process_process_seteuid_id">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v2.0.0</span>
 </div>
@@ -2031,19 +2154,19 @@ This feature is not available in <a href="worker_threads.html#worker_threads_cla
 (See <a href="http://man7.org/linux/man-pages/man2/seteuid.2.html"><code>seteuid(2)</code></a>.) The <code>id</code> can be passed as either a numeric ID or a username
 string. If a username is specified, the method blocks while resolving the
 associated numeric ID.</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.geteuid &#x26;&#x26; process.seteuid) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.geteuid()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">geteuid</span> &#x26;&#x26; process.<span class="hljs-property">seteuid</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.geteuid()}</span>`</span>);
   <span class="hljs-keyword">try</span> {
-    process.seteuid(<span class="hljs-number">501</span>);
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`New uid: <span class="hljs-subst">${process.geteuid()}</span>`</span>);
+    process.<span class="hljs-title function_">seteuid</span>(<span class="hljs-number">501</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`New uid: <span class="hljs-subst">${process.geteuid()}</span>`</span>);
   } <span class="hljs-keyword">catch</span> (err) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Failed to set uid: <span class="hljs-subst">${err}</span>`</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Failed to set uid: <span class="hljs-subst">${err}</span>`</span>);
   }
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).
 This feature is not available in <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.</p>
-<h2><code>process.setgid(id)</code><span><a class="mark" href="#process_process_setgid_id" id="process_process_setgid_id">#</a></span></h2>
+</section><section><h3><code>process.setgid(id)</code><span><a class="mark" href="#process_process_setgid_id" id="process_process_setgid_id">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.31</span>
 </div>
@@ -2054,19 +2177,19 @@ This feature is not available in <a href="worker_threads.html#worker_threads_cla
 <a href="http://man7.org/linux/man-pages/man2/setgid.2.html"><code>setgid(2)</code></a>.) The <code>id</code> can be passed as either a numeric ID or a group name
 string. If a group name is specified, this method blocks while resolving the
 associated numeric ID.</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.getgid &#x26;&#x26; process.setgid) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current gid: <span class="hljs-subst">${process.getgid()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">getgid</span> &#x26;&#x26; process.<span class="hljs-property">setgid</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current gid: <span class="hljs-subst">${process.getgid()}</span>`</span>);
   <span class="hljs-keyword">try</span> {
-    process.setgid(<span class="hljs-number">501</span>);
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`New gid: <span class="hljs-subst">${process.getgid()}</span>`</span>);
+    process.<span class="hljs-title function_">setgid</span>(<span class="hljs-number">501</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`New gid: <span class="hljs-subst">${process.getgid()}</span>`</span>);
   } <span class="hljs-keyword">catch</span> (err) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Failed to set gid: <span class="hljs-subst">${err}</span>`</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Failed to set gid: <span class="hljs-subst">${err}</span>`</span>);
   }
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).
 This feature is not available in <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.</p>
-<h2><code>process.setgroups(groups)</code><span><a class="mark" href="#process_process_setgroups_groups" id="process_process_setgroups_groups">#</a></span></h2>
+</section><section><h3><code>process.setgroups(groups)</code><span><a class="mark" href="#process_process_setgroups_groups" id="process_process_setgroups_groups">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.9.4</span>
 </div>
@@ -2077,18 +2200,18 @@ This feature is not available in <a href="worker_threads.html#worker_threads_cla
 Node.js process. This is a privileged operation that requires the Node.js
 process to have <code>root</code> or the <code>CAP_SETGID</code> capability.</p>
 <p>The <code>groups</code> array can contain numeric group IDs, group names, or both.</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.getgroups &#x26;&#x26; process.setgroups) {
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">getgroups</span> &#x26;&#x26; process.<span class="hljs-property">setgroups</span>) {
   <span class="hljs-keyword">try</span> {
-    process.setgroups([<span class="hljs-number">501</span>]);
-    <span class="hljs-built_in">console</span>.log(process.getgroups()); <span class="hljs-comment">// new groups</span>
+    process.<span class="hljs-title function_">setgroups</span>([<span class="hljs-number">501</span>]);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-title function_">getgroups</span>()); <span class="hljs-comment">// new groups</span>
   } <span class="hljs-keyword">catch</span> (err) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Failed to set groups: <span class="hljs-subst">${err}</span>`</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Failed to set groups: <span class="hljs-subst">${err}</span>`</span>);
   }
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).
 This feature is not available in <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.</p>
-<h2><code>process.setuid(id)</code><span><a class="mark" href="#process_process_setuid_id" id="process_process_setuid_id">#</a></span></h2>
+</section><section><h3><code>process.setuid(id)</code><span><a class="mark" href="#process_process_setuid_id" id="process_process_setuid_id">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.28</span>
 </div>
@@ -2099,19 +2222,33 @@ This feature is not available in <a href="worker_threads.html#worker_threads_cla
 <a href="http://man7.org/linux/man-pages/man2/setuid.2.html"><code>setuid(2)</code></a>.) The <code>id</code> can be passed as either a numeric ID or a username string.
 If a username is specified, the method blocks while resolving the associated
 numeric ID.</p>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.getuid &#x26;&#x26; process.setuid) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.getuid()}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (process.<span class="hljs-property">getuid</span> &#x26;&#x26; process.<span class="hljs-property">setuid</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.getuid()}</span>`</span>);
   <span class="hljs-keyword">try</span> {
-    process.setuid(<span class="hljs-number">501</span>);
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`New uid: <span class="hljs-subst">${process.getuid()}</span>`</span>);
+    process.<span class="hljs-title function_">setuid</span>(<span class="hljs-number">501</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`New uid: <span class="hljs-subst">${process.getuid()}</span>`</span>);
   } <span class="hljs-keyword">catch</span> (err) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Failed to set uid: <span class="hljs-subst">${err}</span>`</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Failed to set uid: <span class="hljs-subst">${err}</span>`</span>);
   }
 }</code></pre>
 <p>This function is only available on POSIX platforms (i.e. not Windows or
 Android).
 This feature is not available in <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads.</p>
-<h2><code>process.setUncaughtExceptionCaptureCallback(fn)</code><span><a class="mark" href="#process_process_setuncaughtexceptioncapturecallback_fn" id="process_process_setuncaughtexceptioncapturecallback_fn">#</a></span></h2>
+</section><section><h3><code>process.setSourceMapsEnabled(val)</code><span><a class="mark" href="#process_process_setsourcemapsenabled_val" id="process_process_setsourcemapsenabled_val">#</a></span></h3>
+<div class="api_metadata">
+<span>Added in: v14.18.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#documentation_stability_index">Stability: 1</a> - Experimental</div><p></p>
+<ul>
+<li><code>val</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
+</ul>
+<p>This function enables or disables the <a href="https://sourcemaps.info/spec.html">Source Map v3</a> support for
+stack traces.</p>
+<p>It provides same features as launching Node.js process with commandline options
+<code>--enable-source-maps</code>.</p>
+<p>Only source maps in JavaScript files that are loaded after source maps has been
+enabled will be parsed and loaded.</p>
+</section><section><h3><code>process.setUncaughtExceptionCaptureCallback(fn)</code><span><a class="mark" href="#process_process_setuncaughtexceptioncapturecallback_fn" id="process_process_setuncaughtexceptioncapturecallback_fn">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v9.3.0</span>
 </div>
@@ -2132,7 +2269,7 @@ method with a non-<code>null</code> argument while another capture function is s
 throw an error.</p>
 <p>Using this function is mutually exclusive with using the deprecated
 <a href="domain.html"><code>domain</code></a> built-in module.</p>
-<h2><code>process.stderr</code><span><a class="mark" href="#process_process_stderr" id="process_process_stderr">#</a></span></h2>
+</section><section><h3><code>process.stderr</code><span><a class="mark" href="#process_process_stderr" id="process_process_stderr">#</a></span></h3>
 <ul>
 <li><a href="stream.html#stream_stream" class="type">&#x3C;Stream></a></li>
 </ul>
@@ -2141,15 +2278,15 @@ throw an error.</p>
 stream) unless fd <code>2</code> refers to a file, in which case it is
 a <a href="stream.html#stream_writable_streams">Writable</a> stream.</p>
 <p><code>process.stderr</code> differs from other Node.js streams in important ways. See
-<a href="process.html#process_a_note_on_process_i_o">note on process I/O</a> for more information.</p>
-<h3><code>process.stderr.fd</code><span><a class="mark" href="#process_process_stderr_fd" id="process_process_stderr_fd">#</a></span></h3>
+<a href="#process_a_note_on_process_i_o">note on process I/O</a> for more information.</p>
+<h4><code>process.stderr.fd</code><span><a class="mark" href="#process_process_stderr_fd" id="process_process_stderr_fd">#</a></span></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
 </ul>
 <p>This property refers to the value of underlying file descriptor of
 <code>process.stderr</code>. The value is fixed at <code>2</code>. In <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads,
 this field does not exist.</p>
-<h2><code>process.stdin</code><span><a class="mark" href="#process_process_stdin" id="process_process_stdin">#</a></span></h2>
+</section><section><h3><code>process.stdin</code><span><a class="mark" href="#process_process_stdin" id="process_process_stdin">#</a></span></h3>
 <ul>
 <li><a href="stream.html#stream_stream" class="type">&#x3C;Stream></a></li>
 </ul>
@@ -2164,14 +2301,14 @@ For more information see <a href="stream.html#stream_compatibility_with_older_no
 <p>In "old" streams mode the <code>stdin</code> stream is paused by default, so one
 must call <code>process.stdin.resume()</code> to read from it. Note also that calling
 <code>process.stdin.resume()</code> itself would switch stream to "old" mode.</p>
-<h3><code>process.stdin.fd</code><span><a class="mark" href="#process_process_stdin_fd" id="process_process_stdin_fd">#</a></span></h3>
+<h4><code>process.stdin.fd</code><span><a class="mark" href="#process_process_stdin_fd" id="process_process_stdin_fd">#</a></span></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
 </ul>
 <p>This property refers to the value of underlying file descriptor of
 <code>process.stdin</code>. The value is fixed at <code>0</code>. In <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads,
 this field does not exist.</p>
-<h2><code>process.stdout</code><span><a class="mark" href="#process_process_stdout" id="process_process_stdout">#</a></span></h2>
+</section><section><h3><code>process.stdout</code><span><a class="mark" href="#process_process_stdout" id="process_process_stdout">#</a></span></h3>
 <ul>
 <li><a href="stream.html#stream_stream" class="type">&#x3C;Stream></a></li>
 </ul>
@@ -2180,17 +2317,17 @@ this field does not exist.</p>
 stream) unless fd <code>1</code> refers to a file, in which case it is
 a <a href="stream.html#stream_writable_streams">Writable</a> stream.</p>
 <p>For example, to copy <code>process.stdin</code> to <code>process.stdout</code>:</p>
-<pre><code class="language-js">process.stdin.pipe(process.stdout);</code></pre>
+<pre><code class="language-js">process.<span class="hljs-property">stdin</span>.<span class="hljs-title function_">pipe</span>(process.<span class="hljs-property">stdout</span>);</code></pre>
 <p><code>process.stdout</code> differs from other Node.js streams in important ways. See
-<a href="process.html#process_a_note_on_process_i_o">note on process I/O</a> for more information.</p>
-<h3><code>process.stdout.fd</code><span><a class="mark" href="#process_process_stdout_fd" id="process_process_stdout_fd">#</a></span></h3>
+<a href="#process_a_note_on_process_i_o">note on process I/O</a> for more information.</p>
+<h4><code>process.stdout.fd</code><span><a class="mark" href="#process_process_stdout_fd" id="process_process_stdout_fd">#</a></span></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
 </ul>
 <p>This property refers to the value of underlying file descriptor of
 <code>process.stdout</code>. The value is fixed at <code>1</code>. In <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads,
 this field does not exist.</p>
-<h3>A note on process I/O<span><a class="mark" href="#process_a_note_on_process_i_o" id="process_a_note_on_process_i_o">#</a></span></h3>
+<h4>A note on process I/O<span><a class="mark" href="#process_a_note_on_process_i_o" id="process_a_note_on_process_i_o">#</a></span></h4>
 <p><code>process.stdout</code> and <code>process.stderr</code> differ from other Node.js streams in
 important ways:</p>
 <ol>
@@ -2222,16 +2359,16 @@ the process output streams.</p>
 <p>To check if a stream is connected to a <a href="tty.html#tty_tty">TTY</a> context, check the <code>isTTY</code>
 property.</p>
 <p>For instance:</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node -p <span class="hljs-string">"Boolean(process.stdin.isTTY)"</span></span>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node -p <span class="hljs-string">"Boolean(process.stdin.isTTY)"</span></span>
 true
-<span class="hljs-meta">$</span><span class="bash"> <span class="hljs-built_in">echo</span> <span class="hljs-string">"foo"</span> | node -p <span class="hljs-string">"Boolean(process.stdin.isTTY)"</span></span>
+<span class="hljs-meta">$ </span><span class="language-bash"><span class="hljs-built_in">echo</span> <span class="hljs-string">"foo"</span> | node -p <span class="hljs-string">"Boolean(process.stdin.isTTY)"</span></span>
 false
-<span class="hljs-meta">$</span><span class="bash"> node -p <span class="hljs-string">"Boolean(process.stdout.isTTY)"</span></span>
+<span class="hljs-meta">$ </span><span class="language-bash">node -p <span class="hljs-string">"Boolean(process.stdout.isTTY)"</span></span>
 true
-<span class="hljs-meta">$</span><span class="bash"> node -p <span class="hljs-string">"Boolean(process.stdout.isTTY)"</span> | cat</span>
+<span class="hljs-meta">$ </span><span class="language-bash">node -p <span class="hljs-string">"Boolean(process.stdout.isTTY)"</span> | cat</span>
 false</code></pre>
 <p>See the <a href="tty.html#tty_tty">TTY</a> documentation for more information.</p>
-<h2><code>process.throwDeprecation</code><span><a class="mark" href="#process_process_throwdeprecation" id="process_process_throwdeprecation">#</a></span></h2>
+</section><section><h3><code>process.throwDeprecation</code><span><a class="mark" href="#process_process_throwdeprecation" id="process_process_throwdeprecation">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.9.12</span>
 </div>
@@ -2244,20 +2381,20 @@ false</code></pre>
 warnings result in errors may be altered at runtime. See the
 documentation for the <a href="#process_event_warning"><code>'warning'</code> event</a> and the
 <a href="#process_process_emitwarning_warning_type_code_ctor"><code>emitWarning()</code> method</a> for more information.</p>
-<pre><code class="language-console"><span class="hljs-meta">$</span><span class="bash"> node --throw-deprecation -p <span class="hljs-string">"process.throwDeprecation"</span></span>
+<pre><code class="language-console"><span class="hljs-meta">$ </span><span class="language-bash">node --throw-deprecation -p <span class="hljs-string">"process.throwDeprecation"</span></span>
 true
-<span class="hljs-meta">$</span><span class="bash"> node -p <span class="hljs-string">"process.throwDeprecation"</span></span>
+<span class="hljs-meta">$ </span><span class="language-bash">node -p <span class="hljs-string">"process.throwDeprecation"</span></span>
 undefined
-<span class="hljs-meta">$</span><span class="bash"> node</span>
-<span class="hljs-meta">></span><span class="bash"> process.emitWarning(<span class="hljs-string">'test'</span>, <span class="hljs-string">'DeprecationWarning'</span>);</span>
+<span class="hljs-meta">$ </span><span class="language-bash">node</span>
+<span class="hljs-meta">> </span><span class="language-bash">process.emitWarning(<span class="hljs-string">'test'</span>, <span class="hljs-string">'DeprecationWarning'</span>);</span>
 undefined
-<span class="hljs-meta">></span><span class="bash"> (node:26598) DeprecationWarning: <span class="hljs-built_in">test</span></span>
-<span class="hljs-meta">></span><span class="bash"> process.throwDeprecation = <span class="hljs-literal">true</span>;</span>
+<span class="hljs-meta">> </span><span class="language-bash">(node:26598) DeprecationWarning: <span class="hljs-built_in">test</span></span>
+<span class="hljs-meta">> </span><span class="language-bash">process.throwDeprecation = <span class="hljs-literal">true</span>;</span>
 true
-<span class="hljs-meta">></span><span class="bash"> process.emitWarning(<span class="hljs-string">'test'</span>, <span class="hljs-string">'DeprecationWarning'</span>);</span>
+<span class="hljs-meta">> </span><span class="language-bash">process.emitWarning(<span class="hljs-string">'test'</span>, <span class="hljs-string">'DeprecationWarning'</span>);</span>
 Thrown:
 [DeprecationWarning: test] { name: 'DeprecationWarning' }</code></pre>
-<h2><code>process.title</code><span><a class="mark" href="#process_process_title" id="process_process_title">#</a></span></h2>
+</section><section><h3><code>process.title</code><span><a class="mark" href="#process_process_title" id="process_process_title">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.104</span>
 </div>
@@ -2278,7 +2415,7 @@ cases.</p>
 <p>Assigning a value to <code>process.title</code> might not result in an accurate label
 within process manager applications such as macOS Activity Monitor or Windows
 Services Manager.</p>
-<h2><code>process.traceDeprecation</code><span><a class="mark" href="#process_process_tracedeprecation" id="process_process_tracedeprecation">#</a></span></h2>
+</section><section><h3><code>process.traceDeprecation</code><span><a class="mark" href="#process_process_tracedeprecation" id="process_process_tracedeprecation">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.8.0</span>
 </div>
@@ -2290,7 +2427,7 @@ Services Manager.</p>
 documentation for the <a href="#process_event_warning"><code>'warning'</code> event</a> and the
 <a href="#process_process_emitwarning_warning_type_code_ctor"><code>emitWarning()</code> method</a> for more information about this
 flag's behavior.</p>
-<h2><code>process.umask()</code><span><a class="mark" href="#process_process_umask" id="process_process_umask">#</a></span></h2>
+</section><section><h3><code>process.umask()</code><span><a class="mark" href="#process_process_umask" id="process_process_umask">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -2308,7 +2445,7 @@ between threads, and is a potential security vulnerability. There is no safe,
 cross-platform alternative API.</div><p></p>
 <p><code>process.umask()</code> returns the Node.js process's file mode creation mask. Child
 processes inherit the mask from the parent process.</p>
-<h2><code>process.umask(mask)</code><span><a class="mark" href="#process_process_umask_mask" id="process_process_umask_mask">#</a></span></h2>
+</section><section><h3><code>process.umask(mask)</code><span><a class="mark" href="#process_process_umask_mask" id="process_process_umask_mask">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.19</span>
 </div>
@@ -2318,12 +2455,12 @@ processes inherit the mask from the parent process.</p>
 <p><code>process.umask(mask)</code> sets the Node.js process's file mode creation mask. Child
 processes inherit the mask from the parent process. Returns the previous mask.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> newmask = <span class="hljs-number">0o022</span>;
-<span class="hljs-keyword">const</span> oldmask = process.umask(newmask);
-<span class="hljs-built_in">console</span>.log(
+<span class="hljs-keyword">const</span> oldmask = process.<span class="hljs-title function_">umask</span>(newmask);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
   <span class="hljs-string">`Changed umask from <span class="hljs-subst">${oldmask.toString(<span class="hljs-number">8</span>)}</span> to <span class="hljs-subst">${newmask.toString(<span class="hljs-number">8</span>)}</span>`</span>
 );</code></pre>
 <p>In <a href="worker_threads.html#worker_threads_class_worker"><code>Worker</code></a> threads, <code>process.umask(mask)</code> will throw an exception.</p>
-<h2><code>process.uptime()</code><span><a class="mark" href="#process_process_uptime" id="process_process_uptime">#</a></span></h2>
+</section><section><h3><code>process.uptime()</code><span><a class="mark" href="#process_process_uptime" id="process_process_uptime">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.5.0</span>
 </div>
@@ -2334,7 +2471,7 @@ processes inherit the mask from the parent process. Returns the previous mask.</
 process has been running.</p>
 <p>The return value includes fractions of a second. Use <code>Math.floor()</code> to get whole
 seconds.</p>
-<h2><code>process.version</code><span><a class="mark" href="#process_process_version" id="process_process_version">#</a></span></h2>
+</section><section><h3><code>process.version</code><span><a class="mark" href="#process_process_version" id="process_process_version">#</a></span></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.3</span>
 </div>
@@ -2342,11 +2479,11 @@ seconds.</p>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
 <p>The <code>process.version</code> property contains the Node.js version string.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Version: <span class="hljs-subst">${process.version}</span>`</span>);
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Version: <span class="hljs-subst">${process.version}</span>`</span>);
 <span class="hljs-comment">// Version: v14.8.0</span></code></pre>
 <p>To get the version string without the prepended <em>v</em>, use
 <code>process.versions.node</code>.</p>
-<h2><code>process.versions</code><span><a class="mark" href="#process_process_versions" id="process_process_versions">#</a></span></h2>
+</section><section><h3><code>process.versions</code><span><a class="mark" href="#process_process_versions" id="process_process_versions">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -2367,7 +2504,7 @@ seconds.</p>
 Node.js and its dependencies. <code>process.versions.modules</code> indicates the current
 ABI version, which is increased whenever a C++ API changes. Node.js will refuse
 to load modules that were compiled against a different module ABI version.</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(process.versions);</code></pre>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">versions</span>);</code></pre>
 <p>Will generate an object similar to:</p>
 <pre><code class="language-console">{ node: '11.13.0',
   v8: '7.0.276.38-node.18',
@@ -2384,7 +2521,7 @@ to load modules that were compiled against a different module ABI version.</p>
   icu: '63.1',
   tz: '2018e',
   unicode: '11.0' }</code></pre>
-<h2>Exit codes<span><a class="mark" href="#process_exit_codes" id="process_exit_codes">#</a></span></h2>
+</section><section><h3>Exit codes<span><a class="mark" href="#process_exit_codes" id="process_exit_codes">#</a></span></h3>
 <p>Node.js will normally exit with a <code>0</code> status code when no more async
 operations are pending. The following status codes are used in other
 cases:</p>
@@ -2430,10 +2567,46 @@ exit codes are defined to be 7-bit integers, and signal exits set
 the high-order bit, and then contain the value of the signal code.
 For example, signal <code>SIGABRT</code> has value <code>6</code>, so the expected exit
 code will be <code>128</code> + <code>6</code>, or <code>134</code>.</li>
-</ul>
+</ul></section>
         <!-- API END -->
       </div>
     </div>
   </div>
+  <script>
+    'use strict';
+    {
+      const kCustomPreference = 'customDarkTheme';
+      const userSettings = sessionStorage.getItem(kCustomPreference);
+      const themeToggleButton = document.getElementById('theme-toggle-btn');
+      if (userSettings === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if ('onchange' in mq) {
+          function mqChangeListener(e) {
+            document.body.classList.toggle('dark-mode', e.matches);
+          }
+          mq.addEventListener('change', mqChangeListener);
+          if (themeToggleButton) {
+            themeToggleButton.addEventListener('click', function() {
+              mq.removeEventListener('change', mqChangeListener);
+            }, { once: true });
+          }
+        }
+        if (mq.matches) {
+          document.body.classList.add('dark-mode');
+        }
+      } else if (userSettings === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+      if (themeToggleButton) {
+        themeToggleButton.hidden = false;
+        themeToggleButton.addEventListener('click', function() {
+          sessionStorage.setItem(
+            kCustomPreference,
+            document.body.classList.toggle('dark-mode')
+          );
+        });
+      }
+    }
+  </script>
 </body>
 </html>

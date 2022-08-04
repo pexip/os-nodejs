@@ -1,10 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v14.16.0">
-  <title>String decoder | Node.js v14.16.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v14.18.1">
+  <title>String decoder | Node.js v14.18.1 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -28,7 +28,7 @@
 <li><a href="async_hooks.html" class="nav-async_hooks">Async hooks</a></li>
 <li><a href="buffer.html" class="nav-buffer">Buffer</a></li>
 <li><a href="addons.html" class="nav-addons">C++ addons</a></li>
-<li><a href="n-api.html" class="nav-n-api">C/C++ addons with N-API</a></li>
+<li><a href="n-api.html" class="nav-n-api">C/C++ addons with Node-API</a></li>
 <li><a href="embedding.html" class="nav-embedding">C++ embedder API</a></li>
 <li><a href="child_process.html" class="nav-child_process">Child processes</a></li>
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
@@ -37,6 +37,7 @@
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
+<li><a href="diagnostics_channel.html" class="nav-diagnostics_channel">Diagnostics Channel</a></li>
 <li><a href="dns.html" class="nav-dns">DNS</a></li>
 <li><a href="domain.html" class="nav-domain">Domain</a></li>
 <li><a href="errors.html" class="nav-errors">Errors</a></li>
@@ -86,7 +87,20 @@
 
     <div id="column1" data-id="string_decoder" class="interior">
       <header>
-        <h1>Node.js v14.16.0 Documentation</h1>
+        <div class="header-container">
+          <h1>Node.js v14.18.1 documentation</h1>
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
+              <path fill="none" d="M0 0h24v24H0z" />
+              <path d="M11.1 12.08c-2.33-4.51-.5-8.48.53-10.07C6.27 2.2 1.98 6.59 1.98 12c0 .14.02.28.02.42.62-.27 1.29-.42 2-.42 1.66 0 3.18.83 4.1 2.15A4.01 4.01 0 0111 18c0 1.52-.87 2.83-2.12 3.51.98.32 2.03.5 3.11.5 3.5 0 6.58-1.8 8.37-4.52-2.36.23-6.98-.97-9.26-5.41z"/>
+              <path d="M7 16h-.18C6.4 14.84 5.3 14 4 14c-1.66 0-3 1.34-3 3s1.34 3 3 3h3c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon light-icon" height="24" width="24">
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+            </svg>
+          </button>
+        </div>
         <div id="gtoc">
           <ul>
             <li>
@@ -101,12 +115,13 @@
             
     <li class="version-picker">
       <a href="#">View another version <span>&#x25bc;</span></a>
-      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v15.x/api/string_decoder.html">15.x</a></li>
+      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v16.x/api/string_decoder.html">16.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v15.x/api/string_decoder.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/string_decoder.html">14.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/string_decoder.html">13.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v12.x/api/string_decoder.html">12.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v11.x/api/string_decoder.html">11.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v10.x/api/string_decoder.html">10.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v10.x/api/string_decoder.html">10.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v9.x/api/string_decoder.html">9.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v8.x/api/string_decoder.html">8.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v7.x/api/string_decoder.html">7.x</a></li>
@@ -117,15 +132,13 @@
 <li><a href="https://nodejs.org/docs/latest-v0.10.x/api/string_decoder.html">0.10.x</a></li></ol>
     </li>
   
-            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/string_decoder.md"><span class="github_icon"><svg height="16" width="16" viewBox="0 0 16.1 16.1" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2 .4-2.5-.5-2.7-1 0-.1-.5-.9-.8-1-.3-.2-.7-.6 0-.6.6 0 1 .6 1.2.8.7 1.2 1.9 1 2.4.7 0-.5.2-.9.5-1-1.8-.3-3.7-1-3.7-4 0-.9.3-1.6.8-2.2 0-.2-.3-1 .1-2 0 0 .7-.3 2.2.7a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.5 1.1.2 2 .1 2.1.5.6.8 1.3.8 2.2 0 3-1.9 3.7-3.6 4 .3.2.5.7.5 1.4v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8a8 8 0 0 0-8-8z"/></svg></span>Edit on GitHub</a></li>
+            <li class="edit_on_github"><a href="https://github.com/nodejs/node/edit/master/doc/api/string_decoder.md">Edit on GitHub</a></li>
           </ul>
         </div>
         <hr>
       </header>
 
-      <div id="toc">
-        <h2>Table of Contents</h2>
-        <ul>
+      <details id="toc" open><summary>Table of contents</summary><ul>
 <li><span class="stability_2"><a href="#string_decoder_string_decoder">String decoder</a></span>
 <ul>
 <li><a href="#string_decoder_class_stringdecoder">Class: <code>StringDecoder</code></a>
@@ -137,41 +150,40 @@
 </li>
 </ul>
 </li>
-</ul>
-      </div>
+</ul></details>
 
       <div id="apicontent">
-        <h1>String decoder<span><a class="mark" href="#string_decoder_string_decoder" id="string_decoder_string_decoder">#</a></span></h1>
+        <h2>String decoder<span><a class="mark" href="#string_decoder_string_decoder" id="string_decoder_string_decoder">#</a></span></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#documentation_stability_index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.16.0/lib/string_decoder.js">lib/string_decoder.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v14.18.1/lib/string_decoder.js">lib/string_decoder.js</a></p>
 <p>The <code>string_decoder</code> module provides an API for decoding <code>Buffer</code> objects into
 strings in a manner that preserves encoded multi-byte UTF-8 and UTF-16
 characters. It can be accessed using:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { StringDecoder } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'string_decoder'</span>);</code></pre>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">StringDecoder</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'string_decoder'</span>);</code></pre>
 <p>The following example shows the basic use of the <code>StringDecoder</code> class.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { StringDecoder } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'string_decoder'</span>);
-<span class="hljs-keyword">const</span> decoder = <span class="hljs-keyword">new</span> StringDecoder(<span class="hljs-string">'utf8'</span>);
+<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">StringDecoder</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'string_decoder'</span>);
+<span class="hljs-keyword">const</span> decoder = <span class="hljs-keyword">new</span> <span class="hljs-title class_">StringDecoder</span>(<span class="hljs-string">'utf8'</span>);
 
-<span class="hljs-keyword">const</span> cent = Buffer.from([<span class="hljs-number">0xC2</span>, <span class="hljs-number">0xA2</span>]);
-<span class="hljs-built_in">console</span>.log(decoder.write(cent));
+<span class="hljs-keyword">const</span> cent = <span class="hljs-title class_">Buffer</span>.<span class="hljs-title function_">from</span>([<span class="hljs-number">0xC2</span>, <span class="hljs-number">0xA2</span>]);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(decoder.<span class="hljs-title function_">write</span>(cent));
 
-<span class="hljs-keyword">const</span> euro = Buffer.from([<span class="hljs-number">0xE2</span>, <span class="hljs-number">0x82</span>, <span class="hljs-number">0xAC</span>]);
-<span class="hljs-built_in">console</span>.log(decoder.write(euro));</code></pre>
+<span class="hljs-keyword">const</span> euro = <span class="hljs-title class_">Buffer</span>.<span class="hljs-title function_">from</span>([<span class="hljs-number">0xE2</span>, <span class="hljs-number">0x82</span>, <span class="hljs-number">0xAC</span>]);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(decoder.<span class="hljs-title function_">write</span>(euro));</code></pre>
 <p>When a <code>Buffer</code> instance is written to the <code>StringDecoder</code> instance, an
 internal buffer is used to ensure that the decoded string does not contain
 any incomplete multibyte characters. These are held in the buffer until the
 next call to <code>stringDecoder.write()</code> or until <code>stringDecoder.end()</code> is called.</p>
 <p>In the following example, the three UTF-8 encoded bytes of the European Euro
 symbol (<code>€</code>) are written over three separate operations:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { StringDecoder } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'string_decoder'</span>);
-<span class="hljs-keyword">const</span> decoder = <span class="hljs-keyword">new</span> StringDecoder(<span class="hljs-string">'utf8'</span>);
+<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">StringDecoder</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'string_decoder'</span>);
+<span class="hljs-keyword">const</span> decoder = <span class="hljs-keyword">new</span> <span class="hljs-title class_">StringDecoder</span>(<span class="hljs-string">'utf8'</span>);
 
-decoder.write(Buffer.from([<span class="hljs-number">0xE2</span>]));
-decoder.write(Buffer.from([<span class="hljs-number">0x82</span>]));
-<span class="hljs-built_in">console</span>.log(decoder.end(Buffer.from([<span class="hljs-number">0xAC</span>])));</code></pre>
-<h2>Class: <code>StringDecoder</code><span><a class="mark" href="#string_decoder_class_stringdecoder" id="string_decoder_class_stringdecoder">#</a></span></h2>
-<h3><code>new StringDecoder([encoding])</code><span><a class="mark" href="#string_decoder_new_stringdecoder_encoding" id="string_decoder_new_stringdecoder_encoding">#</a></span></h3>
+decoder.<span class="hljs-title function_">write</span>(<span class="hljs-title class_">Buffer</span>.<span class="hljs-title function_">from</span>([<span class="hljs-number">0xE2</span>]));
+decoder.<span class="hljs-title function_">write</span>(<span class="hljs-title class_">Buffer</span>.<span class="hljs-title function_">from</span>([<span class="hljs-number">0x82</span>]));
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(decoder.<span class="hljs-title function_">end</span>(<span class="hljs-title class_">Buffer</span>.<span class="hljs-title function_">from</span>([<span class="hljs-number">0xAC</span>])));</code></pre>
+<section><h3>Class: <code>StringDecoder</code><span><a class="mark" href="#string_decoder_class_stringdecoder" id="string_decoder_class_stringdecoder">#</a></span></h3>
+<h4><code>new StringDecoder([encoding])</code><span><a class="mark" href="#string_decoder_new_stringdecoder_encoding" id="string_decoder_new_stringdecoder_encoding">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.1.99</span>
 </div>
@@ -180,7 +192,7 @@ decoder.write(Buffer.from([<span class="hljs-number">0x82</span>]));
 <strong>Default:</strong> <code>'utf8'</code>.</li>
 </ul>
 <p>Creates a new <code>StringDecoder</code> instance.</p>
-<h3><code>stringDecoder.end([buffer])</code><span><a class="mark" href="#string_decoder_stringdecoder_end_buffer" id="string_decoder_stringdecoder_end_buffer">#</a></span></h3>
+<h4><code>stringDecoder.end([buffer])</code><span><a class="mark" href="#string_decoder_stringdecoder_end_buffer" id="string_decoder_stringdecoder_end_buffer">#</a></span></h4>
 <div class="api_metadata">
 <span>Added in: v0.9.3</span>
 </div>
@@ -195,7 +207,7 @@ substitution characters appropriate for the character encoding.</p>
 <p>If the <code>buffer</code> argument is provided, one final call to <code>stringDecoder.write()</code>
 is performed before returning the remaining input.
 After <code>end()</code> is called, the <code>stringDecoder</code> object can be reused for new input.</p>
-<h3><code>stringDecoder.write(buffer)</code><span><a class="mark" href="#string_decoder_stringdecoder_write_buffer" id="string_decoder_stringdecoder_write_buffer">#</a></span></h3>
+<h4><code>stringDecoder.write(buffer)</code><span><a class="mark" href="#string_decoder_stringdecoder_write_buffer" id="string_decoder_stringdecoder_write_buffer">#</a></span></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
@@ -215,10 +227,46 @@ After <code>end()</code> is called, the <code>stringDecoder</code> object can be
 <p>Returns a decoded string, ensuring that any incomplete multibyte characters at
 the end of the <code>Buffer</code>, or <code>TypedArray</code>, or <code>DataView</code> are omitted from the
 returned string and stored in an internal buffer for the next call to
-<code>stringDecoder.write()</code> or <code>stringDecoder.end()</code>.</p>
+<code>stringDecoder.write()</code> or <code>stringDecoder.end()</code>.</p></section>
         <!-- API END -->
       </div>
     </div>
   </div>
+  <script>
+    'use strict';
+    {
+      const kCustomPreference = 'customDarkTheme';
+      const userSettings = sessionStorage.getItem(kCustomPreference);
+      const themeToggleButton = document.getElementById('theme-toggle-btn');
+      if (userSettings === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if ('onchange' in mq) {
+          function mqChangeListener(e) {
+            document.body.classList.toggle('dark-mode', e.matches);
+          }
+          mq.addEventListener('change', mqChangeListener);
+          if (themeToggleButton) {
+            themeToggleButton.addEventListener('click', function() {
+              mq.removeEventListener('change', mqChangeListener);
+            }, { once: true });
+          }
+        }
+        if (mq.matches) {
+          document.body.classList.add('dark-mode');
+        }
+      } else if (userSettings === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+      if (themeToggleButton) {
+        themeToggleButton.hidden = false;
+        themeToggleButton.addEventListener('click', function() {
+          sessionStorage.setItem(
+            kCustomPreference,
+            document.body.classList.toggle('dark-mode')
+          );
+        });
+      }
+    }
+  </script>
 </body>
 </html>

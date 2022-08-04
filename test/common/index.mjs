@@ -1,5 +1,3 @@
-/* eslint-disable node-core/require-common-first, node-core/required-modules */
-
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -30,6 +28,7 @@ const {
   allowGlobals,
   mustCall,
   mustCallAtLeast,
+  mustSucceed,
   hasMultiLocalhost,
   skipIfDumbTerminal,
   skipIfEslintMissing,
@@ -76,6 +75,7 @@ export {
   allowGlobals,
   mustCall,
   mustCallAtLeast,
+  mustSucceed,
   hasMultiLocalhost,
   skipIfDumbTerminal,
   skipIfEslintMissing,

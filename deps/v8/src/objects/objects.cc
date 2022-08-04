@@ -4355,16 +4355,16 @@ void DescriptorArray::Sort() {
   // Reset sorting since the descriptor array might contain invalid pointers.
   for (int i = 0; i < len; ++i) SetSortedKey(i, i);
   // Bottom-up max-heap construction.
-  // Index of the last node with children
+  // Index of the last node with children.
   const int max_parent_index = (len / 2) - 1;
   for (int i = max_parent_index; i >= 0; --i) {
     int parent_index = i;
-    const uint32_t parent_hash = GetSortedKey(i).Hash();
+    const uint32_t parent_hash = GetSortedKey(i).hash();
     while (parent_index <= max_parent_index) {
       int child_index = 2 * parent_index + 1;
-      uint32_t child_hash = GetSortedKey(child_index).Hash();
+      uint32_t child_hash = GetSortedKey(child_index).hash();
       if (child_index + 1 < len) {
-        uint32_t right_child_hash = GetSortedKey(child_index + 1).Hash();
+        uint32_t right_child_hash = GetSortedKey(child_index + 1).hash();
         if (right_child_hash > child_hash) {
           child_index++;
           child_hash = right_child_hash;
@@ -4383,13 +4383,13 @@ void DescriptorArray::Sort() {
     SwapSortedKeys(0, i);
     // Shift down the new top element.
     int parent_index = 0;
-    const uint32_t parent_hash = GetSortedKey(parent_index).Hash();
+    const uint32_t parent_hash = GetSortedKey(parent_index).hash();
     const int max_parent_index = (i / 2) - 1;
     while (parent_index <= max_parent_index) {
       int child_index = parent_index * 2 + 1;
-      uint32_t child_hash = GetSortedKey(child_index).Hash();
+      uint32_t child_hash = GetSortedKey(child_index).hash();
       if (child_index + 1 < i) {
-        uint32_t right_child_hash = GetSortedKey(child_index + 1).Hash();
+        uint32_t right_child_hash = GetSortedKey(child_index + 1).hash();
         if (right_child_hash > child_hash) {
           child_index++;
           child_hash = right_child_hash;
@@ -5962,8 +5962,8 @@ Handle<Object> JSPromise::Reject(Handle<JSPromise> promise,
   if (isolate->debug()->is_active()) MoveMessageToPromise(isolate, promise);
 
   if (debug_event) isolate->debug()->OnPromiseReject(promise, reason);
-  isolate->RunPromiseHook(PromiseHookType::kResolve, promise,
-                          isolate->factory()->undefined_value());
+  isolate->RunAllPromiseHooks(PromiseHookType::kResolve, promise,
+                              isolate->factory()->undefined_value());
 
   // 1. Assert: The value of promise.[[PromiseState]] is "pending".
   CHECK_EQ(Promise::kPending, promise->status());
@@ -5996,8 +5996,8 @@ MaybeHandle<Object> JSPromise::Resolve(Handle<JSPromise> promise,
                                        Handle<Object> resolution) {
   Isolate* const isolate = promise->GetIsolate();
 
-  isolate->RunPromiseHook(PromiseHookType::kResolve, promise,
-                          isolate->factory()->undefined_value());
+  isolate->RunAllPromiseHooks(PromiseHookType::kResolve, promise,
+                              isolate->factory()->undefined_value());
 
   // 7. If SameValue(resolution, promise) is true, then
   if (promise.is_identical_to(resolution)) {

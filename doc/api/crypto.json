@@ -8,7 +8,7 @@
       "introduced_in": "v0.3.6",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/crypto.js\">lib/crypto.js</a></p>\n<p>The <code>crypto</code> module provides cryptographic functionality that includes a set of\nwrappers for OpenSSL's hash, HMAC, cipher, decipher, sign, and verify functions.</p>\n<p>Use <code>require('crypto')</code> to access this module.</p>\n<pre><code class=\"language-js\">const crypto = require('crypto');\n\nconst secret = 'abcdefg';\nconst hash = crypto.createHmac('sha256', secret)\n                   .update('I love cupcakes')\n                   .digest('hex');\nconsole.log(hash);\n// Prints:\n//   c0fa1bc00531bd78ef38c628449c5102aeabd49b5dc3a2a516ea6ea959d6658e\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/crypto.js\">lib/crypto.js</a></p>\n<p>The <code>crypto</code> module provides cryptographic functionality that includes a set of\nwrappers for OpenSSL's hash, HMAC, cipher, decipher, sign, and verify functions.</p>\n<p>Use <code>require('crypto')</code> to access this module.</p>\n<pre><code class=\"language-js\">const crypto = require('crypto');\n\nconst secret = 'abcdefg';\nconst hash = crypto.createHmac('sha256', secret)\n                   .update('I love cupcakes')\n                   .digest('hex');\nconsole.log(hash);\n// Prints:\n//   c0fa1bc00531bd78ef38c628449c5102aeabd49b5dc3a2a516ea6ea959d6658e\n</code></pre>",
       "modules": [
         {
           "textRaw": "Determining if crypto support is unavailable",
@@ -1786,6 +1786,42 @@
               "desc": "<p>Return a random integer <code>n</code> such that <code>min &#x3C;= n &#x3C; max</code>.  This\nimplementation avoids <a href=\"https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#Modulo_bias\">modulo bias</a>.</p>\n<p>The range (<code>max - min</code>) must be less than 2<sup>48</sup>. <code>min</code> and <code>max</code> must\nbe <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger\">safe integers</a>.</p>\n<p>If the <code>callback</code> function is not provided, the random integer is\ngenerated synchronously.</p>\n<pre><code class=\"language-js\">// Asynchronous\ncrypto.randomInt(3, (err, n) => {\n  if (err) throw err;\n  console.log(`Random number chosen from (0, 1, 2): ${n}`);\n});\n</code></pre>\n<pre><code class=\"language-js\">// Synchronous\nconst n = crypto.randomInt(3);\nconsole.log(`Random number chosen from (0, 1, 2): ${n}`);\n</code></pre>\n<pre><code class=\"language-js\">// With `min` argument\nconst n = crypto.randomInt(1, 7);\nconsole.log(`The dice rolled: ${n}`);\n</code></pre>"
             },
             {
+              "textRaw": "`crypto.randomUUID([options])`",
+              "type": "method",
+              "name": "randomUUID",
+              "meta": {
+                "added": [
+                  "v14.17.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "return": {
+                    "textRaw": "Returns: {string}",
+                    "name": "return",
+                    "type": "string"
+                  },
+                  "params": [
+                    {
+                      "textRaw": "`options` {Object}",
+                      "name": "options",
+                      "type": "Object",
+                      "options": [
+                        {
+                          "textRaw": "`disableEntropyCache` {boolean} By default, to improve performance, Node.js generates and caches enough random data to generate up to 128 random UUIDs. To generate a UUID without using the cache, set `disableEntropyCache` to `true`. **Defaults**: `false`.",
+                          "name": "disableEntropyCache",
+                          "type": "boolean",
+                          "desc": "By default, to improve performance, Node.js generates and caches enough random data to generate up to 128 random UUIDs. To generate a UUID without using the cache, set `disableEntropyCache` to `true`. **Defaults**: `false`."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Generates a random <a href=\"https://www.rfc-editor.org/rfc/rfc4122.txt\">RFC 4122</a> version 4 UUID. The UUID is generated using a\ncryptographic pseudorandom number generator.</p>"
+            },
+            {
               "textRaw": "`crypto.scrypt(password, salt, keylen[, options], callback)`",
               "type": "method",
               "name": "scrypt",
@@ -2138,7 +2174,7 @@
                   ]
                 }
               ],
-              "desc": "<p>This function is based on a constant-time algorithm.\nReturns true if <code>a</code> is equal to <code>b</code>, without leaking timing information that\nwould allow an attacker to guess one of the values. This is suitable for\ncomparing HMAC digests or secret values like authentication cookies or\n<a href=\"https://www.w3.org/TR/capability-urls/\">capability urls</a>.</p>\n<p><code>a</code> and <code>b</code> must both be <code>Buffer</code>s, <code>TypedArray</code>s, or <code>DataView</code>s, and they\nmust have the same length.</p>\n<p>Use of <code>crypto.timingSafeEqual</code> does not guarantee that the <em>surrounding</em> code\nis timing-safe. Care should be taken to ensure that the surrounding code does\nnot introduce timing vulnerabilities.</p>"
+              "desc": "<p>This function is based on a constant-time algorithm.\nReturns true if <code>a</code> is equal to <code>b</code>, without leaking timing information that\nwould allow an attacker to guess one of the values. This is suitable for\ncomparing HMAC digests or secret values like authentication cookies or\n<a href=\"https://www.w3.org/TR/capability-urls/\">capability urls</a>.</p>\n<p><code>a</code> and <code>b</code> must both be <code>Buffer</code>s, <code>TypedArray</code>s, or <code>DataView</code>s, and they\nmust have the same byte length.</p>\n<p>If at least one of <code>a</code> and <code>b</code> is a <code>TypedArray</code> with more than one byte per\nentry, such as <code>Uint16Array</code>, the result will be computed using the platform\nbyte order.</p>\n<p>Use of <code>crypto.timingSafeEqual</code> does not guarantee that the <em>surrounding</em> code\nis timing-safe. Care should be taken to ensure that the surrounding code does\nnot introduce timing vulnerabilities.</p>"
             },
             {
               "textRaw": "`crypto.verify(algorithm, data, key, signature)`",
@@ -2190,7 +2226,7 @@
                   ]
                 }
               ],
-              "desc": "<p>Verifies the given signature for <code>data</code> using the given key and algorithm. If\n<code>algorithm</code> is <code>null</code> or <code>undefined</code>, then the algorithm is dependent upon the\nkey type (especially Ed25519 and Ed448).</p>\n<p>If <code>key</code> is not a <a href=\"#crypto_class_keyobject\"><code>KeyObject</code></a>, this function behaves as if <code>key</code> had been\npassed to <a href=\"#crypto_crypto_createpublickey_key\"><code>crypto.createPublicKey()</code></a>. If it is an object, the following\nadditional properties can be passed:</p>\n<ul>\n<li>\n<p><code>dsaEncoding</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> For DSA and ECDSA, this option specifies the\nformat of the generated signature. It can be one of the following:</p>\n<ul>\n<li><code>'der'</code> (default): DER-encoded ASN.1 signature structure encoding <code>(r, s)</code>.</li>\n<li><code>'ieee-p1363'</code>: Signature format <code>r || s</code> as proposed in IEEE-P1363.</li>\n</ul>\n</li>\n<li>\n<p><code>padding</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Optional padding value for RSA, one of the following:</p>\n<ul>\n<li><code>crypto.constants.RSA_PKCS1_PADDING</code> (default)</li>\n<li><code>crypto.constants.RSA_PKCS1_PSS_PADDING</code></li>\n</ul>\n<p><code>RSA_PKCS1_PSS_PADDING</code> will use MGF1 with the same hash function\nused to sign the message as specified in section 3.1 of <a href=\"https://www.rfc-editor.org/rfc/rfc4055.txt\">RFC 4055</a>.</p>\n</li>\n<li>\n<p><code>saltLength</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Salt length for when padding is\n<code>RSA_PKCS1_PSS_PADDING</code>. The special value\n<code>crypto.constants.RSA_PSS_SALTLEN_DIGEST</code> sets the salt length to the digest\nsize, <code>crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN</code> (default) sets it to the\nmaximum permissible value.</p>\n</li>\n</ul>\n<p>The <code>signature</code> argument is the previously calculated signature for the <code>data</code>.</p>\n<p>Because public keys can be derived from private keys, a private key or a public\nkey may be passed for <code>key</code>.</p>"
+              "desc": "<p>Verifies the given signature for <code>data</code> using the given key and algorithm. If\n<code>algorithm</code> is <code>null</code> or <code>undefined</code>, then the algorithm is dependent upon the\nkey type (especially Ed25519 and Ed448).</p>\n<p>If <code>key</code> is not a <a href=\"#crypto_class_keyobject\"><code>KeyObject</code></a>, this function behaves as if <code>key</code> had been\npassed to <a href=\"#crypto_crypto_createpublickey_key\"><code>crypto.createPublicKey()</code></a>. If it is an object, the following\nadditional properties can be passed:</p>\n<ul>\n<li>\n<p><code>dsaEncoding</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> For DSA and ECDSA, this option specifies the\nformat of the signature. It can be one of the following:</p>\n<ul>\n<li><code>'der'</code> (default): DER-encoded ASN.1 signature structure encoding <code>(r, s)</code>.</li>\n<li><code>'ieee-p1363'</code>: Signature format <code>r || s</code> as proposed in IEEE-P1363.</li>\n</ul>\n</li>\n<li>\n<p><code>padding</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Optional padding value for RSA, one of the following:</p>\n<ul>\n<li><code>crypto.constants.RSA_PKCS1_PADDING</code> (default)</li>\n<li><code>crypto.constants.RSA_PKCS1_PSS_PADDING</code></li>\n</ul>\n<p><code>RSA_PKCS1_PSS_PADDING</code> will use MGF1 with the same hash function\nused to sign the message as specified in section 3.1 of <a href=\"https://www.rfc-editor.org/rfc/rfc4055.txt\">RFC 4055</a>.</p>\n</li>\n<li>\n<p><code>saltLength</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Salt length for when padding is\n<code>RSA_PKCS1_PSS_PADDING</code>. The special value\n<code>crypto.constants.RSA_PSS_SALTLEN_DIGEST</code> sets the salt length to the digest\nsize, <code>crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN</code> (default) sets it to the\nmaximum permissible value.</p>\n</li>\n</ul>\n<p>The <code>signature</code> argument is the previously calculated signature for the <code>data</code>.</p>\n<p>Because public keys can be derived from private keys, a private key or a public\nkey may be passed for <code>key</code>.</p>"
             }
           ],
           "type": "module",
@@ -2534,6 +2570,29 @@
               "desc": "<p>Once the <code>cipher.final()</code> method has been called, the <code>Cipher</code> object can no\nlonger be used to encrypt data. Attempts to call <code>cipher.final()</code> more than\nonce will result in an error being thrown.</p>"
             },
             {
+              "textRaw": "`cipher.getAuthTag()`",
+              "type": "method",
+              "name": "getAuthTag",
+              "meta": {
+                "added": [
+                  "v1.0.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "return": {
+                    "textRaw": "Returns: {Buffer} When using an authenticated encryption mode (`GCM`, `CCM` and `OCB` are currently supported), the `cipher.getAuthTag()` method returns a [`Buffer`][] containing the _authentication tag_ that has been computed from the given data.",
+                    "name": "return",
+                    "type": "Buffer",
+                    "desc": "When using an authenticated encryption mode (`GCM`, `CCM` and `OCB` are currently supported), the `cipher.getAuthTag()` method returns a [`Buffer`][] containing the _authentication tag_ that has been computed from the given data."
+                  },
+                  "params": []
+                }
+              ],
+              "desc": "<p>The <code>cipher.getAuthTag()</code> method should only be called after encryption has\nbeen completed using the <a href=\"#crypto_cipher_final_outputencoding\"><code>cipher.final()</code></a> method.</p>"
+            },
+            {
               "textRaw": "`cipher.setAAD(buffer[, options])`",
               "type": "method",
               "name": "setAAD",
@@ -2574,29 +2633,6 @@
                 }
               ],
               "desc": "<p>When using an authenticated encryption mode (<code>GCM</code>, <code>CCM</code> and <code>OCB</code> are\ncurrently supported), the <code>cipher.setAAD()</code> method sets the value used for the\n<em>additional authenticated data</em> (AAD) input parameter.</p>\n<p>The <code>options</code> argument is optional for <code>GCM</code> and <code>OCB</code>. When using <code>CCM</code>, the\n<code>plaintextLength</code> option must be specified and its value must match the length\nof the plaintext in bytes. See <a href=\"#crypto_ccm_mode\">CCM mode</a>.</p>\n<p>The <code>cipher.setAAD()</code> method must be called before <a href=\"#crypto_cipher_update_data_inputencoding_outputencoding\"><code>cipher.update()</code></a>.</p>"
-            },
-            {
-              "textRaw": "`cipher.getAuthTag()`",
-              "type": "method",
-              "name": "getAuthTag",
-              "meta": {
-                "added": [
-                  "v1.0.0"
-                ],
-                "changes": []
-              },
-              "signatures": [
-                {
-                  "return": {
-                    "textRaw": "Returns: {Buffer} When using an authenticated encryption mode (`GCM`, `CCM` and `OCB` are currently supported), the `cipher.getAuthTag()` method returns a [`Buffer`][] containing the _authentication tag_ that has been computed from the given data.",
-                    "name": "return",
-                    "type": "Buffer",
-                    "desc": "When using an authenticated encryption mode (`GCM`, `CCM` and `OCB` are currently supported), the `cipher.getAuthTag()` method returns a [`Buffer`][] containing the _authentication tag_ that has been computed from the given data."
-                  },
-                  "params": []
-                }
-              ],
-              "desc": "<p>The <code>cipher.getAuthTag()</code> method should only be called after encryption has\nbeen completed using the <a href=\"#crypto_cipher_final_outputencoding\"><code>cipher.final()</code></a> method.</p>"
             },
             {
               "textRaw": "`cipher.setAutoPadding([autoPadding])`",
@@ -3164,7 +3200,7 @@
             ],
             "changes": []
           },
-          "desc": "<p>The <code>DiffieHellmanGroup</code> class takes a well-known modp group as its argument but\notherwise works the same as <code>DiffieHellman</code>.</p>\n<pre><code class=\"language-js\">const name = 'modp1';\nconst dh = crypto.createDiffieHellmanGroup(name);\n</code></pre>\n<p><code>name</code> is taken from <a href=\"https://www.rfc-editor.org/rfc/rfc2412.txt\">RFC 2412</a> (modp1 and 2) and <a href=\"https://www.rfc-editor.org/rfc/rfc3526.txt\">RFC 3526</a>:</p>\n<pre><code class=\"language-console\">$ perl -ne 'print \"$1\\n\" if /\"(modp\\d+)\"/' src/node_crypto_groups.h\nmodp1  #  768 bits\nmodp2  # 1024 bits\nmodp5  # 1536 bits\nmodp14 # 2048 bits\nmodp15 # etc.\nmodp16\nmodp17\nmodp18\n</code></pre>"
+          "desc": "<p>The <code>DiffieHellmanGroup</code> class takes a well-known modp group as its argument.\nIt works the same as <code>DiffieHellman</code>, except that it does not allow changing\nits keys after creation. In other words, it does not implement <code>setPublicKey()</code>\nor <code>setPrivateKey()</code> methods.</p>\n<pre><code class=\"language-js\">const name = 'modp1';\nconst dh = crypto.createDiffieHellmanGroup(name);\n</code></pre>\n<p><code>name</code> is taken from <a href=\"https://www.rfc-editor.org/rfc/rfc2412.txt\">RFC 2412</a> (modp1 and 2) and <a href=\"https://www.rfc-editor.org/rfc/rfc3526.txt\">RFC 3526</a>:</p>\n<pre><code class=\"language-console\">$ perl -ne 'print \"$1\\n\" if /\"(modp\\d+)\"/' src/node_crypto_groups.h\nmodp1  #  768 bits\nmodp2  # 1024 bits\nmodp5  # 1536 bits\nmodp14 # 2048 bits\nmodp15 # etc.\nmodp16\nmodp17\nmodp18\n</code></pre>"
         },
         {
           "textRaw": "Class: `ECDH`",
@@ -4000,7 +4036,7 @@
                   ]
                 }
               ],
-              "desc": "<p>Verifies the provided data using the given <code>object</code> and <code>signature</code>.</p>\n<p>If <code>object</code> is not a <a href=\"#crypto_class_keyobject\"><code>KeyObject</code></a>, this function behaves as if\n<code>object</code> had been passed to <a href=\"#crypto_crypto_createpublickey_key\"><code>crypto.createPublicKey()</code></a>. If it is an\nobject, the following additional properties can be passed:</p>\n<ul>\n<li>\n<p><code>dsaEncoding</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> For DSA and ECDSA, this option specifies the\nformat of the generated signature. It can be one of the following:</p>\n<ul>\n<li><code>'der'</code> (default): DER-encoded ASN.1 signature structure encoding <code>(r, s)</code>.</li>\n<li><code>'ieee-p1363'</code>: Signature format <code>r || s</code> as proposed in IEEE-P1363.</li>\n</ul>\n</li>\n<li>\n<p><code>padding</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Optional padding value for RSA, one of the following:</p>\n<ul>\n<li><code>crypto.constants.RSA_PKCS1_PADDING</code> (default)</li>\n<li><code>crypto.constants.RSA_PKCS1_PSS_PADDING</code></li>\n</ul>\n<p><code>RSA_PKCS1_PSS_PADDING</code> will use MGF1 with the same hash function\nused to verify the message as specified in section 3.1 of <a href=\"https://www.rfc-editor.org/rfc/rfc4055.txt\">RFC 4055</a>, unless\nan MGF1 hash function has been specified as part of the key in compliance with\nsection 3.3 of <a href=\"https://www.rfc-editor.org/rfc/rfc4055.txt\">RFC 4055</a>.</p>\n</li>\n<li>\n<p><code>saltLength</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Salt length for when padding is\n<code>RSA_PKCS1_PSS_PADDING</code>. The special value\n<code>crypto.constants.RSA_PSS_SALTLEN_DIGEST</code> sets the salt length to the digest\nsize, <code>crypto.constants.RSA_PSS_SALTLEN_AUTO</code> (default) causes it to be\ndetermined automatically.</p>\n</li>\n</ul>\n<p>The <code>signature</code> argument is the previously calculated signature for the data, in\nthe <code>signatureEncoding</code>.\nIf a <code>signatureEncoding</code> is specified, the <code>signature</code> is expected to be a\nstring; otherwise <code>signature</code> is expected to be a <a href=\"buffer.html\"><code>Buffer</code></a>,\n<code>TypedArray</code>, or <code>DataView</code>.</p>\n<p>The <code>verify</code> object can not be used again after <code>verify.verify()</code> has been\ncalled. Multiple calls to <code>verify.verify()</code> will result in an error being\nthrown.</p>\n<p>Because public keys can be derived from private keys, a private key may\nbe passed instead of a public key.</p>"
+              "desc": "<p>Verifies the provided data using the given <code>object</code> and <code>signature</code>.</p>\n<p>If <code>object</code> is not a <a href=\"#crypto_class_keyobject\"><code>KeyObject</code></a>, this function behaves as if\n<code>object</code> had been passed to <a href=\"#crypto_crypto_createpublickey_key\"><code>crypto.createPublicKey()</code></a>. If it is an\nobject, the following additional properties can be passed:</p>\n<ul>\n<li>\n<p><code>dsaEncoding</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> For DSA and ECDSA, this option specifies the\nformat of the signature. It can be one of the following:</p>\n<ul>\n<li><code>'der'</code> (default): DER-encoded ASN.1 signature structure encoding <code>(r, s)</code>.</li>\n<li><code>'ieee-p1363'</code>: Signature format <code>r || s</code> as proposed in IEEE-P1363.</li>\n</ul>\n</li>\n<li>\n<p><code>padding</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Optional padding value for RSA, one of the following:</p>\n<ul>\n<li><code>crypto.constants.RSA_PKCS1_PADDING</code> (default)</li>\n<li><code>crypto.constants.RSA_PKCS1_PSS_PADDING</code></li>\n</ul>\n<p><code>RSA_PKCS1_PSS_PADDING</code> will use MGF1 with the same hash function\nused to verify the message as specified in section 3.1 of <a href=\"https://www.rfc-editor.org/rfc/rfc4055.txt\">RFC 4055</a>, unless\nan MGF1 hash function has been specified as part of the key in compliance with\nsection 3.3 of <a href=\"https://www.rfc-editor.org/rfc/rfc4055.txt\">RFC 4055</a>.</p>\n</li>\n<li>\n<p><code>saltLength</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;integer&gt;</a> Salt length for when padding is\n<code>RSA_PKCS1_PSS_PADDING</code>. The special value\n<code>crypto.constants.RSA_PSS_SALTLEN_DIGEST</code> sets the salt length to the digest\nsize, <code>crypto.constants.RSA_PSS_SALTLEN_AUTO</code> (default) causes it to be\ndetermined automatically.</p>\n</li>\n</ul>\n<p>The <code>signature</code> argument is the previously calculated signature for the data, in\nthe <code>signatureEncoding</code>.\nIf a <code>signatureEncoding</code> is specified, the <code>signature</code> is expected to be a\nstring; otherwise <code>signature</code> is expected to be a <a href=\"buffer.html\"><code>Buffer</code></a>,\n<code>TypedArray</code>, or <code>DataView</code>.</p>\n<p>The <code>verify</code> object can not be used again after <code>verify.verify()</code> has been\ncalled. Multiple calls to <code>verify.verify()</code> will result in an error being\nthrown.</p>\n<p>Because public keys can be derived from private keys, a private key may\nbe passed instead of a public key.</p>"
             }
           ]
         }

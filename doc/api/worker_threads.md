@@ -61,6 +61,38 @@ Worker threads inherit non-process-specific options by default. Refer to
 [`Worker constructor options`][] to know how to customize worker thread options,
 specifically `argv` and `execArgv` options.
 
+## `worker.getEnvironmentData(key)`
+<!-- YAML
+added: v14.18.0
+-->
+
+> Stability: 1 - Experimental
+
+* `key` {any} Any arbitrary, cloneable JavaScript value that can be used as a
+  {Map} key.
+* Returns: {any}
+
+Within a worker thread, `worker.getEnvironmentData()` returns a clone
+of data passed to the spawning thread's `worker.setEnvironmentData()`.
+Every new `Worker` receives its own copy of the environment data
+automatically.
+
+```js
+const {
+  Worker,
+  isMainThread,
+  setEnvironmentData,
+  getEnvironmentData,
+} = require('worker_threads');
+
+if (isMainThread) {
+  setEnvironmentData('Hello', 'World!');
+  const worker = new Worker(__filename);
+} else {
+  console.log(getEnvironmentData('Hello'));  // Prints 'World!'.
+}
+```
+
 ## `worker.isMainThread`
 <!-- YAML
 added: v10.5.0
@@ -240,6 +272,23 @@ new Worker('process.env.SET_IN_WORKER = "foo"', { eval: true, env: SHARE_ENV })
   });
 ```
 
+## `worker.setEnvironmentData(key[, value])`
+<!-- YAML
+added: v14.18.0
+-->
+
+> Stability: 1 - Experimental
+
+* `key` {any} Any arbitrary, cloneable JavaScript value that can be used as a
+  {Map} key.
+* `value` {any} Any arbitrary, cloneable JavaScript value that will be cloned
+  and passed automatically to all new `Worker` instances. If `value` is passed
+  as `undefined`, any previously set value for the `key` will be deleted.
+
+The `worker.setEnvironmentData()` API sets the content of
+`worker.getEnvironmentData()` in the current thread and all new `Worker`
+instances spawned from the current context.
+
 ## `worker.threadId`
 <!-- YAML
 added: v10.5.0
@@ -356,6 +405,12 @@ added: v14.5.0
 
 The `'messageerror'` event is emitted when deserializing a message failed.
 
+Currently, this event is emitted when there is an error occurring while
+instantiating the posted JS object on the receiving end. Such situations
+are rare, but can happen, for instance, when certain Node.js API objects
+are received in a `vm.Context` (where Node.js APIs are currently
+unavailable).
+
 ### `port.close()`
 <!-- YAML
 added: v10.5.0
@@ -372,6 +427,12 @@ are part of the channel.
 <!-- YAML
 added: v10.5.0
 changes:
+  - version: v14.18.0
+    pr-url: https://github.com/nodejs/node/pull/37917
+    description: Add 'BlockList' to the list of cloneable types.
+  - version: v14.18.0
+    pr-url: https://github.com/nodejs/node/pull/37155
+    description: Add 'Histogram' types to the list of cloneable types.
   - version: v14.5.0
     pr-url: https://github.com/nodejs/node/pull/33360
     description: Added `KeyObject` to the list of cloneable types.
@@ -395,8 +456,13 @@ In particular, the significant differences to `JSON` are:
 * `value` may contain typed arrays, both using `ArrayBuffer`s
    and `SharedArrayBuffer`s.
 * `value` may contain [`WebAssembly.Module`][] instances.
-* `value` may not contain native (C++-backed) objects other than `MessagePort`s,
-  [`FileHandle`][]s, and [`KeyObject`][]s.
+* `value` may not contain native (C++-backed) objects other than:
+  * {FileHandle}s,
+  * {Histogram}s,
+  * {KeyObject}s,
+  * {MessagePort}s,
+  * {net.BlockList}s,
+  * {net.SocketAddress}es,
 
 ```js
 const { MessageChannel } = require('worker_threads');
@@ -787,6 +853,65 @@ If the Worker thread is no longer running, which may occur before the
 [`'exit'` event][] is emitted, the returned `Promise` will be rejected
 immediately with an [`ERR_WORKER_NOT_RUNNING`][] error.
 
+### `worker.performance`
+<!-- YAML
+added: v14.17.0
+-->
+
+An object that can be used to query performance information from a worker
+instance. Similar to [`perf_hooks.performance`][].
+
+#### `performance.eventLoopUtilization([utilization1[, utilization2]])`
+<!-- YAML
+added: v14.17.0
+-->
+
+* `utilization1` {Object} The result of a previous call to
+    `eventLoopUtilization()`.
+* `utilization2` {Object} The result of a previous call to
+    `eventLoopUtilization()` prior to `utilization1`.
+* Returns {Object}
+  * `idle` {number}
+  * `active` {number}
+  * `utilization` {number}
+
+The same call as [`perf_hooks` `eventLoopUtilization()`][], except the values
+of the worker instance are returned.
+
+One difference is that, unlike the main thread, bootstrapping within a worker
+is done within the event loop. So the event loop utilization will be
+immediately available once the worker's script begins execution.
+
+An `idle` time that does not increase does not indicate that the worker is
+stuck in bootstrap. The following examples shows how the worker's entire
+lifetime will never accumulate any `idle` time, but is still be able to process
+messages.
+
+```js
+const { Worker, isMainThread, parentPort } = require('worker_threads');
+
+if (isMainThread) {
+  const worker = new Worker(__filename);
+  setInterval(() => {
+    worker.postMessage('hi');
+    console.log(worker.performance.eventLoopUtilization());
+  }, 100).unref();
+  return;
+}
+
+parentPort.on('message', () => console.log('msg')).unref();
+(function r(n) {
+  if (--n < 0) return;
+  const t = Date.now();
+  while (Date.now() - t < 300);
+  setImmediate(r, n);
+})(10);
+```
+
+The event loop utilization of a worker is available only after the [`'online'`
+event][] emitted, and if called before this, or after the [`'exit'`
+event][], then all properties have the value of `0`.
+
 ### `worker.postMessage(value[, transferList])`
 <!-- YAML
 added: v10.5.0
@@ -901,6 +1026,56 @@ Calling `unref()` on a worker will allow the thread to exit if this is the only
 active handle in the event system. If the worker is already `unref()`ed calling
 `unref()` again will have no effect.
 
+## Notes
+
+### Synchronous blocking of stdio
+
+`Worker`s utilize message passing via {MessagePort} to implement interactions
+with `stdio`. This means that `stdio` output originating from a `Worker` can
+get blocked by synchronous code on the receiving end that is blocking the
+Node.js event loop.
+
+```mjs
+import {
+  Worker,
+  isMainThread,
+} from 'worker_threads';
+
+if (isMainThread) {
+  new Worker(new URL(import.meta.url));
+  for (let n = 0; n < 1e10; n++) {}
+} else {
+  // This output will be blocked by the for loop in the main thread.
+  console.log('foo');
+}
+```
+
+```cjs
+'use strict';
+
+const {
+  Worker,
+  isMainThread,
+} = require('worker_threads');
+
+if (isMainThread) {
+  new Worker(__filename);
+  for (let n = 0; n < 1e10; n++) {}
+} else {
+  // This output will be blocked by the for loop in the main thread.
+  console.log('foo');
+}
+```
+
+### Launching worker threads from preload scripts
+
+Take care when launching worker threads from preload scripts (scripts loaded
+and run using the `-r` command line flag). Unless the `execArgv` option is
+explicitly set, new Worker threads automatically inherit the command line flags
+from the running process and will preload the same preload scripts as the main
+thread. If the preload script unconditionally launches a worker thread, every
+thread spawned will spawn another until the application crashes.
+
 [Addons worker support]: addons.md#addons_worker_support
 [ECMAScript module loader]: esm.md#esm_data_imports
 [HTML structured clone algorithm]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
@@ -908,6 +1083,7 @@ active handle in the event system. If the worker is already `unref()`ed calling
 [Web Workers]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API
 [`'close'` event]: #worker_threads_event_close
 [`'exit'` event]: #worker_threads_event_exit
+[`'online'` event]: #worker_threads_event_online
 [`ArrayBuffer`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
 [`AsyncResource`]: async_hooks.md#async_hooks_class_asyncresource
 [`Buffer.allocUnsafe()`]: buffer.md#buffer_static_method_buffer_allocunsafe_size
@@ -916,17 +1092,19 @@ active handle in the event system. If the worker is already `unref()`ed calling
 [`ERR_WORKER_NOT_RUNNING`]: errors.md#ERR_WORKER_NOT_RUNNING
 [`EventTarget`]: https://developer.mozilla.org/en-US/docs/Web/API/EventTarget
 [`FileHandle`]: fs.md#fs_class_filehandle
-[`KeyObject`]: crypto.md#crypto_class_keyobject
 [`MessagePort`]: #worker_threads_class_messageport
 [`SharedArrayBuffer`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
 [`Uint8Array`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
 [`WebAssembly.Module`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Module
+[`Worker constructor options`]: #worker_threads_new_worker_filename_options
 [`Worker`]: #worker_threads_class_worker
 [`cluster` module]: cluster.md
 [`data:` URL]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
 [`fs.close()`]: fs.md#fs_fs_close_fd_callback
 [`fs.open()`]: fs.md#fs_fs_open_path_flags_mode_callback
 [`markAsUntransferable()`]: #worker_threads_worker_markasuntransferable_object
+[`perf_hooks.performance`]: perf_hooks.md#perf_hooks_perf_hooks_performance
+[`perf_hooks` `eventLoopUtilization()`]: perf_hooks.md#perf_hooks_performance_eventlooputilization_utilization1_utilization2
 [`port.on('message')`]: #worker_threads_event_message
 [`port.onmessage()`]: https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/onmessage
 [`port.postMessage()`]: #worker_threads_port_postmessage_value_transferlist
@@ -941,17 +1119,16 @@ active handle in the event system. If the worker is already `unref()`ed calling
 [`process.title`]: process.md#process_process_title
 [`require('worker_threads').isMainThread`]: #worker_threads_worker_ismainthread
 [`require('worker_threads').parentPort.on('message')`]: #worker_threads_event_message
-[`require('worker_threads').parentPort`]: #worker_threads_worker_parentport
 [`require('worker_threads').parentPort.postMessage()`]: #worker_threads_worker_postmessage_value_transferlist
+[`require('worker_threads').parentPort`]: #worker_threads_worker_parentport
 [`require('worker_threads').threadId`]: #worker_threads_worker_threadid
 [`require('worker_threads').workerData`]: #worker_threads_worker_workerdata
 [`trace_events`]: tracing.md
 [`v8.getHeapSnapshot()`]: v8.md#v8_v8_getheapsnapshot
 [`vm`]: vm.md
-[`Worker constructor options`]: #worker_threads_new_worker_filename_options
+[`worker.SHARE_ENV`]: #worker_threads_worker_share_env
 [`worker.on('message')`]: #worker_threads_event_message_1
 [`worker.postMessage()`]: #worker_threads_worker_postmessage_value_transferlist
-[`worker.SHARE_ENV`]: #worker_threads_worker_share_env
 [`worker.terminate()`]: #worker_threads_worker_terminate
 [`worker.threadId`]: #worker_threads_worker_threadid_1
 [async-resource-worker-pool]: async_hooks.md#async-resource-worker-pool

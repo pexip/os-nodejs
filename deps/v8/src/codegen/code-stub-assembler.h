@@ -1353,13 +1353,12 @@ class V8_EXPORT_PRIVATE CodeStubAssembler
   // Check if the map is set for slow properties.
   TNode<BoolT> IsDictionaryMap(SloppyTNode<Map> map);
 
-  // Load the hash field of a name as an uint32 value.
-  TNode<Uint32T> LoadNameHashField(SloppyTNode<Name> name);
-  // Load the hash value of a name as an uint32 value.
+  // Load the Name::hash() value of a name as an uint32 value.
   // If {if_hash_not_computed} label is specified then it also checks if
   // hash is actually computed.
-  TNode<Uint32T> LoadNameHash(SloppyTNode<Name> name,
+  TNode<Uint32T> LoadNameHash(TNode<Name> name,
                               Label* if_hash_not_computed = nullptr);
+  TNode<Uint32T> LoadNameHashAssumeComputed(TNode<Name> name);
 
   // Load length field of a String object as Smi value.
   TNode<Smi> LoadStringLengthAsSmi(TNode<String> string);
@@ -3717,10 +3716,42 @@ class V8_EXPORT_PRIVATE CodeStubAssembler
       TNode<Context> context);
 
   // Promise helpers
-  TNode<BoolT> IsPromiseHookEnabled();
+  TNode<Uint32T> PromiseHookFlags();
   TNode<BoolT> HasAsyncEventDelegate();
-  TNode<BoolT> IsPromiseHookEnabledOrHasAsyncEventDelegate();
-  TNode<BoolT> IsPromiseHookEnabledOrDebugIsActiveOrHasAsyncEventDelegate();
+  TNode<BoolT> IsContextPromiseHookEnabled(TNode<Uint32T> flags);
+  TNode<BoolT> IsContextPromiseHookEnabled() {
+    return IsContextPromiseHookEnabled(PromiseHookFlags());
+  }
+  TNode<BoolT> IsAnyPromiseHookEnabled(TNode<Uint32T> flags);
+  TNode<BoolT> IsAnyPromiseHookEnabled() {
+    return IsAnyPromiseHookEnabled(PromiseHookFlags());
+  }
+  TNode<BoolT> IsIsolatePromiseHookEnabledOrHasAsyncEventDelegate(
+      TNode<Uint32T> flags);
+  TNode<BoolT> IsIsolatePromiseHookEnabledOrHasAsyncEventDelegate() {
+    return IsIsolatePromiseHookEnabledOrHasAsyncEventDelegate(
+        PromiseHookFlags());
+  }
+  TNode<BoolT>
+  IsIsolatePromiseHookEnabledOrDebugIsActiveOrHasAsyncEventDelegate(
+      TNode<Uint32T> flags);
+  TNode<BoolT>
+  IsIsolatePromiseHookEnabledOrDebugIsActiveOrHasAsyncEventDelegate() {
+    return IsIsolatePromiseHookEnabledOrDebugIsActiveOrHasAsyncEventDelegate(
+        PromiseHookFlags());
+  }
+  TNode<BoolT> IsAnyPromiseHookEnabledOrDebugIsActiveOrHasAsyncEventDelegate(
+      TNode<Uint32T> flags);
+  TNode<BoolT>
+  IsAnyPromiseHookEnabledOrDebugIsActiveOrHasAsyncEventDelegate() {
+    return IsAnyPromiseHookEnabledOrDebugIsActiveOrHasAsyncEventDelegate(
+        PromiseHookFlags());
+  }
+
+  TNode<BoolT> NeedsAnyPromiseHooks(TNode<Uint32T> flags);
+  TNode<BoolT> NeedsAnyPromiseHooks() {
+    return NeedsAnyPromiseHooks(PromiseHookFlags());
+  }
 
   // for..in helpers
   void CheckPrototypeEnumCache(TNode<JSReceiver> receiver,

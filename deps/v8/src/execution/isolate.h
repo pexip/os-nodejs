@@ -1264,6 +1264,22 @@ class V8_EXPORT_PRIVATE Isolate final : private HiddenFactory {
     return id;
   }
 
+  // https://github.com/tc39/proposal-top-level-await/pull/159
+  // TODO(syg): Update to actual spec link once merged.
+  //
+  // According to the spec, modules that depend on async modules (i.e. modules
+  // with top-level await) must be evaluated in order in which their
+  // [[AsyncEvaluating]] flags were set to true. V8 tracks this global total
+  // order with next_module_async_evaluating_ordinal_. Each module that sets its
+  // [[AsyncEvaluating]] to true grabs the next ordinal.
+  unsigned NextModuleAsyncEvaluatingOrdinal() {
+    unsigned ordinal = next_module_async_evaluating_ordinal_++;
+    CHECK_LT(ordinal, kMaxModuleAsyncEvaluatingOrdinal);
+    return ordinal;
+  }
+
+  inline void DidFinishModuleAsyncEvaluation(unsigned ordinal);
+
   void AddNearHeapLimitCallback(v8::NearHeapLimitCallback, void* data);
   void RemoveNearHeapLimitCallback(v8::NearHeapLimitCallback callback,
                                    size_t heap_limit);
@@ -1307,21 +1323,27 @@ class V8_EXPORT_PRIVATE Isolate final : private HiddenFactory {
   }
 #endif
 
+  void SetHasContextPromiseHooks(bool context_promise_hook) {
+    promise_hook_flags_ = PromiseHookFields::HasContextPromiseHook::update(
+        promise_hook_flags_, context_promise_hook);
+    PromiseHookStateUpdated();
+  }
+
+  bool HasContextPromiseHooks() const {
+    return PromiseHookFields::HasContextPromiseHook::decode(
+        promise_hook_flags_);
+  }
+
+  Address promise_hook_flags_address() {
+    return reinterpret_cast<Address>(&promise_hook_flags_);
+  }
+
   Address promise_hook_address() {
     return reinterpret_cast<Address>(&promise_hook_);
   }
 
   Address async_event_delegate_address() {
     return reinterpret_cast<Address>(&async_event_delegate_);
-  }
-
-  Address promise_hook_or_async_event_delegate_address() {
-    return reinterpret_cast<Address>(&promise_hook_or_async_event_delegate_);
-  }
-
-  Address promise_hook_or_debug_is_active_or_async_event_delegate_address() {
-    return reinterpret_cast<Address>(
-        &promise_hook_or_debug_is_active_or_async_event_delegate_);
   }
 
   Address handle_scope_implementer_address() {
@@ -1339,6 +1361,9 @@ class V8_EXPORT_PRIVATE Isolate final : private HiddenFactory {
   void SetPromiseHook(PromiseHook hook);
   void RunPromiseHook(PromiseHookType type, Handle<JSPromise> promise,
                       Handle<Object> parent);
+  void RunAllPromiseHooks(PromiseHookType type, Handle<JSPromise> promise,
+                          Handle<Object> parent);
+  void UpdatePromiseHookProtector();
   void PromiseHookStateUpdated();
 
   void AddDetachedContext(Handle<Context> context);
@@ -1525,6 +1550,13 @@ class V8_EXPORT_PRIVATE Isolate final : private HiddenFactory {
 
   bool RequiresCodeRange() const;
 
+  struct PromiseHookFields {
+    using HasContextPromiseHook = base::BitField<bool, 0, 1>;
+    using HasIsolatePromiseHook = HasContextPromiseHook::Next<bool, 1>;
+    using HasAsyncEventDelegate = HasIsolatePromiseHook::Next<bool, 1>;
+    using IsDebugActive = HasAsyncEventDelegate::Next<bool, 1>;
+  };
+
  private:
   explicit Isolate(std::unique_ptr<IsolateAllocator> isolate_allocator);
   ~Isolate();
@@ -1606,6 +1638,16 @@ class V8_EXPORT_PRIVATE Isolate final : private HiddenFactory {
 
   void RunPromiseHookForAsyncEventDelegate(PromiseHookType type,
                                            Handle<JSPromise> promise);
+
+  bool HasIsolatePromiseHooks() const {
+    return PromiseHookFields::HasIsolatePromiseHook::decode(
+        promise_hook_flags_);
+  }
+
+  bool HasAsyncEventDelegate() const {
+    return PromiseHookFields::HasAsyncEventDelegate::decode(
+        promise_hook_flags_);
+  }
 
   const char* RAILModeName(RAILMode rail_mode) const {
     switch (rail_mode) {
@@ -1788,6 +1830,8 @@ class V8_EXPORT_PRIVATE Isolate final : private HiddenFactory {
   std::atomic<int> next_unique_sfi_id_;
 #endif
 
+  unsigned next_module_async_evaluating_ordinal_;
+
   // Vector of callbacks before a Call starts execution.
   std::vector<BeforeCallEnteredCallback> before_call_entered_callbacks_;
 
@@ -1822,8 +1866,7 @@ class V8_EXPORT_PRIVATE Isolate final : private HiddenFactory {
   debug::ConsoleDelegate* console_delegate_ = nullptr;
 
   debug::AsyncEventDelegate* async_event_delegate_ = nullptr;
-  bool promise_hook_or_async_event_delegate_ = false;
-  bool promise_hook_or_debug_is_active_or_async_event_delegate_ = false;
+  uint32_t promise_hook_flags_ = 0;
   int async_task_count_ = 0;
 
   v8::Isolate::AbortOnUncaughtExceptionCallback

@@ -80,20 +80,26 @@ $ node --completion-bash > node_bash_completion
 $ source node_bash_completion
 ```
 
-### `--conditions=condition`
+### `-C=condition`, `--conditions=condition`
 <!-- YAML
 added: v14.9.0
 -->
 
 > Stability: 1 - Experimental
 
-Enable experimental support for custom conditional exports resolution
+Enable experimental support for custom [conditional exports][] resolution
 conditions.
 
 Any number of custom string condition names are permitted.
 
 The default Node.js conditions of `"node"`, `"default"`, `"import"`, and
 `"require"` will always apply as defined.
+
+For example, to run a module with "development" resolutions:
+
+```console
+$ node -C=development app.js
+```
 
 ### `--cpu-prof`
 <!-- YAML
@@ -160,7 +166,7 @@ Affects the default output directory of:
 * [--redirect-warnings](#cli_redirect_warnings_file)
 
 ### `--disable-proto=mode`
-<!--YAML
+<!-- YAML
 added: v13.12.0
 -->
 
@@ -177,6 +183,19 @@ Make built-in language features like `eval` and `new Function` that generate
 code from strings throw an exception instead. This does not affect the Node.js
 `vm` module.
 
+### `--dns-result-order=order`
+<!-- YAML
+added: v14.18.0
+-->
+
+Set the default value of `verbatim` in [`dns.lookup()`][] and
+[`dnsPromises.lookup()`][]. The value could be:
+* `ipv4first`: sets default `verbatim` `false`.
+* `verbatim`: sets default `verbatim` `true`.
+
+The default is `ipv4first` and [`dns.setDefaultResultOrder()`][] have higher
+priority than `--dns-result-order`.
+
 ### `--enable-fips`
 <!-- YAML
 added: v6.0.0
@@ -188,14 +207,28 @@ Enable FIPS-compliant crypto at startup. (Requires Node.js to be built with
 ### `--enable-source-maps`
 <!-- YAML
 added: v12.12.0
+changes:
+  - version: v14.18.0
+    pr-url: https://github.com/nodejs/node/pull/37362
+    description: This API is no longer experimental.
 -->
 
-> Stability: 1 - Experimental
+Enable [Source Map v3][Source Map] support for stack traces.
 
-Enable experimental Source Map v3 support for stack traces.
+When using a transpiler, such as TypeScript, strack traces thrown by an
+application reference the transpiled code, not the original source position.
+`--enable-source-maps` enables caching of Source Maps and makes a best
+effort to report stack traces relative to the original source file.
 
-Currently, overriding `Error.prepareStackTrace` is ignored when the
-`--enable-source-maps` flag is set.
+Overriding `Error.prepareStackTrace` prevents `--enable-source-maps` from
+modifiying the stack trace.
+
+### `--experimental-abortcontroller`
+<!-- YAML
+added: v14.17.0
+-->
+
+Enable experimental `AbortController` and `AbortSignal` support.
 
 ### `--experimental-import-meta-resolve`
 <!-- YAML
@@ -284,14 +317,14 @@ Enable experimental WebAssembly System Interface (WASI) support.
 added: v12.3.0
 -->
 
+Enable experimental WebAssembly module support.
+
 ### `--force-context-aware`
 <!-- YAML
 added: v12.12.0
 -->
 
 Disable loading native addons that are not [context-aware][].
-
-Enable experimental WebAssembly module support.
 
 ### `--force-fips`
 <!-- YAML
@@ -316,6 +349,52 @@ reference. Code may break under this flag.
 
 `--require` runs prior to freezing intrinsics in order to allow polyfills to
 be added.
+
+### `--heapsnapshot-near-heap-limit=max_count`
+<!-- YAML
+added: v14.18.0
+-->
+
+> Stability: 1 - Experimental
+
+Writes a V8 heap snapshot to disk when the V8 heap usage is approaching the
+heap limit. `count` should be a non-negative integer (in which case
+Node.js will write no more than `max_count` snapshots to disk).
+
+When generating snapshots, garbage collection may be triggered and bring
+the heap usage down, therefore multiple snapshots may be written to disk
+before the Node.js instance finally runs out of memory. These heap snapshots
+can be compared to determine what objects are being allocated during the
+time consecutive snapshots are taken. It's not guaranteed that Node.js will
+write exactly `max_count` snapshots to disk, but it will try
+its best to generate at least one and up to `max_count` snapshots before the
+Node.js instance runs out of memory when `max_count` is greater than `0`.
+
+Generating V8 snapshots takes time and memory (both memory managed by the
+V8 heap and native memory outside the V8 heap). The bigger the heap is,
+the more resources it needs. Node.js will adjust the V8 heap to accommondate
+the additional V8 heap memory overhead, and try its best to avoid using up
+all the memory avialable to the process. When the process uses
+more memory than the system deems appropriate, the process may be terminated
+abruptly by the system, depending on the system configuration.
+
+```console
+$ node --max-old-space-size=100 --heapsnapshot-near-heap-limit=3 index.js
+Wrote snapshot to Heap.20200430.100036.49580.0.001.heapsnapshot
+Wrote snapshot to Heap.20200430.100037.49580.0.002.heapsnapshot
+Wrote snapshot to Heap.20200430.100038.49580.0.003.heapsnapshot
+
+<--- Last few GCs --->
+
+[49580:0x110000000]     4826 ms: Mark-sweep 130.6 (147.8) -> 130.5 (147.8) MB, 27.4 / 0.0 ms  (average mu = 0.126, current mu = 0.034) allocation failure scavenge might not succeed
+[49580:0x110000000]     4845 ms: Mark-sweep 130.6 (147.8) -> 130.6 (147.8) MB, 18.8 / 0.0 ms  (average mu = 0.088, current mu = 0.031) allocation failure scavenge might not succeed
+
+
+<--- JS stacktrace --->
+
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+....
+```
 
 ### `--heapsnapshot-signal=signal`
 <!-- YAML
@@ -529,6 +608,14 @@ added: v6.0.0
 -->
 
 Silence all process warnings (including deprecations).
+
+### `--node-memory-debug`
+<!-- YAML
+added: v14.18.0
+-->
+
+Enable extra debug checks for memory leaks in Node.js internals. This is
+usually only useful for developers debugging Node.js itself.
 
 ### `--openssl-config=file`
 <!-- YAML
@@ -1121,6 +1208,9 @@ Preload the specified module at startup.
 Follows `require()`'s module resolution
 rules. `module` may be either a path to a file, or a node module name.
 
+Only CommonJS modules are supported. Attempting to preload a
+ES6 Module using `--require` will fail with an error.
+
 ### `-v`, `--version`
 <!-- YAML
 added: v0.1.3
@@ -1130,6 +1220,19 @@ Print node's version.
 
 ## Environment variables
 
+### `FORCE_COLOR=[1, 2, 3]`
+
+The `FORCE_COLOR` environment variable is used to
+enable ANSI colorized output. The value may be:
+
+* `1`, `true`, or the empty string `''` indicate 16-color support,
+* `2` to indicate 256-color support, or
+* `3` to indicate 16 million-color support.
+
+When `FORCE_COLOR` is used and set to a supported value, both the `NO_COLOR`,
+and `NODE_DISABLE_COLORS` environment variables are ignored.
+
+Any other value will result in colorized output being disabled.
 ### `NODE_DEBUG=module[,…]`
 <!-- YAML
 added: v0.1.32
@@ -1164,6 +1267,10 @@ options property is explicitly specified for a TLS or HTTPS client or server.
 
 This environment variable is ignored when `node` runs as setuid root or
 has Linux file capabilities set.
+
+The `NODE_EXTRA_CA_CERTS` environment variable is only read when the Node.js
+process is first launched. Changing the value at runtime using
+`process.env.NODE_EXTRA_CA_CERTS` has no effect on the current process.
 
 ### `NODE_ICU_DATA=file`
 <!-- YAML
@@ -1217,11 +1324,13 @@ node --require "./a.js" --require "./b.js"
 
 Node.js options that are allowed are:
 <!-- node-options-node start -->
-* `--conditions`
+* `--conditions`, `-C`
 * `--diagnostic-dir`
 * `--disable-proto`
+* `--dns-result-order`
 * `--enable-fips`
 * `--enable-source-maps`
+* `--experimental-abortcontroller`
 * `--experimental-import-meta-resolve`
 * `--experimental-json-modules`
 * `--experimental-loader`
@@ -1236,6 +1345,7 @@ Node.js options that are allowed are:
 * `--force-context-aware`
 * `--force-fips`
 * `--frozen-intrinsics`
+* `--heapsnapshot-near-heap-limit`
 * `--heapsnapshot-signal`
 * `--http-parser`
 * `--icu-data-dir`
@@ -1250,6 +1360,7 @@ Node.js options that are allowed are:
 * `--no-deprecation`
 * `--no-force-async-hooks-checks`
 * `--no-warnings`
+* `--node-memory-debug`
 * `--openssl-config`
 * `--pending-deprecation`
 * `--policy-integrity`
@@ -1470,6 +1581,11 @@ and the line lengths of the source file (in the key `lineLengths`).
 }
 ```
 
+### `NO_COLOR=<any>`
+
+[`NO_COLOR`][]  is an alias for `NODE_DISABLE_COLORS`. The value of the
+environment variable is arbitrary.
+
 ### `OPENSSL_CONF=file`
 <!-- YAML
 added: v6.11.0
@@ -1564,12 +1680,17 @@ $ node --max-old-space-size=1536 index.js
 [`Atomics.wait()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/wait
 [`Buffer`]: buffer.md#buffer_class_buffer
 [`NODE_OPTIONS`]: #cli_node_options_options
+[`NO_COLOR`]: https://no-color.org
 [`SlowBuffer`]: buffer.md#buffer_class_slowbuffer
+[`dns.lookup()`]: dns.md#dns_dns_lookup_hostname_options_callback
+[`dns.setDefaultResultOrder()`]: dns.md#dns_dns_setdefaultresultorder_order
+[`dnsPromises.lookup()`]: dns.md#dns_dnspromises_lookup_hostname_options
 [`process.setUncaughtExceptionCaptureCallback()`]: process.md#process_process_setuncaughtexceptioncapturecallback_fn
 [`tls.DEFAULT_MAX_VERSION`]: tls.md#tls_tls_default_max_version
 [`tls.DEFAULT_MIN_VERSION`]: tls.md#tls_tls_default_min_version
 [`unhandledRejection`]: process.md#process_event_unhandledrejection
 [`worker_threads.threadId`]: worker_threads.md#worker_threads_worker_threadid
+[conditional exports]: packages.md#packages_conditional_exports
 [context-aware]: addons.md#addons_context_aware_addons
 [customizing ESM specifier resolution]: esm.md#esm_customizing_esm_specifier_resolution_algorithm
 [debugger]: debugger.md

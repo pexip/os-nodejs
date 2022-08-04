@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/vm.js\">lib/vm.js</a></p>\n<p>The <code>vm</code> module enables compiling and running code within V8 Virtual\nMachine contexts. <strong>The <code>vm</code> module is not a security mechanism. Do\nnot use it to run untrusted code</strong>.</p>\n<p>JavaScript code can be compiled and run immediately or\ncompiled, saved, and run later.</p>\n<p>A common use case is to run the code in a different V8 Context. This means\ninvoked code has a different global object than the invoking code.</p>\n<p>One can provide the context by <a href=\"#vm_what_does_it_mean_to_contextify_an_object\"><em>contextifying</em></a> an\nobject. The invoked code treats any property in the context like a\nglobal variable. Any changes to global variables caused by the invoked\ncode are reflected in the context object.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n\nconst x = 1;\n\nconst context = { x: 2 };\nvm.createContext(context); // Contextify the object.\n\nconst code = 'x += 40; var y = 17;';\n// `x` and `y` are global variables in the context.\n// Initially, x has the value 2 because that is the value of context.x.\nvm.runInContext(code, context);\n\nconsole.log(context.x); // 42\nconsole.log(context.y); // 17\n\nconsole.log(x); // 1; y is not defined.\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/vm.js\">lib/vm.js</a></p>\n<p>The <code>vm</code> module enables compiling and running code within V8 Virtual\nMachine contexts. <strong>The <code>vm</code> module is not a security mechanism. Do\nnot use it to run untrusted code</strong>.</p>\n<p>JavaScript code can be compiled and run immediately or\ncompiled, saved, and run later.</p>\n<p>A common use case is to run the code in a different V8 Context. This means\ninvoked code has a different global object than the invoking code.</p>\n<p>One can provide the context by <a href=\"#vm_what_does_it_mean_to_contextify_an_object\"><em>contextifying</em></a> an\nobject. The invoked code treats any property in the context like a\nglobal variable. Any changes to global variables caused by the invoked\ncode are reflected in the context object.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n\nconst x = 1;\n\nconst context = { x: 2 };\nvm.createContext(context); // Contextify the object.\n\nconst code = 'x += 40; var y = 17;';\n// `x` and `y` are global variables in the context.\n// Initially, x has the value 2 because that is the value of context.x.\nvm.runInContext(code, context);\n\nconsole.log(context.x); // 42\nconsole.log(context.y); // 17\n\nconsole.log(x); // 1; y is not defined.\n</code></pre>",
       "classes": [
         {
           "textRaw": "Class: `vm.Script`",
@@ -308,11 +308,11 @@
                       "desc": "Specifies the line number offset that is displayed in stack traces produced by this script."
                     },
                     {
-                      "textRaw": "`columnOffset` {number} Specifies the column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
+                      "textRaw": "`columnOffset` {number} Specifies the first-line column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
                       "name": "columnOffset",
                       "type": "number",
                       "default": "`0`",
-                      "desc": "Specifies the column number offset that is displayed in stack traces produced by this script."
+                      "desc": "Specifies the first-line column number offset that is displayed in stack traces produced by this script."
                     },
                     {
                       "textRaw": "`cachedData` {Buffer|TypedArray|DataView} Provides an optional `Buffer` or `TypedArray`, or `DataView` with V8's code cache data for the supplied source. When supplied, the `cachedDataRejected` value will be set to either `true` or `false` depending on acceptance of the data by V8.",
@@ -372,7 +372,7 @@
           },
           "stability": 1,
           "stabilityText": "Experimental",
-          "desc": "<p><em>This feature is only available with the <code>--experimental-vm-modules</code> command\nflag enabled.</em></p>\n<p>The <code>vm.Module</code> class provides a low-level interface for using\nECMAScript modules in VM contexts. It is the counterpart of the <code>vm.Script</code>\nclass that closely mirrors <a href=\"https://www.ecma-international.org/ecma-262/#sec-abstract-module-records\">Module Record</a>s as defined in the ECMAScript\nspecification.</p>\n<p>Unlike <code>vm.Script</code> however, every <code>vm.Module</code> object is bound to a context from\nits creation. Operations on <code>vm.Module</code> objects are intrinsically asynchronous,\nin contrast with the synchronous nature of <code>vm.Script</code> objects. The use of\n'async' functions can help with manipulating <code>vm.Module</code> objects.</p>\n<p>Using a <code>vm.Module</code> object requires three distinct steps: creation/parsing,\nlinking, and evaluation. These three steps are illustrated in the following\nexample.</p>\n<p>This implementation lies at a lower level than the <a href=\"esm.html#esm_modules_ecmascript_modules\">ECMAScript Module\nloader</a>. There is also no way to interact with the Loader yet, though\nsupport is planned.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n\nconst contextifiedObject = vm.createContext({\n  secret: 42,\n  print: console.log,\n});\n\n(async () => {\n  // Step 1\n  //\n  // Create a Module by constructing a new `vm.SourceTextModule` object. This\n  // parses the provided source text, throwing a `SyntaxError` if anything goes\n  // wrong. By default, a Module is created in the top context. But here, we\n  // specify `contextifiedObject` as the context this Module belongs to.\n  //\n  // Here, we attempt to obtain the default export from the module \"foo\", and\n  // put it into local binding \"secret\".\n\n  const bar = new vm.SourceTextModule(`\n    import s from 'foo';\n    s;\n    print(s);\n  `, { context: contextifiedObject });\n\n  // Step 2\n  //\n  // \"Link\" the imported dependencies of this Module to it.\n  //\n  // The provided linking callback (the \"linker\") accepts two arguments: the\n  // parent module (`bar` in this case) and the string that is the specifier of\n  // the imported module. The callback is expected to return a Module that\n  // corresponds to the provided specifier, with certain requirements documented\n  // in `module.link()`.\n  //\n  // If linking has not started for the returned Module, the same linker\n  // callback will be called on the returned Module.\n  //\n  // Even top-level Modules without dependencies must be explicitly linked. The\n  // callback provided would never be called, however.\n  //\n  // The link() method returns a Promise that will be resolved when all the\n  // Promises returned by the linker resolve.\n  //\n  // Note: This is a contrived example in that the linker function creates a new\n  // \"foo\" module every time it is called. In a full-fledged module system, a\n  // cache would probably be used to avoid duplicated modules.\n\n  async function linker(specifier, referencingModule) {\n    if (specifier === 'foo') {\n      return new vm.SourceTextModule(`\n        // The \"secret\" variable refers to the global variable we added to\n        // \"contextifiedObject\" when creating the context.\n        export default secret;\n      `, { context: referencingModule.context });\n\n      // Using `contextifiedObject` instead of `referencingModule.context`\n      // here would work as well.\n    }\n    throw new Error(`Unable to resolve dependency: ${specifier}`);\n  }\n  await bar.link(linker);\n\n  // Step 3\n  //\n  // Evaluate the Module. The evaluate() method returns a promise which will\n  // resolve after the module has finished evaluating.\n\n  // Prints 42.\n  await bar.evaluate();\n})();\n</code></pre>",
+          "desc": "<p>This feature is only available with the <code>--experimental-vm-modules</code> command\nflag enabled.</p>\n<p>The <code>vm.Module</code> class provides a low-level interface for using\nECMAScript modules in VM contexts. It is the counterpart of the <code>vm.Script</code>\nclass that closely mirrors <a href=\"https://www.ecma-international.org/ecma-262/#sec-abstract-module-records\">Module Record</a>s as defined in the ECMAScript\nspecification.</p>\n<p>Unlike <code>vm.Script</code> however, every <code>vm.Module</code> object is bound to a context from\nits creation. Operations on <code>vm.Module</code> objects are intrinsically asynchronous,\nin contrast with the synchronous nature of <code>vm.Script</code> objects. The use of\n'async' functions can help with manipulating <code>vm.Module</code> objects.</p>\n<p>Using a <code>vm.Module</code> object requires three distinct steps: creation/parsing,\nlinking, and evaluation. These three steps are illustrated in the following\nexample.</p>\n<p>This implementation lies at a lower level than the <a href=\"esm.html#esm_modules_ecmascript_modules\">ECMAScript Module\nloader</a>. There is also no way to interact with the Loader yet, though\nsupport is planned.</p>\n<pre><code class=\"language-mjs\">import vm from 'vm';\n\nconst contextifiedObject = vm.createContext({\n  secret: 42,\n  print: console.log,\n});\n\n// Step 1\n//\n// Create a Module by constructing a new `vm.SourceTextModule` object. This\n// parses the provided source text, throwing a `SyntaxError` if anything goes\n// wrong. By default, a Module is created in the top context. But here, we\n// specify `contextifiedObject` as the context this Module belongs to.\n//\n// Here, we attempt to obtain the default export from the module \"foo\", and\n// put it into local binding \"secret\".\n\nconst bar = new vm.SourceTextModule(`\n  import s from 'foo';\n  s;\n  print(s);\n`, { context: contextifiedObject });\n\n// Step 2\n//\n// \"Link\" the imported dependencies of this Module to it.\n//\n// The provided linking callback (the \"linker\") accepts two arguments: the\n// parent module (`bar` in this case) and the string that is the specifier of\n// the imported module. The callback is expected to return a Module that\n// corresponds to the provided specifier, with certain requirements documented\n// in `module.link()`.\n//\n// If linking has not started for the returned Module, the same linker\n// callback will be called on the returned Module.\n//\n// Even top-level Modules without dependencies must be explicitly linked. The\n// callback provided would never be called, however.\n//\n// The link() method returns a Promise that will be resolved when all the\n// Promises returned by the linker resolve.\n//\n// Note: This is a contrived example in that the linker function creates a new\n// \"foo\" module every time it is called. In a full-fledged module system, a\n// cache would probably be used to avoid duplicated modules.\n\nasync function linker(specifier, referencingModule) {\n  if (specifier === 'foo') {\n    return new vm.SourceTextModule(`\n      // The \"secret\" variable refers to the global variable we added to\n      // \"contextifiedObject\" when creating the context.\n      export default secret;\n    `, { context: referencingModule.context });\n\n    // Using `contextifiedObject` instead of `referencingModule.context`\n    // here would work as well.\n  }\n  throw new Error(`Unable to resolve dependency: ${specifier}`);\n}\nawait bar.link(linker);\n\n// Step 3\n//\n// Evaluate the Module. The evaluate() method returns a promise which will\n// resolve after the module has finished evaluating.\n\n// Prints 42.\nawait bar.evaluate();\n</code></pre>\n<pre><code class=\"language-cjs\">const vm = require('vm');\n\nconst contextifiedObject = vm.createContext({\n  secret: 42,\n  print: console.log,\n});\n\n(async () => {\n  // Step 1\n  //\n  // Create a Module by constructing a new `vm.SourceTextModule` object. This\n  // parses the provided source text, throwing a `SyntaxError` if anything goes\n  // wrong. By default, a Module is created in the top context. But here, we\n  // specify `contextifiedObject` as the context this Module belongs to.\n  //\n  // Here, we attempt to obtain the default export from the module \"foo\", and\n  // put it into local binding \"secret\".\n\n  const bar = new vm.SourceTextModule(`\n    import s from 'foo';\n    s;\n    print(s);\n  `, { context: contextifiedObject });\n\n  // Step 2\n  //\n  // \"Link\" the imported dependencies of this Module to it.\n  //\n  // The provided linking callback (the \"linker\") accepts two arguments: the\n  // parent module (`bar` in this case) and the string that is the specifier of\n  // the imported module. The callback is expected to return a Module that\n  // corresponds to the provided specifier, with certain requirements documented\n  // in `module.link()`.\n  //\n  // If linking has not started for the returned Module, the same linker\n  // callback will be called on the returned Module.\n  //\n  // Even top-level Modules without dependencies must be explicitly linked. The\n  // callback provided would never be called, however.\n  //\n  // The link() method returns a Promise that will be resolved when all the\n  // Promises returned by the linker resolve.\n  //\n  // Note: This is a contrived example in that the linker function creates a new\n  // \"foo\" module every time it is called. In a full-fledged module system, a\n  // cache would probably be used to avoid duplicated modules.\n\n  async function linker(specifier, referencingModule) {\n    if (specifier === 'foo') {\n      return new vm.SourceTextModule(`\n        // The \"secret\" variable refers to the global variable we added to\n        // \"contextifiedObject\" when creating the context.\n        export default secret;\n      `, { context: referencingModule.context });\n\n      // Using `contextifiedObject` instead of `referencingModule.context`\n      // here would work as well.\n    }\n    throw new Error(`Unable to resolve dependency: ${specifier}`);\n  }\n  await bar.link(linker);\n\n  // Step 3\n  //\n  // Evaluate the Module. The evaluate() method returns a promise which will\n  // resolve after the module has finished evaluating.\n\n  // Prints 42.\n  await bar.evaluate();\n})();\n</code></pre>",
           "properties": [
             {
               "textRaw": "`dependencySpecifiers` {string[]}",
@@ -387,6 +387,12 @@
               "desc": "<p>If the <code>module.status</code> is <code>'errored'</code>, this property contains the exception\nthrown by the module during evaluation. If the status is anything else,\naccessing this property will result in a thrown exception.</p>\n<p>The value <code>undefined</code> cannot be used for cases where there is not a thrown\nexception due to possible ambiguity with <code>throw undefined;</code>.</p>\n<p>Corresponds to the <code>[[EvaluationError]]</code> field of <a href=\"https://tc39.es/ecma262/#sec-cyclic-module-records\">Cyclic Module Record</a>s\nin the ECMAScript specification.</p>"
             },
             {
+              "textRaw": "`identifier` {string}",
+              "type": "string",
+              "name": "identifier",
+              "desc": "<p>The identifier of the current module, as set in the constructor.</p>"
+            },
+            {
               "textRaw": "`namespace` {Object}",
               "type": "Object",
               "name": "namespace",
@@ -397,12 +403,6 @@
               "type": "string",
               "name": "status",
               "desc": "<p>The current status of the module. Will be one of:</p>\n<ul>\n<li>\n<p><code>'unlinked'</code>: <code>module.link()</code> has not yet been called.</p>\n</li>\n<li>\n<p><code>'linking'</code>: <code>module.link()</code> has been called, but not all Promises returned\nby the linker function have been resolved yet.</p>\n</li>\n<li>\n<p><code>'linked'</code>: The module has been linked successfully, and all of its\ndependencies are linked, but <code>module.evaluate()</code> has not yet been called.</p>\n</li>\n<li>\n<p><code>'evaluating'</code>: The module is being evaluated through a <code>module.evaluate()</code> on\nitself or a parent module.</p>\n</li>\n<li>\n<p><code>'evaluated'</code>: The module has been successfully evaluated.</p>\n</li>\n<li>\n<p><code>'errored'</code>: The module has been evaluated, but an exception was thrown.</p>\n</li>\n</ul>\n<p>Other than <code>'errored'</code>, this status string corresponds to the specification's\n<a href=\"https://tc39.es/ecma262/#sec-cyclic-module-records\">Cyclic Module Record</a>'s <code>[[Status]]</code> field. <code>'errored'</code> corresponds to\n<code>'evaluated'</code> in the specification, but with <code>[[EvaluationError]]</code> set to a\nvalue that is not <code>undefined</code>.</p>"
-            },
-            {
-              "textRaw": "`identifier` {string}",
-              "type": "string",
-              "name": "identifier",
-              "desc": "<p>The identifier of the current module, as set in the constructor.</p>"
             }
           ],
           "methods": [
@@ -413,9 +413,10 @@
               "signatures": [
                 {
                   "return": {
-                    "textRaw": "Returns: {Promise}",
+                    "textRaw": "Returns: {Promise} Fulfills with `undefined` upon success.",
                     "name": "return",
-                    "type": "Promise"
+                    "type": "Promise",
+                    "desc": "Fulfills with `undefined` upon success."
                   },
                   "params": [
                     {
@@ -461,10 +462,10 @@
                       "type": "Function",
                       "options": [
                         {
-                          "textRaw": "`specifier` {string} The specifier of the requested module:```js import foo from 'foo'; // ^^^^^ the module specifier ```",
+                          "textRaw": "`specifier` {string} The specifier of the requested module:```mjs import foo from 'foo'; // ^^^^^ the module specifier ```",
                           "name": "specifier",
                           "type": "string",
-                          "desc": "The specifier of the requested module:```js import foo from 'foo'; // ^^^^^ the module specifier ```"
+                          "desc": "The specifier of the requested module:```mjs import foo from 'foo'; // ^^^^^ the module specifier ```"
                         },
                         {
                           "textRaw": "`referencingModule` {vm.Module} The `Module` object `link()` is called on.",
@@ -498,7 +499,7 @@
           },
           "stability": 1,
           "stabilityText": "Experimental",
-          "desc": "<p><em>This feature is only available with the <code>--experimental-vm-modules</code> command\nflag enabled.</em></p>\n<ul>\n<li>Extends: <a href=\"vm.html#vm_class_vm_module\" class=\"type\">&lt;vm.Module&gt;</a></li>\n</ul>\n<p>The <code>vm.SourceTextModule</code> class provides the <a href=\"https://tc39.es/ecma262/#sec-source-text-module-records\">Source Text Module Record</a> as\ndefined in the ECMAScript specification.</p>",
+          "desc": "<p>This feature is only available with the <code>--experimental-vm-modules</code> command\nflag enabled.</p>\n<ul>\n<li>Extends: <a href=\"vm.html#vm_class_vm_module\" class=\"type\">&lt;vm.Module&gt;</a></li>\n</ul>\n<p>The <code>vm.SourceTextModule</code> class provides the <a href=\"https://tc39.es/ecma262/#sec-source-text-module-records\">Source Text Module Record</a> as\ndefined in the ECMAScript specification.</p>",
           "methods": [
             {
               "textRaw": "`sourceTextModule.createCachedData()`",
@@ -563,11 +564,11 @@
                       "desc": "Specifies the line number offset that is displayed in stack traces produced by this `Module`."
                     },
                     {
-                      "textRaw": "`columnOffset` {integer} Specifies the column number offset that is displayed in stack traces produced by this `Module`. **Default:** `0`.",
+                      "textRaw": "`columnOffset` {integer} Specifies the first-line column number offset that is displayed in stack traces produced by this `Module`. **Default:** `0`.",
                       "name": "columnOffset",
                       "type": "integer",
                       "default": "`0`",
-                      "desc": "Specifies the column number offset that is displayed in stack traces produced by this `Module`."
+                      "desc": "Specifies the first-line column number offset that is displayed in stack traces produced by this `Module`."
                     },
                     {
                       "textRaw": "`initializeImportMeta` {Function} Called during evaluation of this `Module` to initialize the `import.meta`.",
@@ -615,7 +616,7 @@
                   ]
                 }
               ],
-              "desc": "<p>Creates a new <code>SourceTextModule</code> instance.</p>\n<p>Properties assigned to the <code>import.meta</code> object that are objects may\nallow the module to access information outside the specified <code>context</code>. Use\n<code>vm.runInContext()</code> to create objects in a specific context.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n\nconst contextifiedObject = vm.createContext({ secret: 42 });\n\n(async () => {\n  const module = new vm.SourceTextModule(\n    'Object.getPrototypeOf(import.meta.prop).secret = secret;',\n    {\n      initializeImportMeta(meta) {\n        // Note: this object is created in the top context. As such,\n        // Object.getPrototypeOf(import.meta.prop) points to the\n        // Object.prototype in the top context rather than that in\n        // the contextified object.\n        meta.prop = {};\n      }\n    });\n  // Since module has no dependencies, the linker function will never be called.\n  await module.link(() => {});\n  await module.evaluate();\n\n  // Now, Object.prototype.secret will be equal to 42.\n  //\n  // To fix this problem, replace\n  //     meta.prop = {};\n  // above with\n  //     meta.prop = vm.runInContext('{}', contextifiedObject);\n})();\n</code></pre>"
+              "desc": "<p>Creates a new <code>SourceTextModule</code> instance.</p>\n<p>Properties assigned to the <code>import.meta</code> object that are objects may\nallow the module to access information outside the specified <code>context</code>. Use\n<code>vm.runInContext()</code> to create objects in a specific context.</p>\n<pre><code class=\"language-mjs\">import vm from 'vm';\n\nconst contextifiedObject = vm.createContext({ secret: 42 });\n\nconst module = new vm.SourceTextModule(\n  'Object.getPrototypeOf(import.meta.prop).secret = secret;',\n  {\n    initializeImportMeta(meta) {\n      // Note: this object is created in the top context. As such,\n      // Object.getPrototypeOf(import.meta.prop) points to the\n      // Object.prototype in the top context rather than that in\n      // the contextified object.\n      meta.prop = {};\n    }\n  });\n// Since module has no dependencies, the linker function will never be called.\nawait module.link(() => {});\nawait module.evaluate();\n\n// Now, Object.prototype.secret will be equal to 42.\n//\n// To fix this problem, replace\n//     meta.prop = {};\n// above with\n//     meta.prop = vm.runInContext('{}', contextifiedObject);\n</code></pre>\n<pre><code class=\"language-cjs\">const vm = require('vm');\nconst contextifiedObject = vm.createContext({ secret: 42 });\n(async () => {\n  const module = new vm.SourceTextModule(\n    'Object.getPrototypeOf(import.meta.prop).secret = secret;',\n    {\n      initializeImportMeta(meta) {\n        // Note: this object is created in the top context. As such,\n        // Object.getPrototypeOf(import.meta.prop) points to the\n        // Object.prototype in the top context rather than that in\n        // the contextified object.\n        meta.prop = {};\n      }\n    });\n  // Since module has no dependencies, the linker function will never be called.\n  await module.link(() => {});\n  await module.evaluate();\n  // Now, Object.prototype.secret will be equal to 42.\n  //\n  // To fix this problem, replace\n  //     meta.prop = {};\n  // above with\n  //     meta.prop = vm.runInContext('{}', contextifiedObject);\n})();\n</code></pre>"
             }
           ]
         },
@@ -632,7 +633,7 @@
           },
           "stability": 1,
           "stabilityText": "Experimental",
-          "desc": "<p><em>This feature is only available with the <code>--experimental-vm-modules</code> command\nflag enabled.</em></p>\n<ul>\n<li>Extends: <a href=\"vm.html#vm_class_vm_module\" class=\"type\">&lt;vm.Module&gt;</a></li>\n</ul>\n<p>The <code>vm.SyntheticModule</code> class provides the <a href=\"https://heycam.github.io/webidl/#synthetic-module-records\">Synthetic Module Record</a> as\ndefined in the WebIDL specification. The purpose of synthetic modules is to\nprovide a generic interface for exposing non-JavaScript sources to ECMAScript\nmodule graphs.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n\nconst source = '{ \"a\": 1 }';\nconst module = new vm.SyntheticModule(['default'], function() {\n  const obj = JSON.parse(source);\n  this.setExport('default', obj);\n});\n\n// Use `module` in linking...\n</code></pre>",
+          "desc": "<p>This feature is only available with the <code>--experimental-vm-modules</code> command\nflag enabled.</p>\n<ul>\n<li>Extends: <a href=\"vm.html#vm_class_vm_module\" class=\"type\">&lt;vm.Module&gt;</a></li>\n</ul>\n<p>The <code>vm.SyntheticModule</code> class provides the <a href=\"https://heycam.github.io/webidl/#synthetic-module-records\">Synthetic Module Record</a> as\ndefined in the WebIDL specification. The purpose of synthetic modules is to\nprovide a generic interface for exposing non-JavaScript sources to ECMAScript\nmodule graphs.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n\nconst source = '{ \"a\": 1 }';\nconst module = new vm.SyntheticModule(['default'], function() {\n  const obj = JSON.parse(source);\n  this.setExport('default', obj);\n});\n\n// Use `module` in linking...\n</code></pre>",
           "methods": [
             {
               "textRaw": "`syntheticModule.setExport(name, value)`",
@@ -663,7 +664,7 @@
                   ]
                 }
               ],
-              "desc": "<p>This method is used after the module is linked to set the values of exports. If\nit is called before the module is linked, an <a href=\"errors.html#ERR_VM_MODULE_STATUS\"><code>ERR_VM_MODULE_STATUS</code></a> error\nwill be thrown.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n\n(async () => {\n  const m = new vm.SyntheticModule(['x'], () => {\n    m.setExport('x', 1);\n  });\n\n  await m.link(() => {});\n  await m.evaluate();\n\n  assert.strictEqual(m.namespace.x, 1);\n})();\n</code></pre>"
+              "desc": "<p>This method is used after the module is linked to set the values of exports. If\nit is called before the module is linked, an <a href=\"errors.html#ERR_VM_MODULE_STATUS\"><code>ERR_VM_MODULE_STATUS</code></a> error\nwill be thrown.</p>\n<pre><code class=\"language-mjs\">import vm from 'vm';\n\nconst m = new vm.SyntheticModule(['x'], () => {\n  m.setExport('x', 1);\n});\n\nawait m.link(() => {});\nawait m.evaluate();\n\nassert.strictEqual(m.namespace.x, 1);\n</code></pre>\n<pre><code class=\"language-cjs\">const vm = require('vm');\n(async () => {\n  const m = new vm.SyntheticModule(['x'], () => {\n    m.setExport('x', 1);\n  });\n  await m.link(() => {});\n  await m.evaluate();\n  assert.strictEqual(m.namespace.x, 1);\n})();\n</code></pre>"
             }
           ],
           "signatures": [
@@ -701,25 +702,6 @@
         }
       ],
       "methods": [
-        {
-          "textRaw": "`vm.measureMemory([options])`",
-          "type": "method",
-          "name": "measureMemory",
-          "meta": {
-            "added": [
-              "v13.10.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental",
-          "signatures": [
-            {
-              "params": []
-            }
-          ],
-          "desc": "<p>Measure the memory known to V8 and used by all contexts known to the\ncurrent V8 isolate, or the main context.</p>\n<ul>\n<li><code>options</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a> Optional.\n<ul>\n<li><code>mode</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> Either <code>'summary'</code> or <code>'detailed'</code>. In summary mode,\nonly the memory measured for the main context will be returned. In\ndetailed mode, the measure measured for all contexts known to the\ncurrent V8 isolate will be returned.\n<strong>Default:</strong> <code>'summary'</code></li>\n<li><code>execution</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> Either <code>'default'</code> or <code>'eager'</code>. With default\nexecution, the promise will not resolve until after the next scheduled\ngarbage collection starts, which may take a while (or never if the program\nexits before the next GC). With eager execution, the GC will be started\nright away to measure the memory.\n<strong>Default:</strong> <code>'default'</code></li>\n</ul>\n</li>\n<li>Returns: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise\" class=\"type\">&lt;Promise&gt;</a> If the memory is successfully measured the promise will\nresolve with an object containing information about the memory usage.</li>\n</ul>\n<p>The format of the object that the returned Promise may resolve with is\nspecific to the V8 engine and may change from one version of V8 to the next.</p>\n<p>The returned result is different from the statistics returned by\n<code>v8.getHeapSpaceStatistics()</code> in that <code>vm.measureMemory()</code> measure the\nmemory reachable by each V8 specific contexts in the current instance of\nthe V8 engine, while the result of <code>v8.getHeapSpaceStatistics()</code> measure\nthe memory occupied by each heap space in the current V8 instance.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n// Measure the memory used by the main context.\nvm.measureMemory({ mode: 'summary' })\n  // This is the same as vm.measureMemory()\n  .then((result) => {\n    // The current format is:\n    // {\n    //   total: {\n    //      jsMemoryEstimate: 2418479, jsMemoryRange: [ 2418479, 2745799 ]\n    //    }\n    // }\n    console.log(result);\n  });\n\nconst context = vm.createContext({ a: 1 });\nvm.measureMemory({ mode: 'detailed', execution: 'eager' })\n  .then((result) => {\n    // Reference the context here so that it won't be GC'ed\n    // until the measurement is complete.\n    console.log(context.a);\n    // {\n    //   total: {\n    //     jsMemoryEstimate: 2574732,\n    //     jsMemoryRange: [ 2574732, 2904372 ]\n    //   },\n    //   current: {\n    //     jsMemoryEstimate: 2438996,\n    //     jsMemoryRange: [ 2438996, 2768636 ]\n    //   },\n    //   other: [\n    //     {\n    //       jsMemoryEstimate: 135736,\n    //       jsMemoryRange: [ 135736, 465376 ]\n    //     }\n    //   ]\n    // }\n    console.log(result);\n  });\n</code></pre>"
-        },
         {
           "textRaw": "`vm.compileFunction(code[, params[, options]])`",
           "type": "method",
@@ -784,11 +766,11 @@
                       "desc": "Specifies the line number offset that is displayed in stack traces produced by this script."
                     },
                     {
-                      "textRaw": "`columnOffset` {number} Specifies the column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
+                      "textRaw": "`columnOffset` {number} Specifies the first-line column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
                       "name": "columnOffset",
                       "type": "number",
                       "default": "`0`",
-                      "desc": "Specifies the column number offset that is displayed in stack traces produced by this script."
+                      "desc": "Specifies the first-line column number offset that is displayed in stack traces produced by this script."
                     },
                     {
                       "textRaw": "`cachedData` {Buffer|TypedArray|DataView} Provides an optional `Buffer` or `TypedArray`, or `DataView` with V8's code cache data for the supplied source.",
@@ -942,7 +924,26 @@
               ]
             }
           ],
-          "desc": "<p>Returns <code>true</code> if the given <code>oject</code> object has been <a href=\"#vm_what_does_it_mean_to_contextify_an_object\">contextified</a> using\n<a href=\"#vm_vm_createcontext_contextobject_options\"><code>vm.createContext()</code></a>.</p>"
+          "desc": "<p>Returns <code>true</code> if the given <code>object</code> object has been <a href=\"#vm_what_does_it_mean_to_contextify_an_object\">contextified</a> using\n<a href=\"#vm_vm_createcontext_contextobject_options\"><code>vm.createContext()</code></a>.</p>"
+        },
+        {
+          "textRaw": "`vm.measureMemory([options])`",
+          "type": "method",
+          "name": "measureMemory",
+          "meta": {
+            "added": [
+              "v13.10.0"
+            ],
+            "changes": []
+          },
+          "stability": 1,
+          "stabilityText": "Experimental",
+          "signatures": [
+            {
+              "params": []
+            }
+          ],
+          "desc": "<p>Measure the memory known to V8 and used by all contexts known to the\ncurrent V8 isolate, or the main context.</p>\n<ul>\n<li><code>options</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a> Optional.\n<ul>\n<li><code>mode</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> Either <code>'summary'</code> or <code>'detailed'</code>. In summary mode,\nonly the memory measured for the main context will be returned. In\ndetailed mode, the measure measured for all contexts known to the\ncurrent V8 isolate will be returned.\n<strong>Default:</strong> <code>'summary'</code></li>\n<li><code>execution</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> Either <code>'default'</code> or <code>'eager'</code>. With default\nexecution, the promise will not resolve until after the next scheduled\ngarbage collection starts, which may take a while (or never if the program\nexits before the next GC). With eager execution, the GC will be started\nright away to measure the memory.\n<strong>Default:</strong> <code>'default'</code></li>\n</ul>\n</li>\n<li>Returns: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise\" class=\"type\">&lt;Promise&gt;</a> If the memory is successfully measured the promise will\nresolve with an object containing information about the memory usage.</li>\n</ul>\n<p>The format of the object that the returned Promise may resolve with is\nspecific to the V8 engine and may change from one version of V8 to the next.</p>\n<p>The returned result is different from the statistics returned by\n<code>v8.getHeapSpaceStatistics()</code> in that <code>vm.measureMemory()</code> measure the\nmemory reachable by each V8 specific contexts in the current instance of\nthe V8 engine, while the result of <code>v8.getHeapSpaceStatistics()</code> measure\nthe memory occupied by each heap space in the current V8 instance.</p>\n<pre><code class=\"language-js\">const vm = require('vm');\n// Measure the memory used by the main context.\nvm.measureMemory({ mode: 'summary' })\n  // This is the same as vm.measureMemory()\n  .then((result) => {\n    // The current format is:\n    // {\n    //   total: {\n    //      jsMemoryEstimate: 2418479, jsMemoryRange: [ 2418479, 2745799 ]\n    //    }\n    // }\n    console.log(result);\n  });\n\nconst context = vm.createContext({ a: 1 });\nvm.measureMemory({ mode: 'detailed', execution: 'eager' })\n  .then((result) => {\n    // Reference the context here so that it won't be GC'ed\n    // until the measurement is complete.\n    console.log(context.a);\n    // {\n    //   total: {\n    //     jsMemoryEstimate: 2574732,\n    //     jsMemoryRange: [ 2574732, 2904372 ]\n    //   },\n    //   current: {\n    //     jsMemoryEstimate: 2438996,\n    //     jsMemoryRange: [ 2438996, 2768636 ]\n    //   },\n    //   other: [\n    //     {\n    //       jsMemoryEstimate: 135736,\n    //       jsMemoryRange: [ 135736, 465376 ]\n    //     }\n    //   ]\n    // }\n    console.log(result);\n  });\n</code></pre>"
         },
         {
           "textRaw": "`vm.runInContext(code, contextifiedObject[, options])`",
@@ -1001,11 +1002,11 @@
                       "desc": "Specifies the line number offset that is displayed in stack traces produced by this script."
                     },
                     {
-                      "textRaw": "`columnOffset` {number} Specifies the column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
+                      "textRaw": "`columnOffset` {number} Specifies the first-line column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
                       "name": "columnOffset",
                       "type": "number",
                       "default": "`0`",
-                      "desc": "Specifies the column number offset that is displayed in stack traces produced by this script."
+                      "desc": "Specifies the first-line column number offset that is displayed in stack traces produced by this script."
                     },
                     {
                       "textRaw": "`displayErrors` {boolean} When `true`, if an [`Error`][] occurs while compiling the `code`, the line of code causing the error is attached to the stack trace. **Default:** `true`.",
@@ -1139,11 +1140,11 @@
                       "desc": "Specifies the line number offset that is displayed in stack traces produced by this script."
                     },
                     {
-                      "textRaw": "`columnOffset` {number} Specifies the column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
+                      "textRaw": "`columnOffset` {number} Specifies the first-line column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
                       "name": "columnOffset",
                       "type": "number",
                       "default": "`0`",
-                      "desc": "Specifies the column number offset that is displayed in stack traces produced by this script."
+                      "desc": "Specifies the first-line column number offset that is displayed in stack traces produced by this script."
                     },
                     {
                       "textRaw": "`displayErrors` {boolean} When `true`, if an [`Error`][] occurs while compiling the `code`, the line of code causing the error is attached to the stack trace. **Default:** `true`.",
@@ -1302,11 +1303,11 @@
                       "desc": "Specifies the line number offset that is displayed in stack traces produced by this script."
                     },
                     {
-                      "textRaw": "`columnOffset` {number} Specifies the column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
+                      "textRaw": "`columnOffset` {number} Specifies the first-line column number offset that is displayed in stack traces produced by this script. **Default:** `0`.",
                       "name": "columnOffset",
                       "type": "number",
                       "default": "`0`",
-                      "desc": "Specifies the column number offset that is displayed in stack traces produced by this script."
+                      "desc": "Specifies the first-line column number offset that is displayed in stack traces produced by this script."
                     },
                     {
                       "textRaw": "`displayErrors` {boolean} When `true`, if an [`Error`][] occurs while compiling the `code`, the line of code causing the error is attached to the stack trace. **Default:** `true`.",

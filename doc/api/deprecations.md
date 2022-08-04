@@ -173,7 +173,7 @@ changes:
     description: A deprecation code has been assigned.
   - version: v0.11.14
     description: Runtime deprecation.
-  - version: v0.5.11
+  - version: v0.5.10
     description: Documentation-only deprecation.
 -->
 
@@ -710,7 +710,7 @@ changes:
 
 Type: Documentation-only
 
-The [`EventEmitter.listenerCount(emitter, eventName)`][] API is
+The [`events.listenerCount(emitter, eventName)`][] API is
 deprecated. Please use [`emitter.listenerCount(eventName)`][] instead.
 
 ### DEP0034: `fs.exists(path, callback)`
@@ -1340,6 +1340,7 @@ The `http` module `OutgoingMessage.prototype._headers` and
 the public methods (e.g. `OutgoingMessage.prototype.getHeader()`,
 `OutgoingMessage.prototype.getHeaders()`,
 `OutgoingMessage.prototype.getHeaderNames()`,
+`OutgoingMessage.prototype.getRawHeaderNames()`,
 `OutgoingMessage.prototype.hasHeader()`,
 `OutgoingMessage.prototype.removeHeader()`,
 `OutgoingMessage.prototype.setHeader()`) for working with outgoing headers.
@@ -1773,7 +1774,7 @@ Assigning properties to the top-level `this` as an alternative
 to `module.exports` is deprecated. Developers should use `exports`
 or `module.exports` instead.
 
-### DEP0093: `crypto.fips` is deprecated and replaced.
+### DEP0093: `crypto.fips` is deprecated and replaced
 <!-- YAML
 changes:
   - version: v10.0.0
@@ -1786,7 +1787,7 @@ Type: Documentation-only
 The [`crypto.fips`][] property is deprecated. Please use `crypto.setFips()`
 and `crypto.getFips()` instead.
 
-### DEP0094: Using `assert.fail()` with more than one argument.
+### DEP0094: Using `assert.fail()` with more than one argument
 <!-- YAML
 changes:
   - version: v10.0.0
@@ -1906,7 +1907,7 @@ Type: End-of-Life
 
 The `--with-lttng` compile-time option has been removed.
 
-### DEP0102: Using `noAssert` in `Buffer#(read|write)` operations.
+### DEP0102: Using `noAssert` in `Buffer#(read|write)` operations
 <!-- YAML
 changes:
   - version: v10.0.0
@@ -2147,12 +2148,15 @@ future release.
 ### DEP0116: Legacy URL API
 <!-- YAML
 changes:
+  - version: v14.17.0
+    pr-url: https://github.com/nodejs/node/pull/37784
+    description: Deprecation revoked. Status changed to "Legacy".
   - version: v11.0.0
     pr-url: https://github.com/nodejs/node/pull/22715
     description: Documentation-only deprecation.
 -->
 
-Type: Documentation-only
+Type: Deprecation revoked
 
 The [Legacy URL API][] is deprecated. This includes [`url.format()`][],
 [`url.parse()`][], [`url.resolve()`][], and the [legacy `urlObject`][]. Please
@@ -2455,7 +2459,7 @@ called, not whether `'finish'` has been emitted and the underlying data
 is flushed.
 
 Use [`response.writableFinished`][] or [`response.writableEnded`][]
-accordingly instead to avoid the ambigiuty.
+accordingly instead to avoid the ambiguity.
 
 To maintain existing behaviour `response.finished` should be replaced with
 `response.writableEnded`.
@@ -2649,10 +2653,28 @@ In future versions of Node.js, `fs.rmdir(path, { recursive: true })` will throw
 on nonexistent paths, or when given a file as a target.
 Use `fs.rm(path, { recursive: true, force: true })` instead.
 
+### DEP0151: Main index lookup and extension searching
+<!-- YAML
+changes:
+  - version: v14.18.0
+    pr-url: https://github.com/nodejs/node/pull/36918
+    description: Documentation-only deprecation
+                 with `--pending-deprecation` support.
+-->
+
+Type: Documentation-only (supports [`--pending-deprecation`][])
+
+Previously, `index.js` and extension searching lookups would apply to
+`import 'pkg'` main entry point resolution, even when resolving ES modules.
+
+With this deprecation, all ES module main entry point resolutions require
+an explicit [`"exports"` or `"main"` entry][] with the exact file extension.
+
 [Legacy URL API]: url.md#url_legacy_url_api
 [NIST SP 800-38D]: https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
 [RFC 6066]: https://tools.ietf.org/html/rfc6066#section-3
 [WHATWG URL API]: url.md#url_the_whatwg_url_api
+[`"exports"` or `"main"` entry]: packages.md#packages_main_entry_point_export
 [`--pending-deprecation`]: cli.md#cli_pending_deprecation
 [`--throw-deprecation`]: cli.md#cli_throw_deprecation
 [`Buffer.allocUnsafeSlow(size)`]: buffer.md#buffer_static_method_buffer_allocunsafeslow_size
@@ -2661,7 +2683,6 @@ Use `fs.rm(path, { recursive: true, force: true })` instead.
 [`Buffer.isBuffer()`]: buffer.md#buffer_static_method_buffer_isbuffer_obj
 [`Cipher`]: crypto.md#crypto_class_cipher
 [`Decipher`]: crypto.md#crypto_class_decipher
-[`EventEmitter.listenerCount(emitter, eventName)`]: events.md#events_eventemitter_listenercount_emitter_eventname
 [`REPLServer.clearBufferedCommand()`]: repl.md#repl_replserver_clearbufferedcommand
 [`ReadStream.open()`]: fs.md#fs_class_fs_readstream
 [`Server.connections`]: net.md#net_server_connections
@@ -2691,6 +2712,7 @@ Use `fs.rm(path, { recursive: true, force: true })` instead.
 [`domain`]: domain.md
 [`ecdh.setPublicKey()`]: crypto.md#crypto_ecdh_setpublickey_publickey_encoding
 [`emitter.listenerCount(eventName)`]: events.md#events_emitter_listenercount_eventname
+[`events.listenerCount(emitter, eventName)`]: events.md#events_events_listenercount_emitter_eventname
 [`fs.FileHandle`]: fs.md#fs_class_filehandle
 [`fs.access()`]: fs.md#fs_fs_access_path_mode_callback
 [`fs.createReadStream()`]: fs.md#fs_fs_createreadstream_path_options

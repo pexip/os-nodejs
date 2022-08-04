@@ -233,8 +233,21 @@
         {
           "textRaw": "Node.js error codes",
           "name": "node.js_error_codes",
-          "desc": "<p><a id=\"ERR_AMBIGUOUS_ARGUMENT\"></a></p>",
+          "desc": "<p><a id=\"ABORT_ERR\"></a></p>",
           "modules": [
+            {
+              "textRaw": "`ABORT_ERR`",
+              "name": "`abort_err`",
+              "meta": {
+                "added": [
+                  "v14.17.0"
+                ],
+                "changes": []
+              },
+              "desc": "<p>Used when an operation has been aborted (typically using an <code>AbortController</code>).</p>\n<p>APIs <em>not</em> using <code>AbortSignal</code>s typically do not raise an error with this code.</p>\n<p>This code does not use the regular <code>ERR_*</code> convention Node.js errors use in\norder to be compatible with the web platform's <code>AbortError</code>.</p>\n<p><a id=\"ERR_AMBIGUOUS_ARGUMENT\"></a></p>",
+              "type": "module",
+              "displayName": "`ABORT_ERR`"
+            },
             {
               "textRaw": "`ERR_AMBIGUOUS_ARGUMENT`",
               "name": "`err_ambiguous_argument`",
@@ -329,9 +342,16 @@
             {
               "textRaw": "`ERR_CHILD_PROCESS_STDIO_MAXBUFFER`",
               "name": "`err_child_process_stdio_maxbuffer`",
-              "desc": "<p>Used when the main process is trying to read data from the child process's\nSTDERR/STDOUT, and the data's length is longer than the <code>maxBuffer</code> option.</p>\n<p><a id=\"ERR_CONSOLE_WRITABLE_STREAM\"></a></p>",
+              "desc": "<p>Used when the main process is trying to read data from the child process's\nSTDERR/STDOUT, and the data's length is longer than the <code>maxBuffer</code> option.</p>\n<p><a id=\"ERR_CLOSED_MESSAGE_PORT\"></a></p>",
               "type": "module",
               "displayName": "`ERR_CHILD_PROCESS_STDIO_MAXBUFFER`"
+            },
+            {
+              "textRaw": "`ERR_CLOSED_MESSAGE_PORT`",
+              "name": "`err_closed_message_port`",
+              "desc": "<!--\nadded: v14.17.1\nchanges:\n  - version: 11.12.0\n    pr-url: https://github.com/nodejs/node/pull/26487\n    description: The error message was removed.\n  - version: v14.17.1\n    pr-url: https://github.com/nodejs/node/pull/38510\n    description: The error message was reintroduced.\n-->\n<p>There was an attempt to use a <code>MessagePort</code> instance in a closed\nstate, usually after <code>.close()</code> has been called.</p>\n<p><a id=\"ERR_CONSOLE_WRITABLE_STREAM\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_CLOSED_MESSAGE_PORT`"
             },
             {
               "textRaw": "`ERR_CONSOLE_WRITABLE_STREAM`",
@@ -504,9 +524,48 @@
             {
               "textRaw": "`ERR_CRYPTO_UNKNOWN_DH_GROUP`",
               "name": "`err_crypto_unknown_dh_group`",
-              "desc": "<p>An unknown Diffie-Hellman group name was given. See\n<a href=\"crypto.html#crypto_crypto_getdiffiehellman_groupname\"><code>crypto.getDiffieHellman()</code></a> for a list of valid group names.</p>\n<p><a id=\"ERR_DIR_CLOSED\"></a></p>",
+              "desc": "<p>An unknown Diffie-Hellman group name was given. See\n<a href=\"crypto.html#crypto_crypto_getdiffiehellman_groupname\"><code>crypto.getDiffieHellman()</code></a> for a list of valid group names.</p>\n<p><a id=\"ERR_DLOPEN_FAILED\"></a></p>",
               "type": "module",
               "displayName": "`ERR_CRYPTO_UNKNOWN_DH_GROUP`"
+            },
+            {
+              "textRaw": "`ERR_DLOPEN_FAILED`",
+              "name": "`err_dlopen_failed`",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "desc": "<p>A call to <code>process.dlopen()</code> failed.</p>\n<p><a id=\"ERR_DEBUGGER_ERROR\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_DLOPEN_FAILED`"
+            },
+            {
+              "textRaw": "`ERR_DEBUGGER_ERROR`",
+              "name": "`err_debugger_error`",
+              "meta": {
+                "added": [
+                  "v14.17.4"
+                ],
+                "changes": []
+              },
+              "desc": "<p>An error occurred with the <a href=\"debugger.html\">debugger</a>.</p>\n<p><a id=\"ERR_DEBUGGER_STARTUP_ERROR\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_DEBUGGER_ERROR`"
+            },
+            {
+              "textRaw": "`ERR_DEBUGGER_STARTUP_ERROR`",
+              "name": "`err_debugger_startup_error`",
+              "meta": {
+                "added": [
+                  "v14.17.4"
+                ],
+                "changes": []
+              },
+              "desc": "<p>The <a href=\"debugger.html\">debugger</a> timed out waiting for the required host/port to be free.</p>\n<p><a id=\"ERR_DIR_CLOSED\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_DEBUGGER_STARTUP_ERROR`"
             },
             {
               "textRaw": "`ERR_DIR_CLOSED`",
@@ -803,9 +862,16 @@
             {
               "textRaw": "`ERR_HTTP2_NESTED_PUSH`",
               "name": "`err_http2_nested_push`",
-              "desc": "<p>An attempt was made to initiate a new push stream from within a push stream.\nNested push streams are not permitted.</p>\n<p><a id=\"ERR_HTTP2_NO_SOCKET_MANIPULATION\"></a></p>",
+              "desc": "<p>An attempt was made to initiate a new push stream from within a push stream.\nNested push streams are not permitted.</p>\n<p><a id=\"ERR_HTTP2_NO_MEM\"></a></p>",
               "type": "module",
               "displayName": "`ERR_HTTP2_NESTED_PUSH`"
+            },
+            {
+              "textRaw": "`ERR_HTTP2_NO_MEM`",
+              "name": "`err_http2_no_mem`",
+              "desc": "<p>Out of memory when using the <code>http2session.setLocalWindowSize(windowSize)</code> API.</p>\n<p><a id=\"ERR_HTTP2_NO_SOCKET_MANIPULATION\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_HTTP2_NO_MEM`"
             },
             {
               "textRaw": "`ERR_HTTP2_NO_SOCKET_MANIPULATION`",
@@ -1141,9 +1207,22 @@
             {
               "textRaw": "`ERR_INVALID_IP_ADDRESS`",
               "name": "`err_invalid_ip_address`",
-              "desc": "<p>An IP address is not valid.</p>\n<p><a id=\"ERR_INVALID_MODULE_SPECIFIER\"></a></p>",
+              "desc": "<p>An IP address is not valid.</p>\n<p><a id=\"ERR_INVALID_MODULE\"></a></p>",
               "type": "module",
               "displayName": "`ERR_INVALID_IP_ADDRESS`"
+            },
+            {
+              "textRaw": "`ERR_INVALID_MODULE`",
+              "name": "`err_invalid_module`",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "desc": "<p>An attempt was made to load a module that does not exist or was otherwise not\nvalid.</p>\n<p><a id=\"ERR_INVALID_MODULE_SPECIFIER\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_INVALID_MODULE`"
             },
             {
               "textRaw": "`ERR_INVALID_MODULE_SPECIFIER`",
@@ -1204,7 +1283,7 @@
             {
               "textRaw": "`ERR_INVALID_REPL_INPUT`",
               "name": "`err_invalid_repl_input`",
-              "desc": "<p>The input may not be used in the <a href=\"repl.html\"><code>REPL</code></a>. All prohibited inputs are\ndocumented in the <a href=\"repl.html\"><code>REPL</code></a>'s documentation.</p>\n<p><a id=\"ERR_INVALID_RETURN_PROPERTY\"></a></p>",
+              "desc": "<p>The input may not be used in the <a href=\"repl.html\"><code>REPL</code></a>. The conditions under which this\nerror is used are described in the <a href=\"repl.html\"><code>REPL</code></a> documentation.</p>\n<p><a id=\"ERR_INVALID_RETURN_PROPERTY\"></a></p>",
               "type": "module",
               "displayName": "`ERR_INVALID_REPL_INPUT`"
             },
@@ -1330,9 +1409,16 @@
             {
               "textRaw": "`ERR_MANIFEST_INVALID_RESOURCE_FIELD`",
               "name": "`err_manifest_invalid_resource_field`",
-              "desc": "<p>A policy manifest resource had an invalid value for one of its fields. Update\nthe manifest entry to match in order to resolve this error. See the\ndocumentation for <a href=\"policy.html\">policy</a> manifests for more information.</p>\n<p><a id=\"ERR_MANIFEST_PARSE_POLICY\"></a></p>",
+              "desc": "<p>A policy manifest resource had an invalid value for one of its fields. Update\nthe manifest entry to match in order to resolve this error. See the\ndocumentation for <a href=\"policy.html\">policy</a> manifests for more information.</p>\n<p><a id=\"ERR_MANIFEST_INVALID_SPECIFIER\"></a></p>",
               "type": "module",
               "displayName": "`ERR_MANIFEST_INVALID_RESOURCE_FIELD`"
+            },
+            {
+              "textRaw": "`ERR_MANIFEST_INVALID_SPECIFIER`",
+              "name": "`err_manifest_invalid_specifier`",
+              "desc": "<p>A policy manifest resource had an invalid value for one of its dependency\nmappings. Update the manifest entry to match to resolve this error. See the\ndocumentation for <a href=\"policy.html\">policy</a> manifests for more information.</p>\n<p><a id=\"ERR_MANIFEST_PARSE_POLICY\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_MANIFEST_INVALID_SPECIFIER`"
             },
             {
               "textRaw": "`ERR_MANIFEST_PARSE_POLICY`",
@@ -1436,7 +1522,7 @@
             {
               "textRaw": "`ERR_NAPI_CONS_FUNCTION`",
               "name": "`err_napi_cons_function`",
-              "desc": "<p>While using <code>N-API</code>, a constructor passed was not a function.</p>\n<p><a id=\"ERR_NAPI_INVALID_DATAVIEW_ARGS\"></a></p>",
+              "desc": "<p>While using <code>Node-API</code>, a constructor passed was not a function.</p>\n<p><a id=\"ERR_NAPI_INVALID_DATAVIEW_ARGS\"></a></p>",
               "type": "module",
               "displayName": "`ERR_NAPI_CONS_FUNCTION`"
             },
@@ -1506,9 +1592,16 @@
             {
               "textRaw": "`ERR_NON_CONTEXT_AWARE_DISABLED`",
               "name": "`err_non_context_aware_disabled`",
-              "desc": "<p>A non-context-aware native addon was loaded in a process that disallows them.</p>\n<p><a id=\"ERR_OUT_OF_RANGE\"></a></p>",
+              "desc": "<p>A non-context-aware native addon was loaded in a process that disallows them.</p>\n<p><a id=\"ERR_OPERATION_FAILED\"></a></p>",
               "type": "module",
               "displayName": "`ERR_NON_CONTEXT_AWARE_DISABLED`"
+            },
+            {
+              "textRaw": "`ERR_OPERATION_FAILED`",
+              "name": "`err_operation_failed`",
+              "desc": "<p>An operation failed. This is typically used to signal the general failure of an\nasynchronous operation.</p>\n<p><a id=\"ERR_OUT_OF_RANGE\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_OPERATION_FAILED`"
             },
             {
               "textRaw": "`ERR_OUT_OF_RANGE`",
@@ -1871,7 +1964,7 @@
             {
               "textRaw": "`ERR_UNAVAILABLE_DURING_EXIT`",
               "name": "`err_unavailable_during_exit`",
-              "desc": "<p>Function was called within a <a href=\"process.html#Event:-%60&#x27;exit&#x27;%60\"><code>process.on('exit')</code></a> handler that shouldn't be\ncalled within <a href=\"process.html#Event:-%60&#x27;exit&#x27;%60\"><code>process.on('exit')</code></a> handler.</p>\n<p><a id=\"ERR_UNCAUGHT_EXCEPTION_CAPTURE_ALREADY_SET\"></a></p>",
+              "desc": "<p>Function was called within a <a href=\"process.html#process_event_exit\"><code>process.on('exit')</code></a> handler that shouldn't be\ncalled within <a href=\"process.html#process_event_exit\"><code>process.on('exit')</code></a> handler.</p>\n<p><a id=\"ERR_UNCAUGHT_EXCEPTION_CAPTURE_ALREADY_SET\"></a></p>",
               "type": "module",
               "displayName": "`ERR_UNAVAILABLE_DURING_EXIT`"
             },
@@ -2001,9 +2094,16 @@
             {
               "textRaw": "`ERR_VM_MODULE_LINKING_ERRORED`",
               "name": "`err_vm_module_linking_errored`",
-              "desc": "<p>The linker function returned a module for which linking has failed.</p>\n<p><a id=\"ERR_VM_MODULE_NOT_MODULE\"></a></p>",
+              "desc": "<p>The linker function returned a module for which linking has failed.</p>\n<p><a id=\"ERR_VM_MODULE_LINK_FAILURE\"></a></p>",
               "type": "module",
               "displayName": "`ERR_VM_MODULE_LINKING_ERRORED`"
+            },
+            {
+              "textRaw": "`ERR_VM_MODULE_LINK_FAILURE`",
+              "name": "`err_vm_module_link_failure`",
+              "desc": "<p>The module was unable to be linked due to a failure.</p>\n<p><a id=\"ERR_VM_MODULE_NOT_MODULE\"></a></p>",
+              "type": "module",
+              "displayName": "`ERR_VM_MODULE_LINK_FAILURE`"
             },
             {
               "textRaw": "`ERR_VM_MODULE_NOT_MODULE`",
@@ -2153,25 +2253,9 @@
             {
               "textRaw": "`ERR_CANNOT_TRANSFER_OBJECT`",
               "name": "`err_cannot_transfer_object`",
-              "desc": "<!--\nadded: v10.5.0\nremoved: v12.5.0\n-->\n<p>The value passed to <code>postMessage()</code> contained an object that is not supported\nfor transferring.</p>\n<p><a id=\"ERR_CLOSED_MESSAGE_PORT\"></a></p>",
+              "desc": "<!--\nadded: v10.5.0\nremoved: v12.5.0\n-->\n<p>The value passed to <code>postMessage()</code> contained an object that is not supported\nfor transferring.</p>\n<p><a id=\"ERR_CRYPTO_HASH_DIGEST_NO_UTF16\"></a></p>",
               "type": "module",
               "displayName": "`ERR_CANNOT_TRANSFER_OBJECT`"
-            },
-            {
-              "textRaw": "`ERR_CLOSED_MESSAGE_PORT`",
-              "name": "`err_closed_message_port`",
-              "meta": {
-                "added": [
-                  "v10.5.0"
-                ],
-                "removed": [
-                  "v11.12.0"
-                ],
-                "changes": []
-              },
-              "desc": "<p>There was an attempt to use a <code>MessagePort</code> instance in a closed\nstate, usually after <code>.close()</code> has been called.</p>\n<p><a id=\"ERR_CRYPTO_HASH_DIGEST_NO_UTF16\"></a></p>",
-              "type": "module",
-              "displayName": "`ERR_CLOSED_MESSAGE_PORT`"
             },
             {
               "textRaw": "`ERR_CRYPTO_HASH_DIGEST_NO_UTF16`",
@@ -2320,7 +2404,7 @@
                 ],
                 "changes": []
               },
-              "desc": "<p>Used by the <code>N-API</code> when <code>Constructor.prototype</code> is not an object.</p>\n<p><a id=\"ERR_NO_LONGER_SUPPORTED\"></a></p>",
+              "desc": "<p>Used by the <code>Node-API</code> when <code>Constructor.prototype</code> is not an object.</p>\n<p><a id=\"ERR_NO_LONGER_SUPPORTED\"></a></p>",
               "type": "module",
               "displayName": "`ERR_NAPI_CONS_PROTOTYPE_OBJECT`"
             },

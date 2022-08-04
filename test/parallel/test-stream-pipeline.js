@@ -21,7 +21,7 @@ const net = require('net');
   const expected = [
     Buffer.from('a'),
     Buffer.from('b'),
-    Buffer.from('c')
+    Buffer.from('c'),
   ];
 
   const read = new Readable({
@@ -346,7 +346,7 @@ const net = require('net');
 
   const expected = [
     Buffer.from('hello'),
-    Buffer.from('world')
+    Buffer.from('world'),
   ];
 
   const rs = new Readable({
@@ -627,9 +627,7 @@ const net = require('net');
     await Promise.resolve();
     yield 'hello';
   }, async function*(source) {
-    for await (const chunk of source) {
-      chunk;
-    }
+    for await (const chunk of source) {}
   }, common.mustCall((err) => {
     assert.strictEqual(err, undefined);
   }));
@@ -645,9 +643,7 @@ const net = require('net');
     await Promise.resolve();
     throw new Error('kaboom');
   }, async function*(source) {
-    for await (const chunk of source) {
-      chunk;
-    }
+    for await (const chunk of source) {}
   }, common.mustCall((err) => {
     assert.strictEqual(err.message, 'kaboom');
   }));
@@ -703,7 +699,6 @@ const net = require('net');
     yield 'world';
   }, s, async function(source) {
     for await (const chunk of source) {
-      chunk;
       throw new Error('kaboom');
     }
   }, common.mustCall((err, val) => {
@@ -718,7 +713,6 @@ const net = require('net');
     return ['hello', 'world'];
   }, s, async function*(source) {
     for await (const chunk of source) {
-      chunk;
       throw new Error('kaboom');
     }
   }, common.mustCall((err) => {
@@ -1230,5 +1224,42 @@ const net = require('net');
   });
   pipeline(['1', '2', '3'], w, common.mustSucceed(() => {
     assert.strictEqual(res, '123');
+  }));
+}
+{
+  function createThenable() {
+    let counter = 0;
+    return {
+      get then() {
+        if (counter++) {
+          throw new Error('Cannot access `then` more than once');
+        }
+        return Function.prototype;
+      },
+    };
+  }
+
+  pipeline(
+    function* () {
+      yield 0;
+    },
+    createThenable,
+    () => common.mustNotCall(),
+  );
+}
+
+{
+  const content = 'abc';
+  pipeline(Buffer.from(content), PassThrough({ objectMode: true }),
+           common.mustSucceed(() => {}));
+
+  let res = '';
+  pipeline(Buffer.from(content), async function*(previous) {
+    for await (const val of previous) {
+      res += String.fromCharCode(val);
+      yield val;
+    }
+  }, common.mustSucceed(() => {
+    assert.strictEqual(res, content);
   }));
 }

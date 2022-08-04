@@ -88,7 +88,7 @@ class BindingData : public BaseObject {
   BindingData(Environment* env, Local<Object> obj)
       : BaseObject(env, obj) {}
 
-  static constexpr FastStringKey binding_data_name { "http_parser" };
+  static constexpr FastStringKey type_name { "http_parser" };
 
   std::vector<char> parser_buffer;
   bool parser_buffer_in_use = false;
@@ -101,7 +101,7 @@ class BindingData : public BaseObject {
 };
 
 // TODO(addaleax): Remove once we're on C++17.
-constexpr FastStringKey BindingData::binding_data_name;
+constexpr FastStringKey BindingData::type_name;
 
 // helper class for the Parser
 struct StringPtr {
@@ -880,6 +880,15 @@ class Parser : public AsyncWrap, public StreamListener {
     return HPE_PAUSED;
   }
 
+
+  bool IsNotIndicativeOfMemoryLeakAtExit() const override {
+    // HTTP parsers are able to emit events without any GC root referring
+    // to them, because they receive events directly from the underlying
+    // libuv resource.
+    return true;
+  }
+
+
   llhttp_t parser_;
   StringPtr fields_[kMaxHeaderFieldsCount];  // header fields
   StringPtr values_[kMaxHeaderFieldsCount];  // header values
@@ -947,7 +956,6 @@ void InitializeHttpParser(Local<Object> target,
 
   Local<FunctionTemplate> t = env->NewFunctionTemplate(Parser::New);
   t->InstanceTemplate()->SetInternalFieldCount(Parser::kInternalFieldCount);
-  t->SetClassName(FIXED_ONE_BYTE_STRING(env->isolate(), "HTTPParser"));
 
   t->Set(FIXED_ONE_BYTE_STRING(env->isolate(), "REQUEST"),
          Integer::New(env->isolate(), HTTP_REQUEST));
@@ -990,9 +998,7 @@ void InitializeHttpParser(Local<Object> target,
   env->SetProtoMethod(t, "unconsume", Parser::Unconsume);
   env->SetProtoMethod(t, "getCurrentBuffer", Parser::GetCurrentBuffer);
 
-  target->Set(env->context(),
-              FIXED_ONE_BYTE_STRING(env->isolate(), "HTTPParser"),
-              t->GetFunction(env->context()).ToLocalChecked()).Check();
+  env->SetConstructorFunction(target, "HTTPParser", t);
 }
 
 }  // anonymous namespace

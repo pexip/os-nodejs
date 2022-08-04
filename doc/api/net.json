@@ -6,7 +6,7 @@
       "textRaw": "Net",
       "name": "net",
       "introduced_in": "v0.10.0",
-      "desc": "<!--lint disable maximum-line-length-->\n<blockquote>\n<p>Stability: 2 - Stable</p>\n</blockquote>\n<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.16.0/lib/net.js\">lib/net.js</a></p>\n<p>The <code>net</code> module provides an asynchronous network API for creating stream-based\nTCP or <a href=\"#net_ipc_support\">IPC</a> servers (<a href=\"#net_net_createserver_options_connectionlistener\"><code>net.createServer()</code></a>) and clients\n(<a href=\"#net_net_createconnection\"><code>net.createConnection()</code></a>).</p>\n<p>It can be accessed using:</p>\n<pre><code class=\"language-js\">const net = require('net');\n</code></pre>",
+      "desc": "<!--lint disable maximum-line-length-->\n<blockquote>\n<p>Stability: 2 - Stable</p>\n</blockquote>\n<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v14.18.1/lib/net.js\">lib/net.js</a></p>\n<p>The <code>net</code> module provides an asynchronous network API for creating stream-based\nTCP or <a href=\"#net_ipc_support\">IPC</a> servers (<a href=\"#net_net_createserver_options_connectionlistener\"><code>net.createServer()</code></a>) and clients\n(<a href=\"#net_net_createconnection\"><code>net.createConnection()</code></a>).</p>\n<p>It can be accessed using:</p>\n<pre><code class=\"language-js\">const net = require('net');\n</code></pre>",
       "modules": [
         {
           "textRaw": "IPC support",
@@ -26,6 +26,270 @@
         }
       ],
       "classes": [
+        {
+          "textRaw": "Class: `net.BlockList`",
+          "type": "class",
+          "name": "net.BlockList",
+          "meta": {
+            "added": [
+              "v14.18.0"
+            ],
+            "changes": []
+          },
+          "desc": "<p>The <code>BlockList</code> object can be used with some network APIs to specify rules for\ndisabling inbound or outbound access to specific IP addresses, IP ranges, or\nIP subnets.</p>",
+          "methods": [
+            {
+              "textRaw": "`blockList.addAddress(address[, type])`",
+              "type": "method",
+              "name": "addAddress",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "params": [
+                    {
+                      "textRaw": "`address` {string|net.SocketAddress} An IPv4 or IPv6 address.",
+                      "name": "address",
+                      "type": "string|net.SocketAddress",
+                      "desc": "An IPv4 or IPv6 address."
+                    },
+                    {
+                      "textRaw": "`type` {string} Either `'ipv4'` or `'ipv6'`. **Default:** `'ipv4'`.",
+                      "name": "type",
+                      "type": "string",
+                      "default": "`'ipv4'`",
+                      "desc": "Either `'ipv4'` or `'ipv6'`."
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Adds a rule to block the given IP address.</p>"
+            },
+            {
+              "textRaw": "`blockList.addRange(start, end[, type])`",
+              "type": "method",
+              "name": "addRange",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "params": [
+                    {
+                      "textRaw": "`start` {string|net.SocketAddress} The starting IPv4 or IPv6 address in the range.",
+                      "name": "start",
+                      "type": "string|net.SocketAddress",
+                      "desc": "The starting IPv4 or IPv6 address in the range."
+                    },
+                    {
+                      "textRaw": "`end` {string|net.SocketAddress} The ending IPv4 or IPv6 address in the range.",
+                      "name": "end",
+                      "type": "string|net.SocketAddress",
+                      "desc": "The ending IPv4 or IPv6 address in the range."
+                    },
+                    {
+                      "textRaw": "`type` {string} Either `'ipv4'` or `'ipv6'`. **Default:** `'ipv4'`.",
+                      "name": "type",
+                      "type": "string",
+                      "default": "`'ipv4'`",
+                      "desc": "Either `'ipv4'` or `'ipv6'`."
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Adds a rule to block a range of IP addresses from <code>start</code> (inclusive) to\n<code>end</code> (inclusive).</p>"
+            },
+            {
+              "textRaw": "`blockList.addSubnet(net, prefix[, type])`",
+              "type": "method",
+              "name": "addSubnet",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "params": [
+                    {
+                      "textRaw": "`net` {string|net.SocketAddress} The network IPv4 or IPv6 address.",
+                      "name": "net",
+                      "type": "string|net.SocketAddress",
+                      "desc": "The network IPv4 or IPv6 address."
+                    },
+                    {
+                      "textRaw": "`prefix` {number} The number of CIDR prefix bits. For IPv4, this must be a value between `0` and `32`. For IPv6, this must be between `0` and `128`.",
+                      "name": "prefix",
+                      "type": "number",
+                      "desc": "The number of CIDR prefix bits. For IPv4, this must be a value between `0` and `32`. For IPv6, this must be between `0` and `128`."
+                    },
+                    {
+                      "textRaw": "`type` {string} Either `'ipv4'` or `'ipv6'`. **Default**: `'ipv4'`.",
+                      "name": "type",
+                      "type": "string",
+                      "desc": "Either `'ipv4'` or `'ipv6'`. **Default**: `'ipv4'`."
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Adds a rule to block a range of IP addresses specified as a subnet mask.</p>"
+            },
+            {
+              "textRaw": "`blockList.check(address[, type])`",
+              "type": "method",
+              "name": "check",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "signatures": [
+                {
+                  "return": {
+                    "textRaw": "Returns: {boolean}",
+                    "name": "return",
+                    "type": "boolean"
+                  },
+                  "params": [
+                    {
+                      "textRaw": "`address` {string|net.SocketAddress} The IP address to check",
+                      "name": "address",
+                      "type": "string|net.SocketAddress",
+                      "desc": "The IP address to check"
+                    },
+                    {
+                      "textRaw": "`type` {string} Either `'ipv4'` or `'ipv6'`. **Default:** `'ipv4'`.",
+                      "name": "type",
+                      "type": "string",
+                      "default": "`'ipv4'`",
+                      "desc": "Either `'ipv4'` or `'ipv6'`."
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Returns <code>true</code> if the given IP address matches any of the rules added to the\n<code>BlockList</code>.</p>\n<pre><code class=\"language-js\">const blockList = new net.BlockList();\nblockList.addAddress('123.123.123.123');\nblockList.addRange('10.0.0.1', '10.0.0.10');\nblockList.addSubnet('8592:757c:efae:4e45::', 64, 'ipv6');\n\nconsole.log(blockList.check('123.123.123.123'));  // Prints: true\nconsole.log(blockList.check('10.0.0.3'));  // Prints: true\nconsole.log(blockList.check('222.111.111.222'));  // Prints: false\n\n// IPv6 notation for IPv4 addresses works:\nconsole.log(blockList.check('::ffff:7b7b:7b7b', 'ipv6')); // Prints: true\nconsole.log(blockList.check('::ffff:123.123.123.123', 'ipv6')); // Prints: true\n</code></pre>"
+            }
+          ],
+          "properties": [
+            {
+              "textRaw": "`rules` Type: {string[]}",
+              "type": "string[]",
+              "name": "Type",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "desc": "<p>The list of rules added to the blocklist.</p>"
+            }
+          ]
+        },
+        {
+          "textRaw": "Class: `net.SocketAddress`",
+          "type": "class",
+          "name": "net.SocketAddress",
+          "meta": {
+            "added": [
+              "v14.18.0"
+            ],
+            "changes": []
+          },
+          "properties": [
+            {
+              "textRaw": "`address` Type {string}",
+              "type": "string",
+              "name": "Type",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "desc": "Either `'ipv4'` or `'ipv6'`."
+            },
+            {
+              "textRaw": "`family` Type {string} Either `'ipv4'` or `'ipv6'`.",
+              "type": "string",
+              "name": "Type",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              },
+              "desc": "Either `'ipv4'` or `'ipv6'`."
+            },
+            {
+              "textRaw": "`flowlabel` Type {number}",
+              "type": "number",
+              "name": "Type",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              }
+            },
+            {
+              "textRaw": "`port` Type {number}",
+              "type": "number",
+              "name": "Type",
+              "meta": {
+                "added": [
+                  "v14.18.0"
+                ],
+                "changes": []
+              }
+            }
+          ],
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`options` {Object}",
+                  "name": "options",
+                  "type": "Object",
+                  "options": [
+                    {
+                      "textRaw": "`address` {string} The network address as either an IPv4 or IPv6 string. **Default**: `'127.0.0.1'` if `family` is `'ipv4'`; `'::'` if `family` is `'ipv6'`.",
+                      "name": "address",
+                      "type": "string",
+                      "desc": "The network address as either an IPv4 or IPv6 string. **Default**: `'127.0.0.1'` if `family` is `'ipv4'`; `'::'` if `family` is `'ipv6'`."
+                    },
+                    {
+                      "textRaw": "`family` {string} One of either `'ipv4'` or 'ipv6'`. **Default**: `'ipv4'`.",
+                      "name": "family",
+                      "type": "string",
+                      "desc": "One of either `'ipv4'` or 'ipv6'`. **Default**: `'ipv4'`."
+                    },
+                    {
+                      "textRaw": "`flowlabel` {number} An IPv6 flow-label used only if `family` is `'ipv6'`.",
+                      "name": "flowlabel",
+                      "type": "number",
+                      "desc": "An IPv6 flow-label used only if `family` is `'ipv6'`."
+                    },
+                    {
+                      "textRaw": "`port` {number} An IP port.",
+                      "name": "port",
+                      "type": "number",
+                      "desc": "An IP port."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
         {
           "textRaw": "Class: `net.Server`",
           "type": "class",
@@ -612,7 +876,7 @@
                 "changes": []
               },
               "params": [],
-              "desc": "<p>Emitted when the other end of the socket sends a FIN packet, thus ending the\nreadable side of the socket.</p>\n<p>By default (<code>allowHalfOpen</code> is <code>false</code>) the socket will send a FIN packet\nback and destroy its file descriptor once it has written out its pending\nwrite queue. However, if <code>allowHalfOpen</code> is set to <code>true</code>, the socket will\nnot automatically <a href=\"#net_socket_end_data_encoding_callback\"><code>end()</code></a> its writable side, allowing the\nuser to write arbitrary amounts of data. The user must call\n<a href=\"#net_socket_end_data_encoding_callback\"><code>end()</code></a> explicitly to close the connection (i.e. sending a\nFIN packet back).</p>"
+              "desc": "<p>Emitted when the other end of the socket signals the end of transmission, thus\nending the readable side of the socket.</p>\n<p>By default (<code>allowHalfOpen</code> is <code>false</code>) the socket will send an end of\ntransmission packet back and destroy its file descriptor once it has written out\nits pending write queue. However, if <code>allowHalfOpen</code> is set to <code>true</code>, the\nsocket will not automatically <a href=\"#net_socket_end_data_encoding_callback\"><code>end()</code></a> its writable side,\nallowing the user to write arbitrary amounts of data. The user must call\n<a href=\"#net_socket_end_data_encoding_callback\"><code>end()</code></a> explicitly to close the connection (i.e. sending a\nFIN packet back).</p>"
             },
             {
               "textRaw": "Event: `'error'`",
@@ -1001,7 +1265,16 @@
                 "added": [
                   "v0.1.92"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": [
+                      "v13.12.0",
+                      "v12.17.0"
+                    ],
+                    "pr-url": "https://github.com/nodejs/node/pull/32204",
+                    "description": "New defaults for `TCP_KEEPCNT` and `TCP_KEEPINTVL` socket options were added."
+                  }
+                ]
               },
               "signatures": [
                 {
@@ -1027,7 +1300,7 @@
                   ]
                 }
               ],
-              "desc": "<p>Enable/disable keep-alive functionality, and optionally set the initial\ndelay before the first keepalive probe is sent on an idle socket.</p>\n<p>Set <code>initialDelay</code> (in milliseconds) to set the delay between the last\ndata packet received and the first keepalive probe. Setting <code>0</code> for\n<code>initialDelay</code> will leave the value unchanged from the default\n(or previous) setting.</p>"
+              "desc": "<p>Enable/disable keep-alive functionality, and optionally set the initial\ndelay before the first keepalive probe is sent on an idle socket.</p>\n<p>Set <code>initialDelay</code> (in milliseconds) to set the delay between the last\ndata packet received and the first keepalive probe. Setting <code>0</code> for\n<code>initialDelay</code> will leave the value unchanged from the default\n(or previous) setting.</p>\n<p>Enabling the keep-alive functionality will set the following socket options:</p>\n<ul>\n<li><code>SO_KEEPALIVE=1</code></li>\n<li><code>TCP_KEEPIDLE=initialDelay</code></li>\n<li><code>TCP_KEEPCNT=10</code></li>\n<li><code>TCP_KEEPINTVL=1</code></li>\n</ul>"
             },
             {
               "textRaw": "`socket.setNoDelay([noDelay])`",
@@ -1337,11 +1610,11 @@
                       "desc": "If specified, wrap around an existing socket with the given file descriptor, otherwise a new socket will be created."
                     },
                     {
-                      "textRaw": "`allowHalfOpen` {boolean} Indicates whether half-opened TCP connections are allowed. See [`net.createServer()`][] and the [`'end'`][] event for details. **Default:** `false`.",
+                      "textRaw": "`allowHalfOpen` {boolean} If set to `false`, then the socket will automatically end the writable side when the readable side ends. See [`net.createServer()`][] and the [`'end'`][] event for details. **Default:** `false`.",
                       "name": "allowHalfOpen",
                       "type": "boolean",
                       "default": "`false`",
-                      "desc": "Indicates whether half-opened TCP connections are allowed. See [`net.createServer()`][] and the [`'end'`][] event for details."
+                      "desc": "If set to `false`, then the socket will automatically end the writable side when the readable side ends. See [`net.createServer()`][] and the [`'end'`][] event for details."
                     },
                     {
                       "textRaw": "`readable` {boolean} Allow reads on the socket when an `fd` is passed, otherwise ignored. **Default:** `false`.",
@@ -1635,11 +1908,11 @@
                   "type": "Object",
                   "options": [
                     {
-                      "textRaw": "`allowHalfOpen` {boolean} Indicates whether half-opened TCP connections are allowed. **Default:** `false`.",
+                      "textRaw": "`allowHalfOpen` {boolean} If set to `false`, then the socket will automatically end the writable side when the readable side ends. **Default:** `false`.",
                       "name": "allowHalfOpen",
                       "type": "boolean",
                       "default": "`false`",
-                      "desc": "Indicates whether half-opened TCP connections are allowed."
+                      "desc": "If set to `false`, then the socket will automatically end the writable side when the readable side ends."
                     },
                     {
                       "textRaw": "`pauseOnConnect` {boolean} Indicates whether the socket should be paused on incoming connections. **Default:** `false`.",
@@ -1659,7 +1932,7 @@
               ]
             }
           ],
-          "desc": "<p>Creates a new TCP or <a href=\"#net_ipc_support\">IPC</a> server.</p>\n<p>If <code>allowHalfOpen</code> is set to <code>true</code>, when the other end of the socket\nsends a FIN packet, the server will only send a FIN packet back when\n<a href=\"#net_socket_end_data_encoding_callback\"><code>socket.end()</code></a> is explicitly called, until then the connection is\nhalf-closed (non-readable but still writable). See <a href=\"#net_event_end\"><code>'end'</code></a> event\nand <a href=\"https://tools.ietf.org/html/rfc1122\">RFC 1122</a> (section 4.2.2.13) for more information.</p>\n<p>If <code>pauseOnConnect</code> is set to <code>true</code>, then the socket associated with each\nincoming connection will be paused, and no data will be read from its handle.\nThis allows connections to be passed between processes without any data being\nread by the original process. To begin reading data from a paused socket, call\n<a href=\"#net_socket_resume\"><code>socket.resume()</code></a>.</p>\n<p>The server can be a TCP server or an <a href=\"#net_ipc_support\">IPC</a> server, depending on what it\n<a href=\"#net_server_listen\"><code>listen()</code></a> to.</p>\n<p>Here is an example of an TCP echo server which listens for connections\non port 8124:</p>\n<pre><code class=\"language-js\">const net = require('net');\nconst server = net.createServer((c) => {\n  // 'connection' listener.\n  console.log('client connected');\n  c.on('end', () => {\n    console.log('client disconnected');\n  });\n  c.write('hello\\r\\n');\n  c.pipe(c);\n});\nserver.on('error', (err) => {\n  throw err;\n});\nserver.listen(8124, () => {\n  console.log('server bound');\n});\n</code></pre>\n<p>Test this by using <code>telnet</code>:</p>\n<pre><code class=\"language-console\">$ telnet localhost 8124\n</code></pre>\n<p>To listen on the socket <code>/tmp/echo.sock</code>:</p>\n<pre><code class=\"language-js\">server.listen('/tmp/echo.sock', () => {\n  console.log('server bound');\n});\n</code></pre>\n<p>Use <code>nc</code> to connect to a Unix domain socket server:</p>\n<pre><code class=\"language-console\">$ nc -U /tmp/echo.sock\n</code></pre>"
+          "desc": "<p>Creates a new TCP or <a href=\"#net_ipc_support\">IPC</a> server.</p>\n<p>If <code>allowHalfOpen</code> is set to <code>true</code>, when the other end of the socket\nsignals the end of transmission, the server will only send back the end of\ntransmission when <a href=\"#net_socket_end_data_encoding_callback\"><code>socket.end()</code></a> is explicitly called. For example, in the\ncontext of TCP, when a FIN packed is received, a FIN packed is sent\nback only when <a href=\"#net_socket_end_data_encoding_callback\"><code>socket.end()</code></a> is explicitly called. Until then the\nconnection is half-closed (non-readable but still writable). See <a href=\"#net_event_end\"><code>'end'</code></a>\nevent and <a href=\"https://tools.ietf.org/html/rfc1122\">RFC 1122</a> (section 4.2.2.13) for more information.</p>\n<p>If <code>pauseOnConnect</code> is set to <code>true</code>, then the socket associated with each\nincoming connection will be paused, and no data will be read from its handle.\nThis allows connections to be passed between processes without any data being\nread by the original process. To begin reading data from a paused socket, call\n<a href=\"#net_socket_resume\"><code>socket.resume()</code></a>.</p>\n<p>The server can be a TCP server or an <a href=\"#net_ipc_support\">IPC</a> server, depending on what it\n<a href=\"#net_server_listen\"><code>listen()</code></a> to.</p>\n<p>Here is an example of an TCP echo server which listens for connections\non port 8124:</p>\n<pre><code class=\"language-js\">const net = require('net');\nconst server = net.createServer((c) => {\n  // 'connection' listener.\n  console.log('client connected');\n  c.on('end', () => {\n    console.log('client disconnected');\n  });\n  c.write('hello\\r\\n');\n  c.pipe(c);\n});\nserver.on('error', (err) => {\n  throw err;\n});\nserver.listen(8124, () => {\n  console.log('server bound');\n});\n</code></pre>\n<p>Test this by using <code>telnet</code>:</p>\n<pre><code class=\"language-console\">$ telnet localhost 8124\n</code></pre>\n<p>To listen on the socket <code>/tmp/echo.sock</code>:</p>\n<pre><code class=\"language-js\">server.listen('/tmp/echo.sock', () => {\n  console.log('server bound');\n});\n</code></pre>\n<p>Use <code>nc</code> to connect to a Unix domain socket server:</p>\n<pre><code class=\"language-console\">$ nc -U /tmp/echo.sock\n</code></pre>"
         },
         {
           "textRaw": "`net.isIP(input)`",

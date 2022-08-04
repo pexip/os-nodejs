@@ -19,7 +19,6 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-/* eslint-disable node-core/require-common-first, node-core/required-modules */
 /* eslint-disable node-core/crypto-check */
 'use strict';
 const process = global.process;  // Some tests tamper with the process global.
@@ -275,8 +274,8 @@ if (global.gc) {
   knownGlobals.push(global.gc);
 }
 
-function allowGlobals(...whitelist) {
-  knownGlobals = knownGlobals.concat(whitelist);
+function allowGlobals(...allowlist) {
+  knownGlobals = knownGlobals.concat(allowlist);
 }
 
 if (process.env.NODE_TEST_KNOWN_GLOBALS !== '0') {
@@ -371,10 +370,28 @@ function _mustCallInner(fn, criteria = 1, field) {
 
   mustCallChecks.push(context);
 
-  return function() {
+  const _return = function() { // eslint-disable-line func-style
     context.actual++;
     return fn.apply(this, arguments);
   };
+  // Function instances have own properties that may be relevant.
+  // Let's replicate those properties to the returned function.
+  // Refs: https://tc39.es/ecma262/#sec-function-instances
+  Object.defineProperties(_return, {
+    name: {
+      value: fn.name,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    },
+    length: {
+      value: fn.length,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    },
+  });
+  return _return;
 }
 
 function hasMultiLocalhost() {
@@ -423,7 +440,7 @@ function getCallSite(top) {
   const err = new Error();
   Error.captureStackTrace(err, top);
   // With the V8 Error API, the stack is not formatted until it is accessed
-  err.stack;
+  err.stack; // eslint-disable-line no-unused-expressions
   Error.prepareStackTrace = originalStackFormatter;
   return err.stack;
 }
@@ -596,7 +613,7 @@ function getArrayBufferViews(buf) {
     Uint32Array,
     Float32Array,
     Float64Array,
-    DataView
+    DataView,
   ];
 
   for (const type of arrayBufferViews) {
@@ -699,8 +716,8 @@ function gcUntil(name, condition) {
   });
 }
 
-function requireNoPackageJSONAbove() {
-  let possiblePackage = path.join(__dirname, '..', 'package.json');
+function requireNoPackageJSONAbove(dir = __dirname) {
+  let possiblePackage = path.join(dir, '..', 'package.json');
   let lastPackage = null;
   while (possiblePackage !== lastPackage) {
     if (fs.existsSync(possiblePackage)) {

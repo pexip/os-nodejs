@@ -66,6 +66,7 @@
 #include "src/objects/prototype.h"
 #include "src/objects/slots.h"
 #include "src/objects/smi.h"
+#include "src/objects/source-text-module.h"
 #include "src/objects/stack-frame-info-inl.h"
 #include "src/objects/visitors.h"
 #include "src/profiler/heap-profiler.h"
@@ -2792,6 +2793,8 @@ Isolate::Isolate(std::unique_ptr<i::IsolateAllocator> isolate_allocator)
 #if V8_SFI_HAS_UNIQUE_ID
       next_unique_sfi_id_(0),
 #endif
+      next_module_async_evaluating_ordinal_(
+          SourceTextModule::kFirstAsyncEvaluatingOrdinal),
       cancelable_task_manager_(new CancelableTaskManager()) {
   TRACE_ISOLATE(constructor);
   CheckIsolateLayout();
@@ -3884,19 +3887,23 @@ void Isolate::FireCallCompletedCallback(MicrotaskQueue* microtask_queue) {
   }
 }
 
-void Isolate::PromiseHookStateUpdated() {
-  bool promise_hook_or_async_event_delegate =
-      promise_hook_ || async_event_delegate_;
-  bool promise_hook_or_debug_is_active_or_async_event_delegate =
-      promise_hook_or_async_event_delegate || debug()->is_active();
-  if (promise_hook_or_debug_is_active_or_async_event_delegate &&
-      Protectors::IsPromiseHookIntact(this)) {
+void Isolate::UpdatePromiseHookProtector() {
+  if (Protectors::IsPromiseHookIntact(this)) {
     HandleScope scope(this);
     Protectors::InvalidatePromiseHook(this);
   }
-  promise_hook_or_async_event_delegate_ = promise_hook_or_async_event_delegate;
-  promise_hook_or_debug_is_active_or_async_event_delegate_ =
-      promise_hook_or_debug_is_active_or_async_event_delegate;
+}
+
+void Isolate::PromiseHookStateUpdated() {
+  promise_hook_flags_ =
+    (promise_hook_flags_ & PromiseHookFields::HasContextPromiseHook::kMask) |
+    PromiseHookFields::HasIsolatePromiseHook::encode(promise_hook_) |
+    PromiseHookFields::HasAsyncEventDelegate::encode(async_event_delegate_) |
+    PromiseHookFields::IsDebugActive::encode(debug()->is_active());
+
+  if (promise_hook_flags_ != 0) {
+    UpdatePromiseHookProtector();
+  }
 }
 
 namespace {
@@ -4085,17 +4092,30 @@ void Isolate::SetPromiseHook(PromiseHook hook) {
   PromiseHookStateUpdated();
 }
 
+void Isolate::RunAllPromiseHooks(PromiseHookType type,
+                                 Handle<JSPromise> promise,
+                                 Handle<Object> parent) {
+  if (HasContextPromiseHooks()) {
+    native_context()->RunPromiseHook(type, promise, parent);
+  }
+  if (HasIsolatePromiseHooks() || HasAsyncEventDelegate()) {
+    RunPromiseHook(type, promise, parent);
+  }
+}
+
 void Isolate::RunPromiseHook(PromiseHookType type, Handle<JSPromise> promise,
                              Handle<Object> parent) {
   RunPromiseHookForAsyncEventDelegate(type, promise);
-  if (promise_hook_ == nullptr) return;
+  if (!HasIsolatePromiseHooks()) return;
+  DCHECK(promise_hook_ != nullptr);
   promise_hook_(type, v8::Utils::PromiseToLocal(promise),
                 v8::Utils::ToLocal(parent));
 }
 
 void Isolate::RunPromiseHookForAsyncEventDelegate(PromiseHookType type,
                                                   Handle<JSPromise> promise) {
-  if (!async_event_delegate_) return;
+  if (!HasAsyncEventDelegate()) return;
+  DCHECK(async_event_delegate_ != nullptr);
   if (type == PromiseHookType::kResolve) return;
 
   if (type == PromiseHookType::kBefore) {
