@@ -1,3 +1,9 @@
+nodejs (14.18.1-0pexip3) pexip-bullseye; urgency=medium
+
+  * Bullseye rebuild for ARM64 inclusion
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Mon, 05 Sep 2022 10:34:46 +0100
+
 nodejs (14.18.1-0pexip2) pexip-bullseye; urgency=medium
 
   * Rebuild for Pexip bullseye release.
