@@ -6,8 +6,9 @@
 
 #include "src/codegen/code-comments.h"
 #include "src/codegen/reloc-info.h"
+#include "src/heap/heap-inl.h"
 #include "src/heap/large-spaces.h"
-#include "src/heap/spaces-inl.h"  // For PagedSpaceObjectIterator.
+#include "src/heap/paged-spaces-inl.h"  // For PagedSpaceObjectIterator.
 #include "src/objects/objects-inl.h"
 
 namespace v8 {
@@ -16,21 +17,22 @@ namespace internal {
 // Record code statisitcs.
 void CodeStatistics::RecordCodeAndMetadataStatistics(HeapObject object,
                                                      Isolate* isolate) {
-  if (object.IsScript()) {
+  PtrComprCageBase cage_base(isolate);
+  if (object.IsScript(cage_base)) {
     Script script = Script::cast(object);
     // Log the size of external source code.
-    Object source = script.source();
-    if (source.IsExternalString()) {
+    Object source = script.source(cage_base);
+    if (source.IsExternalString(cage_base)) {
       ExternalString external_source_string = ExternalString::cast(source);
       int size = isolate->external_script_source_size();
       size += external_source_string.ExternalPayloadSize();
       isolate->set_external_script_source_size(size);
     }
-  } else if (object.IsAbstractCode()) {
+  } else if (object.IsAbstractCode(cage_base)) {
     // Record code+metadata statisitcs.
     AbstractCode abstract_code = AbstractCode::cast(object);
     int size = abstract_code.SizeIncludingMetadata();
-    if (abstract_code.IsCode()) {
+    if (abstract_code.IsCode(cage_base)) {
       size += isolate->code_and_metadata_size();
       isolate->set_code_and_metadata_size(size);
     } else {
@@ -40,8 +42,8 @@ void CodeStatistics::RecordCodeAndMetadataStatistics(HeapObject object,
 
 #ifdef DEBUG
     // Record code kind and code comment statistics.
-    isolate->code_kind_statistics()[abstract_code.kind()] +=
-        abstract_code.Size();
+    isolate->code_kind_statistics()[static_cast<int>(abstract_code.kind())] +=
+        abstract_code.Size(cage_base);
     CodeStatistics::CollectCodeCommentStatistics(object, isolate);
 #endif
   }
@@ -85,10 +87,10 @@ void CodeStatistics::ReportCodeStatistics(Isolate* isolate) {
   // Report code kind statistics
   int* code_kind_statistics = isolate->code_kind_statistics();
   PrintF("\n   Code kind histograms: \n");
-  for (int i = 0; i < AbstractCode::NUMBER_OF_KINDS; i++) {
+  for (int i = 0; i < kCodeKindCount; i++) {
     if (code_kind_statistics[i] > 0) {
       PrintF("     %-20s: %10d bytes\n",
-             AbstractCode::Kind2String(static_cast<AbstractCode::Kind>(i)),
+             CodeKindToString(static_cast<CodeKind>(i)),
              code_kind_statistics[i]);
     }
   }
@@ -123,7 +125,7 @@ void CodeStatistics::ReportCodeStatistics(Isolate* isolate) {
 void CodeStatistics::ResetCodeStatistics(Isolate* isolate) {
   // Clear code kind statistics
   int* code_kind_statistics = isolate->code_kind_statistics();
-  for (int i = 0; i < AbstractCode::NUMBER_OF_KINDS; i++) {
+  for (int i = 0; i < kCodeKindCount; i++) {
     code_kind_statistics[i] = 0;
   }
 
@@ -193,12 +195,13 @@ void CodeStatistics::CollectCommentStatistics(Isolate* isolate,
   EnterComment(isolate, comment_txt, flat_delta);
 }
 
-// Collects code comment statistics
+// Collects code comment statistics.
 void CodeStatistics::CollectCodeCommentStatistics(HeapObject obj,
                                                   Isolate* isolate) {
   // Bytecode objects do not contain RelocInfo. Only process code objects
   // for code comment statistics.
   if (!obj.IsCode()) {
+    DCHECK(obj.IsBytecodeArray());
     return;
   }
 
@@ -213,8 +216,8 @@ void CodeStatistics::CollectCodeCommentStatistics(HeapObject obj,
     cit.Next();
   }
 
-  DCHECK(0 <= prev_pc_offset && prev_pc_offset <= code.raw_instruction_size());
-  delta += static_cast<int>(code.raw_instruction_size() - prev_pc_offset);
+  DCHECK(0 <= prev_pc_offset && prev_pc_offset <= code.InstructionSize());
+  delta += static_cast<int>(code.InstructionSize() - prev_pc_offset);
   EnterComment(isolate, "NoComment", delta);
 }
 #endif

@@ -41,6 +41,7 @@
 
 
 #include "node_i18n.h"
+#include "node_external_reference.h"
 
 #if defined(NODE_HAVE_I18N_SUPPORT)
 
@@ -49,6 +50,7 @@
 #include "node_buffer.h"
 #include "node_errors.h"
 #include "node_internals.h"
+#include "string_bytes.h"
 #include "util-inl.h"
 #include "v8.h"
 
@@ -95,7 +97,6 @@ using v8::NewStringType;
 using v8::Object;
 using v8::ObjectTemplate;
 using v8::String;
-using v8::Uint8Array;
 using v8::Value;
 
 namespace i18n {
@@ -424,30 +425,46 @@ void ConverterObject::Create(const FunctionCallbackInfo<Value>& args) {
                         nullptr, nullptr, nullptr, &status);
   }
 
-  new ConverterObject(env, obj, conv, flags);
+  auto converter = new ConverterObject(env, obj, conv, flags);
+  size_t sublen = ucnv_getMinCharSize(conv);
+  std::string sub(sublen, '?');
+  converter->set_subst_chars(sub.c_str());
+
   args.GetReturnValue().Set(obj);
 }
 
 void ConverterObject::Decode(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
-  CHECK_GE(args.Length(), 3);  // Converter, Buffer, Flags
+  CHECK_GE(args.Length(), 4);  // Converter, Buffer, Flags, Encoding
 
   ConverterObject* converter;
   ASSIGN_OR_RETURN_UNWRAP(&converter, args[0].As<Object>());
+
+  if (!(args[1]->IsArrayBuffer() || args[1]->IsSharedArrayBuffer() ||
+        args[1]->IsArrayBufferView())) {
+    return node::THROW_ERR_INVALID_ARG_TYPE(
+        env->isolate(),
+        "The \"input\" argument must be an instance of SharedArrayBuffer, "
+        "ArrayBuffer or ArrayBufferView.");
+  }
+
   ArrayBufferViewContents<char> input(args[1]);
   int flags = args[2]->Uint32Value(env->context()).ToChecked();
 
+  CHECK(args[3]->IsString());
+  Local<String> from_encoding = args[3].As<String>();
+
   UErrorCode status = U_ZERO_ERROR;
   MaybeStackBuffer<UChar> result;
-  MaybeLocal<Object> ret;
 
   UBool flush = (flags & CONVERTER_FLAGS_FLUSH) == CONVERTER_FLAGS_FLUSH;
 
   // When flushing the final chunk, the limit is the maximum
   // of either the input buffer length or the number of pending
-  // characters times the min char size.
-  size_t limit = converter->min_char_size() *
+  // characters times the min char size, multiplied by 2 as unicode may
+  // take up to 2 UChars to encode a character
+  size_t limit = 2 * converter->min_char_size() *
       (!flush ?
           input.length() :
           std::max(
@@ -473,7 +490,7 @@ void ConverterObject::Decode(const FunctionCallbackInfo<Value>& args) {
   UChar* target = *result;
   ucnv_toUnicode(converter->conv(),
                  &target,
-                 target + (limit * sizeof(UChar)),
+                 target + limit,
                  &source,
                  source + source_length,
                  nullptr,
@@ -495,23 +512,38 @@ void ConverterObject::Decode(const FunctionCallbackInfo<Value>& args) {
         converter->set_bom_seen(true);
       }
     }
-    ret = ToBufferEndian(env, &result);
-    if (omit_initial_bom && !ret.IsEmpty()) {
+
+    Local<Value> error;
+    UChar* output = result.out();
+    size_t beginning = 0;
+    size_t length = result.length() * sizeof(UChar);
+
+    if (omit_initial_bom) {
       // Perform `ret = ret.slice(2)`.
-      CHECK(ret.ToLocalChecked()->IsUint8Array());
-      Local<Uint8Array> orig_ret = ret.ToLocalChecked().As<Uint8Array>();
-      ret = Buffer::New(env,
-                        orig_ret->Buffer(),
-                        orig_ret->ByteOffset() + 2,
-                        orig_ret->ByteLength() - 2)
-                            .FromMaybe(Local<Uint8Array>());
+      beginning += 2;
+      length -= 2;
     }
-    if (!ret.IsEmpty())
-      args.GetReturnValue().Set(ret.ToLocalChecked());
-    return;
+
+    char* value = reinterpret_cast<char*>(output) + beginning;
+
+    if (IsBigEndian()) {
+      SwapBytes16(value, length);
+    }
+
+    MaybeLocal<Value> encoded =
+        StringBytes::Encode(env->isolate(), value, length, UCS2, &error);
+
+    Local<Value> ret;
+    if (encoded.ToLocal(&ret)) {
+      args.GetReturnValue().Set(ret);
+      return;
+    }
   }
 
-  args.GetReturnValue().Set(status);
+  node::THROW_ERR_ENCODING_INVALID_ENCODED_DATA(
+      env->isolate(),
+      "The encoded data was not valid for encoding %s",
+      *node::Utf8Value(env->isolate(), from_encoding));
 }
 
 ConverterObject::ConverterObject(
@@ -552,6 +584,16 @@ bool InitializeICUDirectory(const std::string& path) {
     u_init(&status);
   }
   return status == U_ZERO_ERROR;
+}
+
+void SetDefaultTimeZone(const char* tzid) {
+  size_t tzidlen = strlen(tzid) + 1;
+  UErrorCode status = U_ZERO_ERROR;
+  MaybeStackBuffer<UChar, 256> id(tzidlen);
+  u_charsToUChars(tzid, id.out(), tzidlen);
+  // This is threadsafe:
+  ucal_setDefaultTimeZone(id.out(), &status);
+  CHECK(U_SUCCESS(status));
 }
 
 int32_t ToUnicode(MaybeStackBuffer<char>* buf,
@@ -600,13 +642,13 @@ int32_t ToUnicode(MaybeStackBuffer<char>* buf,
 int32_t ToASCII(MaybeStackBuffer<char>* buf,
                 const char* input,
                 size_t length,
-                enum idna_mode mode) {
+                idna_mode mode) {
   UErrorCode status = U_ZERO_ERROR;
   uint32_t options =                  // CheckHyphens = false; handled later
     UIDNA_CHECK_BIDI |                // CheckBidi = true
     UIDNA_CHECK_CONTEXTJ |            // CheckJoiners = true
     UIDNA_NONTRANSITIONAL_TO_ASCII;   // Nontransitional_Processing
-  if (mode == IDNA_STRICT) {
+  if (mode == idna_mode::kStrict) {
     options |= UIDNA_USE_STD3_RULES;  // UseSTD3ASCIIRules = beStrict
                                       // VerifyDnsLength = beStrict;
                                       //   handled later
@@ -654,14 +696,14 @@ int32_t ToASCII(MaybeStackBuffer<char>* buf,
   info.errors &= ~UIDNA_ERROR_LEADING_HYPHEN;
   info.errors &= ~UIDNA_ERROR_TRAILING_HYPHEN;
 
-  if (mode != IDNA_STRICT) {
+  if (mode != idna_mode::kStrict) {
     // VerifyDnsLength = beStrict
     info.errors &= ~UIDNA_ERROR_EMPTY_LABEL;
     info.errors &= ~UIDNA_ERROR_LABEL_TOO_LONG;
     info.errors &= ~UIDNA_ERROR_DOMAIN_NAME_TOO_LONG;
   }
 
-  if (U_FAILURE(status) || (mode != IDNA_LENIENT && info.errors != 0)) {
+  if (U_FAILURE(status) || (mode != idna_mode::kLenient && info.errors != 0)) {
     len = -1;
     buf->SetLength(0);
   } else {
@@ -699,7 +741,7 @@ static void ToASCII(const FunctionCallbackInfo<Value>& args) {
   Utf8Value val(env->isolate(), args[0]);
   // optional arg
   bool lenient = args[1]->BooleanValue(env->isolate());
-  enum idna_mode mode = lenient ? IDNA_LENIENT : IDNA_DEFAULT;
+  idna_mode mode = lenient ? idna_mode::kLenient : idna_mode::kDefault;
 
   MaybeStackBuffer<char> buf;
   int32_t len = ToASCII(&buf, *val, val.length(), mode);
@@ -822,17 +864,17 @@ void Initialize(Local<Object> target,
                 Local<Context> context,
                 void* priv) {
   Environment* env = Environment::GetCurrent(context);
-  env->SetMethod(target, "toUnicode", ToUnicode);
-  env->SetMethod(target, "toASCII", ToASCII);
-  env->SetMethod(target, "getStringWidth", GetStringWidth);
+  SetMethod(context, target, "toUnicode", ToUnicode);
+  SetMethod(context, target, "toASCII", ToASCII);
+  SetMethod(context, target, "getStringWidth", GetStringWidth);
 
   // One-shot converters
-  env->SetMethod(target, "icuErrName", ICUErrorName);
-  env->SetMethod(target, "transcode", Transcode);
+  SetMethod(context, target, "icuErrName", ICUErrorName);
+  SetMethod(context, target, "transcode", Transcode);
 
   // ConverterObject
   {
-    Local<FunctionTemplate> t = FunctionTemplate::New(env->isolate());
+    Local<FunctionTemplate> t = NewFunctionTemplate(env->isolate(), nullptr);
     t->Inherit(BaseObject::GetConstructorTemplate(env));
     t->InstanceTemplate()->SetInternalFieldCount(
         ConverterObject::kInternalFieldCount);
@@ -842,14 +884,26 @@ void Initialize(Local<Object> target,
     env->set_i18n_converter_template(t->InstanceTemplate());
   }
 
-  env->SetMethod(target, "getConverter", ConverterObject::Create);
-  env->SetMethod(target, "decode", ConverterObject::Decode);
-  env->SetMethod(target, "hasConverter", ConverterObject::Has);
+  SetMethod(context, target, "getConverter", ConverterObject::Create);
+  SetMethod(context, target, "decode", ConverterObject::Decode);
+  SetMethod(context, target, "hasConverter", ConverterObject::Has);
+}
+
+void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
+  registry->Register(ToUnicode);
+  registry->Register(ToASCII);
+  registry->Register(GetStringWidth);
+  registry->Register(ICUErrorName);
+  registry->Register(Transcode);
+  registry->Register(ConverterObject::Create);
+  registry->Register(ConverterObject::Decode);
+  registry->Register(ConverterObject::Has);
 }
 
 }  // namespace i18n
 }  // namespace node
 
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(icu, node::i18n::Initialize)
+NODE_MODULE_EXTERNAL_REFERENCE(icu, node::i18n::RegisterExternalReferences)
 
 #endif  // NODE_HAVE_I18N_SUPPORT

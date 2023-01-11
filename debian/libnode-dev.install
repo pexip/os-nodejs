@@ -1,0 +1,9 @@
+usr/include/node
+src/*.h usr/include/nodejs/src
+src/crypto/*.h usr/include/nodejs/src/crypto
+src/tracing/*.h usr/include/nodejs/src/tracing
+deps/v8/include/cppgc/*.h usr/include/nodejs/deps/v8/include/cppgc
+deps/v8/include/cppgc/internal/*.h usr/include/nodejs/deps/v8/include/cppgc/internal
+deps/v8/include/*.h usr/include/nodejs/deps/v8/include
+deps/v8/include/libplatform/*.h usr/include/nodejs/deps/v8/include/libplatform
+common.gypi usr/include/nodejs

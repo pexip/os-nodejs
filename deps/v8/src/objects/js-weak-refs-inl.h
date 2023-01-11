@@ -17,69 +17,40 @@
 namespace v8 {
 namespace internal {
 
+#include "torque-generated/src/objects/js-weak-refs-tq-inl.inc"
+
 TQ_OBJECT_CONSTRUCTORS_IMPL(WeakCell)
 TQ_OBJECT_CONSTRUCTORS_IMPL(JSWeakRef)
-OBJECT_CONSTRUCTORS_IMPL(JSFinalizationRegistry, JSObject)
-
-ACCESSORS(JSFinalizationRegistry, native_context, NativeContext,
-          kNativeContextOffset)
-ACCESSORS(JSFinalizationRegistry, cleanup, Object, kCleanupOffset)
-ACCESSORS(JSFinalizationRegistry, active_cells, HeapObject, kActiveCellsOffset)
-ACCESSORS(JSFinalizationRegistry, cleared_cells, HeapObject,
-          kClearedCellsOffset)
-ACCESSORS(JSFinalizationRegistry, key_map, Object, kKeyMapOffset)
-SMI_ACCESSORS(JSFinalizationRegistry, flags, kFlagsOffset)
-ACCESSORS(JSFinalizationRegistry, next_dirty, Object, kNextDirtyOffset)
-CAST_ACCESSOR(JSFinalizationRegistry)
+TQ_OBJECT_CONSTRUCTORS_IMPL(JSFinalizationRegistry)
 
 BIT_FIELD_ACCESSORS(JSFinalizationRegistry, flags, scheduled_for_cleanup,
                     JSFinalizationRegistry::ScheduledForCleanupBit)
 
-void JSFinalizationRegistry::Register(
+void JSFinalizationRegistry::RegisterWeakCellWithUnregisterToken(
     Handle<JSFinalizationRegistry> finalization_registry,
-    Handle<JSReceiver> target, Handle<Object> holdings,
-    Handle<Object> unregister_token, Isolate* isolate) {
-  Handle<WeakCell> weak_cell = isolate->factory()->NewWeakCell();
-  weak_cell->set_finalization_registry(*finalization_registry);
-  weak_cell->set_target(*target);
-  weak_cell->set_holdings(*holdings);
-  weak_cell->set_prev(ReadOnlyRoots(isolate).undefined_value());
-  weak_cell->set_next(ReadOnlyRoots(isolate).undefined_value());
-  weak_cell->set_unregister_token(*unregister_token);
-  weak_cell->set_key_list_prev(ReadOnlyRoots(isolate).undefined_value());
-  weak_cell->set_key_list_next(ReadOnlyRoots(isolate).undefined_value());
-
-  // Add to active_cells.
-  weak_cell->set_next(finalization_registry->active_cells());
-  if (finalization_registry->active_cells().IsWeakCell()) {
-    WeakCell::cast(finalization_registry->active_cells()).set_prev(*weak_cell);
+    Handle<WeakCell> weak_cell, Isolate* isolate) {
+  Handle<SimpleNumberDictionary> key_map;
+  if (finalization_registry->key_map().IsUndefined(isolate)) {
+    key_map = SimpleNumberDictionary::New(isolate, 1);
+  } else {
+    key_map =
+        handle(SimpleNumberDictionary::cast(finalization_registry->key_map()),
+               isolate);
   }
-  finalization_registry->set_active_cells(*weak_cell);
 
-  if (!unregister_token->IsUndefined(isolate)) {
-    Handle<SimpleNumberDictionary> key_map;
-    if (finalization_registry->key_map().IsUndefined(isolate)) {
-      key_map = SimpleNumberDictionary::New(isolate, 1);
-    } else {
-      key_map =
-          handle(SimpleNumberDictionary::cast(finalization_registry->key_map()),
-                 isolate);
-    }
-
-    // Unregister tokens are held weakly as objects are often their own
-    // unregister token. To avoid using an ephemeron map, the map for token
-    // lookup is keyed on the token's identity hash instead of the token itself.
-    uint32_t key = unregister_token->GetOrCreateHash(isolate).value();
-    InternalIndex entry = key_map->FindEntry(isolate, key);
-    if (entry.is_found()) {
-      Object value = key_map->ValueAt(entry);
-      WeakCell existing_weak_cell = WeakCell::cast(value);
-      existing_weak_cell.set_key_list_prev(*weak_cell);
-      weak_cell->set_key_list_next(existing_weak_cell);
-    }
-    key_map = SimpleNumberDictionary::Set(isolate, key_map, key, weak_cell);
-    finalization_registry->set_key_map(*key_map);
+  // Unregister tokens are held weakly as objects are often their own
+  // unregister token. To avoid using an ephemeron map, the map for token
+  // lookup is keyed on the token's identity hash instead of the token itself.
+  uint32_t key = weak_cell->unregister_token().GetOrCreateHash(isolate).value();
+  InternalIndex entry = key_map->FindEntry(isolate, key);
+  if (entry.is_found()) {
+    Object value = key_map->ValueAt(entry);
+    WeakCell existing_weak_cell = WeakCell::cast(value);
+    existing_weak_cell.set_key_list_prev(*weak_cell);
+    weak_cell->set_key_list_next(existing_weak_cell);
   }
+  key_map = SimpleNumberDictionary::Set(isolate, key_map, key, weak_cell);
+  finalization_registry->set_key_map(*key_map);
 }
 
 bool JSFinalizationRegistry::Unregister(
@@ -89,21 +60,19 @@ bool JSFinalizationRegistry::Unregister(
   // key. Each WeakCell will be in the "active_cells" or "cleared_cells" list of
   // its FinalizationRegistry; remove it from there.
   return finalization_registry->RemoveUnregisterToken(
-      *unregister_token, isolate,
-      [isolate](WeakCell matched_cell) {
-        matched_cell.RemoveFromFinalizationRegistryCells(isolate);
-      },
+      *unregister_token, isolate, kRemoveMatchedCellsFromRegistry,
       [](HeapObject, ObjectSlot, Object) {});
 }
 
-template <typename MatchCallback, typename GCNotifyUpdatedSlotCallback>
+template <typename GCNotifyUpdatedSlotCallback>
 bool JSFinalizationRegistry::RemoveUnregisterToken(
-    JSReceiver unregister_token, Isolate* isolate, MatchCallback match_callback,
+    JSReceiver unregister_token, Isolate* isolate,
+    RemoveUnregisterTokenMode removal_mode,
     GCNotifyUpdatedSlotCallback gc_notify_updated_slot) {
   // This method is called from both FinalizationRegistry#unregister and for
   // removing weakly-held dead unregister tokens. The latter is during GC so
   // this function cannot GC.
-  DisallowHeapAllocation no_gc;
+  DisallowGarbageCollection no_gc;
   if (key_map().IsUndefined(isolate)) {
     return false;
   }
@@ -136,7 +105,16 @@ bool JSFinalizationRegistry::RemoveUnregisterToken(
     value = weak_cell.key_list_next();
     if (weak_cell.unregister_token() == unregister_token) {
       // weak_cell has the same unregister token; remove it from the key list.
-      match_callback(weak_cell);
+      switch (removal_mode) {
+        case kRemoveMatchedCellsFromRegistry:
+          weak_cell.RemoveFromFinalizationRegistryCells(isolate);
+          break;
+        case kKeepMatchedCellsInRegistry:
+          // Do nothing.
+          break;
+      }
+      // Clear unregister token-related fields.
+      weak_cell.set_unregister_token(undefined);
       weak_cell.set_key_list_prev(undefined);
       weak_cell.set_key_list_next(undefined);
       was_present = true;
@@ -179,6 +157,10 @@ bool JSFinalizationRegistry::NeedsCleanup() const {
 
 HeapObject WeakCell::relaxed_target() const {
   return TaggedField<HeapObject>::Relaxed_Load(*this, kTargetOffset);
+}
+
+HeapObject WeakCell::relaxed_unregister_token() const {
+  return TaggedField<HeapObject>::Relaxed_Load(*this, kUnregisterTokenOffset);
 }
 
 template <typename GCNotifyUpdatedSlotCallback>

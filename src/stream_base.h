@@ -4,7 +4,6 @@
 #if defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
 
 #include "env.h"
-#include "allocated_buffer.h"
 #include "async_wrap.h"
 #include "node.h"
 #include "util.h"
@@ -19,6 +18,7 @@ class ShutdownWrap;
 class WriteWrap;
 class StreamBase;
 class StreamResource;
+class ExternalReferenceRegistry;
 
 struct StreamWriteResult {
   bool async;
@@ -49,6 +49,8 @@ class StreamReq {
   virtual AsyncWrap* GetAsyncWrap() = 0;
   inline v8::Local<v8::Object> object();
 
+  // TODO(RaisinTen): Update the return type to a Maybe, so that we can indicate
+  // if there is a pending exception/termination.
   inline void Done(int status, const char* error_str = nullptr);
   inline void Dispose();
 
@@ -89,7 +91,7 @@ class ShutdownWrap : public StreamReq {
 
 class WriteWrap : public StreamReq {
  public:
-  inline void SetAllocatedStorage(AllocatedBuffer&& storage);
+  inline void SetBackingStore(std::unique_ptr<v8::BackingStore> bs);
 
   inline WriteWrap(
       StreamBase* stream,
@@ -104,7 +106,7 @@ class WriteWrap : public StreamReq {
   void OnDone(int status) override;
 
  private:
-  AllocatedBuffer storage_;
+  std::unique_ptr<v8::BackingStore> backing_store_;
 };
 
 
@@ -242,14 +244,19 @@ class StreamResource {
   // `*bufs` and `*count` accordingly. This is a no-op by default.
   // Return 0 for success and a libuv error code for failures.
   virtual int DoTryWrite(uv_buf_t** bufs, size_t* count);
-  // Initiate a write of data. If the write completes synchronously, return 0 on
-  // success (with bufs modified to indicate how much data was consumed) or a
-  // libuv error code on failure. If the write will complete asynchronously,
-  // return 0. When the write completes asynchronously, call req_wrap->Done()
-  // with 0 on success (with bufs modified to indicate how much data was
-  // consumed) or a libuv error code on failure. Do not call req_wrap->Done() if
-  // the write completes synchronously, that is, it should never be called
-  // before DoWrite() has returned.
+  // Initiate a write of data.
+  // Upon an immediate failure, a libuv error code is returned,
+  // w->Done() will never be called and caller should free `bufs`.
+  // Otherwise, 0 is returned and w->Done(status) will be called
+  // with status set to either
+  //  (1) 0 after all data are written, or
+  //  (2) a libuv error code when an error occurs
+  // in either case, w->Done() will never be called before DoWrite() returns.
+  // When 0 is returned:
+  //  (1) memory specified by `bufs` and `count` must remain valid until
+  //      w->Done() gets called.
+  //  (2) `bufs` might or might not be changed, caller should not rely on this.
+  //  (3) `bufs` should be freed after w->Done() gets called.
   virtual int DoWrite(WriteWrap* w,
                       uv_buf_t* bufs,
                       size_t count,
@@ -308,7 +315,7 @@ class StreamBase : public StreamResource {
 
   static void AddMethods(Environment* env,
                          v8::Local<v8::FunctionTemplate> target);
-
+  static void RegisterExternalReferences(ExternalReferenceRegistry* registry);
   virtual bool IsAlive() = 0;
   virtual bool IsClosing() = 0;
   virtual bool IsIPCPipe();
@@ -326,6 +333,8 @@ class StreamBase : public StreamResource {
   // subclasses are also `BaseObject`s.
   Environment* stream_env() const { return env_; }
 
+  // TODO(RaisinTen): Update the return type to a Maybe, so that we can indicate
+  // if there is a pending exception/termination.
   // Shut down the current stream. This request can use an existing
   // ShutdownWrap object (that was created in JS), or a new one will be created.
   // Returns 1 in case of a synchronous completion, 0 in case of asynchronous
@@ -333,17 +342,23 @@ class StreamBase : public StreamResource {
   inline int Shutdown(
       v8::Local<v8::Object> req_wrap_obj = v8::Local<v8::Object>());
 
+  // TODO(RaisinTen): Update the return type to a Maybe, so that we can indicate
+  // if there is a pending exception/termination.
   // Write data to the current stream. This request can use an existing
   // WriteWrap object (that was created in JS), or a new one will be created.
   // This will first try to write synchronously using `DoTryWrite()`, then
   // asynchronously using `DoWrite()`.
+  // Caller can pass `skip_try_write` as true if it has already called
+  // `DoTryWrite()` and ends up with a partial write, or it knows that the
+  // write is too large to finish synchronously.
   // If the return value indicates a synchronous completion, no callback will
   // be invoked.
   inline StreamWriteResult Write(
       uv_buf_t* bufs,
       size_t count,
       uv_stream_t* send_handle = nullptr,
-      v8::Local<v8::Object> req_wrap_obj = v8::Local<v8::Object>());
+      v8::Local<v8::Object> req_wrap_obj = v8::Local<v8::Object>(),
+      bool skip_try_write = false);
 
   // These can be overridden by subclasses to get more specific wrap instances.
   // For example, a subclass Foo could create a FooWriteWrap or FooShutdownWrap
