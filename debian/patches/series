@@ -21,5 +21,7 @@ riscv/fix-ftbfs-riscv64-18-13-0.patch
 armel/configure.patch
 build/openssl_related_test_issues.patch
 build/doc_template_home.html
+
 pexip/include-cjs-module-lexer.patch
 pexip/include-undici.patch
+pexip/disable-failing-tests.patch
