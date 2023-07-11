@@ -1,0 +1,14 @@
+Description: Enable the openssl-legacy-provider option on for now, webapp2 build needs it
+diff --git a/src/crypto/crypto_util.cc b/src/crypto/crypto_util.cc
+index 28eb1bd6b..7b376e448 100644
+--- a/src/crypto/crypto_util.cc
++++ b/src/crypto/crypto_util.cc
+@@ -143,7 +143,7 @@ void InitCryptoOnce() {
+ 
+ #if OPENSSL_VERSION_MAJOR >= 3
+   // --openssl-legacy-provider
+-  if (per_process::cli_options->openssl_legacy_provider) {
++  if (1 || per_process::cli_options->openssl_legacy_provider) {
+     OSSL_PROVIDER* legacy_provider = OSSL_PROVIDER_load(nullptr, "legacy");
+     if (legacy_provider == nullptr) {
+       fprintf(stderr, "Unable to load legacy provider.\n");

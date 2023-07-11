@@ -25,3 +25,5 @@ build/doc_template_home.html
 pexip/include-cjs-module-lexer.patch
 pexip/include-undici.patch
 pexip/disable-failing-tests.patch
+pexip/force-legacy-provider.patch
+

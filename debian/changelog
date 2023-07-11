@@ -12,8 +12,9 @@ nodejs (18.13.0+dfsg1-1pexip1) unstable; urgency=medium
     from build-deps
   * Don't build docs to remove some extra build-deps
   * Disable some (flaky?) failing tests
+  * Enable openssl3 legacy providers by default, for the webapp2 build
 
- -- Steve McIntyre <steve.mcintyre@pexip.com>  Tue, 20 Jun 2023 15:52:22 +0100
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Tue, 11 Jul 2023 15:32:22 +0100
 
 nodejs (18.13.0+dfsg1-1) unstable; urgency=medium
 
