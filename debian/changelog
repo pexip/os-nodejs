@@ -1,4 +1,4 @@
-nodejs (18.13.0+dfsg1-1pexip1) unstable; urgency=medium
+nodejs (18.13.0+dfsg1-1pexip1) pexip; urgency=medium
 
   * New upstream release
   * Pull from Debian bookworm for version 18.x
