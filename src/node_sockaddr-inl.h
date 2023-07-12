@@ -152,7 +152,12 @@ void SocketAddress::Update(uint8_t* data, size_t len) {
   memcpy(&address_, data, len);
 }
 
-v8::Local<v8::Object> SocketAddress::ToJS(
+void SocketAddress::Update(const sockaddr* data, size_t len) {
+  CHECK_LE(len, sizeof(address_));
+  memcpy(&address_, data, len);
+}
+
+v8::MaybeLocal<v8::Object> SocketAddress::ToJS(
     Environment* env,
     v8::Local<v8::Object> info) const {
   return AddressToJS(env, data(), info);
@@ -257,5 +262,5 @@ v8::MaybeLocal<v8::Value> SocketAddressBlockList::Rule::ToV8String(
 }
 }  // namespace node
 
-#endif  // NODE_WANT_INTERNALS
+#endif  // defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
 #endif  // SRC_NODE_SOCKADDR_INL_H_

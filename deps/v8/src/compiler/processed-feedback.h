@@ -5,6 +5,7 @@
 #ifndef V8_COMPILER_PROCESSED_FEEDBACK_H_
 #define V8_COMPILER_PROCESSED_FEEDBACK_H_
 
+#include "src/compiler/feedback-source.h"
 #include "src/compiler/heap-refs.h"
 
 namespace v8 {
@@ -148,7 +149,7 @@ class ElementAccessFeedback : public ProcessedFeedback {
   // [e0, e1]                           [e0, e1]
   //
   ElementAccessFeedback const& Refine(
-      ZoneVector<Handle<Map>> const& inferred_maps, Zone* zone) const;
+      JSHeapBroker* broker, ZoneVector<MapRef> const& inferred_maps) const;
 
  private:
   KeyedAccessMode const keyed_mode_;
@@ -157,34 +158,38 @@ class ElementAccessFeedback : public ProcessedFeedback {
 
 class NamedAccessFeedback : public ProcessedFeedback {
  public:
-  NamedAccessFeedback(NameRef const& name, ZoneVector<Handle<Map>> const& maps,
+  NamedAccessFeedback(NameRef const& name, ZoneVector<MapRef> const& maps,
                       FeedbackSlotKind slot_kind);
 
   NameRef const& name() const { return name_; }
-  ZoneVector<Handle<Map>> const& maps() const { return maps_; }
+  ZoneVector<MapRef> const& maps() const { return maps_; }
 
  private:
   NameRef const name_;
-  ZoneVector<Handle<Map>> const maps_;
+  ZoneVector<MapRef> const maps_;
 };
 
 class CallFeedback : public ProcessedFeedback {
  public:
   CallFeedback(base::Optional<HeapObjectRef> target, float frequency,
-               SpeculationMode mode, FeedbackSlotKind slot_kind)
+               SpeculationMode mode, CallFeedbackContent call_feedback_content,
+               FeedbackSlotKind slot_kind)
       : ProcessedFeedback(kCall, slot_kind),
         target_(target),
         frequency_(frequency),
-        mode_(mode) {}
+        mode_(mode),
+        content_(call_feedback_content) {}
 
   base::Optional<HeapObjectRef> target() const { return target_; }
   float frequency() const { return frequency_; }
   SpeculationMode speculation_mode() const { return mode_; }
+  CallFeedbackContent call_feedback_content() const { return content_; }
 
  private:
   base::Optional<HeapObjectRef> const target_;
   float const frequency_;
   SpeculationMode const mode_;
+  CallFeedbackContent const content_;
 };
 
 template <class T, ProcessedFeedback::Kind K>
@@ -220,7 +225,7 @@ class LiteralFeedback
 };
 
 class RegExpLiteralFeedback
-    : public SingleValueFeedback<JSRegExpRef,
+    : public SingleValueFeedback<RegExpBoilerplateDescriptionRef,
                                  ProcessedFeedback::kRegExpLiteral> {
   using SingleValueFeedback::SingleValueFeedback;
 };

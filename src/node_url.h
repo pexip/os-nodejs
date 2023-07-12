@@ -71,6 +71,7 @@ struct url_data {
   std::string query;
   std::string fragment;
   std::vector<std::string> path;
+  std::string href;
 };
 
 namespace table_data {
@@ -92,6 +93,8 @@ class URL {
                     bool has_url,
                     const struct url_data* base,
                     bool has_base);
+
+  static std::string SerializeURL(const url_data& url, bool exclude);
 
   URL(const char* input, const size_t len) {
     Parse(input, len, kUnknownState, &context_, false, nullptr, false);
@@ -170,6 +173,10 @@ class URL {
     return ret;
   }
 
+  std::string href() const {
+    return SerializeURL(context_, false);
+  }
+
   // Get the path of the file: URL in a format consumable by native file system
   // APIs. Returns an empty string if something went wrong.
   std::string ToFilePath() const;
@@ -186,7 +193,7 @@ class URL {
   URL() : URL("") {}
 
  private:
-  struct url_data context_;
+  url_data context_;
 };
 
 }  // namespace url

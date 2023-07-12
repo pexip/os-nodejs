@@ -63,7 +63,7 @@ class Operand {
  public:
   // Immediate.
   V8_INLINE explicit Operand(int32_t immediate,
-                             RelocInfo::Mode rmode = RelocInfo::NONE)
+                             RelocInfo::Mode rmode = RelocInfo::NO_INFO)
       : rm_(no_reg), rmode_(rmode) {
     value_.immediate = immediate;
   }
@@ -73,7 +73,8 @@ class Operand {
   }
   V8_INLINE explicit Operand(const char* s);
   explicit Operand(Handle<HeapObject> handle);
-  V8_INLINE explicit Operand(Smi value) : rm_(no_reg), rmode_(RelocInfo::NONE) {
+  V8_INLINE explicit Operand(Smi value)
+      : rm_(no_reg), rmode_(RelocInfo::NO_INFO) {
     value_.immediate = static_cast<intptr_t>(value.ptr());
   }
 
@@ -169,6 +170,17 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
 
   // Unused on this architecture.
   void MaybeEmitOutOfLineConstantPool() {}
+
+  // Mips uses BlockTrampolinePool to prevent generating trampoline inside a
+  // continuous instruction block. For Call instrution, it prevents generating
+  // trampoline between jalr and delay slot instruction. In the destructor of
+  // BlockTrampolinePool, it must check if it needs to generate trampoline
+  // immediately, if it does not do this, the branch range will go beyond the
+  // max branch offset, that means the pc_offset after call CheckTrampolinePool
+  // may have changed. So we use pc_for_safepoint_ here for safepoint record.
+  int pc_offset_for_safepoint() {
+    return static_cast<int>(pc_for_safepoint_ - buffer_start_);
+  }
 
   // Label operations & relative jumps (PPUM Appendix D).
   //
@@ -331,6 +343,7 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
   void DataAlign(int m);
   // Aligns code to something that's optimal for a jump target for the platform.
   void CodeTargetAlign();
+  void LoopHeaderAlign() { CodeTargetAlign(); }
 
   // Different nop operations are used by the code generator to detect certain
   // states of the generated code.
@@ -1343,7 +1356,7 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
   }
 
   // Class for scoping postponing the trampoline pool generation.
-  class BlockTrampolinePoolScope {
+  class V8_NODISCARD BlockTrampolinePoolScope {
    public:
     explicit BlockTrampolinePoolScope(Assembler* assem) : assem_(assem) {
       assem_->StartBlockTrampolinePool();
@@ -1360,7 +1373,7 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
   // sequences of instructions that must be emitted as a unit, before
   // buffer growth (and relocation) can occur.
   // This blocking scope is not nestable.
-  class BlockGrowBufferScope {
+  class V8_NODISCARD BlockGrowBufferScope {
    public:
     explicit BlockGrowBufferScope(Assembler* assem) : assem_(assem) {
       assem_->StartBlockGrowBuffer();
@@ -1375,8 +1388,8 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
 
   // Record a deoptimization reason that can be used by a log or cpu profiler.
   // Use --trace-deopt to enable.
-  void RecordDeoptReason(DeoptimizeReason reason, SourcePosition position,
-                         int id);
+  void RecordDeoptReason(DeoptimizeReason reason, uint32_t node_id,
+                         SourcePosition position, int id);
 
   static int RelocateInternalReference(RelocInfo::Mode rmode, Address pc,
                                        intptr_t pc_delta);
@@ -1387,9 +1400,11 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
   // Writes a single byte or word of data in the code stream.  Used for
   // inline tables, e.g., jump-tables.
   void db(uint8_t data);
-  void dd(uint32_t data);
-  void dq(uint64_t data);
-  void dp(uintptr_t data) { dd(data); }
+  void dd(uint32_t data, RelocInfo::Mode rmode = RelocInfo::NO_INFO);
+  void dq(uint64_t data, RelocInfo::Mode rmode = RelocInfo::NO_INFO);
+  void dp(uintptr_t data, RelocInfo::Mode rmode = RelocInfo::NO_INFO) {
+    dd(data, rmode);
+  }
   void dd(Label* label);
 
   // Postpone the generation of the trampoline pool for the specified number of
@@ -1501,6 +1516,8 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
 
   inline int UnboundLabelsCount() { return unbound_labels_count_; }
 
+  bool is_trampoline_emitted() const { return trampoline_emitted_; }
+
  protected:
   // Load Scaled Address instruction.
   void lsa(Register rd, Register rt, Register rs, uint8_t sa);
@@ -1556,8 +1573,6 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
 
   bool has_exception() const { return internal_trampoline_exception_; }
 
-  bool is_trampoline_emitted() const { return trampoline_emitted_; }
-
   // Temporarily block automatic assembly buffer growth.
   void StartBlockGrowBuffer() {
     DCHECK(!block_buffer_growth_);
@@ -1592,6 +1607,8 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
                          RelocInfo::Mode rmode, BranchDelaySlot bdslot);
   void GenPCRelativeJumpAndLink(Register t, int32_t imm32,
                                 RelocInfo::Mode rmode, BranchDelaySlot bdslot);
+
+  void set_pc_for_safepoint() { pc_for_safepoint_ = pc_; }
 
  private:
   // Avoid overflows for displacements etc.
@@ -1856,6 +1873,11 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
   Trampoline trampoline_;
   bool internal_trampoline_exception_;
 
+  // Keep track of the last Call's position to ensure that safepoint can get the
+  // correct information even if there is a trampoline immediately after the
+  // Call.
+  byte* pc_for_safepoint_;
+
  private:
   void AllocateAndInstallRequestedHeapObjects(Isolate* isolate);
 
@@ -1869,16 +1891,27 @@ class V8_EXPORT_PRIVATE Assembler : public AssemblerBase {
 
 class EnsureSpace {
  public:
-  explicit inline EnsureSpace(Assembler* assembler);
+  explicit V8_INLINE EnsureSpace(Assembler* assembler);
 };
 
-class V8_EXPORT_PRIVATE UseScratchRegisterScope {
+class V8_EXPORT_PRIVATE V8_NODISCARD UseScratchRegisterScope {
  public:
   explicit UseScratchRegisterScope(Assembler* assembler);
   ~UseScratchRegisterScope();
 
   Register Acquire();
   bool hasAvailable() const;
+
+  void Include(const RegList& list) { *available_ |= list; }
+  void Exclude(const RegList& list) { available_->clear(list); }
+  void Include(const Register& reg1, const Register& reg2 = no_reg) {
+    RegList list({reg1, reg2});
+    Include(list);
+  }
+  void Exclude(const Register& reg1, const Register& reg2 = no_reg) {
+    RegList list({reg1, reg2});
+    Exclude(list);
+  }
 
  private:
   RegList* available_;

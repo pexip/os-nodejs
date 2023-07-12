@@ -30,7 +30,7 @@ macro RejectPromiseReactionJob(
       }
     }
   } else {
-    StaticAssert(reactionType == kPromiseReactionFulfill);
+    static_assert(reactionType == kPromiseReactionFulfill);
     // We have to call out to the dedicated PromiseRejectReactionJob
     // builtin here, instead of just doing the work inline, as otherwise
     // the catch predictions in the debugger will be wrong, which just
@@ -60,7 +60,7 @@ macro FuflfillPromiseReactionJob(
       const resolve = UnsafeCast<Callable>(capability.resolve);
       try {
         return Call(context, resolve, Undefined, result);
-      } catch (e) {
+      } catch (e, _message) {
         return RejectPromiseReactionJob(
             context, promiseOrCapability, e, reactionType);
       }
@@ -79,7 +79,7 @@ macro PromiseReactionJob(
       return FuflfillPromiseReactionJob(
           context, promiseOrCapability, argument, reactionType);
     } else {
-      StaticAssert(reactionType == kPromiseReactionReject);
+      static_assert(reactionType == kPromiseReactionReject);
       return RejectPromiseReactionJob(
           context, promiseOrCapability, argument, reactionType);
     }
@@ -98,7 +98,7 @@ macro PromiseReactionJob(
         return FuflfillPromiseReactionJob(
             context, promiseOrCapability, result, reactionType);
       }
-    } catch (e) {
+    } catch (e, _message) {
       return RejectPromiseReactionJob(
           context, promiseOrCapability, e, reactionType);
     }

@@ -1,13 +1,11 @@
-// Flags: --no-warnings --expose-internals --experimental-abortcontroller
+// Flags: --no-warnings
 'use strict';
 const common = require('../common');
 const {
   setMaxListeners,
-  EventEmitter
+  EventEmitter,
 } = require('events');
 const assert = require('assert');
-const { MessageChannel } = require('worker_threads');
-const { EventTarget } = require('internal/event_target');
 
 common.expectWarning({
   MaxListenersExceededWarning: [
@@ -27,10 +25,6 @@ common.expectWarning({
      'Use events.setMaxListeners() to increase ' +
      'limit'],
   ],
-  ExperimentalWarning: [[
-    'AbortController is an experimental feature. This feature could change ' +
-    'at any time',
-  ]]
 });
 
 

@@ -109,6 +109,7 @@ class V8_EXPORT_PRIVATE MachineOperatorReducer final
   Reduction ReduceWord64Or(Node* node);
   Reduction ReduceWord32Xor(Node* node);
   Reduction ReduceWord64Xor(Node* node);
+  Reduction ReduceWord32Equal(Node* node);
   Reduction ReduceFloat64InsertLowWord32(Node* node);
   Reduction ReduceFloat64InsertHighWord32(Node* node);
   Reduction ReduceFloat64Compare(Node* node);
@@ -129,6 +130,12 @@ class V8_EXPORT_PRIVATE MachineOperatorReducer final
   Reduction ReduceWordNOr(Node* node);
   template <typename WordNAdapter>
   Reduction ReduceWordNXor(Node* node);
+
+  // Tries to simplify "if(x == 0)" by removing the "== 0" and inverting
+  // branches.
+  Reduction SimplifyBranch(Node* node);
+  // Helper for SimplifyBranch; swaps the if/else of a branch.
+  void SwapBranches(Node* node);
 
   // Helper for ReduceConditional. Does not perform the actual reduction; just
   // returns a new Node that could be used as the input to the condition.
