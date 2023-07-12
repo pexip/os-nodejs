@@ -15,7 +15,7 @@
 #include "node_process-inl.h"
 #include "node_url.h"
 #include "util-inl.h"
-#include "timer_wrap.h"
+#include "timer_wrap-inl.h"
 #include "v8-inspector.h"
 #include "v8-platform.h"
 
@@ -52,7 +52,9 @@ using v8_inspector::StringView;
 using v8_inspector::V8Inspector;
 using v8_inspector::V8InspectorClient;
 
+#ifdef __POSIX__
 static uv_sem_t start_io_thread_semaphore;
+#endif  // __POSIX__
 static uv_async_t start_io_thread_async;
 // This is just an additional check to make sure start_io_thread_async
 // is not accidentally re-used or used when uninitialized.
@@ -87,7 +89,6 @@ inline void* StartIoThreadMain(void* unused) {
     if (agent != nullptr)
       agent->RequestIoThreadStart();
   }
-  return nullptr;
 }
 
 static int StartDebugSignalHandler() {
@@ -98,11 +99,11 @@ static int StartDebugSignalHandler() {
   pthread_attr_t attr;
   CHECK_EQ(0, pthread_attr_init(&attr));
 #if defined(PTHREAD_STACK_MIN) && !defined(__FreeBSD__)
-  // PTHREAD_STACK_MIN is 2 KB with musl libc, which is too small to safely
-  // receive signals. PTHREAD_STACK_MIN + MINSIGSTKSZ is 8 KB on arm64, which
+  // PTHREAD_STACK_MIN is 2 KiB with musl libc, which is too small to safely
+  // receive signals. PTHREAD_STACK_MIN + MINSIGSTKSZ is 8 KiB on arm64, which
   // is the musl architecture with the biggest MINSIGSTKSZ so let's use that
   // as a lower bound and let's quadruple it just in case. The goal is to avoid
-  // creating a big 2 or 4 MB address space gap (problematic on 32 bits
+  // creating a big 2 or 4 MiB address space gap (problematic on 32 bits
   // because of fragmentation), not squeeze out every last byte.
   // Omitted on FreeBSD because it doesn't seem to like small stacks.
   const size_t stack_size = std::max(static_cast<size_t>(4 * 8192),
@@ -369,6 +370,16 @@ bool IsFilePath(const std::string& path) {
 }
 #endif  // __POSIX__
 
+void ThrowUninitializedInspectorError(Environment* env) {
+  HandleScope scope(env->isolate());
+
+  const char* msg = "This Environment was initialized without a V8::Inspector";
+  Local<Value> exception =
+    v8::String::NewFromUtf8(env->isolate(), msg).ToLocalChecked();
+
+  env->isolate()->ThrowException(exception);
+}
+
 }  // namespace
 
 class NodeInspectorClient : public V8InspectorClient {
@@ -496,7 +507,7 @@ class NodeInspectorClient : public V8InspectorClient {
     Isolate* isolate = env_->isolate();
     Local<Context> context = env_->context();
 
-    int script_id = message->GetScriptOrigin().ScriptID()->Value();
+    int script_id = message->GetScriptOrigin().ScriptId();
 
     Local<v8::StackTrace> stack_trace = message->GetStackTrace();
 
@@ -637,9 +648,7 @@ class NodeInspectorClient : public V8InspectorClient {
     if (!IsFilePath(resource_name))
       return nullptr;
     node::url::URL url = node::url::URL::FromFilePath(resource_name);
-    // TODO(ak239spb): replace this code with url.href().
-    // Refs: https://github.com/nodejs/node/issues/22610
-    return Utf8ToStringView(url.protocol() + "//" + url.path());
+    return Utf8ToStringView(url.href());
   }
 
   node::Environment* env_;
@@ -712,7 +721,8 @@ bool Agent::Start(const std::string& path,
   if (parent_handle_) {
     wait_for_connect = parent_handle_->WaitForConnect();
     parent_handle_->WorkerStarted(client_->getThreadHandle(), wait_for_connect);
-  } else if (!options.inspector_enabled || !StartIoThread()) {
+  } else if (!options.inspector_enabled || !options.allow_attaching_debugger ||
+             !StartIoThread()) {
     return false;
   }
 
@@ -730,6 +740,11 @@ bool Agent::Start(const std::string& path,
 bool Agent::StartIoThread() {
   if (io_ != nullptr)
     return true;
+
+  if (!parent_env_->should_create_inspector() && !client_) {
+    ThrowUninitializedInspectorError(parent_env_);
+    return false;
+  }
 
   CHECK_NOT_NULL(client_);
 
@@ -751,7 +766,13 @@ void Agent::Stop() {
 std::unique_ptr<InspectorSession> Agent::Connect(
     std::unique_ptr<InspectorSessionDelegate> delegate,
     bool prevent_shutdown) {
+  if (!parent_env_->should_create_inspector() && !client_) {
+    ThrowUninitializedInspectorError(parent_env_);
+    return std::unique_ptr<InspectorSession>{};
+  }
+
   CHECK_NOT_NULL(client_);
+
   int session_id = client_->connectFrontend(std::move(delegate),
                                             prevent_shutdown);
   return std::unique_ptr<InspectorSession>(
@@ -761,6 +782,11 @@ std::unique_ptr<InspectorSession> Agent::Connect(
 std::unique_ptr<InspectorSession> Agent::ConnectToMainThread(
     std::unique_ptr<InspectorSessionDelegate> delegate,
     bool prevent_shutdown) {
+  if (!parent_env_->should_create_inspector() && !client_) {
+    ThrowUninitializedInspectorError(parent_env_);
+    return std::unique_ptr<InspectorSession>{};
+  }
+
   CHECK_NOT_NULL(parent_handle_);
   CHECK_NOT_NULL(client_);
   auto thread_safe_delegate =
@@ -770,6 +796,11 @@ std::unique_ptr<InspectorSession> Agent::ConnectToMainThread(
 }
 
 void Agent::WaitForDisconnect() {
+  if (!parent_env_->should_create_inspector() && !client_) {
+    ThrowUninitializedInspectorError(parent_env_);
+    return;
+  }
+
   CHECK_NOT_NULL(client_);
   bool is_worker = parent_handle_ != nullptr;
   parent_handle_.reset();
@@ -886,6 +917,9 @@ void Agent::RequestIoThreadStart() {
   // We need to attempt to interrupt V8 flow (in case Node is running
   // continuous JS code) and to wake up libuv thread (in case Node is waiting
   // for IO events)
+  if (!options().allow_attaching_debugger) {
+    return;
+  }
   CHECK(start_io_thread_async_initialized);
   uv_async_send(&start_io_thread_async);
   parent_env_->RequestInterrupt([this](Environment*) {
@@ -915,6 +949,12 @@ void Agent::SetParentHandle(
 
 std::unique_ptr<ParentInspectorHandle> Agent::GetParentHandle(
     uint64_t thread_id, const std::string& url) {
+  if (!parent_env_->should_create_inspector() && !client_) {
+    ThrowUninitializedInspectorError(parent_env_);
+    return std::unique_ptr<ParentInspectorHandle>{};
+  }
+
+  CHECK_NOT_NULL(client_);
   if (!parent_handle_) {
     return client_->getWorkerManager()->NewParentHandle(thread_id, url);
   } else {
@@ -923,11 +963,21 @@ std::unique_ptr<ParentInspectorHandle> Agent::GetParentHandle(
 }
 
 void Agent::WaitForConnect() {
+  if (!parent_env_->should_create_inspector() && !client_) {
+    ThrowUninitializedInspectorError(parent_env_);
+    return;
+  }
+
   CHECK_NOT_NULL(client_);
   client_->waitForFrontend();
 }
 
 std::shared_ptr<WorkerManager> Agent::GetWorkerManager() {
+  if (!parent_env_->should_create_inspector() && !client_) {
+    ThrowUninitializedInspectorError(parent_env_);
+    return std::unique_ptr<WorkerManager>{};
+  }
+
   CHECK_NOT_NULL(client_);
   return client_->getWorkerManager();
 }

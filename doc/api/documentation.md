@@ -1,6 +1,7 @@
 # About this documentation
 
 <!--introduced_in=v0.10.0-->
+
 <!-- type=misc -->
 
 Welcome to the official API reference documentation for Node.js!
@@ -28,7 +29,7 @@ The stability indices are as follows:
 <!-- separator -->
 
 > Stability: 1 - Experimental. The feature is not subject to
-> [Semantic Versioning][] rules. Non-backward compatible changes or removal may
+> [semantic versioning][] rules. Non-backward compatible changes or removal may
 > occur in any future release. Use of the feature is not recommended in
 > production environments.
 
@@ -39,9 +40,13 @@ The stability indices are as follows:
 
 <!-- separator -->
 
-> Stability: 3 - Legacy. The feature is no longer recommended for use. While it
-> likely will not be removed, and is still covered by semantic-versioning
-> guarantees, use of the feature should be avoided.
+> Stability: 3 - Legacy. Although this feature is unlikely to be removed and is
+> still covered by semantic versioning guarantees, it is no longer actively
+> maintained, and other alternatives are available.
+
+Features are marked as legacy rather than being deprecated if their use does no
+harm, and they are widely relied upon within the npm ecosystem. Bugs found in
+legacy features are unlikely to be fixed.
 
 Use caution when making use of Experimental features, particularly within
 modules. Users may not be aware that experimental features are being used.
@@ -50,48 +55,54 @@ modifications occur. To avoid surprises, use of an Experimental feature may need
 a command-line flag. Experimental features may also emit a [warning][].
 
 ## Stability overview
+
 <!-- STABILITY_OVERVIEW_SLOT_BEGIN -->
 | API | Stability |
 | --- | --------- |
-| [assert](assert.html) | (2) Stable |
-| [async_hooks](async_hooks.html) | (1) Experimental |
-| [buffer](buffer.html) | (2) Stable |
-| [child_process](child_process.html) | (2) Stable |
-| [cluster](cluster.html) | (2) Stable |
-| [console](console.html) | (2) Stable |
-| [crypto](crypto.html) | (2) Stable |
-| [dgram](dgram.html) | (2) Stable |
-| [diagnostics_channel](diagnostics_channel.html) | (1) Experimental |
-| [dns](dns.html) | (2) Stable |
-| [domain](domain.html) | (0) Deprecated |
-| [fs](fs.html) | (2) Stable |
-| [http](http.html) | (2) Stable |
-| [http/2](http2.html) | (2) Stable |
-| [https](https.html) | (2) Stable |
-| [inspector](inspector.html) | (2) Stable |
-| [module](modules.html) | (2) Stable |
-| [os](os.html) | (2) Stable |
-| [path](path.html) | (2) Stable |
-| [performance_measurement_apis](perf_hooks.html) | (2) Stable |
-| [punycode](punycode.html) | (0) Deprecated |
-| [querystring](querystring.html) | (3) Legacy |
-| [readline](readline.html) | (2) Stable |
-| [repl](repl.html) | (2) Stable |
-| [stream](stream.html) | (2) Stable |
-| [string_decoder](string_decoder.html) | (2) Stable |
-| [timers](timers.html) | (2) Stable |
-| [tls_(ssl)](tls.html) | (2) Stable |
-| [trace_events](tracing.html) | (1) Experimental |
-| [tty](tty.html) | (2) Stable |
-| [url](url.html) | (2) Stable |
-| [util](util.html) | (2) Stable |
-| [vm](vm.html) | (2) Stable |
-| [webassembly_system_interface_(wasi)](wasi.html) | (1) Experimental |
-| [worker_threads](worker_threads.html) | (2) Stable |
-| [zlib](zlib.html) | (2) Stable |
+| [Assert](assert.html) | (2) Stable |
+| [Async hooks](async_hooks.html) | (1) Experimental |
+| [Asynchronous context tracking](async_context.html) | (2) Stable |
+| [Buffer](buffer.html) | (2) Stable |
+| [Child process](child_process.html) | (2) Stable |
+| [Cluster](cluster.html) | (2) Stable |
+| [Console](console.html) | (2) Stable |
+| [Crypto](crypto.html) | (2) Stable |
+| [Diagnostics Channel](diagnostics_channel.html) | (2) Stable |
+| [DNS](dns.html) | (2) Stable |
+| [Domain](domain.html) | (0) Deprecated |
+| [File system](fs.html) | (2) Stable |
+| [HTTP](http.html) | (2) Stable |
+| [HTTP/2](http2.html) | (2) Stable |
+| [HTTPS](https.html) | (2) Stable |
+| [Inspector](inspector.html) | (2) Stable |
+| [Modules: CommonJS modules](modules.html) | (2) Stable |
+| [OS](os.html) | (2) Stable |
+| [Path](path.html) | (2) Stable |
+| [Performance measurement APIs](perf_hooks.html) | (2) Stable |
+| [Punycode](punycode.html) | (0) Deprecated |
+| [Query string](querystring.html) | (2) Stable |
+| [Readline](readline.html) | (2) Stable |
+| [REPL](repl.html) | (2) Stable |
+| [Stream](stream.html) | (2) Stable |
+| [String decoder](string_decoder.html) | (2) Stable |
+| [Test runner](test.html) | (1) Experimental |
+| [Timers](timers.html) | (2) Stable |
+| [TLS (SSL)](tls.html) | (2) Stable |
+| [Trace events](tracing.html) | (1) Experimental |
+| [TTY](tty.html) | (2) Stable |
+| [UDP/datagram sockets](dgram.html) | (2) Stable |
+| [URL](url.html) | (2) Stable |
+| [Util](util.html) | (2) Stable |
+| [VM (executing JavaScript)](vm.html) | (2) Stable |
+| [Web Crypto API](webcrypto.html) | (1) Experimental |
+| [Web Streams API](webstreams.html) | (1) Experimental. |
+| [WebAssembly System Interface (WASI)](wasi.html) | (1) Experimental |
+| [Worker threads](worker_threads.html) | (2) Stable |
+| [Zlib](zlib.html) | (2) Stable |
 <!-- STABILITY_OVERVIEW_SLOT_END -->
 
 ## JSON output
+
 <!-- YAML
 added: v0.6.12
 -->
@@ -107,8 +118,8 @@ to the corresponding man pages which describe how the system call works.
 Most Unix system calls have Windows analogues. Still, behavior differences may
 be unavoidable.
 
-[Semantic Versioning]: https://semver.org/
 [V8 JavaScript engine]: https://v8.dev/
+[semantic versioning]: https://semver.org/
 [the contributing guide]: https://github.com/nodejs/node/blob/HEAD/CONTRIBUTING.md
 [the issue tracker]: https://github.com/nodejs/node/issues/new
-[warning]: process.md#process_event_warning
+[warning]: process.md#event-warning

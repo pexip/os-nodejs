@@ -5,10 +5,7 @@
 #ifndef INCLUDE_CPPGC_GARBAGE_COLLECTED_H_
 #define INCLUDE_CPPGC_GARBAGE_COLLECTED_H_
 
-#include <type_traits>
-
 #include "cppgc/internal/api-constants.h"
-#include "cppgc/macros.h"
 #include "cppgc/platform.h"
 #include "cppgc/trace-trait.h"
 #include "cppgc/type-traits.h"
@@ -17,31 +14,9 @@ namespace cppgc {
 
 class Visitor;
 
-namespace internal {
-
-class GarbageCollectedBase {
- public:
-  // Must use MakeGarbageCollected.
-  void* operator new(size_t) = delete;
-  void* operator new[](size_t) = delete;
-  // The garbage collector is taking care of reclaiming the object. Also,
-  // virtual destructor requires an unambiguous, accessible 'operator delete'.
-  void operator delete(void*) {
-#ifdef V8_ENABLE_CHECKS
-    internal::Abort();
-#endif  // V8_ENABLE_CHECKS
-  }
-  void operator delete[](void*) = delete;
-
- protected:
-  GarbageCollectedBase() = default;
-};
-
-}  // namespace internal
-
 /**
- * Base class for managed objects. Only descendent types of GarbageCollected
- * can be constructed using MakeGarbageCollected. Must be inherited from as
+ * Base class for managed objects. Only descendent types of `GarbageCollected`
+ * can be constructed using `MakeGarbageCollected()`. Must be inherited from as
  * left-most base class.
  *
  * Types inheriting from GarbageCollected must provide a method of
@@ -74,10 +49,24 @@ class GarbageCollectedBase {
  * };
  * \endcode
  */
-template <typename>
-class GarbageCollected : public internal::GarbageCollectedBase {
+template <typename T>
+class GarbageCollected {
  public:
   using IsGarbageCollectedTypeMarker = void;
+  using ParentMostGarbageCollectedType = T;
+
+  // Must use MakeGarbageCollected.
+  void* operator new(size_t) = delete;
+  void* operator new[](size_t) = delete;
+  // The garbage collector is taking care of reclaiming the object. Also,
+  // virtual destructor requires an unambiguous, accessible 'operator delete'.
+  void operator delete(void*) {
+#ifdef V8_ENABLE_CHECKS
+    internal::Fatal(
+        "Manually deleting a garbage collected object is not allowed");
+#endif  // V8_ENABLE_CHECKS
+  }
+  void operator delete[](void*) = delete;
 
  protected:
   GarbageCollected() = default;
@@ -101,19 +90,9 @@ class GarbageCollected : public internal::GarbageCollectedBase {
  * };
  * \endcode
  */
-class GarbageCollectedMixin : public internal::GarbageCollectedBase {
+class GarbageCollectedMixin {
  public:
   using IsGarbageCollectedMixinTypeMarker = void;
-
-  // Sentinel used to mark not-fully-constructed mixins.
-  static constexpr void* kNotFullyConstructedObject = nullptr;
-
-  // Provide default implementation that indicate that the vtable is not yet
-  // set up properly. This is used to to get GCInfo objects for mixins so that
-  // these objects can be processed later on.
-  virtual TraceDescriptor GetTraceDescriptor() const {
-    return {kNotFullyConstructedObject, nullptr};
-  }
 
   /**
    * This Trace method must be overriden by objects inheriting from
@@ -121,71 +100,6 @@ class GarbageCollectedMixin : public internal::GarbageCollectedBase {
    */
   virtual void Trace(cppgc::Visitor*) const {}
 };
-
-/**
- * Macro defines all methods and markers needed for handling mixins. Must be
- * used on the type that is inheriting from GarbageCollected *and*
- * GarbageCollectedMixin.
- *
- * \code
- * class Mixin : public GarbageCollectedMixin {
- *  public:
- *   void Trace(cppgc::Visitor* visitor) const override {
- *     // Dispatch using visitor->Trace(...);
- *   }
- * };
- *
- * class Foo : public GarbageCollected<Foo>, public Mixin {
- *   USING_GARBAGE_COLLECTED_MIXIN();
- *  public:
- *   void Trace(cppgc::Visitor* visitor) const override {
- *     // Dispatch using visitor->Trace(...);
- *     Mixin::Trace(visitor);
- *   }
- * };
- * \endcode
- */
-#define USING_GARBAGE_COLLECTED_MIXIN()                                      \
- public:                                                                     \
-  /* Marker is used by clang to check for proper usages of the macro. */     \
-  typedef int HasUsingGarbageCollectedMixinMacro;                            \
-                                                                             \
-  TraceDescriptor GetTraceDescriptor() const override {                      \
-    static_assert(                                                           \
-        internal::IsSubclassOfTemplate<                                      \
-            std::remove_const_t<std::remove_pointer_t<decltype(this)>>,      \
-            cppgc::GarbageCollected>::value,                                 \
-        "Only garbage collected objects can have garbage collected mixins"); \
-    return {this, TraceTrait<std::remove_const_t<                            \
-                      std::remove_pointer_t<decltype(this)>>>::Trace};       \
-  }                                                                          \
-                                                                             \
- private:                                                                    \
-  friend class internal::__thisIsHereToForceASemicolonAfterThisMacro
-
-/**
- * Merge two or more Mixins into one.
- *
- * \code
- * class A : public GarbageCollectedMixin {};
- * class B : public GarbageCollectedMixin {};
- * class C : public A, public B {
- *   MERGE_GARBAGE_COLLECTED_MIXINS();
- *  public:
- * };
- * \endcode
- */
-#define MERGE_GARBAGE_COLLECTED_MIXINS()                \
- public:                                                \
-  /* When using multiple mixins the methods become  */  \
-  /* ambigous. Providing additional implementations */  \
-  /* disambiguate them again.                       */  \
-  TraceDescriptor GetTraceDescriptor() const override { \
-    return {kNotFullyConstructedObject, nullptr};       \
-  }                                                     \
-                                                        \
- private:                                               \
-  friend class internal::__thisIsHereToForceASemicolonAfterThisMacro
 
 }  // namespace cppgc
 

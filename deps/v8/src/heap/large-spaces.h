@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 #include "src/base/macros.h"
+#include "src/base/platform/mutex.h"
 #include "src/common/globals.h"
 #include "src/heap/heap.h"
 #include "src/heap/memory-chunk.h"
@@ -21,6 +22,7 @@ namespace v8 {
 namespace internal {
 
 class Isolate;
+class LocalHeap;
 
 class LargePage : public MemoryChunk {
  public:
@@ -29,13 +31,21 @@ class LargePage : public MemoryChunk {
   // already imposes on x64 and ia32 architectures.
   static const int kMaxCodePageSize = 512 * MB;
 
+  LargePage(Heap* heap, BaseSpace* space, size_t chunk_size, Address area_start,
+            Address area_end, VirtualMemory reservation,
+            Executability executable);
+
   static LargePage* FromHeapObject(HeapObject o) {
+    DCHECK(!V8_ENABLE_THIRD_PARTY_HEAP_BOOL);
     return static_cast<LargePage*>(MemoryChunk::FromHeapObject(o));
   }
 
   HeapObject GetObject() { return HeapObject::FromAddress(area_start()); }
 
   LargePage* next_page() { return static_cast<LargePage*>(list_node_.next()); }
+  const LargePage* next_page() const {
+    return static_cast<const LargePage*>(list_node_.next());
+  }
 
   // Uncommit memory that is not in use anymore by the object. If the object
   // cannot be shrunk 0 is returned.
@@ -59,6 +69,7 @@ STATIC_ASSERT(sizeof(LargePage) <= MemoryChunk::kHeaderSize);
 class V8_EXPORT_PRIVATE LargeObjectSpace : public Space {
  public:
   using iterator = LargePageIterator;
+  using const_iterator = ConstLargePageIterator;
 
   ~LargeObjectSpace() override { TearDown(); }
 
@@ -66,37 +77,43 @@ class V8_EXPORT_PRIVATE LargeObjectSpace : public Space {
   void TearDown();
 
   // Available bytes for objects in this space.
-  size_t Available() override;
+  size_t Available() const override;
 
-  size_t Size() override { return size_; }
-  size_t SizeOfObjects() override { return objects_size_; }
+  size_t Size() const override { return size_; }
+  size_t SizeOfObjects() const override { return objects_size_; }
 
   // Approximate amount of physical memory committed for this space.
-  size_t CommittedPhysicalMemory() override;
+  size_t CommittedPhysicalMemory() const override;
 
-  int PageCount() { return page_count_; }
+  int PageCount() const { return page_count_; }
 
   // Frees unmarked objects.
   virtual void FreeUnmarkedObjects();
 
   // Checks whether a heap object is in this space; O(1).
-  bool Contains(HeapObject obj);
+  bool Contains(HeapObject obj) const;
   // Checks whether an address is in the object area in this space. Iterates all
   // objects in the space. May be slow.
-  bool ContainsSlow(Address addr);
+  bool ContainsSlow(Address addr) const;
 
   // Checks whether the space is empty.
-  bool IsEmpty() { return first_page() == nullptr; }
+  bool IsEmpty() const { return first_page() == nullptr; }
 
   virtual void AddPage(LargePage* page, size_t object_size);
   virtual void RemovePage(LargePage* page, size_t object_size);
 
-  LargePage* first_page() {
-    return reinterpret_cast<LargePage*>(Space::first_page());
+  LargePage* first_page() override {
+    return reinterpret_cast<LargePage*>(memory_chunk_list_.front());
+  }
+  const LargePage* first_page() const override {
+    return reinterpret_cast<const LargePage*>(memory_chunk_list_.front());
   }
 
   iterator begin() { return iterator(first_page()); }
   iterator end() { return iterator(nullptr); }
+
+  const_iterator begin() const { return const_iterator(first_page()); }
+  const_iterator end() const { return const_iterator(nullptr); }
 
   std::unique_ptr<ObjectIterator> GetObjectIterator(Heap* heap) override;
 
@@ -110,20 +127,44 @@ class V8_EXPORT_PRIVATE LargeObjectSpace : public Space {
   void Print() override;
 #endif
 
+  // The last allocated object that is not guaranteed to be initialized when the
+  // concurrent marker visits it.
+  Address pending_object() const {
+    return pending_object_.load(std::memory_order_acquire);
+  }
+
+  void ResetPendingObject() {
+    pending_object_.store(0, std::memory_order_release);
+  }
+
+  base::SharedMutex* pending_allocation_mutex() {
+    return &pending_allocation_mutex_;
+  }
+
  protected:
   LargeObjectSpace(Heap* heap, AllocationSpace id);
 
+  void AdvanceAndInvokeAllocationObservers(Address soon_object, size_t size);
+
   LargePage* AllocateLargePage(int object_size, Executability executable);
 
-  size_t size_;          // allocated bytes
+  void UpdatePendingObject(HeapObject object);
+
+  std::atomic<size_t> size_;  // allocated bytes
   int page_count_;       // number of chunks
-  size_t objects_size_;  // size of objects
+  std::atomic<size_t> objects_size_;  // size of objects
+  base::Mutex allocation_mutex_;
+
+  // Current potentially uninitialized object. Protected by
+  // pending_allocation_mutex_.
+  std::atomic<Address> pending_object_;
+
+  // Used to protect pending_object_.
+  base::SharedMutex pending_allocation_mutex_;
 
  private:
   friend class LargeObjectSpaceObjectIterator;
 };
-
-class OffThreadLargeObjectSpace;
 
 class OldLargeObjectSpace : public LargeObjectSpace {
  public:
@@ -132,17 +173,20 @@ class OldLargeObjectSpace : public LargeObjectSpace {
   V8_EXPORT_PRIVATE V8_WARN_UNUSED_RESULT AllocationResult
   AllocateRaw(int object_size);
 
+  V8_EXPORT_PRIVATE V8_WARN_UNUSED_RESULT AllocationResult
+  AllocateRawBackground(LocalHeap* local_heap, int object_size);
+
   // Clears the marking state of live objects.
   void ClearMarkingStateOfLiveObjects();
 
   void PromoteNewLargeObject(LargePage* page);
 
-  V8_EXPORT_PRIVATE void MergeOffThreadSpace(OffThreadLargeObjectSpace* other);
-
  protected:
   explicit OldLargeObjectSpace(Heap* heap, AllocationSpace id);
   V8_WARN_UNUSED_RESULT AllocationResult AllocateRaw(int object_size,
                                                      Executability executable);
+  V8_WARN_UNUSED_RESULT AllocationResult AllocateRawBackground(
+      LocalHeap* local_heap, int object_size, Executability executable);
 };
 
 class NewLargeObjectSpace : public LargeObjectSpace {
@@ -153,7 +197,7 @@ class NewLargeObjectSpace : public LargeObjectSpace {
   AllocateRaw(int object_size);
 
   // Available bytes for objects in this space.
-  size_t Available() override;
+  size_t Available() const override;
 
   void Flip();
 
@@ -161,16 +205,7 @@ class NewLargeObjectSpace : public LargeObjectSpace {
 
   void SetCapacity(size_t capacity);
 
-  // The last allocated object that is not guaranteed to be initialized when the
-  // concurrent marker visits it.
-  Address pending_object() {
-    return pending_object_.load(std::memory_order_relaxed);
-  }
-
-  void ResetPendingObject() { pending_object_.store(0); }
-
  private:
-  std::atomic<Address> pending_object_;
   size_t capacity_;
 };
 
@@ -180,6 +215,9 @@ class CodeLargeObjectSpace : public OldLargeObjectSpace {
 
   V8_EXPORT_PRIVATE V8_WARN_UNUSED_RESULT AllocationResult
   AllocateRaw(int object_size);
+
+  V8_EXPORT_PRIVATE V8_WARN_UNUSED_RESULT AllocationResult
+  AllocateRawBackground(LocalHeap* local_heap, int object_size);
 
   // Finds a large object page containing the given address, returns nullptr if
   // such a page doesn't exist.
@@ -196,24 +234,6 @@ class CodeLargeObjectSpace : public OldLargeObjectSpace {
 
   // Page-aligned addresses to their corresponding LargePage.
   std::unordered_map<Address, LargePage*> chunk_map_;
-};
-
-class V8_EXPORT_PRIVATE OffThreadLargeObjectSpace : public LargeObjectSpace {
- public:
-  explicit OffThreadLargeObjectSpace(Heap* heap);
-
-  V8_WARN_UNUSED_RESULT AllocationResult AllocateRaw(int object_size);
-
-  void FreeUnmarkedObjects() override;
-
-  bool is_off_thread() const override { return true; }
-
- protected:
-  // OldLargeObjectSpace can mess with OffThreadLargeObjectSpace during merging.
-  friend class OldLargeObjectSpace;
-
-  V8_WARN_UNUSED_RESULT AllocationResult AllocateRaw(int object_size,
-                                                     Executability executable);
 };
 
 class LargeObjectSpaceObjectIterator : public ObjectIterator {

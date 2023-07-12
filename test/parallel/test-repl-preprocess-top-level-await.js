@@ -9,17 +9,33 @@ const { processTopLevelAwait } = require('internal/repl/await');
 // This test was created based on
 // https://cs.chromium.org/chromium/src/third_party/WebKit/LayoutTests/http/tests/inspector-unit/preprocess-top-level-awaits.js?rcl=358caaba5e763e71c4abb9ada2d9cd8b1188cac9
 
+const surrogate = (
+  '"\u{1F601}\u{1f468}\u200d\u{1f469}\u200d\u{1f467}\u200d\u{1f466}"'
+);
+
 const testCases = [
   [ '0',
     null ],
   [ 'await 0',
-    '(async () => { return (await 0) })()' ],
+    '(async () => { return { value: (await 0) } })()' ],
+  [ `await ${surrogate}`,
+    `(async () => { return { value: (await ${surrogate}) } })()` ],
   [ 'await 0;',
-    '(async () => { return (await 0); })()' ],
+    '(async () => { return { value: (await 0) }; })()' ],
+  [ 'await 0;;;',
+    '(async () => { return { value: (await 0) };;; })()' ],
+  [ `await ${surrogate};`,
+    `(async () => { return { value: (await ${surrogate}) }; })()` ],
+  [ `await ${surrogate};`,
+    `(async () => { return { value: (await ${surrogate}) }; })()` ],
   [ '(await 0)',
-    '(async () => { return ((await 0)) })()' ],
+    '(async () => { return ({ value: (await 0) }) })()' ],
+  [ `(await ${surrogate})`,
+    `(async () => { return ({ value: (await ${surrogate}) }) })()` ],
   [ '(await 0);',
-    '(async () => { return ((await 0)); })()' ],
+    '(async () => { return ({ value: (await 0) }); })()' ],
+  [ `(await ${surrogate});`,
+    `(async () => { return ({ value: (await ${surrogate}) }); })()` ],
   [ 'async function foo() { await 0; }',
     null ],
   [ 'async () => await 0',
@@ -28,8 +44,12 @@ const testCases = [
     null ],
   [ 'await 0; return 0;',
     null ],
+  [ `await ${surrogate}; await ${surrogate};`,
+    `(async () => { await ${surrogate}; return { value: (await ${surrogate}) }; })()` ],
   [ 'var a = await 1',
     'var a; (async () => { void (a = await 1) })()' ],
+  [ `var a = await ${surrogate}`,
+    `var a; (async () => { void (a = await ${surrogate}) })()` ],
   [ 'let a = await 1',
     'let a; (async () => { void (a = await 1) })()' ],
   [ 'const a = await 1',
@@ -51,7 +71,7 @@ const testCases = [
         ' ([{d}] = [{d: 3}])) })()'],
   /* eslint-disable no-template-curly-in-string */
   [ 'console.log(`${(await { a: 1 }).a}`)',
-    '(async () => { return (console.log(`${(await { a: 1 }).a}`)) })()' ],
+    '(async () => { return { value: (console.log(`${(await { a: 1 }).a}`)) } })()' ],
   /* eslint-enable no-template-curly-in-string */
   [ 'await 0; function foo() {}',
     'var foo; (async () => { await 0; this.foo = foo; function foo() {} })()' ],
@@ -72,15 +92,15 @@ const testCases = [
   [ 'let o = await 1, p',
     'let o, p; (async () => { void ( (o = await 1), (p=undefined)) })()' ],
   [ 'await (async () => { let p = await 1; return p; })()',
-    '(async () => { return (await (async () => ' +
-      '{ let p = await 1; return p; })()) })()' ],
+    '(async () => { return { value: (await (async () => ' +
+      '{ let p = await 1; return p; })()) } })()' ],
   [ '{ let p = await 1; }',
     '(async () => { { let p = await 1; } })()' ],
   [ 'var p = await 1',
     'var p; (async () => { void (p = await 1) })()' ],
   [ 'await (async () => { var p = await 1; return p; })()',
-    '(async () => { return (await (async () => ' +
-      '{ var p = await 1; return p; })()) })()' ],
+    '(async () => { return { value: (await (async () => ' +
+      '{ var p = await 1; return p; })()) } })()' ],
   [ '{ var p = await 1; }',
     'var p; (async () => { { void (p = await 1); } })()' ],
   [ 'for await (var i of asyncIterable) { i; }',
@@ -120,6 +140,10 @@ const testCases = [
   [ 'var x = await foo(); async function foo() { return Promise.resolve(1);}',
     'var x; var foo; (async () => { void (x = await foo()); this.foo = foo; ' +
       'async function foo() { return Promise.resolve(1);} })()'],
+  [ '(await x).y',
+    '(async () => { return { value: ((await x).y) } })()'],
+  [ 'await (await x).y',
+    '(async () => { return { value: (await (await x).y) } })()'],
 ];
 
 for (const [input, expected] of testCases) {

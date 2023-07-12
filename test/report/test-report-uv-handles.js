@@ -161,10 +161,10 @@ if (process.argv[2] === 'child') {
   child.stdout.on('data', (chunk) => { stdout += chunk; });
   child.on('exit', common.mustCall((code, signal) => {
     assert.strictEqual(stderr.trim(), '');
-    assert.deepStrictEqual(code, 0, 'Process exited unexpectedly with code: ' +
-                           `${code}`);
-    assert.deepStrictEqual(signal, null, 'Process should have exited cleanly,' +
-                            ` but did not: ${signal}`);
+    assert.strictEqual(code, 0, 'Process exited unexpectedly with code: ' +
+                       `${code}`);
+    assert.strictEqual(signal, null, 'Process should have exited cleanly,' +
+                       ` but did not: ${signal}`);
 
     const reports = helper.findReports(child.pid, tmpdir.path);
     assert.deepStrictEqual(reports, [], report_msg, reports);
@@ -260,6 +260,8 @@ if (process.argv[2] === 'child') {
           found_udp.push('connected');
         }
         assert(handle.is_referenced);
+        assert.strictEqual(handle.writeQueueSize, 0);
+        assert.strictEqual(handle.writeQueueCount, 0);
       }, 2),
     };
 
@@ -273,8 +275,7 @@ if (process.argv[2] === 'child') {
       assert(found_udp.includes(socket), `${socket} UDP socket was not found`);
     }
     for (const socket of ['listening', 'inbound']) {
-      assert(found_named_pipe.includes(socket),
-             `${socket} named pipe socket was not found`);
+      assert(found_named_pipe.includes(socket), `${socket} named pipe socket was not found`);
     }
 
     // Common report tests.

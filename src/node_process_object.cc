@@ -1,8 +1,11 @@
 #include "env-inl.h"
+#include "node_errors.h"
+#include "node_external_reference.h"
 #include "node_internals.h"
-#include "node_options-inl.h"
 #include "node_metadata.h"
+#include "node_options-inl.h"
 #include "node_process-inl.h"
+#include "node_realm-inl.h"
 #include "node_revert.h"
 #include "util-inl.h"
 
@@ -59,6 +62,13 @@ static void DebugPortSetter(Local<Name> property,
                             const PropertyCallbackInfo<void>& info) {
   Environment* env = Environment::GetCurrent(info);
   int32_t port = value->Int32Value(env->context()).FromMaybe(0);
+
+  if ((port != 0 && port < 1024) || port > 65535) {
+    return THROW_ERR_OUT_OF_RANGE(
+      env,
+      "process.debugPort must be 0 or in range 1024 to 65535");
+  }
+
   ExclusiveAccess<HostPort>::Scoped host_port(env->inspector_host_port());
   host_port->set_port(static_cast<int>(port));
 }
@@ -68,13 +78,13 @@ static void GetParentProcessId(Local<Name> property,
   info.GetReturnValue().Set(uv_os_getppid());
 }
 
-MaybeLocal<Object> CreateProcessObject(Environment* env) {
-  Isolate* isolate = env->isolate();
+MaybeLocal<Object> CreateProcessObject(Realm* realm) {
+  Isolate* isolate = realm->isolate();
   EscapableHandleScope scope(isolate);
-  Local<Context> context = env->context();
+  Local<Context> context = realm->context();
 
   Local<FunctionTemplate> process_template = FunctionTemplate::New(isolate);
-  process_template->SetClassName(env->process_string());
+  process_template->SetClassName(realm->env()->process_string());
   Local<Function> process_ctor;
   Local<Object> process;
   if (!process_template->GetFunction(context).ToLocal(&process_ctor) ||
@@ -82,13 +92,21 @@ MaybeLocal<Object> CreateProcessObject(Environment* env) {
     return MaybeLocal<Object>();
   }
 
+  // process[exiting_aliased_Uint32Array]
+  if (process
+          ->SetPrivate(context,
+                       realm->env()->exiting_aliased_Uint32Array(),
+                       realm->env()->exiting().GetJSArray())
+          .IsNothing()) {
+    return {};
+  }
+
   // process.version
-  READONLY_PROPERTY(process,
-                    "version",
-                    FIXED_ONE_BYTE_STRING(env->isolate(), NODE_VERSION));
+  READONLY_PROPERTY(
+      process, "version", FIXED_ONE_BYTE_STRING(isolate, NODE_VERSION));
 
   // process.versions
-  Local<Object> versions = Object::New(env->isolate());
+  Local<Object> versions = Object::New(isolate);
   READONLY_PROPERTY(process, "versions", versions);
 
 #define V(key)                                                                 \
@@ -106,7 +124,7 @@ MaybeLocal<Object> CreateProcessObject(Environment* env) {
   READONLY_STRING_PROPERTY(process, "platform", per_process::metadata.platform);
 
   // process.release
-  Local<Object> release = Object::New(env->isolate());
+  Local<Object> release = Object::New(isolate);
   READONLY_PROPERTY(process, "release", release);
   READONLY_STRING_PROPERTY(release, "name", per_process::metadata.release.name);
 #if NODE_VERSION_IS_LTS
@@ -126,7 +144,7 @@ MaybeLocal<Object> CreateProcessObject(Environment* env) {
 
   // process._rawDebug: may be overwritten later in JS land, but should be
   // available from the beginning for debugging purposes
-  env->SetMethod(process, "_rawDebug", RawDebug);
+  SetMethod(context, process, "_rawDebug", RawDebug);
 
   return scope.Escape(process);
 }
@@ -200,4 +218,16 @@ void PatchProcessObject(const FunctionCallbackInfo<Value>& args) {
             .FromJust());
 }
 
+void RegisterProcessExternalReferences(ExternalReferenceRegistry* registry) {
+  registry->Register(RawDebug);
+  registry->Register(GetParentProcessId);
+  registry->Register(DebugPortSetter);
+  registry->Register(DebugPortGetter);
+  registry->Register(ProcessTitleSetter);
+  registry->Register(ProcessTitleGetter);
+}
+
 }  // namespace node
+
+NODE_MODULE_EXTERNAL_REFERENCE(process_object,
+                               node::RegisterProcessExternalReferences)

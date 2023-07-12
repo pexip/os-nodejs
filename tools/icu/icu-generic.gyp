@@ -93,7 +93,6 @@
         },
         'defines': [
           'U_ATTRIBUTE_DEPRECATED=',
-          '_CRT_SECURE_NO_DEPRECATE=',
           'U_STATIC_IMPLEMENTATION=1',
         ],
       },
@@ -167,7 +166,7 @@
                   'msvs_quote_cmd': 0,
                   'inputs': [ '<(icu_data_in)', 'icu_small.json' ],
                   'outputs': [ '<(SHARED_INTERMEDIATE_DIR)/icutmp/icudt<(icu_ver_major)<(icu_endianness).dat' ],
-                  'action': [ 'python',
+                  'action': [ '<(python)',
                               'icutrim.py',
                               '-P', '<(PRODUCT_DIR)/.', # '.' suffix is a workaround against GYP assumptions :(
                               '-D', '<(icu_data_in)',
@@ -252,7 +251,7 @@
                   'action_name': 'icutrim',
                   'inputs': [ '<(icu_data_in)', 'icu_small.json' ],
                   'outputs': [ '<(SHARED_INTERMEDIATE_DIR)/icutmp/icudt<(icu_ver_major)<(icu_endianness).dat' ],
-                  'action': [ 'python',
+                  'action': [ '<(python)',
                               'icutrim.py',
                               '-P', '<(PRODUCT_DIR)',
                               '-D', '<(icu_data_in)',
@@ -419,7 +418,7 @@
       'target_name': 'genrb',
       'type': 'executable',
       'toolsets': [ 'host' ],
-      'dependencies': [ 'icutools' ],
+      'dependencies': [ 'icutools', 'icu_implementation' ],
       'sources': [
         '<@(icu_src_genrb)'
       ],

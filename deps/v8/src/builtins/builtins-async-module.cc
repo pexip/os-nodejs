@@ -11,9 +11,16 @@ namespace internal {
 
 BUILTIN(CallAsyncModuleFulfilled) {
   HandleScope handle_scope(isolate);
-  Handle<SourceTextModule> module(
-      isolate->global_handles()->Create(*args.at<SourceTextModule>(0)));
-  SourceTextModule::AsyncModuleExecutionFulfilled(isolate, module);
+  Handle<SourceTextModule> module(args.at<SourceTextModule>(0));
+  if (SourceTextModule::AsyncModuleExecutionFulfilled(isolate, module)
+          .IsNothing()) {
+    // The evaluation of async module can not throwing a JavaScript observable
+    // exception.
+    DCHECK(isolate->has_pending_exception());
+    DCHECK_EQ(isolate->pending_exception(),
+              ReadOnlyRoots(isolate).termination_exception());
+    return ReadOnlyRoots(isolate).exception();
+  }
   return ReadOnlyRoots(isolate).undefined_value();
 }
 
@@ -22,8 +29,7 @@ BUILTIN(CallAsyncModuleRejected) {
 
   // Arguments should be a SourceTextModule and an exception object.
   DCHECK_EQ(args.length(), 2);
-  Handle<SourceTextModule> module(
-      isolate->global_handles()->Create(*args.at<SourceTextModule>(0)));
+  Handle<SourceTextModule> module(args.at<SourceTextModule>(0));
   Handle<Object> exception(args.at(1));
   SourceTextModule::AsyncModuleExecutionRejected(isolate, module, exception);
   return ReadOnlyRoots(isolate).undefined_value();
