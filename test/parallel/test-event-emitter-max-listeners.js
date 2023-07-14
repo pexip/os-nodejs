@@ -40,7 +40,7 @@ for (const obj of throwsObjs) {
       code: 'ERR_OUT_OF_RANGE',
       name: 'RangeError',
       message: 'The value of "n" is out of range. ' +
-               `It must be a non-negative number. Received ${inspect(obj)}`
+               `It must be a non-negative number. Received ${inspect(obj)}`,
     }
   );
 
@@ -50,9 +50,23 @@ for (const obj of throwsObjs) {
       code: 'ERR_OUT_OF_RANGE',
       name: 'RangeError',
       message: 'The value of "defaultMaxListeners" is out of range. ' +
-               `It must be a non-negative number. Received ${inspect(obj)}`
+               `It must be a non-negative number. Received ${inspect(obj)}`,
     }
   );
 }
 
 e.emit('maxListeners');
+
+{
+  const { EventEmitter, defaultMaxListeners } = events;
+  for (const obj of throwsObjs) {
+    assert.throws(() => EventEmitter.setMaxListeners(obj), {
+      code: 'ERR_OUT_OF_RANGE',
+    });
+  }
+
+  assert.throws(
+    () => EventEmitter.setMaxListeners(defaultMaxListeners, 'INVALID_EMITTER'),
+    { code: 'ERR_INVALID_ARG_TYPE' }
+  );
+}

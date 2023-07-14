@@ -4,6 +4,7 @@
 #include "env-inl.h"
 #include "node_buffer.h"
 #include "node_errors.h"
+#include "node_external_reference.h"
 #include "string_bytes.h"
 #include "util.h"
 
@@ -327,13 +328,21 @@ void InitializeStringDecoder(Local<Object> target,
               FIXED_ONE_BYTE_STRING(isolate, "kSize"),
               Integer::New(isolate, sizeof(StringDecoder))).Check();
 
-  env->SetMethod(target, "decode", DecodeData);
-  env->SetMethod(target, "flush", FlushData);
+  SetMethod(context, target, "decode", DecodeData);
+  SetMethod(context, target, "flush", FlushData);
 }
 
 }  // anonymous namespace
+
+void RegisterStringDecoderExternalReferences(
+    ExternalReferenceRegistry* registry) {
+  registry->Register(DecodeData);
+  registry->Register(FlushData);
+}
 
 }  // namespace node
 
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(string_decoder,
                                    node::InitializeStringDecoder)
+NODE_MODULE_EXTERNAL_REFERENCE(string_decoder,
+                               node::RegisterStringDecoderExternalReferences)

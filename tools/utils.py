@@ -26,7 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import os
+import glob
 import platform
 import re
 import sys
@@ -83,9 +83,7 @@ def GuessOS():
 def GuessArchitecture():
   id = platform.machine()
   id = id.lower()  # Windows 7 capitalizes 'AMD64'.
-  if id.startswith('armv6'): # Can return 'armv6l'.
-    return 'armv6'
-  elif id.startswith('arm') or id == 'aarch64':
+  if id.startswith('arm') or id == 'aarch64':
     return 'arm'
   elif (not id) or (not re.match('(x|i[3-6])86$', id) is None):
     return 'ia32'
@@ -99,6 +97,8 @@ def GuessArchitecture():
     return 'ppc'
   elif id == 's390x':
     return 's390'
+  elif id == 'riscv64':
+    return 'riscv64'
   else:
     id = platform.processor()
     if id == 'powerpc':
@@ -111,11 +111,7 @@ def IsWindows():
 
 
 def SearchFiles(dir, ext):
-  matching_files = []
-  for path, dirs, files in os.walk(dir):
-    for file in files:
-      if file.endswith('.' + ext):
-        matching_files.append(path + '/' + file)
+  list = glob.glob(dir+ '/**/*.' + ext, recursive=True)
   if sys.platform == 'win32':
-    matching_files = [x.replace('\\', '/') for x in matching_files]
-  return matching_files
+    list = [ x.replace('\\', '/')for x in list]
+  return sorted(list)
