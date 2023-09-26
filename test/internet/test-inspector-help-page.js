@@ -14,7 +14,7 @@ const stderr = child.stderr.toString();
 const helpUrl = stderr.match(/For help, see: (.+)/)[1];
 
 function check(url, cb) {
-  https.get(url, { agent: new https.Agent() }, common.mustCall((res) => {
+  https.get(url, common.mustCall((res) => {
     assert(res.statusCode >= 200 && res.statusCode < 400);
 
     if (res.statusCode >= 300)
@@ -28,7 +28,7 @@ function check(url, cb) {
     });
 
     res.on('end', common.mustCall(() => {
-      assert.match(result, />Debugging Guide</);
+      assert(/>Debugging Guide</.test(result));
       cb();
     }));
   })).on('error', common.mustNotCall);

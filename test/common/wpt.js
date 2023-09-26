@@ -5,7 +5,6 @@ const fixtures = require('../common/fixtures');
 const fs = require('fs');
 const fsPromises = fs.promises;
 const path = require('path');
-const events = require('events');
 const { inspect } = require('util');
 const { Worker } = require('worker_threads');
 
@@ -34,7 +33,7 @@ const harnessMock = {
   assert_array_equals: assert.deepStrictEqual,
   assert_unreached(desc) {
     assert.fail(`Reached unreachable code: ${desc}`);
-  },
+  }
 };
 
 class ResourceLoader {
@@ -46,7 +45,7 @@ class ResourceLoader {
     // We need to patch this to load the WebIDL parser
     url = url.replace(
       '/resources/WebIDLParser.js',
-      '/resources/webidl2/lib/webidl2.js',
+      '/resources/webidl2/lib/webidl2.js'
     );
     const base = path.dirname(from);
     return url.startsWith('/') ?
@@ -57,10 +56,10 @@ class ResourceLoader {
   /**
    * Load a resource in test/fixtures/wpt specified with a URL
    * @param {string} from the path of the file loading this resource,
-   *                      relative to the WPT folder.
+   *                      relative to thw WPT folder.
    * @param {string} url the url of the resource being loaded.
-   * @param {boolean} asFetch if true, return the resource in a
-   *                          pseudo-Response object.
+   * @param {boolean} asPromise if true, return the resource in a
+   *                            pseudo-Response object.
    */
   read(from, url, asFetch = true) {
     const file = this.toRealFilePath(from, url);
@@ -70,7 +69,7 @@ class ResourceLoader {
           return {
             ok: true,
             json() { return JSON.parse(data.toString()); },
-            text() { return data.toString(); },
+            text() { return data.toString(); }
           };
         });
     }
@@ -79,7 +78,7 @@ class ResourceLoader {
 }
 
 class StatusRule {
-  constructor(key, value, pattern) {
+  constructor(key, value, pattern = undefined) {
     this.key = key;
     this.requires = value.requires || [];
     this.fail = value.fail;
@@ -118,8 +117,7 @@ class StatusRuleSet {
       if (key.includes('*')) {
         this.patternMatch.push(new StatusRule(key, rules[key], key));
       } else {
-        const normalizedPath = path.normalize(key);
-        this.exactMatch[normalizedPath] = new StatusRule(key, rules[key]);
+        this.exactMatch[key] = new StatusRule(key, rules[key]);
       }
     }
   }
@@ -153,8 +151,7 @@ class WPTTestSpec {
     this.filename = filename;
 
     this.requires = new Set();
-    this.failedTests = [];
-    this.flakyTests = [];
+    this.failReasons = [];
     this.skipReasons = [];
     for (const item of rules) {
       if (item.requires.length) {
@@ -162,21 +159,13 @@ class WPTTestSpec {
           this.requires.add(req);
         }
       }
-      if (Array.isArray(item.fail?.expected)) {
-        this.failedTests.push(...item.fail.expected);
-      }
-      if (Array.isArray(item.fail?.flaky)) {
-        this.failedTests.push(...item.fail.flaky);
-        this.flakyTests.push(...item.fail.flaky);
+      if (item.fail) {
+        this.failReasons.push(item.fail);
       }
       if (item.skip) {
         this.skipReasons.push(item.skip);
       }
     }
-
-    this.failedTests = [...new Set(this.failedTests)];
-    this.flakyTests = [...new Set(this.flakyTests)];
-    this.skipReasons = [...new Set(this.skipReasons)];
   }
 
   getRelativePath() {
@@ -298,21 +287,17 @@ class WPTRunner {
     this.resource = new ResourceLoader(path);
 
     this.flags = [];
-    this.dummyGlobalThisScript = null;
     this.initScript = null;
 
     this.status = new StatusLoader(path);
     this.status.load();
     this.specMap = new Map(
-      this.status.specs.map((item) => [item.filename, item]),
+      this.status.specs.map((item) => [item.filename, item])
     );
 
     this.results = {};
     this.inProgress = new Set();
-    this.workers = new Map();
     this.unexpectedFailures = [];
-
-    this.scriptsModifier = null;
   }
 
   /**
@@ -331,54 +316,9 @@ class WPTRunner {
     this.initScript = script;
   }
 
-  /**
-   * Set the scripts modifier for each script.
-   * @param {(meta: { code: string, filename: string }) => void} modifier
-   */
-  setScriptModifier(modifier) {
-    this.scriptsModifier = modifier;
-  }
-
-  get fullInitScript() {
-    if (this.initScript === null && this.dummyGlobalThisScript === null) {
-      return null;
-    }
-
-    if (this.initScript === null) {
-      return this.dummyGlobalThisScript;
-    } else if (this.dummyGlobalThisScript === null) {
-      return this.initScript;
-    }
-
-    return `${this.dummyGlobalThisScript}\n\n//===\n${this.initScript}`;
-  }
-
-  /**
-   * Pretend the runner is run in `name`'s environment (globalThis).
-   * @param {'Window'} name
-   * @see {@link https://github.com/nodejs/node/blob/24673ace8ae196bd1c6d4676507d6e8c94cf0b90/test/fixtures/wpt/resources/idlharness.js#L654-L671}
-   */
-  pretendGlobalThisAs(name) {
-    switch (name) {
-      case 'Window': {
-        this.dummyGlobalThisScript =
-          'global.Window = Object.getPrototypeOf(globalThis).constructor;';
-        break;
-      }
-
-      // TODO(XadillaX): implement `ServiceWorkerGlobalScope`,
-      // `DedicateWorkerGlobalScope`, etc.
-      //
-      // e.g. `ServiceWorkerGlobalScope` should implement dummy
-      // `addEventListener` and so on.
-
-      default: throw new Error(`Invalid globalThis type ${name}.`);
-    }
-  }
-
   // TODO(joyeecheung): work with the upstream to port more tests in .html
   // to .js.
-  async runJsTests() {
+  runJsTests() {
     let queue = [];
 
     // If the tests are run as `node test/wpt/test-something.js subset.any.js`,
@@ -407,30 +347,26 @@ class WPTRunner {
       // Scripts specified with the `// META: script=` header
       if (meta.script) {
         for (const script of meta.script) {
-          const obj = {
+          scriptsToRun.push({
             filename: this.resource.toRealFilePath(relativePath, script),
-            code: this.resource.read(relativePath, script, false),
-          };
-          this.scriptsModifier?.(obj);
-          scriptsToRun.push(obj);
+            code: this.resource.read(relativePath, script, false)
+          });
         }
       }
       // The actual test
-      const obj = {
+      scriptsToRun.push({
         code: content,
-        filename: absolutePath,
-      };
-      this.scriptsModifier?.(obj);
-      scriptsToRun.push(obj);
+        filename: absolutePath
+      });
 
       const workerPath = path.join(__dirname, 'wpt/worker.js');
       const worker = new Worker(workerPath, {
         execArgv: this.flags,
         workerData: {
-          testRelativePath: relativePath,
+          filename: testFileName,
           wptRunner: __filename,
           wptPath: this.path,
-          initScript: this.fullInitScript,
+          initScript: this.initScript,
           harness: {
             code: fs.readFileSync(harnessPath, 'utf8'),
             filename: harnessPath,
@@ -438,7 +374,6 @@ class WPTRunner {
           scriptsToRun,
         },
       });
-      this.workers.set(testFileName, worker);
 
       worker.on('message', (message) => {
         switch (message.type) {
@@ -452,102 +387,55 @@ class WPTRunner {
       });
 
       worker.on('error', (err) => {
-        if (!this.inProgress.has(testFileName)) {
-          // The test is already finished. Ignore errors that occur after it.
-          // This can happen normally, for example in timers tests.
-          return;
-        }
         this.fail(
           testFileName,
           {
             status: NODE_UNCAUGHT,
             name: 'evaluation in WPTRunner.runJsTests()',
             message: err.message,
-            stack: inspect(err),
+            stack: inspect(err)
           },
-          kUncaught,
+          kUncaught
         );
         this.inProgress.delete(testFileName);
       });
-
-      await events.once(worker, 'exit').catch(() => {});
     }
 
     process.on('exit', () => {
+      const total = this.specMap.size;
       if (this.inProgress.size > 0) {
         for (const filename of this.inProgress) {
           this.fail(filename, { name: 'Unknown' }, kIncomplete);
         }
       }
       inspect.defaultOptions.depth = Infinity;
-      // Sorts the rules to have consistent output
-      console.log(JSON.stringify(Object.keys(this.results).sort().reduce(
-        (obj, key) => {
-          obj[key] = this.results[key];
-          return obj;
-        },
-        {},
-      ), null, 2));
+      console.log(this.results);
 
       const failures = [];
       let expectedFailures = 0;
       let skipped = 0;
-      for (const [key, item] of Object.entries(this.results)) {
-        if (item.fail?.unexpected) {
+      for (const key of Object.keys(this.results)) {
+        const item = this.results[key];
+        if (item.fail && item.fail.unexpected) {
           failures.push(key);
         }
-        if (item.fail?.expected) {
+        if (item.fail && item.fail.expected) {
           expectedFailures++;
         }
         if (item.skip) {
           skipped++;
         }
       }
-
-      const unexpectedPasses = [];
-      for (const specMap of queue) {
-        const key = specMap.filename;
-
-        // File has no expected failures
-        if (!specMap.failedTests.length) {
-          continue;
-        }
-
-        // File was (maybe even conditionally) skipped
-        if (this.results[key]?.skip) {
-          continue;
-        }
-
-        // Full check: every expected to fail test is present
-        if (specMap.failedTests.some((expectedToFail) => {
-          if (specMap.flakyTests.includes(expectedToFail)) {
-            return false;
-          }
-          return this.results[key]?.fail?.expected?.includes(expectedToFail) !== true;
-        })) {
-          unexpectedPasses.push(key);
-          continue;
-        }
-      }
-
-      const ran = queue.length;
-      const total = ran + skipped;
+      const ran = total - skipped;
       const passed = ran - expectedFailures - failures.length;
       console.log(`Ran ${ran}/${total} tests, ${skipped} skipped,`,
                   `${passed} passed, ${expectedFailures} expected failures,`,
-                  `${failures.length} unexpected failures,`,
-                  `${unexpectedPasses.length} unexpected passes`);
+                  `${failures.length} unexpected failures`);
       if (failures.length > 0) {
         const file = path.join('test', 'wpt', 'status', `${this.path}.json`);
         throw new Error(
           `Found ${failures.length} unexpected failures. ` +
           `Consider updating ${file} for these files:\n${failures.join('\n')}`);
-      }
-      if (unexpectedPasses.length > 0) {
-        const file = path.join('test', 'wpt', 'status', `${this.path}.json`);
-        throw new Error(
-          `Found ${unexpectedPasses.length} unexpected passes. ` +
-          `Consider updating ${file} for these files:\n${unexpectedPasses.join('\n')}`);
       }
     });
   }
@@ -606,9 +494,6 @@ class WPTRunner {
       this.resultCallback(filename, { status: 2, name: 'Unknown' });
     }
     this.inProgress.delete(filename);
-    // Always force termination of the worker. Some tests allocate resources
-    // that would otherwise keep it alive.
-    this.workers.get(filename).terminate();
   }
 
   addTestResult(filename, item) {
@@ -629,9 +514,8 @@ class WPTRunner {
       if (!result[item.status][key]) {
         result[item.status][key] = [];
       }
-      const hasName = result[item.status][key].includes(item.name);
-      if (!hasName) {
-        result[item.status][key].push(item.name);
+      if (result[item.status][key].indexOf(item.reason) === -1) {
+        result[item.status][key].push(item.reason);
       }
     }
   }
@@ -642,10 +526,10 @@ class WPTRunner {
 
   fail(filename, test, status) {
     const spec = this.specMap.get(filename);
-    const expected = spec.failedTests.includes(test.name);
+    const expected = !!(spec.failReasons.length);
     if (expected) {
       console.log(`[EXPECTED_FAILURE][${status.toUpperCase()}] ${test.name}`);
-      console.log(test.message || status);
+      console.log(spec.failReasons.join('; '));
     } else {
       console.log(`[UNEXPECTED_FAILURE][${status.toUpperCase()}] ${test.name}`);
     }
@@ -657,10 +541,9 @@ class WPTRunner {
                     ` ${require.main.filename} ${filename}`;
     console.log(`Command: ${command}\n`);
     this.addTestResult(filename, {
-      name: test.name,
       expected,
       status: kFail,
-      reason: test.message || status,
+      reason: test.message || status
     });
   }
 
@@ -671,7 +554,7 @@ class WPTRunner {
     console.log(`[SKIPPED] ${joinedReasons}`);
     this.addTestResult(filename, {
       status: kSkip,
-      reason: joinedReasons,
+      reason: joinedReasons
     });
   }
 
@@ -722,5 +605,5 @@ class WPTRunner {
 module.exports = {
   harness: harnessMock,
   ResourceLoader,
-  WPTRunner,
+  WPTRunner
 };

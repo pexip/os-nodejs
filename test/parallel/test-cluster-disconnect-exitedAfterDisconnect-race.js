@@ -7,7 +7,7 @@ const common = require('../common');
 const assert = require('assert');
 const cluster = require('cluster');
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   cluster.on('exit', (worker, code) => {
     assert.strictEqual(code, 0, `worker exited with code: ${code}, expected 0`);
   });

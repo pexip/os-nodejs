@@ -3,6 +3,8 @@
 
 const common = require('../common');
 
+common.disableCrashOnUnhandledRejection();
+
 // Verify that ignoring unhandled rejection works fine and that no warning is
 // logged.
 

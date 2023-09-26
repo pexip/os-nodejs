@@ -9,12 +9,6 @@ const https = require('https');
 
 const agent = new https.Agent();
 
-// empty argument
-assert.strictEqual(
-  agent.getName(),
-  'localhost::::::::::::::::::::::'
-);
-
 // empty options
 assert.strictEqual(
   agent.getName({}),

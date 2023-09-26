@@ -46,9 +46,7 @@ function validateContent(report, fields = []) {
   } catch (err) {
     try {
       err.stack += util.format('\n------\nFailing Report:\n%O', report);
-    } catch {
-      // Continue regardless of error.
-    }
+    } catch {}
     throw err;
   }
 }
@@ -71,7 +69,7 @@ function _validateContent(report, fields = []) {
 
   checkForUnknownFields(report, sections);
   sections.forEach((section) => {
-    assert(Object.hasOwn(report, section));
+    assert(report.hasOwnProperty(section));
     assert(typeof report[section] === 'object' && report[section] !== null);
   });
 
@@ -105,7 +103,7 @@ function _validateContent(report, fields = []) {
                         'glibcVersionRuntime', 'glibcVersionCompiler', 'cwd',
                         'reportVersion', 'networkInterfaces', 'threadId'];
   checkForUnknownFields(header, headerFields);
-  assert.strictEqual(header.reportVersion, 3);  // Increment as needed.
+  assert.strictEqual(header.reportVersion, 2);  // Increment as needed.
   assert.strictEqual(typeof header.event, 'string');
   assert.strictEqual(typeof header.trigger, 'string');
   assert(typeof header.filename === 'string' || header.filename === null);
@@ -148,7 +146,7 @@ function _validateContent(report, fields = []) {
   header.networkInterfaces.forEach((iface) => {
     assert.strictEqual(typeof iface.name, 'string');
     assert.strictEqual(typeof iface.internal, 'boolean');
-    assert.match(iface.mac, /^([0-9A-F][0-9A-F]:){5}[0-9A-F]{2}$/i);
+    assert(/^([0-9A-F][0-9A-F]:){5}[0-9A-F]{2}$/i.test(iface.mac));
 
     if (iface.family === 'IPv4') {
       assert.strictEqual(net.isIPv4(iface.address), true);
@@ -173,7 +171,7 @@ function _validateContent(report, fields = []) {
     assert(typeof frame === 'object' && frame !== null);
     checkForUnknownFields(frame, ['pc', 'symbol']);
     assert.strictEqual(typeof frame.pc, 'string');
-    assert.match(frame.pc, /^0x[0-9a-f]+$/);
+    assert(/^0x[0-9a-f]+$/.test(frame.pc));
     assert.strictEqual(typeof frame.symbol, 'string');
   });
 
@@ -193,32 +191,14 @@ function _validateContent(report, fields = []) {
 
     // Verify the format of the javascriptHeap section.
     const heap = report.javascriptHeap;
-    // See `PrintGCStatistics` in node_report.cc
-    const jsHeapFields = [
-      'totalMemory',
-      'executableMemory',
-      'totalCommittedMemory',
-      'availableMemory',
-      'totalGlobalHandlesMemory',
-      'usedGlobalHandlesMemory',
-      'usedMemory',
-      'memoryLimit',
-      'mallocedMemory',
-      'externalMemory',
-      'peakMallocedMemory',
-      'nativeContextCount',
-      'detachedContextCount',
-      'doesZapGarbage',
-      'heapSpaces',
-    ];
+    const jsHeapFields = ['totalMemory', 'totalCommittedMemory', 'usedMemory',
+                          'availableMemory', 'memoryLimit', 'heapSpaces'];
     checkForUnknownFields(heap, jsHeapFields);
-    // Do not check `heapSpaces` here
-    for (let i = 0; i < jsHeapFields.length - 1; i++) {
-      assert(
-        Number.isSafeInteger(heap[jsHeapFields[i]]),
-        `heap.${jsHeapFields[i]} is not a safe integer`,
-      );
-    }
+    assert(Number.isSafeInteger(heap.totalMemory));
+    assert(Number.isSafeInteger(heap.totalCommittedMemory));
+    assert(Number.isSafeInteger(heap.usedMemory));
+    assert(Number.isSafeInteger(heap.availableMemory));
+    assert(Number.isSafeInteger(heap.memoryLimit));
     assert(typeof heap.heapSpaces === 'object' && heap.heapSpaces !== null);
     const heapSpaceFields = ['memorySize', 'committedMemory', 'capacity',
                              'used', 'available'];
@@ -232,29 +212,15 @@ function _validateContent(report, fields = []) {
   }
 
   // Verify the format of the resourceUsage section.
-  const usage = { ...report.resourceUsage };
-  // Delete it, otherwise checkForUnknownFields will throw error
-  delete usage.constrained_memory;
+  const usage = report.resourceUsage;
   const resourceUsageFields = ['userCpuSeconds', 'kernelCpuSeconds',
-                               'cpuConsumptionPercent', 'userCpuConsumptionPercent',
-                               'kernelCpuConsumptionPercent',
-                               'maxRss', 'rss', 'free_memory', 'total_memory',
-                               'available_memory', 'pageFaults', 'fsActivity'];
+                               'cpuConsumptionPercent', 'maxRss',
+                               'pageFaults', 'fsActivity'];
   checkForUnknownFields(usage, resourceUsageFields);
   assert.strictEqual(typeof usage.userCpuSeconds, 'number');
   assert.strictEqual(typeof usage.kernelCpuSeconds, 'number');
   assert.strictEqual(typeof usage.cpuConsumptionPercent, 'number');
-  assert.strictEqual(typeof usage.userCpuConsumptionPercent, 'number');
-  assert.strictEqual(typeof usage.kernelCpuConsumptionPercent, 'number');
-  assert(typeof usage.rss, 'string');
-  assert(typeof usage.maxRss, 'string');
-  assert(typeof usage.free_memory, 'string');
-  assert(typeof usage.total_memory, 'string');
-  assert(typeof usage.available_memory, 'string');
-  // This field may not exsit
-  if (report.resourceUsage.constrained_memory) {
-    assert(typeof report.resourceUsage.constrained_memory, 'string');
-  }
+  assert(Number.isSafeInteger(usage.maxRss));
   assert(typeof usage.pageFaults === 'object' && usage.pageFaults !== null);
   checkForUnknownFields(usage.pageFaults, ['IORequired', 'IONotRequired']);
   assert(Number.isSafeInteger(usage.pageFaults.IORequired));
@@ -268,15 +234,11 @@ function _validateContent(report, fields = []) {
   if (report.uvthreadResourceUsage) {
     const usage = report.uvthreadResourceUsage;
     const threadUsageFields = ['userCpuSeconds', 'kernelCpuSeconds',
-                               'cpuConsumptionPercent', 'fsActivity',
-                               'userCpuConsumptionPercent',
-                               'kernelCpuConsumptionPercent'];
+                               'cpuConsumptionPercent', 'fsActivity'];
     checkForUnknownFields(usage, threadUsageFields);
     assert.strictEqual(typeof usage.userCpuSeconds, 'number');
     assert.strictEqual(typeof usage.kernelCpuSeconds, 'number');
     assert.strictEqual(typeof usage.cpuConsumptionPercent, 'number');
-    assert.strictEqual(typeof usage.userCpuConsumptionPercent, 'number');
-    assert.strictEqual(typeof usage.kernelCpuConsumptionPercent, 'number');
     assert(typeof usage.fsActivity === 'object' && usage.fsActivity !== null);
     checkForUnknownFields(usage.fsActivity, ['reads', 'writes']);
     assert(Number.isSafeInteger(usage.fsActivity.reads));
@@ -288,7 +250,7 @@ function _validateContent(report, fields = []) {
   report.libuv.forEach((resource) => {
     assert.strictEqual(typeof resource.type, 'string');
     assert.strictEqual(typeof resource.address, 'string');
-    assert.match(resource.address, /^0x[0-9a-f]+$/);
+    assert(/^0x[0-9a-f]+$/.test(resource.address));
     assert.strictEqual(typeof resource.is_active, 'boolean');
     assert.strictEqual(typeof resource.is_referenced,
                        resource.type === 'loop' ? 'undefined' : 'boolean');

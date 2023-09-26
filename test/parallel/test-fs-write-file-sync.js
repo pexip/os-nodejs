@@ -104,10 +104,6 @@ tmpdir.refresh();
 
 // Test writeFileSync with an object with an own toString function
 {
-  // Runtime deprecated by DEP0162
-  common.expectWarning('DeprecationWarning',
-                       'Implicit coercion of objects with own toString property is deprecated.',
-                       'DEP0162');
   const file = path.join(tmpdir.path, 'testWriteFileSyncStringify.txt');
   const data = {
     toString() {

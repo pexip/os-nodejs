@@ -168,9 +168,9 @@ TypeAlias* Declarations::DeclareType(const Identifier* name, const Type* type) {
                                   new TypeAlias(type, true, name->pos)));
 }
 
-TypeAlias* Declarations::PredeclareTypeAlias(const Identifier* name,
-                                             TypeDeclaration* type,
-                                             bool redeclaration) {
+const TypeAlias* Declarations::PredeclareTypeAlias(const Identifier* name,
+                                                   TypeDeclaration* type,
+                                                   bool redeclaration) {
   CheckAlreadyDeclared<TypeAlias>(name->value, "type");
   std::unique_ptr<TypeAlias> alias_ptr(
       new TypeAlias(type, redeclaration, name->pos));
@@ -202,12 +202,9 @@ Macro* Declarations::DeclareMacro(
     base::Optional<std::string> external_assembler_name,
     const Signature& signature, base::Optional<Statement*> body,
     base::Optional<std::string> op, bool is_user_defined) {
-  if (Macro* existing_macro =
-          TryLookupMacro(name, signature.GetExplicitTypes())) {
-    if (existing_macro->ParentScope() == CurrentScope::Get()) {
-      ReportError("cannot redeclare macro ", name,
-                  " with identical explicit parameters");
-    }
+  if (TryLookupMacro(name, signature.GetExplicitTypes())) {
+    ReportError("cannot redeclare macro ", name,
+                " with identical explicit parameters");
   }
   Macro* macro;
   if (external_assembler_name) {
@@ -217,7 +214,6 @@ Macro* Declarations::DeclareMacro(
     macro = CreateTorqueMacro(name, name, accessible_from_csa, signature, body,
                               is_user_defined);
   }
-
   Declare(name, macro);
   if (op) {
     if (TryLookupMacro(*op, signature.GetExplicitTypes())) {
@@ -280,12 +276,11 @@ RuntimeFunction* Declarations::DeclareRuntimeFunction(
                            new RuntimeFunction(name, signature))));
 }
 
-ExternConstant* Declarations::DeclareExternConstant(Identifier* name,
-                                                    const Type* type,
-                                                    std::string value) {
+void Declarations::DeclareExternConstant(Identifier* name, const Type* type,
+                                         std::string value) {
   CheckAlreadyDeclared<Value>(name->value, "constant");
-  return Declare(name->value, std::unique_ptr<ExternConstant>(
-                                  new ExternConstant(name, type, value)));
+  Declare(name->value, std::unique_ptr<ExternConstant>(
+                           new ExternConstant(name, type, value)));
 }
 
 NamespaceConstant* Declarations::DeclareNamespaceConstant(Identifier* name,

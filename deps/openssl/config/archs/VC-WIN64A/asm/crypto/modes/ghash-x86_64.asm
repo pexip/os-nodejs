@@ -19,7 +19,6 @@ $L$SEH_begin_gcm_gmult_4bit:
 
 
 
-DB	243,15,30,250
 	push	rbx
 
 	push	rbp
@@ -137,7 +136,6 @@ $L$SEH_begin_gcm_ghash_4bit:
 
 
 
-DB	243,15,30,250
 	push	rbx
 
 	push	rbp
@@ -888,7 +886,6 @@ global	gcm_gmult_clmul
 ALIGN	16
 gcm_gmult_clmul:
 
-DB	243,15,30,250
 $L$_gmult_clmul:
 	movdqu	xmm0,XMMWORD[rcx]
 	movdqa	xmm5,XMMWORD[$L$bswap_mask]
@@ -942,7 +939,6 @@ global	gcm_ghash_clmul
 ALIGN	32
 gcm_ghash_clmul:
 
-DB	243,15,30,250
 $L$_ghash_clmul:
 	lea	rax,[((-136))+rsp]
 $L$SEH_begin_gcm_ghash_clmul:
@@ -1470,7 +1466,6 @@ global	gcm_gmult_avx
 ALIGN	32
 gcm_gmult_avx:
 
-DB	243,15,30,250
 	jmp	NEAR $L$_gmult_clmul
 
 
@@ -1479,7 +1474,6 @@ global	gcm_ghash_avx
 ALIGN	32
 gcm_ghash_avx:
 
-DB	243,15,30,250
 	lea	rax,[((-136))+rsp]
 $L$SEH_begin_gcm_ghash_avx:
 

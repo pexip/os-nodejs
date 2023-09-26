@@ -4,12 +4,7 @@
 
 #include "src/extensions/gc-extension.h"
 
-#include "include/v8-isolate.h"
-#include "include/v8-object.h"
-#include "include/v8-persistent-handle.h"
-#include "include/v8-primitive.h"
-#include "include/v8-template.h"
-#include "src/base/optional.h"
+#include "include/v8.h"
 #include "src/base/platform/platform.h"
 #include "src/execution/isolate.h"
 #include "src/heap/heap.h"
@@ -78,8 +73,8 @@ Maybe<GCOptions> Parse(v8::Isolate* isolate,
   return Just<GCOptions>(options);
 }
 
-void InvokeGC(v8::Isolate* isolate, ExecutionType execution_type,
-              v8::Isolate::GarbageCollectionType type) {
+void InvokeGC(v8::Isolate* isolate, v8::Isolate::GarbageCollectionType type,
+              v8::EmbedderHeapTracer::EmbedderStackState embedder_stack_state) {
   Heap* heap = reinterpret_cast<Isolate*>(isolate)->heap();
   switch (type) {
     case v8::Isolate::GarbageCollectionType::kMinorGarbageCollection:
@@ -87,15 +82,7 @@ void InvokeGC(v8::Isolate* isolate, ExecutionType execution_type,
                            kGCCallbackFlagForced);
       break;
     case v8::Isolate::GarbageCollectionType::kFullGarbageCollection:
-      EmbedderStackStateScope stack_scope(
-          heap,
-          execution_type == ExecutionType::kAsync
-              ? EmbedderStackStateScope::kImplicitThroughTask
-              : EmbedderStackStateScope::kExplicitInvocation,
-          execution_type == ExecutionType::kAsync
-              ? v8::EmbedderHeapTracer::EmbedderStackState::kNoHeapPointers
-              : v8::EmbedderHeapTracer::EmbedderStackState::
-                    kMayContainHeapPointers);
+      heap->SetEmbedderStackStateForNextFinalizaton(embedder_stack_state);
       heap->PreciseCollectAllGarbage(i::Heap::kNoGCFlags,
                                      i::GarbageCollectionReason::kTesting,
                                      kGCCallbackFlagForced);
@@ -114,12 +101,11 @@ class AsyncGC final : public CancelableTask {
         ctx_(isolate, isolate->GetCurrentContext()),
         resolver_(isolate, resolver),
         type_(type) {}
-  AsyncGC(const AsyncGC&) = delete;
-  AsyncGC& operator=(const AsyncGC&) = delete;
 
   void RunInternal() final {
     v8::HandleScope scope(isolate_);
-    InvokeGC(isolate_, ExecutionType::kAsync, type_);
+    InvokeGC(isolate_, type_,
+             v8::EmbedderHeapTracer::EmbedderStackState::kNoHeapPointers);
     auto resolver = v8::Local<v8::Promise::Resolver>::New(isolate_, resolver_);
     auto ctx = Local<v8::Context>::New(isolate_, ctx_);
     resolver->Resolve(ctx, v8::Undefined(isolate_)).ToChecked();
@@ -130,6 +116,8 @@ class AsyncGC final : public CancelableTask {
   v8::Persistent<v8::Context> ctx_;
   v8::Persistent<v8::Promise::Resolver> resolver_;
   v8::Isolate::GarbageCollectionType type_;
+
+  DISALLOW_COPY_AND_ASSIGN(AsyncGC);
 };
 
 }  // namespace
@@ -144,8 +132,9 @@ void GCExtension::GC(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
   // Immediate bailout if no arguments are provided.
   if (args.Length() == 0) {
-    InvokeGC(isolate, ExecutionType::kSync,
-             v8::Isolate::GarbageCollectionType::kFullGarbageCollection);
+    InvokeGC(
+        isolate, v8::Isolate::GarbageCollectionType::kFullGarbageCollection,
+        v8::EmbedderHeapTracer::EmbedderStackState::kMayContainHeapPointers);
     return;
   }
 
@@ -154,7 +143,9 @@ void GCExtension::GC(const v8::FunctionCallbackInfo<v8::Value>& args) {
   GCOptions options = maybe_options.ToChecked();
   switch (options.execution) {
     case ExecutionType::kSync:
-      InvokeGC(isolate, ExecutionType::kSync, options.type);
+      InvokeGC(
+          isolate, options.type,
+          v8::EmbedderHeapTracer::EmbedderStackState::kMayContainHeapPointers);
       break;
     case ExecutionType::kAsync: {
       v8::HandleScope scope(isolate);

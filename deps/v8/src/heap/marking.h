@@ -58,9 +58,8 @@ class MarkBit {
 template <>
 inline bool MarkBit::Set<AccessMode::NON_ATOMIC>() {
   CellType old_value = *cell_;
-  if ((old_value & mask_) == mask_) return false;
   *cell_ = old_value | mask_;
-  return true;
+  return (old_value & mask_) == 0;
 }
 
 template <>

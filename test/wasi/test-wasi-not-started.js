@@ -8,7 +8,7 @@ if (process.argv[2] === 'wasi-child') {
 
   const { WASI } = require('wasi');
   const wasi = new WASI({
-    args: ['foo', '-bar', '--baz=value'],
+    args: ['foo', '-bar', '--baz=value']
   });
   const importObject = { wasi_snapshot_preview1: wasi.wasiImport };
 
@@ -21,7 +21,7 @@ if (process.argv[2] === 'wasi-child') {
   }, {
     name: 'Error',
     code: 'ERR_WASI_NOT_STARTED',
-    message: 'wasi.start() has not been called',
+    message: 'wasi.start() has not been called'
   });
 } else {
   const assert = require('assert');
@@ -29,10 +29,11 @@ if (process.argv[2] === 'wasi-child') {
 
   const child = cp.spawnSync(process.execPath, [
     '--experimental-wasi-unstable-preview1',
+    '--experimental-wasm-bigint',
     __filename,
     'wasi-child',
   ], {
-    env: { ...process.env, NODE_DEBUG_NATIVE: 'wasi' },
+    env: { ...process.env, NODE_DEBUG_NATIVE: 'wasi' }
   });
   assert.strictEqual(child.signal, null);
   assert.strictEqual(child.status, 0);

@@ -31,7 +31,7 @@ const dgram = require('dgram');
 const BYE = 'bye';
 const WORKER2_NAME = 'wrker2';
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   const worker1 = cluster.fork();
 
   if (common.isWindows) {
@@ -65,7 +65,7 @@ if (cluster.isPrimary) {
     assert.strictEqual(signal, null);
     assert.strictEqual(code, 0);
   }));
-  // end primary code
+  // end master code
 } else {
   // worker code
   process.on('message', common.mustCallAtLeast((msg) => {

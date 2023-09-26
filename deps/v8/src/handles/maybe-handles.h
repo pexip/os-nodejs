@@ -45,7 +45,6 @@ class MaybeHandle final {
       : location_(maybe_handle.location_) {}
 
   V8_INLINE MaybeHandle(T object, Isolate* isolate);
-  V8_INLINE MaybeHandle(T object, LocalHeap* local_heap);
 
   V8_INLINE void Assert() const { DCHECK_NOT_NULL(location_); }
   V8_INLINE void Check() const { CHECK_NOT_NULL(location_); }
@@ -92,8 +91,6 @@ class MaybeObjectHandle {
       : reference_type_(HeapObjectReferenceType::STRONG) {}
   inline MaybeObjectHandle(MaybeObject object, Isolate* isolate);
   inline MaybeObjectHandle(Object object, Isolate* isolate);
-  inline MaybeObjectHandle(MaybeObject object, LocalHeap* local_heap);
-  inline MaybeObjectHandle(Object object, LocalHeap* local_heap);
   inline explicit MaybeObjectHandle(Handle<Object> object);
 
   static inline MaybeObjectHandle Weak(Object object, Isolate* isolate);
@@ -103,7 +100,15 @@ class MaybeObjectHandle {
   inline MaybeObject operator->() const;
   inline Handle<Object> object() const;
 
-  inline bool is_identical_to(const MaybeObjectHandle& other) const;
+  bool is_identical_to(const MaybeObjectHandle& other) const {
+    Handle<Object> this_handle;
+    Handle<Object> other_handle;
+    return reference_type_ == other.reference_type_ &&
+           handle_.ToHandle(&this_handle) ==
+               other.handle_.ToHandle(&other_handle) &&
+           this_handle.is_identical_to(other_handle);
+  }
+
   bool is_null() const { return handle_.is_null(); }
 
  private:

@@ -5,10 +5,11 @@
 #ifndef V8_OBJECTS_FREE_SPACE_INL_H_
 #define V8_OBJECTS_FREE_SPACE_INL_H_
 
+#include "src/objects/free-space.h"
+
 #include "src/execution/isolate.h"
 #include "src/heap/heap-write-barrier-inl.h"
 #include "src/heap/heap.h"
-#include "src/objects/free-space.h"
 #include "src/objects/objects-inl.h"
 
 // Has to be the last include (doesn't have include guards):
@@ -17,13 +18,11 @@
 namespace v8 {
 namespace internal {
 
-#include "torque-generated/src/objects/free-space-tq-inl.inc"
-
 TQ_OBJECT_CONSTRUCTORS_IMPL(FreeSpace)
 
 RELAXED_SMI_ACCESSORS(FreeSpace, size, kSizeOffset)
 
-int FreeSpace::Size() { return size(kRelaxedLoad); }
+int FreeSpace::Size() { return size(); }
 
 FreeSpace FreeSpace::next() {
   DCHECK(IsValid());
@@ -37,7 +36,8 @@ void FreeSpace::set_next(FreeSpace next) {
 }
 
 FreeSpace FreeSpace::cast(HeapObject o) {
-  SLOW_DCHECK((!GetHeapFromWritableObject(o)->deserialization_complete()) ||
+  SLOW_DCHECK((!Heap::InOffThreadSpace(o) &&
+               !GetHeapFromWritableObject(o)->deserialization_complete()) ||
               o.IsFreeSpace());
   return bit_cast<FreeSpace>(o);
 }
@@ -50,10 +50,10 @@ bool FreeSpace::IsValid() {
   Heap* heap = GetHeapFromWritableObject(*this);
   Object free_space_map =
       Isolate::FromHeap(heap)->root(RootIndex::kFreeSpaceMap);
-  CHECK_IMPLIES(!map_slot().contains_map_value(free_space_map.ptr()),
+  CHECK_IMPLIES(!map_slot().contains_value(free_space_map.ptr()),
                 !heap->deserialization_complete() &&
-                    map_slot().contains_map_value(kNullAddress));
-  CHECK_LE(kNextOffset + kTaggedSize, size(kRelaxedLoad));
+                    map_slot().contains_value(kNullAddress));
+  CHECK_LE(kNextOffset + kTaggedSize, relaxed_read_size());
   return true;
 }
 

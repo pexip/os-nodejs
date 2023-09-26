@@ -21,7 +21,8 @@ server.on('stream', common.mustCall((stream, headers) => {
       ':authority': `localhost:${port}`,
     }, {}, 'callback'),
     {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_CALLBACK',
+      message: "Callback must be a function. Received 'callback'"
     }
   );
 

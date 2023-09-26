@@ -168,7 +168,7 @@ childProcess.exec(
     fixtures.path('cluster-preload-test.js')}"`,
   function(err, stdout, stderr) {
     assert.ifError(err);
-    assert.match(stdout, /worker terminated with code 43/);
+    assert.ok(/worker terminated with code 43/.test(stdout));
   }
 );
 
@@ -198,6 +198,6 @@ childProcess.exec(
   { cwd: fixtures.fixturesDir },
   function(err, stdout, stderr) {
     assert.ifError(err);
-    assert.match(stdout, /worker terminated with code 43/);
+    assert.ok(/worker terminated with code 43/.test(stdout));
   }
 );

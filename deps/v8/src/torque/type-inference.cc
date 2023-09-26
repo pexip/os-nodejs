@@ -12,7 +12,7 @@ TypeArgumentInference::TypeArgumentInference(
     const GenericParameters& type_parameters,
     const TypeVector& explicit_type_arguments,
     const std::vector<TypeExpression*>& term_parameters,
-    const std::vector<base::Optional<const Type*>>& term_argument_types)
+    const TypeVector& term_argument_types)
     : num_explicit_(explicit_type_arguments.size()),
       type_parameter_from_name_(type_parameters.size()),
       inferred_(type_parameters.size()) {
@@ -20,8 +20,8 @@ TypeArgumentInference::TypeArgumentInference(
     Fail("more explicit type arguments than expected");
     return;
   }
-  if (term_argument_types.size() > term_parameters.size()) {
-    Fail("more arguments than expected");
+  if (term_parameters.size() != term_argument_types.size()) {
+    Fail("number of term parameters does not match number of term arguments!");
     return;
   }
 
@@ -32,9 +32,8 @@ TypeArgumentInference::TypeArgumentInference(
     inferred_[i] = {explicit_type_arguments[i]};
   }
 
-  for (size_t i = 0; i < term_argument_types.size(); i++) {
-    if (term_argument_types[i])
-      Match(term_parameters[i], *term_argument_types[i]);
+  for (size_t i = 0; i < term_parameters.size(); i++) {
+    Match(term_parameters[i], term_argument_types[i]);
     if (HasFailed()) return;
   }
 
@@ -61,7 +60,7 @@ void TypeArgumentInference::Match(TypeExpression* parameter,
           BasicTypeExpression::DynamicCast(parameter)) {
     // If the parameter is referring to one of the type parameters, substitute
     if (basic->namespace_qualification.empty() && !basic->is_constexpr) {
-      auto result = type_parameter_from_name_.find(basic->name->value);
+      auto result = type_parameter_from_name_.find(basic->name);
       if (result != type_parameter_from_name_.end()) {
         size_t type_parameter_index = result->second;
         if (type_parameter_index < num_explicit_) {
@@ -92,7 +91,7 @@ void TypeArgumentInference::Match(TypeExpression* parameter,
 void TypeArgumentInference::MatchGeneric(BasicTypeExpression* parameter,
                                          const Type* argument_type) {
   QualifiedName qualified_name{parameter->namespace_qualification,
-                               parameter->name->value};
+                               parameter->name};
   GenericType* generic_type =
       Declarations::LookupUniqueGenericType(qualified_name);
   auto& specialized_from = argument_type->GetSpecializedFrom();

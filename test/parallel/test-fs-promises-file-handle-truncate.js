@@ -16,10 +16,10 @@ async function validateTruncate() {
   const buffer = Buffer.from(text, 'utf8');
   await fileHandle.write(buffer, 0, buffer.length);
 
-  assert.strictEqual((await readFile(filename)).toString(), text);
+  assert.deepStrictEqual((await readFile(filename)).toString(), text);
 
   await fileHandle.truncate(5);
-  assert.strictEqual((await readFile(filename)).toString(), 'Hello');
+  assert.deepStrictEqual((await readFile(filename)).toString(), 'Hello');
 
   await fileHandle.close();
 }

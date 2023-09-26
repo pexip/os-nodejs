@@ -1,11 +1,11 @@
 /* compression_utils_portable.cc
  *
- * Copyright 2019 The Chromium Authors
+ * Copyright 2019 The Chromium Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the Chromium source repository LICENSE file.
  */
 
-#include "compression_utils_portable.h"
+#include "third_party/zlib/google/compression_utils_portable.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -84,7 +84,7 @@ int CompressHelper(WrapperType wrapper_type,
                    int compression_level,
                    void* (*malloc_fn)(size_t),
                    void (*free_fn)(void*)) {
-  if (compression_level < 0 || compression_level > 9) {
+  if (compression_level < 1 || compression_level > 9) {
     compression_level = Z_DEFAULT_COMPRESSION;
   }
 

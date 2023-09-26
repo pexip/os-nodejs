@@ -18,13 +18,25 @@ class V8_EXPORT_PRIVATE BitVector : public ZoneObject {
     uintptr_t* ptr_;    // valid if data_length_ > 1
     uintptr_t inline_;  // valid if data_length_ == 1
 
-    explicit DataStorage(uintptr_t value) : inline_(value) {}
+    DataStorage(uintptr_t value) : inline_(value) {}
   };
 
   // Iterator for the elements of this BitVector.
   class Iterator {
    public:
-    V8_EXPORT_PRIVATE inline void operator++() {
+    explicit Iterator(BitVector* target)
+        : target_(target),
+          current_index_(0),
+          current_value_(target->is_inline() ? target->data_.inline_
+                                             : target->data_.ptr_[0]),
+          current_(-1) {
+      Advance();
+    }
+    ~Iterator() = default;
+
+    bool Done() const { return current_index_ >= target_->data_length_; }
+
+    V8_EXPORT_PRIVATE inline void Advance() {
       current_++;
 
       // Skip zeroed words.
@@ -45,46 +57,15 @@ class V8_EXPORT_PRIVATE BitVector : public ZoneObject {
       current_value_ >>= 1;
     }
 
-    int operator*() const {
+    int Current() const {
       DCHECK(!Done());
       return current_;
     }
 
-    bool operator!=(const Iterator& other) const {
-      // "other" is required to be the end sentinel value, to avoid us needing
-      // to compare exact "current" values.
-      DCHECK(other.Done());
-      DCHECK_EQ(target_, other.target_);
-      return current_index_ != other.current_index_;
-    }
-
    private:
-    static constexpr struct StartTag {
-    } kStartTag = {};
-    static constexpr struct EndTag {
-    } kEndTag = {};
-
-    explicit Iterator(const BitVector* target, StartTag)
-        : target_(target),
-          current_value_(target->is_inline() ? target->data_.inline_
-                                             : target->data_.ptr_[0]),
-          current_index_(0),
-          current_(-1) {
-      ++(*this);
-    }
-    explicit Iterator(const BitVector* target, EndTag)
-        : target_(target),
-          current_value_(0),
-          current_index_(target->data_length_),
-          current_(-1) {
-      DCHECK(Done());
-    }
-
-    bool Done() const { return current_index_ >= target_->data_length_; }
-
-    const BitVector* target_;
-    uintptr_t current_value_;
+    BitVector* target_;
     int current_index_;
+    uintptr_t current_value_;
     int current_;
 
     friend class BitVector;
@@ -130,15 +111,8 @@ class V8_EXPORT_PRIVATE BitVector : public ZoneObject {
   }
 
   void CopyFrom(const BitVector& other) {
-    DCHECK_EQ(other.length(), length());
-    if (is_inline()) {
-      DCHECK(other.is_inline());
-      data_.inline_ = other.data_.inline_;
-    } else {
-      for (int i = 0; i < data_length_; i++) {
-        data_.ptr_[i] = other.data_.ptr_[i];
-      }
-    }
+    DCHECK_LE(other.length(), length());
+    CopyFrom(other.data_, other.data_length_);
   }
 
   void Resize(int new_length, Zone* zone) {
@@ -152,19 +126,7 @@ class V8_EXPORT_PRIVATE BitVector : public ZoneObject {
       DCHECK_GT(new_data_length, kDataLengthForInline);
       data_.ptr_ = zone->NewArray<uintptr_t>(new_data_length);
       data_length_ = new_data_length;
-
-      // Copy over the data.
-      if (old_data_length == kDataLengthForInline) {
-        data_.ptr_[0] = old_data.inline_;
-      } else {
-        for (int i = 0; i < old_data_length; i++) {
-          data_.ptr_[i] = old_data.ptr_[i];
-        }
-      }
-      // Zero out the rest of the data.
-      for (int i = old_data_length; i < data_length_; i++) {
-        data_.ptr_[i] = 0;
-      }
+      CopyFrom(old_data, old_data_length);
     }
     length_ = new_length;
   }
@@ -314,15 +276,9 @@ class V8_EXPORT_PRIVATE BitVector : public ZoneObject {
 
   int length() const { return length_; }
 
-  Iterator begin() const { return Iterator(this, Iterator::kStartTag); }
-
-  Iterator end() const { return Iterator(this, Iterator::kEndTag); }
-
 #ifdef DEBUG
-  void Print() const;
+  void Print();
 #endif
-
-  MOVE_ONLY_NO_DEFAULT_CONSTRUCTOR(BitVector);
 
  private:
   int length_;
@@ -330,50 +286,90 @@ class V8_EXPORT_PRIVATE BitVector : public ZoneObject {
   DataStorage data_;
 
   bool is_inline() const { return data_length_ == kDataLengthForInline; }
+
+  void CopyFrom(DataStorage other_data, int other_data_length) {
+    DCHECK_LE(other_data_length, data_length_);
+
+    if (is_inline()) {
+      DCHECK_EQ(other_data_length, kDataLengthForInline);
+      data_.inline_ = other_data.inline_;
+    } else if (other_data_length == kDataLengthForInline) {
+      data_.ptr_[0] = other_data.inline_;
+      for (int i = 1; i < data_length_; i++) {
+        data_.ptr_[i] = 0;
+      }
+    } else {
+      for (int i = 0; i < other_data_length; i++) {
+        data_.ptr_[i] = other_data.ptr_[i];
+      }
+      for (int i = other_data_length; i < data_length_; i++) {
+        data_.ptr_[i] = 0;
+      }
+    }
+  }
+
+  DISALLOW_COPY_AND_ASSIGN(BitVector);
 };
 
 class GrowableBitVector {
  public:
-  GrowableBitVector() : bits_() {}
-  GrowableBitVector(int length, Zone* zone) : bits_(length, zone) {}
+  class Iterator {
+   public:
+    Iterator(const GrowableBitVector* target, Zone* zone)
+        : it_(target->bits_ == nullptr ? new (zone) BitVector(1, zone)
+                                       : target->bits_) {}
+    bool Done() const { return it_.Done(); }
+    void Advance() { it_.Advance(); }
+    int Current() const { return it_.Current(); }
+
+   private:
+    BitVector::Iterator it_;
+  };
+
+  GrowableBitVector() : bits_(nullptr) {}
+  GrowableBitVector(int length, Zone* zone)
+      : bits_(new (zone) BitVector(length, zone)) {}
 
   bool Contains(int value) const {
     if (!InBitsRange(value)) return false;
-    return bits_.Contains(value);
+    return bits_->Contains(value);
   }
 
   void Add(int value, Zone* zone) {
     EnsureCapacity(value, zone);
-    bits_.Add(value);
+    bits_->Add(value);
   }
 
-  void Clear() { bits_.Clear(); }
-
-  int length() const { return bits_.length(); }
-
-  bool Equals(const GrowableBitVector& other) const {
-    return length() == other.length() && bits_.Equals(other.bits_);
+  void Union(const GrowableBitVector& other, Zone* zone) {
+    for (Iterator it(&other, zone); !it.Done(); it.Advance()) {
+      Add(it.Current(), zone);
+    }
   }
 
-  BitVector::Iterator begin() const { return bits_.begin(); }
-
-  BitVector::Iterator end() const { return bits_.end(); }
+  void Clear() {
+    if (bits_ != nullptr) bits_->Clear();
+  }
 
  private:
-  static constexpr int kInitialLength = 1024;
+  static const int kInitialLength = 1024;
 
-  bool InBitsRange(int value) const { return bits_.length() > value; }
+  bool InBitsRange(int value) const {
+    return bits_ != nullptr && bits_->length() > value;
+  }
 
   void EnsureCapacity(int value, Zone* zone) {
     if (InBitsRange(value)) return;
-    int new_length =
-        base::bits::RoundUpToPowerOfTwo32(static_cast<uint32_t>(value));
-    new_length = std::min(new_length, kInitialLength);
+    int new_length = bits_ == nullptr ? kInitialLength : bits_->length();
     while (new_length <= value) new_length *= 2;
-    bits_.Resize(new_length, zone);
+
+    if (bits_ == nullptr) {
+      bits_ = new (zone) BitVector(new_length, zone);
+    } else {
+      bits_->Resize(new_length, zone);
+    }
   }
 
-  BitVector bits_;
+  BitVector* bits_;
 };
 
 }  // namespace internal

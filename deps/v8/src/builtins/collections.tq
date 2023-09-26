@@ -33,8 +33,11 @@ macro LoadKeyValuePairNoSideEffects(implicit context: Context)(o: JSAny):
         }
       }
     }
-    case (JSAny): {
+    case (JSReceiver): {
       goto MayHaveSideEffects;
+    }
+    case (o: JSAny): deferred {
+      ThrowTypeError(MessageTemplate::kIteratorValueNotAnObject, o);
     }
   }
 }
@@ -45,8 +48,6 @@ transitioning macro LoadKeyValuePair(implicit context: Context)(o: JSAny):
   try {
     return LoadKeyValuePairNoSideEffects(o) otherwise Generic;
   } label Generic {
-    const o = Cast<JSReceiver>(o)
-        otherwise ThrowTypeError(MessageTemplate::kIteratorValueNotAnObject, o);
     return KeyValuePair{
       key: GetProperty(o, Convert<Smi>(0)),
       value: GetProperty(o, Convert<Smi>(1))

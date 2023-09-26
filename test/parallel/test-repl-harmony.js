@@ -43,7 +43,7 @@ child.stdout.on('data', (d) => {
   out += d;
 });
 child.stdout.on('end', () => {
-  assert.match(out, expectOut);
+  assert(expectOut.test(out));
   console.log('ok');
 });
 

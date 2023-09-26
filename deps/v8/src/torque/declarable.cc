@@ -2,12 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/torque/declarable.h"
-
 #include <fstream>
 #include <iostream>
 
-#include "src/torque/ast.h"
+#include "src/torque/declarable.h"
 #include "src/torque/global-context.h"
 #include "src/torque/type-inference.h"
 #include "src/torque/type-visitor.h"
@@ -17,18 +15,6 @@ namespace internal {
 namespace torque {
 
 DEFINE_CONTEXTUAL_VARIABLE(CurrentScope)
-
-QualifiedName QualifiedName::Parse(std::string qualified_name) {
-  std::vector<std::string> qualifications;
-  while (true) {
-    size_t namespace_delimiter_index = qualified_name.find("::");
-    if (namespace_delimiter_index == std::string::npos) break;
-    qualifications.push_back(
-        qualified_name.substr(0, namespace_delimiter_index));
-    qualified_name = qualified_name.substr(namespace_delimiter_index + 2);
-  }
-  return QualifiedName(qualifications, qualified_name);
-}
 
 std::ostream& operator<<(std::ostream& os, const QualifiedName& name) {
   for (const std::string& qualifier : name.namespace_qualification) {
@@ -82,38 +68,18 @@ std::ostream& operator<<(std::ostream& os, const GenericCallable& g) {
 }
 
 SpecializationRequester::SpecializationRequester(SourcePosition position,
-                                                 Scope* s, std::string name)
+                                                 Scope* scope, std::string name)
     : position(position), name(std::move(name)) {
   // Skip scopes that are not related to template specializations, they might be
   // stack-allocated and not live for long enough.
-  while (s && s->GetSpecializationRequester().IsNone()) s = s->ParentScope();
-  this->scope = s;
-}
-
-std::vector<Declarable*> Scope::Lookup(const QualifiedName& name) {
-  if (name.namespace_qualification.size() >= 1 &&
-      name.namespace_qualification[0] == "") {
-    return GlobalContext::GetDefaultNamespace()->Lookup(
-        name.DropFirstNamespaceQualification());
-  }
-  std::vector<Declarable*> result;
-  if (ParentScope()) {
-    result = ParentScope()->Lookup(name);
-  }
-  for (Declarable* declarable : LookupShallow(name)) {
-    result.push_back(declarable);
-  }
-  return result;
+  while (scope && scope->GetSpecializationRequester().IsNone())
+    scope = scope->ParentScope();
+  this->scope = scope;
 }
 
 base::Optional<std::string> TypeConstraint::IsViolated(const Type* type) const {
   if (upper_bound && !type->IsSubtypeOf(*upper_bound)) {
-    if (type->IsTopType()) {
-      return TopType::cast(type)->reason();
-    } else {
-      return {
-          ToString("expected ", *type, " to be a subtype of ", **upper_bound)};
-    }
+    return {ToString("expected ", *type, " to be a subtype of ", *upper_bound)};
   }
   return base::nullopt;
 }
@@ -147,13 +113,17 @@ std::vector<TypeConstraint> ComputeConstraints(
 
 TypeArgumentInference GenericCallable::InferSpecializationTypes(
     const TypeVector& explicit_specialization_types,
-    const std::vector<base::Optional<const Type*>>& arguments) {
+    const TypeVector& arguments) {
+  size_t implicit_count = declaration()->parameters.implicit_count;
   const std::vector<TypeExpression*>& parameters =
       declaration()->parameters.types;
+  std::vector<TypeExpression*> explicit_parameters(
+      parameters.begin() + implicit_count, parameters.end());
+
   CurrentScope::Scope generic_scope(ParentScope());
   TypeArgumentInference inference(generic_parameters(),
-                                  explicit_specialization_types, parameters,
-                                  arguments);
+                                  explicit_specialization_types,
+                                  explicit_parameters, arguments);
   if (!inference.HasFailed()) {
     if (auto violation =
             FindConstraintViolation(inference.GetResult(), Constraints())) {
@@ -164,11 +134,11 @@ TypeArgumentInference GenericCallable::InferSpecializationTypes(
 }
 
 base::Optional<Statement*> GenericCallable::CallableBody() {
-  if (auto* macro_decl = TorqueMacroDeclaration::DynamicCast(declaration())) {
-    return macro_decl->body;
-  } else if (auto* builtin_decl =
+  if (auto* decl = TorqueMacroDeclaration::DynamicCast(declaration())) {
+    return decl->body;
+  } else if (auto* decl =
                  TorqueBuiltinDeclaration::DynamicCast(declaration())) {
-    return builtin_decl->body;
+    return decl->body;
   } else {
     return base::nullopt;
   }

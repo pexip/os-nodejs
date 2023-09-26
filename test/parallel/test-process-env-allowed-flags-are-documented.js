@@ -15,9 +15,7 @@ const parseSection = (text, startMarker, endMarker) => {
   const match = text.match(regExp);
   assert(match,
          `Unable to locate text between '${startMarker}' and '${endMarker}'.`);
-  return match[1]
-         .split(/\r?\n/)
-         .filter((val) => val.trim() !== '');
+  return match[1].split(/\r?\n/);
 };
 
 const nodeOptionsLines = parseSection(cliText,
@@ -26,7 +24,6 @@ const nodeOptionsLines = parseSection(cliText,
 const v8OptionsLines = parseSection(cliText,
                                     '<!-- node-options-v8 start -->',
                                     '<!-- node-options-v8 end -->');
-
 // Check the options are documented in alphabetical order.
 assert.deepStrictEqual(nodeOptionsLines, [...nodeOptionsLines].sort());
 assert.deepStrictEqual(v8OptionsLines, [...v8OptionsLines].sort());
@@ -43,29 +40,23 @@ for (const line of [...nodeOptionsLines, ...v8OptionsLines]) {
   }
 }
 
-if (!common.hasOpenSSL3) {
-  documented.delete('--openssl-legacy-provider');
-  documented.delete('--openssl-shared-config');
-}
-
 // Filter out options that are conditionally present.
 const conditionalOpts = [
   {
     include: common.hasCrypto,
     filter: (opt) => {
-      return [
-        '--openssl-config',
-        common.hasOpenSSL3 ? '--openssl-legacy-provider' : '',
-        common.hasOpenSSL3 ? '--openssl-shared-config' : '',
-        '--tls-cipher-list',
-        '--use-bundled-ca',
-        '--use-openssl-ca',
-        '--secure-heap',
-        '--secure-heap-min',
-        '--enable-fips',
-        '--force-fips',
-      ].includes(opt);
+      return ['--openssl-config', '--tls-cipher-list', '--use-bundled-ca',
+              '--use-openssl-ca' ].includes(opt);
     }
+  }, {
+    // We are using openssl_is_fips from the configuration because it could be
+    // the case that OpenSSL is FIPS compatible but fips has not been enabled
+    // (starting node with --enable-fips). If we use common.hasFipsCrypto
+    // that would only tells us if fips has been enabled, but in this case we
+    // want to check options which will be available regardless of whether fips
+    // is enabled at runtime or not.
+    include: process.config.variables.openssl_is_fips,
+    filter: (opt) => opt.includes('-fips')
   }, {
     include: common.hasIntl,
     filter: (opt) => opt === '--icu-data-dir'

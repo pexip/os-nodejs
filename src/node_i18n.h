@@ -36,21 +36,20 @@
 #include <string>
 
 namespace node {
+
 namespace i18n {
 
 bool InitializeICUDirectory(const std::string& path);
 
-void SetDefaultTimeZone(const char* tzid);
-
-enum class idna_mode {
+enum idna_mode {
   // Default mode for maximum compatibility.
-  kDefault,
+  IDNA_DEFAULT,
   // Ignore all errors in IDNA conversion, if possible.
-  kLenient,
+  IDNA_LENIENT,
   // Enforce STD3 rules (UseSTD3ASCIIRules) and DNS length restrictions
   // (VerifyDnsLength). Corresponds to `beStrict` flag in the "domain to ASCII"
   // algorithm.
-  kStrict
+  IDNA_STRICT
 };
 
 // Implements the WHATWG URL Standard "domain to ASCII" algorithm.
@@ -58,7 +57,7 @@ enum class idna_mode {
 int32_t ToASCII(MaybeStackBuffer<char>* buf,
                 const char* input,
                 size_t length,
-                idna_mode mode = idna_mode::kDefault);
+                enum idna_mode mode = IDNA_DEFAULT);
 
 // Implements the WHATWG URL Standard "domain to Unicode" algorithm.
 // https://url.spec.whatwg.org/#concept-domain-to-unicode

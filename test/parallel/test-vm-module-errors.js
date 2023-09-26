@@ -139,25 +139,20 @@ async function checkLinking() {
     code: 'ERR_VM_MODULE_DIFFERENT_CONTEXT'
   });
 
-  const error = new Error();
   await assert.rejects(async () => {
-    globalThis.error = error;
-    const erroredModule = new SourceTextModule('throw error;');
-    await erroredModule.link(common.mustNotCall());
+    const erroredModule = new SourceTextModule('import "foo";');
     try {
-      await erroredModule.evaluate();
+      await erroredModule.link(common.mustCall(() => ({})));
     } catch {
       // ignored
+    } finally {
+      assert.strictEqual(erroredModule.status, 'errored');
     }
-    delete globalThis.error;
-
-    assert.strictEqual(erroredModule.status, 'errored');
 
     const rootModule = new SourceTextModule('import "errored";');
     await rootModule.link(common.mustCall(() => erroredModule));
   }, {
-    code: 'ERR_VM_MODULE_LINK_FAILURE',
-    cause: error,
+    code: 'ERR_VM_MODULE_LINKING_ERRORED'
   });
 }
 

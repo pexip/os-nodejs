@@ -23,8 +23,7 @@ const options = {
   key: loadPEM('agent2-key'),
   cert: loadPEM('agent2-cert'),
   ciphers: '-ALL:ECDHE-RSA-AES128-SHA256',
-  ecdhCurve: 'auto',
-  maxVersion: 'TLSv1.2',
+  ecdhCurve: 'auto'
 };
 
 const reply = 'I AM THE WALRUS'; // Something recognizable

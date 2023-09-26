@@ -72,10 +72,10 @@ SamplingHeapProfiler::~SamplingHeapProfiler() {
 }
 
 void SamplingHeapProfiler::SampleObject(Address soon_object, size_t size) {
-  DisallowGarbageCollection no_gc;
+  DisallowHeapAllocation no_allocation;
 
   // Check if the area is iterable by confirming that it starts with a map.
-  DCHECK(HeapObject::FromAddress(soon_object).map(isolate_).IsMap(isolate_));
+  DCHECK((*ObjectSlot(soon_object)).IsMap());
 
   HandleScope scope(isolate_);
   HeapObject heap_object = HeapObject::FromAddress(soon_object);
@@ -132,11 +132,11 @@ SamplingHeapProfiler::AllocationNode* SamplingHeapProfiler::AddStack() {
   AllocationNode* node = &profile_root_;
 
   std::vector<SharedFunctionInfo> stack;
-  JavaScriptFrameIterator frame_it(isolate_);
+  JavaScriptFrameIterator it(isolate_);
   int frames_captured = 0;
   bool found_arguments_marker_frames = false;
-  while (!frame_it.done() && frames_captured < stack_depth_) {
-    JavaScriptFrame* frame = frame_it.frame();
+  while (!it.done() && frames_captured < stack_depth_) {
+    JavaScriptFrame* frame = it.frame();
     // If we are materializing objects during deoptimization, inlined
     // closures may not yet be materialized, and this includes the
     // closure on the stack. Skip over any such frames (they'll be
@@ -149,7 +149,7 @@ SamplingHeapProfiler::AllocationNode* SamplingHeapProfiler::AddStack() {
     } else {
       found_arguments_marker_frames = true;
     }
-    frame_it.Advance();
+    it.Advance();
   }
 
   if (frames_captured == 0) {
@@ -190,7 +190,7 @@ SamplingHeapProfiler::AllocationNode* SamplingHeapProfiler::AddStack() {
   // the first element in the list.
   for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
     SharedFunctionInfo shared = *it;
-    const char* name = this->names()->GetCopy(shared.DebugNameCStr().get());
+    const char* name = this->names()->GetName(shared.DebugName());
     int script_id = v8::UnboundScript::kNoScriptId;
     if (shared.script().IsScript()) {
       Script script = Script::cast(shared.script());
@@ -219,10 +219,13 @@ v8::AllocationProfile::Node* SamplingHeapProfiler::TranslateAllocationNode(
   int column = v8::AllocationProfile::kNoColumnNumberInfo;
   std::vector<v8::AllocationProfile::Allocation> allocations;
   allocations.reserve(node->allocations_.size());
-  if (node->script_id_ != v8::UnboundScript::kNoScriptId) {
-    auto script_iterator = scripts.find(node->script_id_);
-    if (script_iterator != scripts.end()) {
-      Handle<Script> script = script_iterator->second;
+  if (node->script_id_ != v8::UnboundScript::kNoScriptId &&
+      scripts.find(node->script_id_) != scripts.end()) {
+    // Cannot use std::map<T>::at because it is not available on android.
+    auto non_const_scripts =
+        const_cast<std::map<int, Handle<Script>>&>(scripts);
+    Handle<Script> script = non_const_scripts[node->script_id_];
+    if (!script.is_null()) {
       if (script->name().IsName()) {
         Name name = Name::cast(script->name());
         script_name = ToApiHandle<v8::String>(

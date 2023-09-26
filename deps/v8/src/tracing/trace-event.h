@@ -8,9 +8,6 @@
 #include <stddef.h>
 #include <memory>
 
-// Include first to ensure that V8_USE_PERFETTO can be defined before use.
-#include "v8config.h"  // NOLINT(build/include_directory)
-
 #if defined(V8_USE_PERFETTO)
 #include "protos/perfetto/trace/track_event/debug_annotation.pbzero.h"
 #include "src/tracing/trace-categories.h"
@@ -21,7 +18,6 @@
 #include "include/v8-platform.h"
 #include "src/base/atomicops.h"
 #include "src/base/macros.h"
-#include "src/base/platform/wrappers.h"
 
 // This header file defines implementation details of how the trace macros in
 // trace_event_common.h collect and store trace events. Anything not
@@ -279,7 +275,6 @@ enum CategoryGroupEnabledFlags {
 #define TRACE_EVENT_CALL_STATS_SCOPED(isolate, category_group, name) \
   INTERNAL_TRACE_EVENT_CALL_STATS_SCOPED(isolate, category_group, name)
 
-#ifdef V8_RUNTIME_CALL_STATS
 #define INTERNAL_TRACE_EVENT_CALL_STATS_SCOPED(isolate, category_group, name)  \
   INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group);                      \
   v8::internal::tracing::CallStatsScopedTracer INTERNAL_TRACE_EVENT_UID(       \
@@ -289,9 +284,6 @@ enum CategoryGroupEnabledFlags {
         .Initialize(isolate, INTERNAL_TRACE_EVENT_UID(category_group_enabled), \
                     name);                                                     \
   }
-#else  // V8_RUNTIME_CALL_STATS
-#define INTERNAL_TRACE_EVENT_CALL_STATS_SCOPED(isolate, category_group, name)
-#endif  // V8_RUNTIME_CALL_STATS
 
 namespace v8 {
 namespace internal {
@@ -592,7 +584,6 @@ class ScopedTracer {
   Data data_;
 };
 
-#ifdef V8_RUNTIME_CALL_STATS
 // Do not use directly.
 class CallStatsScopedTracer {
  public:
@@ -617,15 +608,12 @@ class CallStatsScopedTracer {
   Data* p_data_;
   Data data_;
 };
-#endif  // defined(V8_RUNTIME_CALL_STATS)
 
 }  // namespace tracing
 }  // namespace internal
 }  // namespace v8
 
 #else  // defined(V8_USE_PERFETTO)
-
-#ifdef V8_RUNTIME_CALL_STATS
 
 #define TRACE_EVENT_CALL_STATS_SCOPED(isolate, category, name)             \
   struct PERFETTO_UID(ScopedEvent) {                                       \
@@ -658,7 +646,6 @@ class CallStatsScopedTracer {
     { isolate, 0 }                                                         \
   }
 
-#endif  // defined(V8_RUNTIME_CALL_STATS)
 #endif  // defined(V8_USE_PERFETTO)
 
 #endif  // V8_TRACING_TRACE_EVENT_H_

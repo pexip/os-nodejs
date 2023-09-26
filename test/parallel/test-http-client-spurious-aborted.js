@@ -60,18 +60,15 @@ function download() {
       res.on('end', common.mustCall(() => {
         reqCountdown.dec();
       }));
-      res.on('error', common.mustNotCall());
     } else {
       res.on('aborted', common.mustCall(() => {
         aborted = true;
         reqCountdown.dec();
         writable.end();
       }));
-      res.on('error', common.expectsError({
-        code: 'ECONNRESET'
-      }));
     }
 
+    res.on('error', common.mustNotCall());
     writable.on('finish', () => {
       assert.strictEqual(aborted, abortRequest);
       finishCountdown.dec();

@@ -32,6 +32,7 @@ function main({ dur, len, type, method }) {
     headers: { 'Connection': 'keep-alive', 'Transfer-Encoding': 'chunked' },
     agent: new http.Agent({ maxSockets: 1 }),
     host: '127.0.0.1',
+    port: common.PORT,
     path: '/',
     method: 'POST'
   };
@@ -39,17 +40,16 @@ function main({ dur, len, type, method }) {
   const server = http.createServer((req, res) => {
     res.end();
   });
-  server.listen(0, options.host, () => {
+  server.listen(options.port, options.host, () => {
     setTimeout(done, dur * 1000);
     bench.start();
-    pummel(server.address().port);
+    pummel();
   });
 
-  function pummel(port) {
-    options.port = port;
+  function pummel() {
     const req = http.request(options, (res) => {
       nreqs++;
-      pummel(port);  // Line up next request.
+      pummel();  // Line up next request.
       res.resume();
     });
     if (method === 'write') {

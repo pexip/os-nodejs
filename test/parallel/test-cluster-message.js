@@ -40,7 +40,7 @@ if (cluster.isWorker) {
   function maybeReply() {
     if (!socket || !message) return;
 
-    // Tell primary using TCP socket that a message is received.
+    // Tell master using TCP socket that a message is received.
     socket.write(JSON.stringify({
       code: 'received message',
       echo: message
@@ -60,15 +60,15 @@ if (cluster.isWorker) {
     maybeReply();
   });
 
-  server.listen(0);
-} else if (cluster.isPrimary) {
+  server.listen(0, '127.0.0.1');
+} else if (cluster.isMaster) {
 
   const checks = {
     global: {
       'receive': false,
       'correct': false
     },
-    primary: {
+    master: {
       'receive': false,
       'correct': false
     },
@@ -101,7 +101,7 @@ if (cluster.isWorker) {
 
   // When a IPC message is received from the worker
   worker.on('message', function(message) {
-    check('primary', message === 'message from worker');
+    check('master', message === 'message from worker');
   });
   cluster.on('message', function(worker_, message) {
     assert.strictEqual(worker_, worker);
@@ -113,7 +113,7 @@ if (cluster.isWorker) {
 
     client = net.connect(address.port, function() {
       // Send message to worker.
-      worker.send('message from primary');
+      worker.send('message from master');
     });
 
     client.on('data', function(data) {
@@ -121,7 +121,7 @@ if (cluster.isWorker) {
       data = JSON.parse(data.toString());
 
       if (data.code === 'received message') {
-        check('worker', data.echo === 'message from primary');
+        check('worker', data.echo === 'message from master');
       } else {
         throw new Error(`wrong TCP message received: ${data}`);
       }

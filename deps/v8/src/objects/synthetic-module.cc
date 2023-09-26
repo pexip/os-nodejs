@@ -10,7 +10,6 @@
 #include "src/objects/module-inl.h"
 #include "src/objects/objects-inl.h"
 #include "src/objects/shared-function-info.h"
-#include "src/objects/synthetic-module-inl.h"
 #include "src/utils/ostreams.h"
 
 namespace v8 {
@@ -31,8 +30,9 @@ Maybe<bool> SyntheticModule::SetExport(Isolate* isolate,
     return Nothing<bool>();
   }
 
+  Handle<Cell> export_cell(Handle<Cell>::cast(export_object));
   // Spec step 2: Set the mutable binding of export_name to export_value
-  Cell::cast(*export_object).set_value(*export_value);
+  export_cell->set_value(*export_value);
 
   return Just(true);
 }
@@ -56,21 +56,26 @@ MaybeHandle<Cell> SyntheticModule::ResolveExport(
     Handle<String> module_specifier, Handle<String> export_name,
     MessageLocation loc, bool must_resolve) {
   Handle<Object> object(module->exports().Lookup(export_name), isolate);
-  if (object->IsCell()) return Handle<Cell>::cast(object);
+  if (object->IsCell()) {
+    return Handle<Cell>::cast(object);
+  }
 
-  if (!must_resolve) return MaybeHandle<Cell>();
+  if (must_resolve) {
+    return isolate->Throw<Cell>(
+        isolate->factory()->NewSyntaxError(MessageTemplate::kUnresolvableExport,
+                                           module_specifier, export_name),
+        &loc);
+  }
 
-  return isolate->ThrowAt<Cell>(
-      isolate->factory()->NewSyntaxError(MessageTemplate::kUnresolvableExport,
-                                         module_specifier, export_name),
-      &loc);
+  return MaybeHandle<Cell>();
 }
 
 // Implements Synthetic Module Record's Instantiate concrete method :
 // https://heycam.github.io/webidl/#smr-instantiate
 bool SyntheticModule::PrepareInstantiate(Isolate* isolate,
                                          Handle<SyntheticModule> module,
-                                         v8::Local<v8::Context> context) {
+                                         v8::Local<v8::Context> context,
+                                         v8::Module::ResolveCallback callback) {
   Handle<ObjectHashTable> exports(module->exports(), isolate);
   Handle<FixedArray> export_names(module->export_names(), isolate);
   // Spec step 7: For each export_name in module->export_names...
@@ -92,7 +97,7 @@ bool SyntheticModule::PrepareInstantiate(Isolate* isolate,
 // just update status.
 bool SyntheticModule::FinishInstantiate(Isolate* isolate,
                                         Handle<SyntheticModule> module) {
-  module->SetStatus(kLinked);
+  module->SetStatus(kInstantiated);
   return true;
 }
 
@@ -111,30 +116,12 @@ MaybeHandle<Object> SyntheticModule::Evaluate(Isolate* isolate,
            Utils::ToLocal(Handle<Module>::cast(module)))
            .ToLocal(&result)) {
     isolate->PromoteScheduledException();
-    Module::RecordErrorUsingPendingException(isolate, module);
+    module->RecordErrorUsingPendingException(isolate);
     return MaybeHandle<Object>();
   }
 
   module->SetStatus(kEvaluated);
-
-  Handle<Object> result_from_callback = Utils::OpenHandle(*result);
-
-  Handle<JSPromise> capability;
-  if (result_from_callback->IsJSPromise()) {
-    capability = Handle<JSPromise>::cast(result_from_callback);
-  } else {
-    // The host's evaluation steps should have returned a resolved Promise,
-    // but as an allowance to hosts that have not yet finished the migration
-    // to top-level await, create a Promise if the callback result didn't give
-    // us one.
-    capability = isolate->factory()->NewJSPromise();
-    JSPromise::Resolve(capability, isolate->factory()->undefined_value())
-        .ToHandleChecked();
-  }
-
-  module->set_top_level_capability(*capability);
-
-  return result_from_callback;
+  return Utils::OpenHandle(*result);
 }
 
 }  // namespace internal

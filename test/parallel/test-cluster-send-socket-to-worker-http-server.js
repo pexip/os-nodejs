@@ -10,7 +10,7 @@ const cluster = require('cluster');
 const http = require('http');
 const net = require('net');
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   const worker = cluster.fork();
   const server = net.createServer(common.mustCall((socket) => {
     worker.send('socket', socket);

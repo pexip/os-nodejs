@@ -27,7 +27,7 @@ session.post('Runtime.evaluate', {
   assert.ifError(error);
   const { exception } = res.exceptionDetails;
   assert.strictEqual(exception.className, 'EvalError');
-  assert.match(exception.description, /Possible side-effect/);
+  assert(/Possible side-effect/.test(exception.description));
 
   assert(context);  // Keep 'context' alive and make linter happy.
 });

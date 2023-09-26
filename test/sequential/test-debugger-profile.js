@@ -21,21 +21,18 @@ function delay(ms) {
     throw error;
   }
 
-  try {
-    (async () => {
-      await cli.waitForInitialBreak();
-      await cli.waitForPrompt();
-      await cli.command('exec console.profile()');
+  return cli.waitForInitialBreak()
+    .then(() => cli.waitForPrompt())
+    .then(() => cli.command('exec console.profile()'))
+    .then(() => {
       assert.match(cli.output, /undefined/);
-      await cli.command('exec console.profileEnd()');
-      await delay(250);
+    })
+    .then(() => cli.command('exec console.profileEnd()'))
+    .then(() => delay(250))
+    .then(() => {
       assert.match(cli.output, /undefined/);
       assert.match(cli.output, /Captured new CPU profile\./);
-      await cli.quit();
-    })()
-        .then(common.mustCall());
-  } catch (error) {
-    return onFatal(error);
-  }
-
+    })
+    .then(() => cli.quit())
+    .then(null, onFatal);
 }

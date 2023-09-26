@@ -68,7 +68,7 @@ assert.throws(() => {
   message: 'Unknown encoding: {}'
 });
 
-(function checkVariableCaseEncoding() {
+(function checkVairableCaseEncoding() {
   const m = new MyWritable(function(isBuffer, type, enc) {
     assert.strictEqual(enc, 'ascii');
   }, { decodeStrings: false });

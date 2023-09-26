@@ -194,8 +194,7 @@ TEST_F(DebugSymbolsTest, ReqWrapList) {
   // ARM64 CI machinies.
   for (auto it : *(*env)->req_wrap_queue()) (void) &it;
 
-  volatile uintptr_t last =
-      tail + nodedbg_offset_ListNode_ReqWrap__next___uintptr_t;
+  auto last = tail + nodedbg_offset_ListNode_ReqWrap__next___uintptr_t;
   last = *reinterpret_cast<uintptr_t*>(last);
 
   auto expected = reinterpret_cast<uintptr_t>(&obj);

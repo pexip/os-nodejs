@@ -22,11 +22,11 @@ class WasmBuiltinsAssembler : public CodeStubAssembler {
 
   TNode<FixedArray> LoadTablesFromInstance(TNode<WasmInstanceObject> instance);
 
-  TNode<FixedArray> LoadInternalFunctionsFromInstance(
+  TNode<FixedArray> LoadExternalFunctionsFromInstance(
       TNode<WasmInstanceObject> instance);
 
-  TNode<FixedArray> LoadManagedObjectMapsFromInstance(
-      TNode<WasmInstanceObject> instance);
+ protected:
+  TNode<Smi> SmiFromUint32WithSaturation(TNode<Uint32T> value, uint32_t max);
 };
 
 }  // namespace internal

@@ -127,9 +127,6 @@ class MemoryRetainer {
   }
 
   virtual bool IsRootNode() const { return false; }
-  virtual v8::EmbedderGraph::Node::Detachedness GetDetachedness() const {
-    return v8::EmbedderGraph::Node::Detachedness::kUnknown;
-  }
 };
 
 class MemoryTracker {

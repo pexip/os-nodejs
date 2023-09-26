@@ -26,12 +26,10 @@ using v8::Array;
 using v8::ArrayBufferView;
 using v8::Context;
 using v8::EscapableHandleScope;
-using v8::FixedArray;
 using v8::Function;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::HandleScope;
-using v8::Int32;
 using v8::Integer;
 using v8::IntegrityLevel;
 using v8::Isolate;
@@ -39,13 +37,13 @@ using v8::Local;
 using v8::MaybeLocal;
 using v8::MicrotaskQueue;
 using v8::Module;
-using v8::ModuleRequest;
 using v8::Number;
 using v8::Object;
 using v8::PrimitiveArray;
 using v8::Promise;
 using v8::ScriptCompiler;
 using v8::ScriptOrigin;
+using v8::ScriptOrModule;
 using v8::String;
 using v8::UnboundModuleScript;
 using v8::Undefined;
@@ -82,7 +80,7 @@ ModuleWrap::~ModuleWrap() {
 Local<Context> ModuleWrap::context() const {
   Local<Value> obj = object()->GetInternalField(kContextObjectSlot);
   if (obj.IsEmpty()) return {};
-  return obj.As<Object>()->GetCreationContext().ToLocalChecked();
+  return obj.As<Object>()->CreationContext();
 }
 
 ModuleWrap* ModuleWrap::GetFromModule(Environment* env,
@@ -121,7 +119,7 @@ void ModuleWrap::New(const FunctionCallbackInfo<Value>& args) {
   Local<Context> context;
   ContextifyContext* contextify_context = nullptr;
   if (args[1]->IsUndefined()) {
-    context = that->GetCreationContext().ToLocalChecked();
+    context = that->CreationContext();
   } else {
     CHECK(args[1]->IsObject());
     contextify_context = ContextifyContext::ContextFromContextifiedSandbox(
@@ -130,8 +128,8 @@ void ModuleWrap::New(const FunctionCallbackInfo<Value>& args) {
     context = contextify_context->context();
   }
 
-  int line_offset = 0;
-  int column_offset = 0;
+  Local<Integer> line_offset;
+  Local<Integer> column_offset;
 
   bool synthetic = args[2]->IsArray();
   if (synthetic) {
@@ -141,9 +139,9 @@ void ModuleWrap::New(const FunctionCallbackInfo<Value>& args) {
     // new ModuleWrap(url, context, source, lineOffset, columOffset, cachedData)
     CHECK(args[2]->IsString());
     CHECK(args[3]->IsNumber());
-    line_offset = args[3].As<Int32>()->Value();
+    line_offset = args[3].As<Integer>();
     CHECK(args[4]->IsNumber());
-    column_offset = args[4].As<Int32>()->Value();
+    column_offset = args[4].As<Integer>();
   }
 
   Local<PrimitiveArray> host_defined_options =
@@ -178,24 +176,23 @@ void ModuleWrap::New(const FunctionCallbackInfo<Value>& args) {
       if (!args[5]->IsUndefined()) {
         CHECK(args[5]->IsArrayBufferView());
         Local<ArrayBufferView> cached_data_buf = args[5].As<ArrayBufferView>();
-        uint8_t* data =
-            static_cast<uint8_t*>(cached_data_buf->Buffer()->Data());
+        uint8_t* data = static_cast<uint8_t*>(
+            cached_data_buf->Buffer()->GetBackingStore()->Data());
         cached_data =
             new ScriptCompiler::CachedData(data + cached_data_buf->ByteOffset(),
                                            cached_data_buf->ByteLength());
       }
 
       Local<String> source_text = args[2].As<String>();
-      ScriptOrigin origin(isolate,
-                          url,
-                          line_offset,
-                          column_offset,
-                          true,                             // is cross origin
-                          -1,                               // script id
+      ScriptOrigin origin(url,
+                          line_offset,                      // line offset
+                          column_offset,                    // column offset
+                          True(isolate),                    // is cross origin
+                          Local<Integer>(),                 // script id
                           Local<Value>(),                   // source map URL
-                          false,                            // is opaque (?)
-                          false,                            // is WASM
-                          true,                             // is ES Module
+                          False(isolate),                   // is opaque (?)
+                          False(isolate),                   // is WASM
+                          True(isolate),                    // is ES Module
                           host_defined_options);
       ScriptCompiler::Source source(source_text, origin, cached_data);
       ScriptCompiler::CompileOptions options;
@@ -236,7 +233,7 @@ void ModuleWrap::New(const FunctionCallbackInfo<Value>& args) {
     obj->object()->SetInternalField(kSyntheticEvaluationStepsSlot, args[3]);
   }
 
-  // Use the extras object as an object whose GetCreationContext() will be the
+  // Use the extras object as an object whose CreationContext() will be the
   // original `context`, since the `Context` itself strictly speaking cannot
   // be stored in an internal field.
   obj->object()->SetInternalField(kContextObjectSlot,
@@ -250,21 +247,6 @@ void ModuleWrap::New(const FunctionCallbackInfo<Value>& args) {
 
   that->SetIntegrityLevel(context, IntegrityLevel::kFrozen);
   args.GetReturnValue().Set(that);
-}
-
-static Local<Object> createImportAssertionContainer(Environment* env,
-  Isolate* isolate, Local<FixedArray> raw_assertions) {
-  Local<Object> assertions =
-        Object::New(isolate, v8::Null(env->isolate()), nullptr, nullptr, 0);
-  for (int i = 0; i < raw_assertions->Length(); i += 3) {
-      assertions
-          ->Set(env->context(),
-                raw_assertions->Get(env->context(), i).As<String>(),
-                raw_assertions->Get(env->context(), i + 1).As<Value>())
-          .ToChecked();
-  }
-
-  return assertions;
 }
 
 void ModuleWrap::Link(const FunctionCallbackInfo<Value>& args) {
@@ -288,25 +270,17 @@ void ModuleWrap::Link(const FunctionCallbackInfo<Value>& args) {
   Local<Context> mod_context = obj->context();
   Local<Module> module = obj->module_.Get(isolate);
 
-  Local<FixedArray> module_requests = module->GetModuleRequests();
-  const int module_requests_length = module_requests->Length();
+  const int module_requests_length = module->GetModuleRequestsLength();
   MaybeStackBuffer<Local<Value>, 16> promises(module_requests_length);
 
   // call the dependency resolve callbacks
   for (int i = 0; i < module_requests_length; i++) {
-    Local<ModuleRequest> module_request =
-      module_requests->Get(env->context(), i).As<ModuleRequest>();
-    Local<String> specifier = module_request->GetSpecifier();
+    Local<String> specifier = module->GetModuleRequest(i);
     Utf8Value specifier_utf8(env->isolate(), specifier);
     std::string specifier_std(*specifier_utf8, specifier_utf8.length());
 
-    Local<FixedArray> raw_assertions = module_request->GetImportAssertions();
-    Local<Object> assertions =
-      createImportAssertionContainer(env, isolate, raw_assertions);
-
     Local<Value> argv[] = {
-        specifier,
-        assertions,
+      specifier
     };
 
     MaybeLocal<Value> maybe_resolve_return_value =
@@ -339,7 +313,7 @@ void ModuleWrap::Instantiate(const FunctionCallbackInfo<Value>& args) {
   Local<Context> context = obj->context();
   Local<Module> module = obj->module_.Get(isolate);
   TryCatchScope try_catch(env);
-  USE(module->InstantiateModule(context, ResolveModuleCallback));
+  USE(module->InstantiateModule(context, ResolveCallback));
 
   // clear resolve cache on instantiate
   obj->resolve_cache_.clear();
@@ -428,7 +402,13 @@ void ModuleWrap::Evaluate(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  args.GetReturnValue().Set(result.ToLocalChecked());
+  // If TLA is enabled, `result` is the evaluation's promise.
+  // Otherwise, `result` is the last evaluated value of the module,
+  // which could be a promise, which would result in it being incorrectly
+  // unwrapped when the higher level code awaits the evaluation.
+  if (env->isolate_data()->options()->experimental_top_level_await) {
+    args.GetReturnValue().Set(result.ToLocalChecked());
+  }
 }
 
 void ModuleWrap::GetNamespace(const FunctionCallbackInfo<Value>& args) {
@@ -475,16 +455,12 @@ void ModuleWrap::GetStaticDependencySpecifiers(
 
   Local<Module> module = obj->module_.Get(env->isolate());
 
-  Local<FixedArray> module_requests = module->GetModuleRequests();
-  int count = module_requests->Length();
+  int count = module->GetModuleRequestsLength();
 
   MaybeStackBuffer<Local<Value>, 16> specifiers(count);
 
-  for (int i = 0; i < count; i++) {
-    Local<ModuleRequest> module_request =
-      module_requests->Get(env->context(), i).As<ModuleRequest>();
-    specifiers[i] = module_request->GetSpecifier();
-  }
+  for (int i = 0; i < count; i++)
+    specifiers[i] = module->GetModuleRequest(i);
 
   args.GetReturnValue().Set(
       Array::New(env->isolate(), specifiers.out(), count));
@@ -499,11 +475,9 @@ void ModuleWrap::GetError(const FunctionCallbackInfo<Value>& args) {
   args.GetReturnValue().Set(module->GetException());
 }
 
-MaybeLocal<Module> ModuleWrap::ResolveModuleCallback(
-    Local<Context> context,
-    Local<String> specifier,
-    Local<FixedArray> import_assertions,
-    Local<Module> referrer) {
+MaybeLocal<Module> ModuleWrap::ResolveCallback(Local<Context> context,
+                                               Local<String> specifier,
+                                               Local<Module> referrer) {
   Environment* env = Environment::GetCurrent(context);
   if (env == nullptr) {
     Isolate* isolate = context->GetIsolate();
@@ -552,23 +526,21 @@ MaybeLocal<Module> ModuleWrap::ResolveModuleCallback(
 
 static MaybeLocal<Promise> ImportModuleDynamically(
     Local<Context> context,
-    Local<v8::Data> host_defined_options,
-    Local<Value> resource_name,
-    Local<String> specifier,
-    Local<FixedArray> import_assertions) {
-  Isolate* isolate = context->GetIsolate();
+    Local<ScriptOrModule> referrer,
+    Local<String> specifier) {
+  Isolate* iso = context->GetIsolate();
   Environment* env = Environment::GetCurrent(context);
   if (env == nullptr) {
-    THROW_ERR_EXECUTION_ENVIRONMENT_NOT_AVAILABLE(isolate);
+    THROW_ERR_EXECUTION_ENVIRONMENT_NOT_AVAILABLE(iso);
     return MaybeLocal<Promise>();
   }
 
-  EscapableHandleScope handle_scope(isolate);
+  EscapableHandleScope handle_scope(iso);
 
   Local<Function> import_callback =
     env->host_import_module_dynamically_callback();
 
-  Local<FixedArray> options = host_defined_options.As<FixedArray>();
+  Local<PrimitiveArray> options = referrer->GetHostDefinedOptions();
   if (options->Length() != HostDefinedOptions::kLength) {
     Local<Promise::Resolver> resolver;
     if (!Promise::Resolver::New(context).ToLocal(&resolver)) return {};
@@ -582,11 +554,11 @@ static MaybeLocal<Promise> ImportModuleDynamically(
 
   Local<Value> object;
 
-  int type = options->Get(context, HostDefinedOptions::kType)
+  int type = options->Get(iso, HostDefinedOptions::kType)
                  .As<Number>()
                  ->Int32Value(context)
                  .ToChecked();
-  uint32_t id = options->Get(context, HostDefinedOptions::kID)
+  uint32_t id = options->Get(iso, HostDefinedOptions::kID)
                     .As<Number>()
                     ->Uint32Value(context)
                     .ToChecked();
@@ -604,19 +576,15 @@ static MaybeLocal<Promise> ImportModuleDynamically(
     UNREACHABLE();
   }
 
-  Local<Object> assertions =
-    createImportAssertionContainer(env, isolate, import_assertions);
-
   Local<Value> import_args[] = {
     object,
     Local<Value>(specifier),
-    assertions,
   };
 
   Local<Value> result;
   if (import_callback->Call(
         context,
-        Undefined(isolate),
+        Undefined(iso),
         arraysize(import_args),
         import_args).ToLocal(&result)) {
     CHECK(result->IsPromise());
@@ -628,16 +596,16 @@ static MaybeLocal<Promise> ImportModuleDynamically(
 
 void ModuleWrap::SetImportModuleDynamicallyCallback(
     const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
+  Isolate* iso = args.GetIsolate();
   Environment* env = Environment::GetCurrent(args);
-  HandleScope handle_scope(isolate);
+  HandleScope handle_scope(iso);
 
   CHECK_EQ(args.Length(), 1);
   CHECK(args[0]->IsFunction());
   Local<Function> import_callback = args[0].As<Function>();
   env->set_host_import_module_dynamically_callback(import_callback);
 
-  isolate->SetHostImportModuleDynamicallyCallback(ImportModuleDynamically);
+  iso->SetHostImportModuleDynamicallyCallback(ImportModuleDynamically);
 }
 
 void ModuleWrap::HostInitializeImportMetaObjectCallback(
@@ -765,37 +733,31 @@ void ModuleWrap::Initialize(Local<Object> target,
                             Local<Context> context,
                             void* priv) {
   Environment* env = Environment::GetCurrent(context);
-  Isolate* isolate = env->isolate();
 
-  Local<FunctionTemplate> tpl = NewFunctionTemplate(isolate, New);
+  Local<FunctionTemplate> tpl = env->NewFunctionTemplate(New);
   tpl->InstanceTemplate()->SetInternalFieldCount(
       ModuleWrap::kInternalFieldCount);
   tpl->Inherit(BaseObject::GetConstructorTemplate(env));
 
-  SetProtoMethod(isolate, tpl, "link", Link);
-  SetProtoMethod(isolate, tpl, "instantiate", Instantiate);
-  SetProtoMethod(isolate, tpl, "evaluate", Evaluate);
-  SetProtoMethod(isolate, tpl, "setExport", SetSyntheticExport);
-  SetProtoMethodNoSideEffect(
-      isolate, tpl, "createCachedData", CreateCachedData);
-  SetProtoMethodNoSideEffect(isolate, tpl, "getNamespace", GetNamespace);
-  SetProtoMethodNoSideEffect(isolate, tpl, "getStatus", GetStatus);
-  SetProtoMethodNoSideEffect(isolate, tpl, "getError", GetError);
-  SetProtoMethodNoSideEffect(isolate,
-                             tpl,
-                             "getStaticDependencySpecifiers",
-                             GetStaticDependencySpecifiers);
+  env->SetProtoMethod(tpl, "link", Link);
+  env->SetProtoMethod(tpl, "instantiate", Instantiate);
+  env->SetProtoMethod(tpl, "evaluate", Evaluate);
+  env->SetProtoMethod(tpl, "setExport", SetSyntheticExport);
+  env->SetProtoMethodNoSideEffect(tpl, "createCachedData", CreateCachedData);
+  env->SetProtoMethodNoSideEffect(tpl, "getNamespace", GetNamespace);
+  env->SetProtoMethodNoSideEffect(tpl, "getStatus", GetStatus);
+  env->SetProtoMethodNoSideEffect(tpl, "getError", GetError);
+  env->SetProtoMethodNoSideEffect(tpl, "getStaticDependencySpecifiers",
+                                  GetStaticDependencySpecifiers);
 
-  SetConstructorFunction(context, target, "ModuleWrap", tpl);
+  env->SetConstructorFunction(target, "ModuleWrap", tpl);
 
-  SetMethod(context,
-            target,
-            "setImportModuleDynamicallyCallback",
-            SetImportModuleDynamicallyCallback);
-  SetMethod(context,
-            target,
-            "setInitializeImportMetaObjectCallback",
-            SetInitializeImportMetaObjectCallback);
+  env->SetMethod(target,
+                 "setImportModuleDynamicallyCallback",
+                 SetImportModuleDynamicallyCallback);
+  env->SetMethod(target,
+                 "setInitializeImportMetaObjectCallback",
+                 SetInitializeImportMetaObjectCallback);
 
 #define V(name)                                                                \
     target->Set(context,                                                       \

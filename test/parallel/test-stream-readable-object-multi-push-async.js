@@ -47,7 +47,7 @@ const BATCH = 10;
   readable.on('readable', () => {
     let data;
     console.log('readable emitted');
-    while ((data = readable.read()) !== null) {
+    while (data = readable.read()) {
       console.log(data);
     }
   });

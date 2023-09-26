@@ -13,15 +13,14 @@ const bench = common.createBenchmark(main, {
 
 function main({ type, len, chunks, c, chunkedEnc, duration }) {
   const server = require('../fixtures/simple-http-server.js')
-  .listen(0)
+  .listen(common.PORT)
   .on('listening', () => {
     const path = `/${type}/${len}/${chunks}/normal/${chunkedEnc}`;
 
     bench.http({
       path,
       connections: c,
-      duration,
-      port: server.address().port,
+      duration
     }, () => {
       server.close();
     });

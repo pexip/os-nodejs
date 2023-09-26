@@ -8,13 +8,8 @@ Agent* g_agent = nullptr;
 v8::TracingController* g_controller = nullptr;
 
 void TraceEventHelper::SetAgent(Agent* agent) {
-  if (agent) {
-    g_agent = agent;
-    g_controller = agent->GetTracingController();
-  } else {
-    g_agent = nullptr;
-    g_controller = nullptr;
-  }
+  g_agent = agent;
+  g_controller = agent->GetTracingController();
 }
 
 Agent* TraceEventHelper::GetAgent() {

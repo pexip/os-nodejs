@@ -8,9 +8,7 @@
 #include "src/base/export-template.h"
 #include "src/common/globals.h"
 #include "src/objects/fixed-array.h"
-#include "src/objects/internal-index.h"
 #include "src/objects/js-objects.h"
-#include "src/objects/keys.h"
 #include "src/objects/smi.h"
 #include "src/roots/roots.h"
 
@@ -36,7 +34,7 @@ namespace internal {
 //   [kPrefixSize]: element count
 //   [kPrefixSize + 1]: deleted element count
 //   [kPrefixSize + 2]: bucket count
-//   [kPrefixSize + 3..(kPrefixSize + 3 + NumberOfBuckets() - 1)]: "hash table",
+//   [kPrefixSize + 3..(3 + NumberOfBuckets() - 1)]: "hash table",
 //                            where each item is an offset into the
 //                            data table (see below) where the first
 //                            item in this bucket is stored.
@@ -54,22 +52,19 @@ namespace internal {
 //
 // Memory layout for obsolete table:
 //   [0] : Prefix
-//   [kPrefixSize + 0]: Next newer table
-//   [kPrefixSize + 1]: deleted element count or kClearedTableSentinel if
-//                      the table was cleared
-//   [kPrefixSize + 2]: bucket count
-//   [kPrefixSize + 3..(kPrefixSize + 3 + NumberOfDeletedElements() - 1)]:
-//                      The indexes of the removed holes. This part is only
-//                      usable for non-cleared tables, as clearing removes the
-//                      deleted elements count.
-//   [kPrefixSize + 3 + NumberOfDeletedElements()..length]: Not used
+//   [kPrefixSize + 0]: bucket count
+//   [kPrefixSize + 1]: Next newer table
+//   [kPrefixSize + 2]: Number of removed holes or -1 when the table was
+//                      cleared.
+//   [kPrefixSize + 3..(3 + NumberOfRemovedHoles() - 1)]: The indexes
+//                      of the removed holes.
+//   [kPrefixSize + 3 + NumberOfRemovedHoles()..length]: Not used
 template <class Derived, int entrysize>
 class OrderedHashTable : public FixedArray {
  public:
   // Returns an OrderedHashTable (possibly |table|) with enough space
   // to add at least one new element.
-  template <typename IsolateT>
-  static MaybeHandle<Derived> EnsureGrowable(IsolateT* isolate,
+  static MaybeHandle<Derived> EnsureGrowable(Isolate* isolate,
                                              Handle<Derived> table);
 
   // Returns an OrderedHashTable (possibly |table|) that's shrunken
@@ -83,15 +78,11 @@ class OrderedHashTable : public FixedArray {
   // Returns true if the OrderedHashTable contains the key
   static bool HasKey(Isolate* isolate, Derived table, Object key);
 
-  // Returns whether a potential key |k| returned by KeyAt is a real
-  // key (meaning that it is not a hole).
-  static inline bool IsKey(ReadOnlyRoots roots, Object k);
-
   // Returns a true value if the OrderedHashTable contains the key and
   // the key has been deleted. This does not shrink the table.
   static bool Delete(Isolate* isolate, Derived table, Object key);
 
-  InternalIndex FindEntry(Isolate* isolate, Object key);
+  int FindEntry(Isolate* isolate, Object key);
 
   int NumberOfElements() const {
     return Smi::ToInt(get(NumberOfElementsIndex()));
@@ -107,25 +98,33 @@ class OrderedHashTable : public FixedArray {
     return NumberOfElements() + NumberOfDeletedElements();
   }
 
-  int Capacity() { return NumberOfBuckets() * kLoadFactor; }
-
   int NumberOfBuckets() const {
     return Smi::ToInt(get(NumberOfBucketsIndex()));
   }
 
-  InternalIndex::Range IterateEntries() {
-    return InternalIndex::Range(UsedCapacity());
+  // Returns an index into |this| for the given entry.
+  int EntryToIndex(int entry) {
+    return HashTableStartIndex() + NumberOfBuckets() + (entry * kEntrySize);
   }
 
-  // use IsKey to check if this is a deleted entry.
-  Object KeyAt(InternalIndex entry) {
-    DCHECK_LT(entry.as_int(), this->UsedCapacity());
+  int HashToBucket(int hash) { return hash & (NumberOfBuckets() - 1); }
+
+  int HashToEntry(int hash) {
+    int bucket = HashToBucket(hash);
+    Object entry = this->get(HashTableStartIndex() + bucket);
+    return Smi::ToInt(entry);
+  }
+
+  int NextChainEntry(int entry) {
+    Object next_entry = get(EntryToIndex(entry) + kChainOffset);
+    return Smi::ToInt(next_entry);
+  }
+
+  // use KeyAt(i)->IsTheHole(isolate) to determine if this is a deleted entry.
+  Object KeyAt(int entry) {
+    DCHECK_LT(entry, this->UsedCapacity());
     return get(EntryToIndex(entry));
   }
-
-  // Similar to KeyAt, but indicates whether the given entry is valid
-  // (not deleted one)
-  inline bool ToKey(ReadOnlyRoots roots, InternalIndex entry, Object* out_key);
 
   bool IsObsolete() { return !get(NextTableIndex()).IsSmi(); }
 
@@ -143,9 +142,7 @@ class OrderedHashTable : public FixedArray {
   static const int kChainOffset = entrysize;
 
   static const int kNotFound = -1;
-  // The minimum capacity. Note that despite this value, 0 is also a permitted
-  // capacity, indicating a table without any storage for elements.
-  static const int kInitialCapacity = 4;
+  static const int kMinCapacity = 4;
 
   static constexpr int PrefixIndex() { return 0; }
 
@@ -201,47 +198,13 @@ class OrderedHashTable : public FixedArray {
 
  protected:
   // Returns an OrderedHashTable with a capacity of at least |capacity|.
-  template <typename IsolateT>
   static MaybeHandle<Derived> Allocate(
-      IsolateT* isolate, int capacity,
+      Isolate* isolate, int capacity,
       AllocationType allocation = AllocationType::kYoung);
 
-  static MaybeHandle<Derived> AllocateEmpty(Isolate* isolate,
-                                            AllocationType allocation,
-                                            RootIndex root_ndex);
-
-  template <typename IsolateT>
-  static MaybeHandle<Derived> Rehash(IsolateT* isolate, Handle<Derived> table);
-  template <typename IsolateT>
-  static MaybeHandle<Derived> Rehash(IsolateT* isolate, Handle<Derived> table,
+  static MaybeHandle<Derived> Rehash(Isolate* isolate, Handle<Derived> table);
+  static MaybeHandle<Derived> Rehash(Isolate* isolate, Handle<Derived> table,
                                      int new_capacity);
-
-  int HashToEntryRaw(int hash) {
-    int bucket = HashToBucket(hash);
-    Object entry = this->get(HashTableStartIndex() + bucket);
-    int entry_int = Smi::ToInt(entry);
-    DCHECK(entry_int == kNotFound || entry_int >= 0);
-    return entry_int;
-  }
-
-  int NextChainEntryRaw(int entry) {
-    DCHECK_LT(entry, this->UsedCapacity());
-    Object next_entry = get(EntryToIndexRaw(entry) + kChainOffset);
-    int next_entry_int = Smi::ToInt(next_entry);
-    DCHECK(next_entry_int == kNotFound || next_entry_int >= 0);
-    return next_entry_int;
-  }
-
-  // Returns an index into |this| for the given entry.
-  int EntryToIndexRaw(int entry) {
-    return HashTableStartIndex() + NumberOfBuckets() + (entry * kEntrySize);
-  }
-
-  int EntryToIndex(InternalIndex entry) {
-    return EntryToIndexRaw(entry.as_int());
-  }
-
-  int HashToBucket(int hash) { return hash & (NumberOfBuckets() - 1); }
 
   void SetNumberOfBuckets(int num) {
     set(NumberOfBucketsIndex(), Smi::FromInt(num));
@@ -255,6 +218,8 @@ class OrderedHashTable : public FixedArray {
     set(NumberOfDeletedElementsIndex(), Smi::FromInt(num));
   }
 
+  // Returns the number elements that can fit into the allocated buffer.
+  int Capacity() { return NumberOfBuckets() * kLoadFactor; }
 
   void SetNextTable(Derived next_table) { set(NextTableIndex(), next_table); }
 
@@ -270,11 +235,8 @@ class OrderedHashTable : public FixedArray {
 
 class V8_EXPORT_PRIVATE OrderedHashSet
     : public OrderedHashTable<OrderedHashSet, 1> {
-  using Base = OrderedHashTable<OrderedHashSet, 1>;
-
  public:
   DECL_CAST(OrderedHashSet)
-  DECL_PRINTER(OrderedHashSet)
 
   static MaybeHandle<OrderedHashSet> Add(Isolate* isolate,
                                          Handle<OrderedHashSet> table,
@@ -287,14 +249,9 @@ class V8_EXPORT_PRIVATE OrderedHashSet
                                             int new_capacity);
   static MaybeHandle<OrderedHashSet> Rehash(Isolate* isolate,
                                             Handle<OrderedHashSet> table);
-  template <typename IsolateT>
   static MaybeHandle<OrderedHashSet> Allocate(
-      IsolateT* isolate, int capacity,
+      Isolate* isolate, int capacity,
       AllocationType allocation = AllocationType::kYoung);
-
-  static MaybeHandle<OrderedHashSet> AllocateEmpty(
-      Isolate* isolate, AllocationType allocation = AllocationType::kReadOnly);
-
   static HeapObject GetEmpty(ReadOnlyRoots ro_roots);
   static inline Handle<Map> GetMap(ReadOnlyRoots roots);
   static inline bool Is(Handle<HeapObject> table);
@@ -305,11 +262,8 @@ class V8_EXPORT_PRIVATE OrderedHashSet
 
 class V8_EXPORT_PRIVATE OrderedHashMap
     : public OrderedHashTable<OrderedHashMap, 2> {
-  using Base = OrderedHashTable<OrderedHashMap, 2>;
-
  public:
   DECL_CAST(OrderedHashMap)
-  DECL_PRINTER(OrderedHashMap)
 
   // Returns a value if the OrderedHashMap contains the key, otherwise
   // returns undefined.
@@ -318,23 +272,15 @@ class V8_EXPORT_PRIVATE OrderedHashMap
                                          Handle<Object> key,
                                          Handle<Object> value);
 
-  template <typename IsolateT>
   static MaybeHandle<OrderedHashMap> Allocate(
-      IsolateT* isolate, int capacity,
+      Isolate* isolate, int capacity,
       AllocationType allocation = AllocationType::kYoung);
-
-  static MaybeHandle<OrderedHashMap> AllocateEmpty(
-      Isolate* isolate, AllocationType allocation = AllocationType::kReadOnly);
-
   static MaybeHandle<OrderedHashMap> Rehash(Isolate* isolate,
                                             Handle<OrderedHashMap> table,
                                             int new_capacity);
   static MaybeHandle<OrderedHashMap> Rehash(Isolate* isolate,
                                             Handle<OrderedHashMap> table);
-
-  void SetEntry(InternalIndex entry, Object key, Object value);
-
-  Object ValueAt(InternalIndex entry);
+  Object ValueAt(int entry);
 
   // This takes and returns raw Address values containing tagged Object
   // pointers because it is called via ExternalReference.
@@ -425,7 +371,7 @@ class SmallOrderedHashTable : public HeapObject {
   // we've already reached MaxCapacity.
   static MaybeHandle<Derived> Grow(Isolate* isolate, Handle<Derived> table);
 
-  InternalIndex FindEntry(Isolate* isolate, Object key);
+  int FindEntry(Isolate* isolate, Object key);
   static Handle<Derived> Shrink(Isolate* isolate, Handle<Derived> table);
 
   // Iterates only fields in the DataTable.
@@ -472,11 +418,7 @@ class SmallOrderedHashTable : public HeapObject {
 
   int NumberOfBuckets() const { return getByte(NumberOfBucketsOffset(), 0); }
 
-  V8_INLINE Object KeyAt(InternalIndex entry) const;
-
-  InternalIndex::Range IterateEntries() {
-    return InternalIndex::Range(UsedCapacity());
-  }
+  V8_INLINE Object KeyAt(int entry) const;
 
   DECL_VERIFIER(SmallOrderedHashTable)
 
@@ -518,7 +460,8 @@ class SmallOrderedHashTable : public HeapObject {
   }
 
   Address GetHashTableStartAddress(int capacity) const {
-    return field_address(DataTableStartOffset() + DataTableSizeFor(capacity));
+    return FIELD_ADDR(*this,
+                      DataTableStartOffset() + DataTableSizeFor(capacity));
   }
 
   void SetFirstEntry(int bucket, byte value) {
@@ -756,65 +699,39 @@ class V8_EXPORT_PRIVATE OrderedHashSetHandler
       Isolate* isolate, Handle<SmallOrderedHashSet> table);
 };
 
-class V8_EXPORT_PRIVATE OrderedNameDictionary
+class OrderedNameDictionary
     : public OrderedHashTable<OrderedNameDictionary, 3> {
-  using Base = OrderedHashTable<OrderedNameDictionary, 3>;
-
  public:
   DECL_CAST(OrderedNameDictionary)
-  DECL_PRINTER(OrderedNameDictionary)
 
-  template <typename IsolateT>
-  static MaybeHandle<OrderedNameDictionary> Add(
-      IsolateT* isolate, Handle<OrderedNameDictionary> table, Handle<Name> key,
+  V8_EXPORT_PRIVATE static MaybeHandle<OrderedNameDictionary> Add(
+      Isolate* isolate, Handle<OrderedNameDictionary> table, Handle<Name> key,
       Handle<Object> value, PropertyDetails details);
 
-  void SetEntry(InternalIndex entry, Object key, Object value,
-                PropertyDetails details);
+  V8_EXPORT_PRIVATE void SetEntry(int entry, Object key, Object value,
+                                  PropertyDetails details);
 
-  template <typename IsolateT>
-  InternalIndex FindEntry(IsolateT* isolate, Object key);
+  V8_EXPORT_PRIVATE static Handle<OrderedNameDictionary> DeleteEntry(
+      Isolate* isolate, Handle<OrderedNameDictionary> table, int entry);
 
-  // This is to make the interfaces of NameDictionary::FindEntry and
-  // OrderedNameDictionary::FindEntry compatible.
-  // TODO(emrich) clean this up: NameDictionary uses Handle<Object>
-  // for FindEntry keys due to its Key typedef, but that's also used
-  // for adding, where we do need handles.
-  template <typename IsolateT>
-  InternalIndex FindEntry(IsolateT* isolate, Handle<Object> key) {
-    return FindEntry(isolate, *key);
-  }
-
-  static Handle<OrderedNameDictionary> DeleteEntry(
-      Isolate* isolate, Handle<OrderedNameDictionary> table,
-      InternalIndex entry);
-
-  template <typename IsolateT>
   static MaybeHandle<OrderedNameDictionary> Allocate(
-      IsolateT* isolate, int capacity,
+      Isolate* isolate, int capacity,
       AllocationType allocation = AllocationType::kYoung);
 
-  static MaybeHandle<OrderedNameDictionary> AllocateEmpty(
-      Isolate* isolate, AllocationType allocation = AllocationType::kReadOnly);
-
-  template <typename IsolateT>
   static MaybeHandle<OrderedNameDictionary> Rehash(
-      IsolateT* isolate, Handle<OrderedNameDictionary> table, int new_capacity);
+      Isolate* isolate, Handle<OrderedNameDictionary> table, int new_capacity);
 
   // Returns the value for entry.
-  inline Object ValueAt(InternalIndex entry);
-
-  // Like KeyAt, but casts to Name
-  inline Name NameAt(InternalIndex entry);
+  inline Object ValueAt(int entry);
 
   // Set the value for entry.
-  inline void ValueAtPut(InternalIndex entry, Object value);
+  inline void ValueAtPut(int entry, Object value);
 
   // Returns the property details for the property at entry.
-  inline PropertyDetails DetailsAt(InternalIndex entry);
+  inline PropertyDetails DetailsAt(int entry);
 
   // Set the details for entry.
-  inline void DetailsAtPut(InternalIndex entry, PropertyDetails value);
+  inline void DetailsAtPut(int entry, PropertyDetails value);
 
   inline void SetHash(int hash);
   inline int Hash();
@@ -826,10 +743,6 @@ class V8_EXPORT_PRIVATE OrderedNameDictionary
   static const int kValueOffset = 1;
   static const int kPropertyDetailsOffset = 2;
   static const int kPrefixSize = 1;
-
-  static constexpr int HashIndex() { return PrefixIndex(); }
-
-  static const bool kIsOrderedDictionaryType = true;
 
   OBJECT_CONSTRUCTORS(OrderedNameDictionary,
                       OrderedHashTable<OrderedNameDictionary, 3>);
@@ -848,32 +761,32 @@ class V8_EXPORT_PRIVATE OrderedNameDictionaryHandler
   static Handle<HeapObject> Shrink(Isolate* isolate, Handle<HeapObject> table);
 
   static Handle<HeapObject> DeleteEntry(Isolate* isolate,
-                                        Handle<HeapObject> table,
-                                        InternalIndex entry);
-  static InternalIndex FindEntry(Isolate* isolate, HeapObject table, Name key);
-  static void SetEntry(HeapObject table, InternalIndex entry, Object key,
-                       Object value, PropertyDetails details);
+                                        Handle<HeapObject> table, int entry);
+  static int FindEntry(Isolate* isolate, HeapObject table, Name key);
+  static void SetEntry(HeapObject table, int entry, Object key, Object value,
+                       PropertyDetails details);
 
   // Returns the value for entry.
-  static Object ValueAt(HeapObject table, InternalIndex entry);
+  static Object ValueAt(HeapObject table, int entry);
 
   // Set the value for entry.
-  static void ValueAtPut(HeapObject table, InternalIndex entry, Object value);
+  static void ValueAtPut(HeapObject table, int entry, Object value);
 
   // Returns the property details for the property at entry.
-  static PropertyDetails DetailsAt(HeapObject table, InternalIndex entry);
+  static PropertyDetails DetailsAt(HeapObject table, int entry);
 
   // Set the details for entry.
-  static void DetailsAtPut(HeapObject table, InternalIndex entry,
-                           PropertyDetails value);
+  static void DetailsAtPut(HeapObject table, int entry, PropertyDetails value);
 
-  static Name KeyAt(HeapObject table, InternalIndex entry);
+  static Name KeyAt(HeapObject table, int entry);
 
   static void SetHash(HeapObject table, int hash);
   static int Hash(HeapObject table);
 
   static int NumberOfElements(HeapObject table);
   static int Capacity(HeapObject table);
+
+  static const int kNotFound = -1;
 
  protected:
   static MaybeHandle<OrderedNameDictionary> AdjustRepresentation(
@@ -889,24 +802,23 @@ class SmallOrderedNameDictionary
   DECL_VERIFIER(SmallOrderedNameDictionary)
 
   // Returns the value for entry.
-  inline Object ValueAt(InternalIndex entry);
+  inline Object ValueAt(int entry);
 
   static Handle<SmallOrderedNameDictionary> Rehash(
       Isolate* isolate, Handle<SmallOrderedNameDictionary> table,
       int new_capacity);
 
   V8_EXPORT_PRIVATE static Handle<SmallOrderedNameDictionary> DeleteEntry(
-      Isolate* isolate, Handle<SmallOrderedNameDictionary> table,
-      InternalIndex entry);
+      Isolate* isolate, Handle<SmallOrderedNameDictionary> table, int entry);
 
   // Set the value for entry.
-  inline void ValueAtPut(InternalIndex entry, Object value);
+  inline void ValueAtPut(int entry, Object value);
 
   // Returns the property details for the property at entry.
-  inline PropertyDetails DetailsAt(InternalIndex entry);
+  inline PropertyDetails DetailsAt(int entry);
 
   // Set the details for entry.
-  inline void DetailsAtPut(InternalIndex entry, PropertyDetails value);
+  inline void DetailsAtPut(int entry, PropertyDetails value);
 
   inline void SetHash(int hash);
   inline int Hash();
@@ -924,7 +836,7 @@ class SmallOrderedNameDictionary
       Isolate* isolate, Handle<SmallOrderedNameDictionary> table,
       Handle<Name> key, Handle<Object> value, PropertyDetails details);
 
-  V8_EXPORT_PRIVATE void SetEntry(InternalIndex entry, Object key, Object value,
+  V8_EXPORT_PRIVATE void SetEntry(int entry, Object key, Object value,
                                   PropertyDetails details);
 
   static inline Handle<Map> GetMap(ReadOnlyRoots roots);

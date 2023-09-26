@@ -1,7 +1,6 @@
 #include "debug_utils-inl.h"  // NOLINT(build/include)
 #include "env-inl.h"
 #include "node_internals.h"
-#include "util.h"
 
 #ifdef __POSIX__
 #if defined(__linux__)
@@ -59,14 +58,13 @@ namespace per_process {
 EnabledDebugList enabled_debug_list;
 }
 
-void EnabledDebugList::Parse(std::shared_ptr<KVStore> env_vars,
-                             v8::Isolate* isolate) {
+void EnabledDebugList::Parse(Environment* env) {
   std::string cats;
-  credentials::SafeGetenv("NODE_DEBUG_NATIVE", &cats, env_vars, isolate);
-  Parse(cats);
+  credentials::SafeGetenv("NODE_DEBUG_NATIVE", &cats, env);
+  Parse(cats, true);
 }
 
-void EnabledDebugList::Parse(const std::string& cats) {
+void EnabledDebugList::Parse(const std::string& cats, bool enabled) {
   std::string debug_categories = cats;
   while (!debug_categories.empty()) {
     std::string::size_type comma_pos = debug_categories.find(',');
@@ -76,7 +74,7 @@ void EnabledDebugList::Parse(const std::string& cats) {
   {                                                                            \
     static const std::string available_category = ToLower(#name);              \
     if (available_category.find(wanted) != std::string::npos)                  \
-      set_enabled(DebugCategory::name);                                        \
+      set_enabled(DebugCategory::name, enabled);                               \
   }
 
     DEBUG_CATEGORY_NAMES(V)

@@ -14,7 +14,7 @@ function main({ connections, headers, w, duration }) {
     res.end();
   });
 
-  server.listen(0, () => {
+  server.listen(common.PORT, () => {
     const headers = {
       'Content-Type': 'text/plain',
       'Accept': 'text/plain',
@@ -34,8 +34,7 @@ function main({ connections, headers, w, duration }) {
       path: '/',
       connections,
       headers,
-      duration,
-      port: server.address().port,
+      duration
     }, () => {
       server.close();
     });

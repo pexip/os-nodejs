@@ -9,27 +9,44 @@ const startCLI = require('../common/debugger');
 const assert = require('assert');
 const { spawn } = require('child_process');
 
-const script = fixtures.path('debugger', 'alive.js');
 
-const runTest = async () => {
-  const target = spawn(process.execPath, [script]);
-  const cli = startCLI(['-p', `${target.pid}`]);
+function launchTarget(...args) {
+  const childProc = spawn(process.execPath, args);
+  return Promise.resolve(childProc);
+}
 
-  try {
-    await cli.waitForPrompt();
-    await cli.command('sb("alive.js", 3)');
-    await cli.waitFor(/break/);
-    await cli.waitForPrompt();
-    assert.match(
-      cli.output,
-      /> 3 {3}\+\+x;/,
-      'marks the 3rd line');
-  } catch (error) {
+{
+  const script = fixtures.path('debugger', 'alive.js');
+  let cli = null;
+  let target = null;
+
+  function cleanup(error) {
+    if (cli) {
+      cli.quit();
+      cli = null;
+    }
+    if (target) {
+      target.kill();
+      target = null;
+    }
     assert.ifError(error);
-  } finally {
-    await cli.quit();
-    target.kill();
   }
-};
 
-runTest().then(common.mustCall());
+  return launchTarget(script)
+    .then((childProc) => {
+      target = childProc;
+      cli = startCLI(['-p', `${target.pid}`]);
+      return cli.waitForPrompt();
+    })
+    .then(() => cli.command('sb("alive.js", 3)'))
+    .then(() => cli.waitFor(/break/))
+    .then(() => cli.waitForPrompt())
+    .then(() => {
+      assert.match(
+        cli.output,
+        /> 3   \+\+x;/,
+        'marks the 3rd line');
+    })
+    .then(() => cleanup())
+    .then(null, cleanup);
+}

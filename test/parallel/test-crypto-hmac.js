@@ -36,6 +36,8 @@ assert.throws(
   {
     code: 'ERR_INVALID_ARG_TYPE',
     name: 'TypeError',
+    message: 'The "key" argument must be of type string or an instance of ' +
+             'Buffer, TypedArray, DataView, or KeyObject. Received null'
   });
 
 function testHmac(algo, key, data, expected) {
@@ -422,8 +424,8 @@ assert.strictEqual(
   }
   {
     const h = crypto.createHmac('sha1', 'key').update('data');
-    assert.strictEqual(h.digest('latin1'), expected);
-    assert.strictEqual(h.digest('latin1'), '');
+    assert.deepStrictEqual(h.digest('latin1'), expected);
+    assert.deepStrictEqual(h.digest('latin1'), '');
   }
 }
 
@@ -440,22 +442,13 @@ assert.strictEqual(
   }
   {
     const h = crypto.createHmac('sha1', 'key');
-    assert.strictEqual(h.digest('latin1'), expected);
-    assert.strictEqual(h.digest('latin1'), '');
+    assert.deepStrictEqual(h.digest('latin1'), expected);
+    assert.deepStrictEqual(h.digest('latin1'), '');
   }
 }
 
 {
   assert.throws(
     () => crypto.createHmac('sha7', 'key'),
-    /Invalid digest/);
-}
-
-{
-  const buf = Buffer.alloc(0);
-  const keyObject = crypto.createSecretKey(Buffer.alloc(0));
-  assert.deepStrictEqual(
-    crypto.createHmac('sha256', buf).update('foo').digest(),
-    crypto.createHmac('sha256', keyObject).update('foo').digest(),
-  );
+    /Unknown message digest/);
 }

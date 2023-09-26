@@ -2,7 +2,7 @@
 const common = require('../common');
 const assert = require('assert');
 
-const { Readable } = require('stream');
+const Readable = require('_stream_readable');
 const EE = require('events').EventEmitter;
 
 class LegacyStream extends EE {

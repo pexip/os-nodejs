@@ -10,7 +10,6 @@
 #include <type_traits>
 
 #include "cppgc/internal/pointer-policies.h"
-#include "cppgc/sentinel-pointer.h"
 #include "cppgc/type-traits.h"
 #include "v8config.h"  // NOLINT(build/include_directory)
 
@@ -20,68 +19,21 @@ class Visitor;
 
 namespace internal {
 
-// MemberBase always refers to the object as const object and defers to
-// BasicMember on casting to the right type as needed.
-class MemberBase {
- protected:
-  struct AtomicInitializerTag {};
-
-  MemberBase() : raw_(nullptr) {}
-  explicit MemberBase(const void* value) : raw_(value) {}
-  MemberBase(const void* value, AtomicInitializerTag) { SetRawAtomic(value); }
-
-  const void** GetRawSlot() const { return &raw_; }
-  const void* GetRaw() const { return raw_; }
-  void SetRaw(void* value) { raw_ = value; }
-
-  const void* GetRawAtomic() const {
-    return reinterpret_cast<const std::atomic<const void*>*>(&raw_)->load(
-        std::memory_order_relaxed);
-  }
-  void SetRawAtomic(const void* value) {
-    reinterpret_cast<std::atomic<const void*>*>(&raw_)->store(
-        value, std::memory_order_relaxed);
-  }
-
-  void ClearFromGC() const { raw_ = nullptr; }
-
- private:
-  // All constructors initialize `raw_`. Do not add a default value here as it
-  // results in a non-atomic write on some builds, even when the atomic version
-  // of the constructor is used.
-  mutable const void* raw_;
-};
-
 // The basic class from which all Member classes are 'generated'.
 template <typename T, typename WeaknessTag, typename WriteBarrierPolicy,
           typename CheckingPolicy>
-class BasicMember final : private MemberBase, private CheckingPolicy {
+class BasicMember : private CheckingPolicy {
  public:
   using PointeeType = T;
 
   constexpr BasicMember() = default;
   constexpr BasicMember(std::nullptr_t) {}     // NOLINT
-  BasicMember(SentinelPointer s) : MemberBase(s) {}  // NOLINT
-  BasicMember(T* raw) : MemberBase(raw) {            // NOLINT
+  BasicMember(SentinelPointer s) : raw_(s) {}  // NOLINT
+  BasicMember(T* raw) : raw_(raw) {            // NOLINT
     InitializingWriteBarrier();
-    this->CheckPointer(Get());
+    this->CheckPointer(raw_);
   }
   BasicMember(T& raw) : BasicMember(&raw) {}  // NOLINT
-  // Atomic ctor. Using the AtomicInitializerTag forces BasicMember to
-  // initialize using atomic assignments. This is required for preventing
-  // data races with concurrent marking.
-  using AtomicInitializerTag = MemberBase::AtomicInitializerTag;
-  BasicMember(std::nullptr_t, AtomicInitializerTag atomic)
-      : MemberBase(nullptr, atomic) {}
-  BasicMember(SentinelPointer s, AtomicInitializerTag atomic)
-      : MemberBase(s, atomic) {}
-  BasicMember(T* raw, AtomicInitializerTag atomic) : MemberBase(raw, atomic) {
-    InitializingWriteBarrier();
-    this->CheckPointer(Get());
-  }
-  BasicMember(T& raw, AtomicInitializerTag atomic)
-      : BasicMember(&raw, atomic) {}
-  // Copy ctor.
   BasicMember(const BasicMember& other) : BasicMember(other.Get()) {}
   // Allow heterogeneous construction.
   template <typename U, typename OtherBarrierPolicy, typename OtherWeaknessTag,
@@ -91,34 +43,21 @@ class BasicMember final : private MemberBase, private CheckingPolicy {
       const BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy,
                         OtherCheckingPolicy>& other)
       : BasicMember(other.Get()) {}
-  // Move ctor.
-  BasicMember(BasicMember&& other) noexcept : BasicMember(other.Get()) {
-    other.Clear();
-  }
-  // Allow heterogeneous move construction.
-  template <typename U, typename OtherBarrierPolicy, typename OtherWeaknessTag,
-            typename OtherCheckingPolicy,
-            typename = std::enable_if_t<std::is_base_of<T, U>::value>>
-  BasicMember(BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy,
-                          OtherCheckingPolicy>&& other) noexcept
-      : BasicMember(other.Get()) {
-    other.Clear();
-  }
   // Construction from Persistent.
   template <typename U, typename PersistentWeaknessPolicy,
             typename PersistentLocationPolicy,
             typename PersistentCheckingPolicy,
             typename = std::enable_if_t<std::is_base_of<T, U>::value>>
-  BasicMember(const BasicPersistent<U, PersistentWeaknessPolicy,
-                                    PersistentLocationPolicy,
-                                    PersistentCheckingPolicy>& p)
+  BasicMember(  // NOLINT
+      const BasicPersistent<U, PersistentWeaknessPolicy,
+                            PersistentLocationPolicy, PersistentCheckingPolicy>&
+          p)
       : BasicMember(p.Get()) {}
 
-  // Copy assignment.
   BasicMember& operator=(const BasicMember& other) {
     return operator=(other.Get());
   }
-  // Allow heterogeneous copy assignment.
+  // Allow heterogeneous assignment.
   template <typename U, typename OtherWeaknessTag, typename OtherBarrierPolicy,
             typename OtherCheckingPolicy,
             typename = std::enable_if_t<std::is_base_of<T, U>::value>>
@@ -126,22 +65,6 @@ class BasicMember final : private MemberBase, private CheckingPolicy {
       const BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy,
                         OtherCheckingPolicy>& other) {
     return operator=(other.Get());
-  }
-  // Move assignment.
-  BasicMember& operator=(BasicMember&& other) noexcept {
-    operator=(other.Get());
-    other.Clear();
-    return *this;
-  }
-  // Heterogeneous move assignment.
-  template <typename U, typename OtherWeaknessTag, typename OtherBarrierPolicy,
-            typename OtherCheckingPolicy,
-            typename = std::enable_if_t<std::is_base_of<T, U>::value>>
-  BasicMember& operator=(BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy,
-                                     OtherCheckingPolicy>&& other) noexcept {
-    operator=(other.Get());
-    other.Clear();
-    return *this;
   }
   // Assignment from Persistent.
   template <typename U, typename PersistentWeaknessPolicy,
@@ -179,20 +102,13 @@ class BasicMember final : private MemberBase, private CheckingPolicy {
   }
 
   explicit operator bool() const { return Get(); }
-  operator T*() const { return Get(); }
+  operator T*() const { return Get(); }  // NOLINT
   T* operator->() const { return Get(); }
   T& operator*() const { return *Get(); }
 
-  // CFI cast exemption to allow passing SentinelPointer through T* and support
-  // heterogeneous assignments between different Member and Persistent handles
-  // based on their actual types.
-  V8_CLANG_NO_SANITIZE("cfi-unrelated-cast") T* Get() const {
+  T* Get() const {
     // Executed by the mutator, hence non atomic load.
-    //
-    // The const_cast below removes the constness from MemberBase storage. The
-    // following static_cast re-adds any constness if specified through the
-    // user-visible template parameter T.
-    return static_cast<T*>(const_cast<void*>(MemberBase::GetRaw()));
+    return raw_;
   }
 
   void Clear() { SetRawAtomic(nullptr); }
@@ -203,48 +119,47 @@ class BasicMember final : private MemberBase, private CheckingPolicy {
     return result;
   }
 
-  const T** GetSlotForTesting() const {
-    return reinterpret_cast<const T**>(GetRawSlot());
-  }
-
  private:
-  const T* GetRawAtomic() const {
-    return static_cast<const T*>(MemberBase::GetRawAtomic());
+  void SetRawAtomic(T* raw) {
+    reinterpret_cast<std::atomic<T*>*>(&raw_)->store(raw,
+                                                     std::memory_order_relaxed);
+  }
+  T* GetRawAtomic() const {
+    return reinterpret_cast<const std::atomic<T*>*>(&raw_)->load(
+        std::memory_order_relaxed);
   }
 
   void InitializingWriteBarrier() const {
-    WriteBarrierPolicy::InitializingBarrier(GetRawSlot(), GetRaw());
+    WriteBarrierPolicy::InitializingBarrier(
+        reinterpret_cast<const void*>(&raw_), static_cast<const void*>(raw_));
   }
   void AssigningWriteBarrier() const {
-    WriteBarrierPolicy::AssigningBarrier(GetRawSlot(), GetRaw());
+    WriteBarrierPolicy::AssigningBarrier(reinterpret_cast<const void*>(&raw_),
+                                         static_cast<const void*>(raw_));
   }
 
-  void ClearFromGC() const { MemberBase::ClearFromGC(); }
-
-  T* GetFromGC() const { return Get(); }
+  T* raw_ = nullptr;
 
   friend class cppgc::Visitor;
-  template <typename U>
-  friend struct cppgc::TraceTrait;
 };
 
 template <typename T1, typename WeaknessTag1, typename WriteBarrierPolicy1,
           typename CheckingPolicy1, typename T2, typename WeaknessTag2,
           typename WriteBarrierPolicy2, typename CheckingPolicy2>
-bool operator==(const BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1,
-                                  CheckingPolicy1>& member1,
-                const BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2,
-                                  CheckingPolicy2>& member2) {
+bool operator==(
+    BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1, CheckingPolicy1> member1,
+    BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2, CheckingPolicy2>
+        member2) {
   return member1.Get() == member2.Get();
 }
 
 template <typename T1, typename WeaknessTag1, typename WriteBarrierPolicy1,
           typename CheckingPolicy1, typename T2, typename WeaknessTag2,
           typename WriteBarrierPolicy2, typename CheckingPolicy2>
-bool operator!=(const BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1,
-                                  CheckingPolicy1>& member1,
-                const BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2,
-                                  CheckingPolicy2>& member2) {
+bool operator!=(
+    BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1, CheckingPolicy1> member1,
+    BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2, CheckingPolicy2>
+        member2) {
   return !(member1 == member2);
 }
 

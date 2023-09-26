@@ -26,10 +26,10 @@ const getFileName = (i) => path.join(tmpdir.path, `writev_sync_${i}.txt`);
   const expectedLength = bufferArr.length * buffer.byteLength;
 
   let written = fs.writevSync(fd, [Buffer.from('')], null);
-  assert.strictEqual(written, 0);
+  assert.deepStrictEqual(written, 0);
 
   written = fs.writevSync(fd, bufferArr, null);
-  assert.strictEqual(written, expectedLength);
+  assert.deepStrictEqual(written, expectedLength);
 
   fs.closeSync(fd);
 
@@ -46,31 +46,21 @@ const getFileName = (i) => path.join(tmpdir.path, `writev_sync_${i}.txt`);
   const expectedLength = bufferArr.length * buffer.byteLength;
 
   let written = fs.writevSync(fd, [Buffer.from('')]);
-  assert.strictEqual(written, 0);
+  assert.deepStrictEqual(written, 0);
 
   written = fs.writevSync(fd, bufferArr);
-  assert.strictEqual(written, expectedLength);
+  assert.deepStrictEqual(written, expectedLength);
 
   fs.closeSync(fd);
 
   assert(Buffer.concat(bufferArr).equals(fs.readFileSync(filename)));
 }
 
-// fs.writevSync with empty array of buffers
-{
-  const filename = getFileName(3);
-  const fd = fs.openSync(filename, 'w');
-  const written = fs.writevSync(fd, []);
-  assert.strictEqual(written, 0);
-  fs.closeSync(fd);
-
-}
-
 /**
  * Testing with wrong input types
  */
 {
-  const filename = getFileName(4);
+  const filename = getFileName(3);
   const fd = fs.openSync(filename, 'w');
 
   [false, 'test', {}, [{}], ['sdf'], null, undefined].forEach((i) => {

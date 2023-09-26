@@ -28,7 +28,7 @@ process.on('exit', () => {
 
 process.stderr.write = (data) => {
   if (writeTimes === 0)
-    assert.match(data, leakWarning);
+    assert.ok(leakWarning.test(data));
   else
     assert.fail('stderr.write should be called only once');
 

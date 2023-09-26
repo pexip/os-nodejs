@@ -5,15 +5,11 @@
 #ifndef V8_DIAGNOSTICS_CODE_TRACER_H_
 #define V8_DIAGNOSTICS_CODE_TRACER_H_
 
-#include "src/base/optional.h"
-#include "src/base/platform/wrappers.h"
-#include "src/base/strings.h"
-#include "src/base/vector.h"
 #include "src/common/globals.h"
 #include "src/flags/flags.h"
 #include "src/utils/allocation.h"
-#include "src/utils/ostreams.h"
 #include "src/utils/utils.h"
+#include "src/utils/vector.h"
 
 namespace v8 {
 namespace internal {
@@ -27,19 +23,18 @@ class CodeTracer final : public Malloced {
     }
 
     if (FLAG_redirect_code_traces_to != nullptr) {
-      base::StrNCpy(filename_, FLAG_redirect_code_traces_to,
-                    filename_.length());
+      StrNCpy(filename_, FLAG_redirect_code_traces_to, filename_.length());
     } else if (isolate_id >= 0) {
-      base::SNPrintF(filename_, "code-%d-%d.asm",
-                     base::OS::GetCurrentProcessId(), isolate_id);
+      SNPrintF(filename_, "code-%d-%d.asm", base::OS::GetCurrentProcessId(),
+               isolate_id);
     } else {
-      base::SNPrintF(filename_, "code-%d.asm", base::OS::GetCurrentProcessId());
+      SNPrintF(filename_, "code-%d.asm", base::OS::GetCurrentProcessId());
     }
 
     WriteChars(filename_.begin(), "", 0, false);
   }
 
-  class V8_NODISCARD Scope {
+  class Scope {
    public:
     explicit Scope(CodeTracer* tracer) : tracer_(tracer) { tracer->OpenFile(); }
     ~Scope() { tracer_->CloseFile(); }
@@ -48,28 +43,6 @@ class CodeTracer final : public Malloced {
 
    private:
     CodeTracer* tracer_;
-  };
-
-  class V8_NODISCARD StreamScope : public Scope {
-   public:
-    explicit StreamScope(CodeTracer* tracer) : Scope(tracer) {
-      FILE* file = this->file();
-      if (file == stdout) {
-        stdout_stream_.emplace();
-      } else {
-        file_stream_.emplace(file);
-      }
-    }
-
-    std::ostream& stream() {
-      if (stdout_stream_.has_value()) return stdout_stream_.value();
-      return file_stream_.value();
-    }
-
-   private:
-    // Exactly one of these two will be initialized.
-    base::Optional<StdoutStream> stdout_stream_;
-    base::Optional<OFStream> file_stream_;
   };
 
   void OpenFile() {
@@ -94,7 +67,7 @@ class CodeTracer final : public Malloced {
 
     if (--scope_depth_ == 0) {
       DCHECK_NOT_NULL(file_);
-      base::Fclose(file_);
+      fclose(file_);
       file_ = nullptr;
     }
   }
@@ -104,7 +77,7 @@ class CodeTracer final : public Malloced {
  private:
   static bool ShouldRedirect() { return FLAG_redirect_code_traces; }
 
-  base::EmbeddedVector<char, 128> filename_;
+  EmbeddedVector<char, 128> filename_;
   FILE* file_;
   int scope_depth_;
 };

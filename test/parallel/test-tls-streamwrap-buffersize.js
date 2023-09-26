@@ -59,8 +59,9 @@ const net = require('net');
           assert.strictEqual(client.bufferSize, i);
         }
 
-        client.on('end', common.mustCall());
-        client.on('close', common.mustCall(() => {
+        // It seems that tlsSockets created from sockets of `Duplex` emit no
+        // "finish" events. We use "end" event instead.
+        client.on('end', common.mustCall(() => {
           assert.strictEqual(client.bufferSize, undefined);
         }));
 

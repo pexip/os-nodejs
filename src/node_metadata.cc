@@ -6,21 +6,12 @@
 #include "node.h"
 #include "util.h"
 #include "uv.h"
-#include "uvwasi.h"
 #include "v8.h"
 #include "zlib.h"
 
 #if HAVE_OPENSSL
 #include <openssl/opensslv.h>
-#if NODE_OPENSSL_HAS_QUIC
-#include <openssl/quic.h>
-#endif
 #endif  // HAVE_OPENSSL
-
-#ifdef OPENSSL_INFO_QUIC
-#include <ngtcp2/version.h>
-#include <nghttp3/version.h>
-#endif
 
 #ifdef NODE_HAVE_I18N_SUPPORT
 #include <unicode/timezone.h>
@@ -36,16 +27,21 @@ Metadata metadata;
 }
 
 #if HAVE_OPENSSL
-static constexpr size_t search(const char* s, char c, size_t n = 0) {
-  return *s == c ? n : search(s + 1, c, n + 1);
+constexpr int search(const char* s, int n, int c) {
+  return *s == c ? n : search(s + 1, n + 1, c);
 }
 
-static inline std::string GetOpenSSLVersion() {
+std::string GetOpenSSLVersion() {
   // sample openssl version string format
   // for reference: "OpenSSL 1.1.0i 14 Aug 2018"
-  constexpr size_t start = search(OPENSSL_VERSION_TEXT, ' ') + 1;
-  constexpr size_t len = search(&OPENSSL_VERSION_TEXT[start], ' ');
-  return std::string(OPENSSL_VERSION_TEXT, start, len);
+  char buf[128];
+  const char* etext = OPENSSL_VERSION_TEXT;
+  const int start = search(etext, 0, ' ') + 1;
+  etext += start;
+  const int end = search(etext, start, ' ');
+  const int len = end - start;
+  snprintf(buf, sizeof(buf), "%.*s", len, &OPENSSL_VERSION_TEXT[start]);
+  return std::string(buf);
 }
 #endif  // HAVE_OPENSSL
 
@@ -91,8 +87,6 @@ Metadata::Versions::Versions() {
     "." +
     std::to_string(BrotliEncoderVersion() & 0xFFF);
 
-  uvwasi = UVWASI_VERSION_STRING;
-
 #if HAVE_OPENSSL
   openssl = GetOpenSSLVersion();
 #endif
@@ -101,11 +95,6 @@ Metadata::Versions::Versions() {
   icu = U_ICU_VERSION;
   unicode = U_UNICODE_VERSION;
 #endif  // NODE_HAVE_I18N_SUPPORT
-
-#ifdef OPENSSL_INFO_QUIC
-  ngtcp2 = NGTCP2_VERSION;
-  nghttp3 = NGHTTP3_VERSION;
-#endif
 }
 
 Metadata::Release::Release() : name(NODE_RELEASE) {

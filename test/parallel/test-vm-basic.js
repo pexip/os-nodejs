@@ -323,14 +323,6 @@ const vm = require('vm');
     global
   );
 
-  // Test compileFunction produceCachedData option
-  const result = vm.compileFunction('console.log("Hello, World!")', [], {
-    produceCachedData: true,
-  });
-
-  assert.ok(result.cachedDataProduced);
-  assert.ok(result.cachedData.length > 0);
-
   // Resetting value
   Error.stackTraceLimit = oldLimit;
 }

@@ -16,7 +16,6 @@ const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
 process.throwDeprecation = true;
-process.on('warning', common.mustNotCall());
 
 const defaultHistoryPath = path.join(tmpdir.path, '.node_repl_history');
 
@@ -74,7 +73,6 @@ const tests = [
     env: { NODE_REPL_HISTORY: defaultHistoryPath },
     test: [ 'let ab = 45', ENTER,
             '555 + 909', ENTER,
-            'let autocompleteMe = 123', ENTER,
             '{key : {key2 :[] }}', ENTER,
             'Array(100).fill(1).map((e, i) => i ** i)', LEFT, LEFT, DELETE,
             '2', ENTER],
@@ -83,7 +81,7 @@ const tests = [
   },
   {
     env: { NODE_REPL_HISTORY: defaultHistoryPath },
-    test: [UP, UP, UP, UP, UP, UP, DOWN, DOWN, DOWN, DOWN, DOWN, DOWN],
+    test: [UP, UP, UP, UP, UP, DOWN, DOWN, DOWN, DOWN, DOWN],
     expected: [prompt,
                `${prompt}Array(100).fill(1).map((e, i) => i ** 2)`,
                prev && '\n// [ 0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, ' +
@@ -93,7 +91,6 @@ const tests = [
                  ' 2025, 2116, 2209,...',
                `${prompt}{key : {key2 :[] }}`,
                prev && '\n// { key: { key2: [] } }',
-               `${prompt}let autocompleteMe = 123`,
                `${prompt}555 + 909`,
                prev && '\n// 1464',
                `${prompt}let ab = 45`,
@@ -101,7 +98,6 @@ const tests = [
                `${prompt}let ab = 45`,
                `${prompt}555 + 909`,
                prev && '\n// 1464',
-               `${prompt}let autocompleteMe = 123`,
                `${prompt}{key : {key2 :[] }}`,
                prev && '\n// { key: { key2: [] } }',
                `${prompt}Array(100).fill(1).map((e, i) => i ** 2)`,
@@ -131,7 +127,7 @@ const tests = [
     preview: false,
     showEscapeCodes: true,
     test: [
-      '55', UP, UP, UP, UP, UP, UP, UP, ENTER,
+      '55', UP, UP, UP, UP, UP, UP, ENTER,
     ],
     expected: [
       '\x1B[1G', '\x1B[0J', prompt, '\x1B[3G',
@@ -188,10 +184,10 @@ const tests = [
       ENTER,
       'veryLongName'.repeat(30),
       ENTER,
-      `${'\x1B[90m \x1B[39m'.repeat(229)} aut`,
+      `${'\x1B[90m \x1B[39m'.repeat(235)} fun`,
       ESCAPE,
       ENTER,
-      `${' '.repeat(230)} aut`,
+      `${' '.repeat(236)} fun`,
       ESCAPE,
       ENTER,
     ],
@@ -239,20 +235,19 @@ const tests = [
       prompt, '\x1B[3G',
       // 1. UP
       // This exceeds the maximum columns (250):
-      // Whitespace + prompt + ' // '.length + 'autocompleteMe'.length
-      // 230 + 2 + 4 + 14
+      // Whitespace + prompt + ' // '.length + 'function'.length
+      // 236 + 2 + 4 + 8
       '\x1B[1G', '\x1B[0J',
-      `${prompt}${' '.repeat(230)} aut`, '\x1B[237G',
-      ' // ocompleteMe', '\x1B[237G',
-      '\n// 123', '\x1B[237G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      `${prompt}${' '.repeat(236)} fun`, '\x1B[243G',
+      ' // ction', '\x1B[243G',
+      ' // ction', '\x1B[243G',
       '\x1B[0K',
       // 2. UP
       '\x1B[1G', '\x1B[0J',
-      `${prompt}${' '.repeat(229)} aut`, '\x1B[236G',
-      ' // ocompleteMe', '\x1B[236G',
-      '\n// 123', '\x1B[236G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      `${prompt}${' '.repeat(235)} fun`, '\x1B[242G',
+      // TODO(BridgeAR): Investigate why the preview is generated twice.
+      ' // ction', '\x1B[242G',
+      ' // ction', '\x1B[242G',
       // Preview cleanup
       '\x1B[0K',
       // 3. UP
@@ -330,8 +325,8 @@ const tests = [
     skip: !process.features.inspector,
     checkTotal: true,
     test: [
-      'au',
-      't',
+      'fu',
+      'n',
       RIGHT,
       BACKSPACE,
       LEFT,
@@ -357,93 +352,74 @@ const tests = [
     // K = Erase in line; 0 = right; 1 = left; 2 = total
     expected: [
       // 0.
-      // 'a'
-      '\x1B[1G', '\x1B[0J', prompt, '\x1B[3G', 'a',
+      // 'f'
+      '\x1B[1G', '\x1B[0J', prompt, '\x1B[3G', 'f',
       // 'u'
-      'u', ' // tocompleteMe', '\x1B[5G',
-      '\n// 123', '\x1B[5G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
-      // 't' - Cleanup
+      'u', ' // nction', '\x1B[5G',
+      // 'n' - Cleanup
       '\x1B[0K',
-      't', ' // ocompleteMe', '\x1B[6G',
-      '\n// 123', '\x1B[6G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      'n', ' // ction', '\x1B[6G',
       // 1. Right. Cleanup
       '\x1B[0K',
-      'ocompleteMe',
-      '\n// 123', '\x1B[17G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      'ction',
       // 2. Backspace. Refresh
-      '\x1B[1G', '\x1B[0J', `${prompt}autocompleteM`, '\x1B[16G',
+      '\x1B[1G', '\x1B[0J', `${prompt}functio`, '\x1B[10G',
       // Autocomplete and refresh?
-      ' // e', '\x1B[16G',
-      '\n// 123', '\x1B[16G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      ' // n', '\x1B[10G', ' // n', '\x1B[10G',
       // 3. Left. Cleanup
       '\x1B[0K',
-      '\x1B[1D', '\x1B[16G', ' // e', '\x1B[15G',
+      '\x1B[1D', '\x1B[10G', ' // n', '\x1B[9G',
       // 4. Left. Cleanup
-      '\x1B[16G', '\x1B[0K', '\x1B[15G',
-      '\x1B[1D', '\x1B[16G', ' // e', '\x1B[14G',
+      '\x1B[10G', '\x1B[0K', '\x1B[9G',
+      '\x1B[1D', '\x1B[10G', ' // n', '\x1B[8G',
       // 5. 'A' - Cleanup
-      '\x1B[16G', '\x1B[0K', '\x1B[14G',
+      '\x1B[10G', '\x1B[0K', '\x1B[8G',
       // Refresh
-      '\x1B[1G', '\x1B[0J', `${prompt}autocompletAeM`, '\x1B[15G',
+      '\x1B[1G', '\x1B[0J', `${prompt}functAio`, '\x1B[9G',
       // 6. Backspace. Refresh
-      '\x1B[1G', '\x1B[0J', `${prompt}autocompleteM`,
-      '\x1B[14G', '\x1B[16G', ' // e',
-      '\x1B[14G', '\x1B[16G', ' // e',
-      '\x1B[14G', '\x1B[16G',
+      '\x1B[1G', '\x1B[0J', `${prompt}functio`, '\x1B[8G', '\x1B[10G', ' // n',
+      '\x1B[8G', '\x1B[10G', ' // n',
+      '\x1B[8G', '\x1B[10G',
       // 7. Go to end. Cleanup
-      '\x1B[0K', '\x1B[14G', '\x1B[2C',
-      'e',
-      '\n// 123', '\x1B[17G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      '\x1B[0K', '\x1B[8G', '\x1B[2C',
+      'n',
       // 8. Backspace. Refresh
-      '\x1B[1G', '\x1B[0J', `${prompt}autocompleteM`, '\x1B[16G',
+      '\x1B[1G', '\x1B[0J', `${prompt}functio`, '\x1B[10G',
       // Autocomplete
-      ' // e', '\x1B[16G',
-      '\n// 123', '\x1B[16G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      ' // n', '\x1B[10G', ' // n', '\x1B[10G',
       // 9. Word left. Cleanup
-      '\x1B[0K', '\x1B[13D', '\x1B[16G', ' // e', '\x1B[3G', '\x1B[16G',
+      '\x1B[0K', '\x1B[7D', '\x1B[10G', ' // n', '\x1B[3G', '\x1B[10G',
       // 10. Word right. Cleanup
-      '\x1B[0K', '\x1B[3G', '\x1B[13C', ' // e', '\x1B[16G',
-      '\n// 123', '\x1B[16G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      '\x1B[0K', '\x1B[3G', '\x1B[7C', ' // n', '\x1B[10G',
       // 11. ESCAPE
-      '\x1B[0K',
+      '\x1B[0K', ' // n', '\x1B[10G', '\x1B[0K',
       // 12. ENTER
       '\r\n',
-      'Uncaught ReferenceError: autocompleteM is not defined\n',
+      'Uncaught ReferenceError: functio is not defined\n',
       '\x1B[1G', '\x1B[0J',
       // 13. UP
       prompt, '\x1B[3G', '\x1B[1G', '\x1B[0J',
-      `${prompt}autocompleteM`, '\x1B[16G',
-      ' // e', '\x1B[16G',
-      '\n// 123', '\x1B[16G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
+      `${prompt}functio`, '\x1B[10G',
+      ' // n', '\x1B[10G',
+      ' // n', '\x1B[10G',
       // 14. LEFT
-      '\x1B[0K', '\x1B[1D', '\x1B[16G',
-      ' // e', '\x1B[15G', '\x1B[16G',
+      '\x1B[0K', '\x1B[1D',
+      '\x1B[10G', ' // n', '\x1B[9G', '\x1B[10G',
       // 15. ENTER
-      '\x1B[0K', '\x1B[15G', '\x1B[1C',
+      '\x1B[0K', '\x1B[9G', '\x1B[1C',
       '\r\n',
-      'Uncaught ReferenceError: autocompleteM is not defined\n',
+      'Uncaught ReferenceError: functio is not defined\n',
       '\x1B[1G', '\x1B[0J',
-      prompt, '\x1B[3G',
+      '> ', '\x1B[3G',
       // 16. UP
       '\x1B[1G', '\x1B[0J',
-      `${prompt}autocompleteM`, '\x1B[16G',
-      ' // e', '\x1B[16G',
-      '\n// 123', '\x1B[16G',
-      '\x1B[1A', '\x1B[1B', '\x1B[2K', '\x1B[1A',
-      '\x1B[0K',
+      '> functio', '\x1B[10G',
+      ' // n', '\x1B[10G',
+      ' // n', '\x1B[10G', '\x1B[0K',
       // 17. ENTER
-      'e', '\r\n',
-      '123\n',
+      'n', '\r\n',
       '\x1B[1G', '\x1B[0J',
-      prompt, '\x1B[3G',
+      '... ', '\x1B[5G',
       '\r\n',
     ],
     clean: true
@@ -576,42 +552,6 @@ const tests = [
       yield ENTER;
     })(),
     expected: [],
-    clean: false
-  },
-  {
-    env: { NODE_REPL_HISTORY: defaultHistoryPath },
-    test: ['const util = {}', ENTER,
-           'ut', RIGHT, ENTER],
-    expected: [
-      prompt, ...'const util = {}',
-      'undefined\n',
-      prompt, ...'ut', ...(prev ? [' // il', '\n// {}',
-                                   'il', '\n// {}'] : [' // il', 'il']),
-      '{}\n',
-      prompt,
-    ],
-    clean: false
-  },
-  {
-    env: { NODE_REPL_HISTORY: defaultHistoryPath },
-    test: [
-      'const utilDesc = Reflect.getOwnPropertyDescriptor(globalThis, "util")',
-      ENTER,
-      'globalThis.util = {}', ENTER,
-      'ut', RIGHT, ENTER,
-      'Reflect.defineProperty(globalThis, "util", utilDesc)', ENTER],
-    expected: [
-      prompt, ...'const utilDesc = ' +
-      'Reflect.getOwnPropertyDescriptor(globalThis, "util")',
-      'undefined\n',
-      prompt, ...'globalThis.util = {}',
-      '{}\n',
-      prompt, ...'ut', ' // il', 'il',
-      '{}\n',
-      prompt, ...'Reflect.defineProperty(globalThis, "util", utilDesc)',
-      'true\n',
-      prompt,
-    ],
     clean: false
   },
 ];

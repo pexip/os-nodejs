@@ -15,17 +15,10 @@ const debuglog = (arg) => {
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
-let openFd;
-
-fs.open(`${tmpdir.path}/dummy`, 'wx+', common.mustCall((err, fd) => {
-  debuglog('fs open() callback');
-  assert.ifError(err);
-  openFd = fd;
-}));
-debuglog('waiting for callback');
-
-process.on('beforeExit', common.mustCall(() => {
-  if (openFd) {
-    fs.closeSync(openFd);
-  }
-}));
+{
+  fs.open(`${tmpdir.path}/dummy`, 'wx+', common.mustCall((err, fd) => {
+    debuglog('fs open() callback');
+    assert.ifError(err);
+  }));
+  debuglog('waiting for callback');
+}

@@ -33,15 +33,6 @@ std::vector<T*> FilterDeclarables(const std::vector<Declarable*> list) {
   return result;
 }
 
-inline std::string UnwrapTNodeTypeName(const std::string& generates) {
-  if (generates.length() < 7 || generates.substr(0, 6) != "TNode<" ||
-      generates.substr(generates.length() - 1, 1) != ">") {
-    ReportError("generated type \"", generates,
-                "\" should be of the form \"TNode<...>\"");
-  }
-  return generates.substr(6, generates.length() - 7);
-}
-
 class Declarations {
  public:
   static std::vector<Declarable*> TryLookup(const QualifiedName& name) {
@@ -93,9 +84,9 @@ class Declarations {
   static Namespace* DeclareNamespace(const std::string& name);
   static TypeAlias* DeclareType(const Identifier* name, const Type* type);
 
-  static TypeAlias* PredeclareTypeAlias(const Identifier* name,
-                                        TypeDeclaration* type,
-                                        bool redeclaration);
+  static const TypeAlias* PredeclareTypeAlias(const Identifier* name,
+                                              TypeDeclaration* type,
+                                              bool redeclaration);
   static TorqueMacro* CreateTorqueMacro(std::string external_name,
                                         std::string readable_name,
                                         bool exported_to_csa,
@@ -132,9 +123,8 @@ class Declarations {
   static RuntimeFunction* DeclareRuntimeFunction(const std::string& name,
                                                  const Signature& signature);
 
-  static ExternConstant* DeclareExternConstant(Identifier* name,
-                                               const Type* type,
-                                               std::string value);
+  static void DeclareExternConstant(Identifier* name, const Type* type,
+                                    std::string value);
   static NamespaceConstant* DeclareNamespaceConstant(Identifier* name,
                                                      const Type* type,
                                                      Expression* body);

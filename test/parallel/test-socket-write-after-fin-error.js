@@ -16,20 +16,18 @@ let gotServerError = false;
 
 const server = net.createServer(function(sock) {
   sock.setEncoding('utf8');
-  sock.on('error', function() {});
+  sock.on('error', function(er) {
+    console.error(`${er.code}: ${er.message}`);
+    gotServerError = er;
+  });
 
   sock.on('data', function(c) {
     serverData += c;
   });
   sock.on('end', function() {
     gotServerEnd = true;
-    setImmediate(() => {
-      sock.write(serverData, function(er) {
-        console.error(`${er.code}: ${er.message}`);
-        gotServerError = er;
-      });
-      sock.end();
-    });
+    sock.write(serverData);
+    sock.end();
   });
   server.close();
 });

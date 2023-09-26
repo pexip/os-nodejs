@@ -50,11 +50,7 @@ function main(conf) {
     buf.fill('x');
   }
 
-  try {
-    fs.unlinkSync(filename);
-  } catch {
-    // Continue regardless of error.
-  }
+  try { fs.unlinkSync(filename); } catch {}
   const ws = fs.createWriteStream(filename);
   ws.on('close', runTest.bind(null, filesize, highWaterMark, encoding, n));
   ws.on('drain', write);
@@ -85,11 +81,7 @@ function runTest(filesize, highWaterMark, encoding, n) {
   });
 
   rs.on('end', () => {
-    try {
-      fs.unlinkSync(filename);
-    } catch {
-      // Continue regardless of error.
-    }
+    try { fs.unlinkSync(filename); } catch {}
     // MB/sec
     bench.end(bytes / (1024 * 1024));
   });

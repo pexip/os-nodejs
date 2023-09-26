@@ -5,8 +5,9 @@
 #ifndef V8_DEBUG_DEBUG_SCOPES_H_
 #define V8_DEBUG_DEBUG_SCOPES_H_
 
+#include <vector>
+
 #include "src/debug/debug-frames.h"
-#include "src/parsing/parse-info.h"
 
 namespace v8 {
 namespace internal {
@@ -109,7 +110,6 @@ class ScopeIterator {
 
  private:
   Isolate* isolate_;
-  std::unique_ptr<ReusableUnoptimizedCompileState> reusable_compile_state_;
   std::unique_ptr<ParseInfo> info_;
   FrameInspector* const frame_inspector_ = nullptr;
   Handle<JSGeneratorObject> generator_;
@@ -141,8 +141,8 @@ class ScopeIterator {
 
   void UnwrapEvaluationContext();
 
-  using Visitor = std::function<bool(Handle<String> name, Handle<Object> value,
-                                     ScopeType scope_type)>;
+  using Visitor =
+      std::function<bool(Handle<String> name, Handle<Object> value)>;
 
   Handle<JSObject> WithContextExtension();
 
@@ -159,14 +159,12 @@ class ScopeIterator {
 
   // Helper functions.
   void VisitScope(const Visitor& visitor, Mode mode) const;
-  void VisitLocalScope(const Visitor& visitor, Mode mode,
-                       ScopeType scope_type) const;
+  void VisitLocalScope(const Visitor& visitor, Mode mode) const;
   void VisitScriptScope(const Visitor& visitor) const;
   void VisitModuleScope(const Visitor& visitor) const;
-  bool VisitLocals(const Visitor& visitor, Mode mode,
-                   ScopeType scope_type) const;
+  bool VisitLocals(const Visitor& visitor, Mode mode) const;
   bool VisitContextLocals(const Visitor& visitor, Handle<ScopeInfo> scope_info,
-                          Handle<Context> context, ScopeType scope_type) const;
+                          Handle<Context> context) const;
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(ScopeIterator);
 };

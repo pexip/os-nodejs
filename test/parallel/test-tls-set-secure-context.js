@@ -9,9 +9,7 @@ if (!common.hasCrypto)
 // secure context is changed.
 
 const assert = require('assert');
-const events = require('events');
 const https = require('https');
-const timers = require('timers/promises');
 const fixtures = require('../common/fixtures');
 const credentialOptions = [
   {
@@ -45,51 +43,63 @@ server.listen(0, common.mustCall(() => {
   const { port } = server.address();
   const firstRequest = makeRequest(port, 1);
 
-  (async function makeRemainingRequests() {
+  async function makeRemainingRequests() {
     // Wait until the first request is guaranteed to have been handled.
-    while (!firstResponse) {
-      await timers.setImmediate();
+    if (!firstResponse) {
+      return setImmediate(makeRemainingRequests);
     }
 
     assert.strictEqual(await makeRequest(port, 2), 'success');
 
     server.setSecureContext(credentialOptions[1]);
     firstResponse.write('request-');
-    const errorMessageRegex = common.hasOpenSSL3 ?
-      /^Error: self-signed certificate$/ :
-      /^Error: self signed certificate$/;
-    await assert.rejects(makeRequest(port, 3), errorMessageRegex);
+    await assert.rejects(async () => {
+      await makeRequest(port, 3);
+    }, /^Error: self signed certificate$/);
 
     server.setSecureContext(credentialOptions[0]);
     assert.strictEqual(await makeRequest(port, 4), 'success');
 
     server.setSecureContext(credentialOptions[1]);
     firstResponse.end('fun!');
-    await assert.rejects(makeRequest(port, 5), errorMessageRegex);
+    await assert.rejects(async () => {
+      await makeRequest(port, 5);
+    }, /^Error: self signed certificate$/);
 
     assert.strictEqual(await firstRequest, 'multi-request-success-fun!');
     server.close();
-  })().then(common.mustCall());
+  }
+
+  makeRemainingRequests();
 }));
 
-async function makeRequest(port, id) {
-  const options = {
-    rejectUnauthorized: true,
-    ca: credentialOptions[0].ca,
-    servername: 'agent1',
-    headers: { id },
-    agent: new https.Agent()
-  };
+function makeRequest(port, id) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      rejectUnauthorized: true,
+      ca: credentialOptions[0].ca,
+      servername: 'agent1',
+      headers: { id }
+    };
 
-  const req = https.get(`https://localhost:${port}`, options);
+    let errored = false;
+    https.get(`https://localhost:${port}`, options, (res) => {
+      let response = '';
 
-  let errored = false;
-  req.on('error', () => errored = true);
-  req.on('finish', () => assert.strictEqual(errored, false));
+      res.setEncoding('utf8');
 
-  const [res] = await events.once(req, 'response');
-  res.setEncoding('utf8');
-  let response = '';
-  for await (const chunk of res) response += chunk;
-  return response;
+      res.on('data', (chunk) => {
+        response += chunk;
+      });
+
+      res.on('end', common.mustCall(() => {
+        resolve(response);
+      }));
+    }).on('error', (err) => {
+      errored = true;
+      reject(err);
+    }).on('finish', () => {
+      assert.strictEqual(errored, false);
+    });
+  });
 }

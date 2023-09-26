@@ -29,7 +29,7 @@ const assert = require('assert');
 const cluster = require('cluster');
 const msg = 'foo';
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   const worker = cluster.fork();
 
   worker.on('message', common.mustCall((message) => {

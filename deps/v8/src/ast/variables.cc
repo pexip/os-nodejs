@@ -30,15 +30,14 @@ bool Variable::IsGlobalObjectProperty() const {
          scope_ != nullptr && scope_->is_script_scope();
 }
 
-bool Variable::IsReplGlobal() const {
-  return scope()->is_repl_mode_scope() &&
-         (mode() == VariableMode::kLet || mode() == VariableMode::kConst);
+bool Variable::IsReplGlobalLet() const {
+  return scope()->is_repl_mode_scope() && mode() == VariableMode::kLet;
 }
 
 void Variable::RewriteLocationForRepl() {
   DCHECK(scope_->is_repl_mode_scope());
 
-  if (mode() == VariableMode::kLet || mode() == VariableMode::kConst) {
+  if (mode() == VariableMode::kLet) {
     DCHECK_EQ(location(), VariableLocation::CONTEXT);
     bit_field_ =
         LocationField::update(bit_field_, VariableLocation::REPL_GLOBAL);

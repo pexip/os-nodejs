@@ -8,8 +8,7 @@ const resource = new ResourceLoader(workerData.wptPath);
 
 global.self = global;
 global.GLOBAL = {
-  isWindow() { return false; },
-  isShadowRealm() { return false; },
+  isWindow() { return false; }
 };
 global.require = require;
 
@@ -17,7 +16,7 @@ global.require = require;
 // in Node.js, but some tests and harness depend on this to pull
 // resources.
 global.fetch = function fetch(file) {
-  return resource.read(workerData.testRelativePath, file, true);
+  return resource.read(workerData.filename, file, true);
 };
 
 if (workerData.initScript) {
@@ -25,7 +24,7 @@ if (workerData.initScript) {
 }
 
 runInThisContext(workerData.harness.code, {
-  filename: workerData.harness.filename,
+  filename: workerData.harness.filename
 });
 
 // eslint-disable-next-line no-undef

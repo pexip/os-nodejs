@@ -10,10 +10,7 @@ for (const entryPoint of entryPoints) {
   try {
     execFileSync(node, [entryPoint], { stdio: 'pipe' });
   } catch (e) {
-    const error = e.toString();
-    assert.match(error, /MODULE_NOT_FOUND/);
-    assert.match(error, /Cannot find module/);
-    assert(error.includes(entryPoint));
+    assert(e.toString().match(/Error: Cannot find module/));
     continue;
   }
   assert.fail('Executing node with inexistent entry point should ' +

@@ -5,6 +5,7 @@
 #ifndef V8_UTILS_ADDRESS_MAP_H_
 #define V8_UTILS_ADDRESS_MAP_H_
 
+#include "include/v8.h"
 #include "src/base/hashmap.h"
 #include "src/common/assert-scope.h"
 #include "src/objects/heap-object.h"
@@ -55,8 +56,6 @@ class HeapObjectToIndexHashMap : public PointerToIndexHashMap<HeapObject> {};
 class RootIndexMap {
  public:
   explicit RootIndexMap(Isolate* isolate);
-  RootIndexMap(const RootIndexMap&) = delete;
-  RootIndexMap& operator=(const RootIndexMap&) = delete;
 
   // Returns true on successful lookup and sets *|out_root_list|.
   bool Lookup(HeapObject obj, RootIndex* out_root_list) const {
@@ -71,6 +70,8 @@ class RootIndexMap {
 
  private:
   HeapObjectToIndexHashMap* map_;
+
+  DISALLOW_COPY_AND_ASSIGN(RootIndexMap);
 };
 
 }  // namespace internal

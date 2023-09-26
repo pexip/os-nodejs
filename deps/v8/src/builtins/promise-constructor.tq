@@ -36,7 +36,7 @@ HasAccessCheckFailed(implicit context: Context)(
   return false;
 }
 
-extern macro ConstructorBuiltinsAssembler::FastNewObject(
+extern macro ConstructorBuiltinsAssembler::EmitFastNewObject(
     Context, JSFunction, JSReceiver): JSObject;
 
 extern macro
@@ -50,7 +50,7 @@ PromiseConstructor(
     newTarget: JSAny)(executor: JSAny): JSAny {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (newTarget == Undefined) {
-    ThrowTypeError(MessageTemplate::kPromiseNewTargetUndefined);
+    ThrowTypeError(MessageTemplate::kNotAPromise, newTarget);
   }
 
   // 2. If IsCallable(executor) is false, throw a TypeError exception.
@@ -58,21 +58,22 @@ PromiseConstructor(
     ThrowTypeError(MessageTemplate::kResolverNotAFunction, executor);
   }
 
-  const promiseFun = *NativeContextSlot(ContextSlot::PROMISE_FUNCTION_INDEX);
+  const promiseFun = UnsafeCast<JSFunction>(
+      context[NativeContextSlot::PROMISE_FUNCTION_INDEX]);
 
-  // Throw no access type error if the stack looks fishy.
+  // Silently fail if the stack looks fishy.
   if (HasAccessCheckFailed(context, promiseFun, executor)) {
     IncrementUseCounter(
         context, SmiConstant(kPromiseConstructorReturnedUndefined));
-    runtime::ThrowNoAccess();
+    return Undefined;
   }
 
   let result: JSPromise;
   if (promiseFun == newTarget) {
     result = NewJSPromise();
   } else {
-    result = UnsafeCast<JSPromise>(
-        FastNewObject(context, promiseFun, UnsafeCast<JSReceiver>(newTarget)));
+    result = UnsafeCast<JSPromise>(EmitFastNewObject(
+        context, promiseFun, UnsafeCast<JSReceiver>(newTarget)));
     PromiseInit(result);
     RunAnyPromiseHookInit(result, Undefined);
   }
@@ -85,7 +86,7 @@ PromiseConstructor(
   const reject = funcs.reject;
   try {
     Call(context, UnsafeCast<Callable>(executor), Undefined, resolve, reject);
-  } catch (e, _message) {
+  } catch (e) {
     Call(context, reject, Undefined, e);
   }
 
@@ -100,10 +101,7 @@ PromisePrototypeCatch(
     js-implicit context: Context, receiver: JSAny)(onRejected: JSAny): JSAny {
   // 1. Let promise be the this value.
   // 2. Return ? Invoke(promise, "then", « undefined, onRejected »).
-  // This builtin is attached to JSFunction created by the bootstrapper so
-  // `context` is the native context.
-  check(Is<NativeContext>(context));
-  const nativeContext = UnsafeCast<NativeContext>(context);
+  const nativeContext = LoadNativeContext(context);
   return UnsafeCast<JSAny>(
       InvokeThen(nativeContext, receiver, Undefined, onRejected));
 }

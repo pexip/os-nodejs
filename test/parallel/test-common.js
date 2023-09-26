@@ -34,7 +34,7 @@ const { join } = require('path');
   const p = fixtures.path('leakedGlobal.js');
   execFile(process.execPath, [p], common.mustCall((err, stdout, stderr) => {
     assert.notStrictEqual(err.code, 0);
-    assert.match(stderr, /\bAssertionError\b.*\bUnexpected global\b.*\bgc\b/);
+    assert.ok(/\bAssertionError\b.*\bUnexpected global\b.*\bgc\b/.test(stderr));
   }));
 }
 
@@ -51,17 +51,14 @@ const { join } = require('path');
 
 // common.mustCall() tests
 assert.throws(function() {
-  // eslint-disable-next-line no-restricted-syntax
   common.mustCall(function() {}, 'foo');
 }, /^TypeError: Invalid exact value: foo$/);
 
 assert.throws(function() {
-  // eslint-disable-next-line no-restricted-syntax
   common.mustCall(function() {}, /foo/);
 }, /^TypeError: Invalid exact value: \/foo\/$/);
 
 assert.throws(function() {
-  // eslint-disable-next-line no-restricted-syntax
   common.mustCallAtLeast(function() {}, /foo/);
 }, /^TypeError: Invalid minimum value: \/foo\/$/);
 
@@ -73,20 +70,20 @@ assert.throws(
     message: /^fhqwhgads$/
   });
 
-const fnOnce = common.mustCall();
+const fnOnce = common.mustCall(() => {});
 fnOnce();
-const fnTwice = common.mustCall(2);
+const fnTwice = common.mustCall(() => {}, 2);
 fnTwice();
 fnTwice();
-const fnAtLeast1Called1 = common.mustCallAtLeast(1);
+const fnAtLeast1Called1 = common.mustCallAtLeast(() => {}, 1);
 fnAtLeast1Called1();
-const fnAtLeast1Called2 = common.mustCallAtLeast(1);
+const fnAtLeast1Called2 = common.mustCallAtLeast(() => {}, 1);
 fnAtLeast1Called2();
 fnAtLeast1Called2();
-const fnAtLeast2Called2 = common.mustCallAtLeast(2);
+const fnAtLeast2Called2 = common.mustCallAtLeast(() => {}, 2);
 fnAtLeast2Called2();
 fnAtLeast2Called2();
-const fnAtLeast2Called3 = common.mustCallAtLeast(2);
+const fnAtLeast2Called3 = common.mustCallAtLeast(() => {}, 2);
 fnAtLeast2Called3();
 fnAtLeast2Called3();
 fnAtLeast2Called3();
@@ -133,7 +130,7 @@ const HIJACK_TEST_ARRAY = [ 'foo\n', 'bar\n', 'baz\n' ];
 // Test `tmpdir`.
 {
   tmpdir.refresh();
-  assert.match(tmpdir.path, /\.tmp\.\d+/);
+  assert.ok(/\.tmp\.\d+/.test(tmpdir.path));
   const sentinelPath = join(tmpdir.path, 'gaga');
   writeFileSync(sentinelPath, 'googoo');
   tmpdir.refresh();

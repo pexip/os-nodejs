@@ -32,17 +32,16 @@ class BytecodeJumpTable;
 class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
  public:
   explicit BytecodeGenerator(
-      LocalIsolate* local_isolate, Zone* zone, UnoptimizedCompilationInfo* info,
+      Zone* zone, UnoptimizedCompilationInfo* info,
       const AstStringConstants* ast_string_constants,
-      std::vector<FunctionLiteral*>* eager_inner_literals,
-      Handle<Script> script);
+      std::vector<FunctionLiteral*>* eager_inner_literals);
 
   void GenerateBytecode(uintptr_t stack_limit);
-  template <typename IsolateT>
-  Handle<BytecodeArray> FinalizeBytecode(IsolateT* isolate,
+  template <typename LocalIsolate>
+  Handle<BytecodeArray> FinalizeBytecode(LocalIsolate* isolate,
                                          Handle<Script> script);
-  template <typename IsolateT>
-  Handle<ByteArray> FinalizeSourcePositionTable(IsolateT* isolate);
+  template <typename LocalIsolate>
+  Handle<ByteArray> FinalizeSourcePositionTable(LocalIsolate* isolate);
 
 #ifdef DEBUG
   int CheckBytecodeMatches(BytecodeArray bytecode);
@@ -72,7 +71,6 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
   class ExpressionResultScope;
   class FeedbackSlotCache;
   class IteratorRecord;
-  class MultipleEntryBlockContextScope;
   class LoopScope;
   class NaryCodeCoverageSlots;
   class OptionalChainNullLabelScope;
@@ -99,9 +97,7 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
                                            const AstRawString* name);
     static AssignmentLhsData KeyedProperty(Register object, Register key);
     static AssignmentLhsData PrivateMethodOrAccessor(AssignType type,
-                                                     Property* property,
-                                                     Register object,
-                                                     Register key);
+                                                     Property* property);
     static AssignmentLhsData NamedSuperProperty(
         RegisterList super_property_args);
     static AssignmentLhsData KeyedSuperProperty(
@@ -120,18 +116,11 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
       return object_expr_;
     }
     Register object() const {
-      DCHECK(assign_type_ == NAMED_PROPERTY || assign_type_ == KEYED_PROPERTY ||
-             assign_type_ == PRIVATE_METHOD ||
-             assign_type_ == PRIVATE_GETTER_ONLY ||
-             assign_type_ == PRIVATE_SETTER_ONLY ||
-             assign_type_ == PRIVATE_GETTER_AND_SETTER);
+      DCHECK(assign_type_ == NAMED_PROPERTY || assign_type_ == KEYED_PROPERTY);
       return object_;
     }
     Register key() const {
-      DCHECK(assign_type_ == KEYED_PROPERTY || assign_type_ == PRIVATE_METHOD ||
-             assign_type_ == PRIVATE_GETTER_ONLY ||
-             assign_type_ == PRIVATE_SETTER_ONLY ||
-             assign_type_ == PRIVATE_GETTER_AND_SETTER);
+      DCHECK(assign_type_ == KEYED_PROPERTY);
       return key_;
     }
     const AstRawString* name() const {
@@ -175,8 +164,8 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
   };
 
   void GenerateBytecodeBody();
-  template <typename IsolateT>
-  void AllocateDeferredConstants(IsolateT* isolate, Handle<Script> script);
+  template <typename LocalIsolate>
+  void AllocateDeferredConstants(LocalIsolate* isolate, Handle<Script> script);
 
   DEFINE_AST_VISITOR_SUBCLASS_MEMBERS();
 
@@ -249,22 +238,21 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
 
   void BuildLoadNamedProperty(const Expression* object_expr, Register object,
                               const AstRawString* name);
-  void BuildSetNamedProperty(const Expression* object_expr, Register object,
-                             const AstRawString* name);
-  void BuildStoreGlobal(Variable* variable);
+  void BuildStoreNamedProperty(const Expression* object_expr, Register object,
+                               const AstRawString* name);
 
   void BuildVariableLoad(Variable* variable, HoleCheckMode hole_check_mode,
-                         TypeofMode typeof_mode = TypeofMode::kNotInside);
+                         TypeofMode typeof_mode = NOT_INSIDE_TYPEOF);
   void BuildVariableLoadForAccumulatorValue(
       Variable* variable, HoleCheckMode hole_check_mode,
-      TypeofMode typeof_mode = TypeofMode::kNotInside);
+      TypeofMode typeof_mode = NOT_INSIDE_TYPEOF);
   void BuildVariableAssignment(
       Variable* variable, Token::Value op, HoleCheckMode hole_check_mode,
       LookupHoistingMode lookup_hoisting_mode = LookupHoistingMode::kNormal);
   void BuildLiteralCompareNil(Token::Value compare_op,
                               BytecodeArrayBuilder::NilValue nil);
-  void BuildReturn(int source_position);
-  void BuildAsyncReturn(int source_position);
+  void BuildReturn(int source_position = kNoSourcePosition);
+  void BuildAsyncReturn(int source_position = kNoSourcePosition);
   void BuildAsyncGeneratorReturn();
   void BuildReThrow();
   void BuildHoleCheckForVariableAssignment(Variable* variable, Token::Value op);
@@ -321,25 +309,26 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
   void VisitRestArgumentsArray(Variable* rest);
   void VisitCallSuper(Call* call);
   void BuildInvalidPropertyAccess(MessageTemplate tmpl, Property* property);
-  void BuildPrivateBrandCheck(Property* property, Register object);
-  void BuildPrivateMethodIn(Variable* private_name,
-                            Expression* object_expression);
+  void BuildPrivateBrandCheck(Property* property, Register object,
+                              MessageTemplate tmpl);
   void BuildPrivateGetterAccess(Register obj, Register access_pair);
   void BuildPrivateSetterAccess(Register obj, Register access_pair,
                                 Register value);
   void BuildPrivateMethods(ClassLiteral* expr, bool is_static,
                            Register home_object);
-  void BuildClassProperty(ClassLiteral::Property* property);
   void BuildClassLiteral(ClassLiteral* expr, Register name);
   void VisitClassLiteral(ClassLiteral* expr, Register name);
   void VisitNewTargetVariable(Variable* variable);
   void VisitThisFunctionVariable(Variable* variable);
-  void BuildPrivateBrandInitialization(Register receiver, Variable* brand);
+  void BuildPrivateBrandInitialization(Register receiver);
   void BuildInstanceMemberInitialization(Register constructor,
                                          Register instance);
   void BuildGeneratorObjectVariableInitialization();
   void VisitBlockDeclarationsAndStatements(Block* stmt);
-  void VisitLiteralAccessor(LiteralProperty* property, Register value_out);
+  void VisitSetHomeObject(Register value, Register home_object,
+                          LiteralProperty* property);
+  void VisitLiteralAccessor(Register home_object, LiteralProperty* property,
+                            Register value_out);
   void VisitForInAssignment(Expression* expr);
   void VisitModuleNamespaceImports();
 
@@ -433,7 +422,6 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
                                           Variable* variable);
   FeedbackSlot GetCachedLoadICSlot(const Expression* expr,
                                    const AstRawString* name);
-  FeedbackSlot GetCachedLoadSuperICSlot(const AstRawString* name);
   FeedbackSlot GetCachedStoreICSlot(const Expression* expr,
                                     const AstRawString* name);
   FeedbackSlot GetDummyCompareICSlot();
@@ -441,6 +429,11 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
   int GetCachedCreateClosureSlot(FunctionLiteral* literal);
 
   void AddToEagerLiteralsIfEager(FunctionLiteral* literal);
+
+  // Checks if the visited expression is one shot, i.e executed only once. Any
+  // expression either in a top level code or an IIFE that is not within a loop
+  // is eligible for one shot optimizations.
+  inline bool ShouldOptimizeAsOneShot() const;
 
   static constexpr ToBooleanMode ToBooleanModeFromTypeHint(TypeHint type_hint) {
     return type_hint == TypeHint::kBoolean ? ToBooleanMode::kAlreadyBoolean
@@ -501,7 +494,6 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
     current_loop_scope_ = loop_scope;
   }
 
-  LocalIsolate* local_isolate_;
   Zone* zone_;
   BytecodeArrayBuilder builder_;
   UnoptimizedCompilationInfo* info_;
@@ -511,7 +503,6 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
 
   // External vector of literals to be eagerly compiled.
   std::vector<FunctionLiteral*>* eager_inner_literals_;
-  Handle<Script> script_;
 
   FeedbackSlotCache* feedback_slot_cache_;
 
@@ -520,10 +511,8 @@ class BytecodeGenerator final : public AstVisitor<BytecodeGenerator> {
   ZoneVector<std::pair<FunctionLiteral*, size_t>> function_literals_;
   ZoneVector<std::pair<NativeFunctionLiteral*, size_t>>
       native_function_literals_;
-  ZoneVector<std::pair<ObjectLiteralBoilerplateBuilder*, size_t>>
-      object_literals_;
-  ZoneVector<std::pair<ArrayLiteralBoilerplateBuilder*, size_t>>
-      array_literals_;
+  ZoneVector<std::pair<ObjectLiteral*, size_t>> object_literals_;
+  ZoneVector<std::pair<ArrayLiteral*, size_t>> array_literals_;
   ZoneVector<std::pair<ClassLiteral*, size_t>> class_literals_;
   ZoneVector<std::pair<GetTemplateObject*, size_t>> template_objects_;
 

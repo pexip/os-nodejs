@@ -50,7 +50,6 @@ function doTest(testOptions, callback) {
     requestCert: true,
     rejectUnauthorized: false,
     secureProtocol: 'TLS_method',
-    ciphers: 'RSA@SECLEVEL=0'
   };
   let requestCount = 0;
   let resumeCount = 0;

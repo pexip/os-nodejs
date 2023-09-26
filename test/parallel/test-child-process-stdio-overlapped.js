@@ -33,10 +33,6 @@ const exeExtension = process.platform === 'win32' ? '.exe' : '';
 const exe = 'overlapped-checker' + exeExtension;
 const exePath = path.join(path.dirname(process.execPath), exe);
 
-if (!require('fs').existsSync(exePath)) {
-  common.skip(exe + ' binary is not available');
-}
-
 const child = child_process.spawn(exePath, [], {
   stdio: ['overlapped', 'pipe', 'pipe']
 });

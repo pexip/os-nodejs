@@ -30,7 +30,6 @@ const v8 = require('v8');
 const { previewEntries } = internalBinding('util');
 const { inspect } = util;
 const { MessageChannel } = require('worker_threads');
-const url = require('url');
 
 assert.strictEqual(util.inspect(1), '1');
 assert.strictEqual(util.inspect(false), 'false');
@@ -157,14 +156,12 @@ assert.match(util.inspect((new JSStream())._externalStream),
   assert.strictEqual(util.inspect({ a: regexp }, false, 0), '{ a: /regexp/ }');
 }
 
-assert.match(
-  util.inspect({ a: { a: { a: { a: {} } } } }, undefined, undefined, true),
-  /Object/
-);
-assert.doesNotMatch(
-  util.inspect({ a: { a: { a: { a: {} } } } }, undefined, null, true),
-  /Object/
-);
+assert(/Object/.test(
+  util.inspect({ a: { a: { a: { a: {} } } } }, undefined, undefined, true)
+));
+assert(!/Object/.test(
+  util.inspect({ a: { a: { a: { a: {} } } } }, undefined, null, true)
+));
 
 {
   const showHidden = true;
@@ -435,7 +432,7 @@ assert.strictEqual(
 
 // Array with extra properties.
 {
-  const arr = [1, 2, 3, , ]; // eslint-disable-line no-sparse-arrays
+  const arr = [1, 2, 3, , ];
   arr.foo = 'bar';
   assert.strictEqual(util.inspect(arr),
                      "[ 1, 2, 3, <1 empty item>, foo: 'bar' ]");
@@ -662,22 +659,6 @@ assert.strictEqual(util.inspect(-5e-324), '-5e-324');
 }
 
 {
-  const falsyCause1 = new Error('', { cause: false });
-  delete falsyCause1.stack;
-  const falsyCause2 = new Error(undefined, { cause: null });
-  falsyCause2.stack = '';
-  const undefinedCause = new Error('', { cause: undefined });
-  undefinedCause.stack = '';
-
-  assert.strictEqual(util.inspect(falsyCause1), '[Error] { [cause]: false }');
-  assert.strictEqual(util.inspect(falsyCause2), '[Error] { [cause]: null }');
-  assert.strictEqual(
-    util.inspect(undefinedCause),
-    '[Error] { [cause]: undefined }'
-  );
-}
-
-{
   const tmp = Error.stackTraceLimit;
   Error.stackTraceLimit = 0;
   const err = new Error('foo');
@@ -854,51 +835,9 @@ assert.strictEqual(util.inspect(Object.create(Date.prototype)), 'Date {}');
   );
 }
 
-// Escape unpaired surrogate pairs.
-{
-  const edgeChar = String.fromCharCode(0xd799);
-
-  for (let charCode = 0xD800; charCode < 0xDFFF; charCode++) {
-    const surrogate = String.fromCharCode(charCode);
-
-    assert.strictEqual(
-      util.inspect(surrogate),
-      `'\\u${charCode.toString(16)}'`
-    );
-    assert.strictEqual(
-      util.inspect(`${'a'.repeat(200)}${surrogate}`),
-      `'${'a'.repeat(200)}\\u${charCode.toString(16)}'`
-    );
-    assert.strictEqual(
-      util.inspect(`${surrogate}${'a'.repeat(200)}`),
-      `'\\u${charCode.toString(16)}${'a'.repeat(200)}'`
-    );
-    if (charCode < 0xdc00) {
-      const highSurrogate = surrogate;
-      const lowSurrogate = String.fromCharCode(charCode + 1024);
-      assert(
-        !util.inspect(
-          `${edgeChar}${highSurrogate}${lowSurrogate}${edgeChar}`
-        ).includes('\\u')
-      );
-      assert.strictEqual(
-        (util.inspect(
-          `${highSurrogate}${highSurrogate}${lowSurrogate}`
-        ).match(/\\u/g) ?? []).length,
-        1
-      );
-    } else {
-      assert.strictEqual(
-        util.inspect(`${edgeChar}${surrogate}${edgeChar}`),
-        `'${edgeChar}\\u${charCode.toString(16)}${edgeChar}'`
-      );
-    }
-  }
-}
-
 // Test util.inspect.styles and util.inspect.colors.
 {
-  function testColorStyle(style, input) {
+  function testColorStyle(style, input, implicit) {
     const colorName = util.inspect.styles[style];
     let color = ['', ''];
     if (util.inspect.colors[colorName])
@@ -991,7 +930,7 @@ util.inspect({ hasOwnProperty: null });
 
   assert.strictEqual(util.inspect(subject), "{ foo: 'bar' }");
 
-  subject[util.inspect.custom] = common.mustCall((depth, opts, inspect) => {
+  subject[util.inspect.custom] = common.mustCall((depth, opts) => {
     const clone = { ...opts };
     // This might change at some point but for now we keep the stylize function.
     // The function should either be documented or an alternative should be
@@ -1001,13 +940,12 @@ util.inspect({ hasOwnProperty: null });
     assert.strictEqual(opts.budget, undefined);
     assert.strictEqual(opts.indentationLvl, undefined);
     assert.strictEqual(opts.showHidden, false);
-    assert.strictEqual(inspect, util.inspect);
     assert.deepStrictEqual(
-      new Set(Object.keys(inspect.defaultOptions).concat(['stylize'])),
+      new Set(Object.keys(util.inspect.defaultOptions).concat(['stylize'])),
       new Set(Object.keys(opts))
     );
     opts.showHidden = true;
-    return { [inspect.custom]: common.mustCall((depth, opts2) => {
+    return { [util.inspect.custom]: common.mustCall((depth, opts2) => {
       assert.deepStrictEqual(clone, opts2);
     }) };
   });
@@ -1397,9 +1335,6 @@ if (typeof Symbol !== 'undefined') {
   class SetSubclass extends Set {}
   class MapSubclass extends Map {}
   class PromiseSubclass extends Promise {}
-  class SymbolNameClass {
-    static name = Symbol('name');
-  }
 
   const x = new ObjectSubclass();
   x.foo = 42;
@@ -1413,8 +1348,6 @@ if (typeof Symbol !== 'undefined') {
                      "MapSubclass(1) [Map] { 'foo' => 42 }");
   assert.strictEqual(util.inspect(new PromiseSubclass(() => {})),
                      'PromiseSubclass [Promise] { <pending> }');
-  assert.strictEqual(util.inspect(new SymbolNameClass()),
-                     'Symbol(name) {}');
   assert.strictEqual(
     util.inspect({ a: { b: new ArraySubclass([1, [2], 3]) } }, { depth: 1 }),
     '{ a: { b: [ArraySubclass] } }'
@@ -1534,13 +1467,13 @@ if (typeof Symbol !== 'undefined') {
 
   // Set single option through property assignment.
   util.inspect.defaultOptions.maxArrayLength = null;
-  assert.doesNotMatch(util.inspect(arr), /1 more item/);
+  assert(!/1 more item/.test(util.inspect(arr)));
   util.inspect.defaultOptions.maxArrayLength = oldOptions.maxArrayLength;
-  assert.match(util.inspect(arr), /1 more item/);
+  assert(/1 more item/.test(util.inspect(arr)));
   util.inspect.defaultOptions.depth = null;
-  assert.doesNotMatch(util.inspect(obj), /Object/);
+  assert(!/Object/.test(util.inspect(obj)));
   util.inspect.defaultOptions.depth = oldOptions.depth;
-  assert.match(util.inspect(obj), /Object/);
+  assert(/Object/.test(util.inspect(obj)));
   assert.strictEqual(
     JSON.stringify(util.inspect.defaultOptions),
     JSON.stringify(oldOptions)
@@ -1548,11 +1481,11 @@ if (typeof Symbol !== 'undefined') {
 
   // Set multiple options through object assignment.
   util.inspect.defaultOptions = { maxArrayLength: null, depth: 2 };
-  assert.doesNotMatch(util.inspect(arr), /1 more item/);
-  assert.match(util.inspect(obj), /Object/);
+  assert(!/1 more item/.test(util.inspect(arr)));
+  assert(/Object/.test(util.inspect(obj)));
   util.inspect.defaultOptions = oldOptions;
-  assert.match(util.inspect(arr), /1 more item/);
-  assert.match(util.inspect(obj), /Object/);
+  assert(/1 more item/.test(util.inspect(arr)));
+  assert(/Object/.test(util.inspect(obj)));
   assert.strictEqual(
     JSON.stringify(util.inspect.defaultOptions),
     JSON.stringify(oldOptions)
@@ -2148,7 +2081,6 @@ assert.strictEqual(util.inspect('"\'${a}'), "'\"\\'${a}'");
   [function() {}, '[Function (anonymous)]'],
   [() => {}, '[Function (anonymous)]'],
   [[1, 2], '[ 1, 2 ]'],
-  // eslint-disable-next-line no-sparse-arrays
   [[, , 5, , , , ], '[ <2 empty items>, 5, <3 empty items> ]'],
   [{ a: 5 }, '{ a: 5 }'],
   [new Set([1, 2]), 'Set(2) { 1, 2 }'],
@@ -2251,12 +2183,12 @@ assert.strictEqual(util.inspect('"\'${a}'), "'\"\\'${a}'");
   value.foo = 'bar';
   let res = util.inspect(value);
   assert.notStrictEqual(res, expectedWithoutProto);
-  assert.match(res, /foo: 'bar'/);
+  assert(/foo: 'bar'/.test(res), res);
   delete value.foo;
   value[Symbol('foo')] = 'yeah';
   res = util.inspect(value);
   assert.notStrictEqual(res, expectedWithoutProto);
-  assert.match(res, /\[Symbol\(foo\)]: 'yeah'/);
+  assert(/\[Symbol\(foo\)]: 'yeah'/.test(res), res);
 });
 
 assert.strictEqual(inspect(1n), '1n');
@@ -2638,24 +2570,6 @@ assert.strictEqual(
 
   assert.strictEqual(out, expected);
 
-  // Array grouping should prevent lining up outer elements on a single line.
-  obj = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]]];
-
-  out = util.inspect(obj, { compact: 3 });
-
-  expected = [
-    '[',
-    '  [',
-    '    [',
-    '      1, 2, 3, 4, 5,',
-    '      6, 7, 8, 9',
-    '    ]',
-    '  ]',
-    ']',
-  ].join('\n');
-
-  assert.strictEqual(out, expected);
-
   // Verify that array grouping and line consolidation does not happen together.
   obj = {
     a: {
@@ -2696,6 +2610,7 @@ assert.strictEqual(
 
   expected = [
     '[',
+    /* eslint-disable max-len */
     '   \u001b[33m0\u001b[39m,  \u001b[33m1\u001b[39m,  \u001b[33m2\u001b[39m,  \u001b[33m3\u001b[39m,',
     '   \u001b[33m4\u001b[39m,  \u001b[33m5\u001b[39m,  \u001b[33m6\u001b[39m,  \u001b[33m7\u001b[39m,',
     '   \u001b[33m8\u001b[39m,  \u001b[33m9\u001b[39m, \u001b[33m10\u001b[39m, \u001b[33m11\u001b[39m,',
@@ -2711,6 +2626,7 @@ assert.strictEqual(
     '  \u001b[33m48\u001b[39m, \u001b[33m49\u001b[39m, \u001b[33m50\u001b[39m, \u001b[33m51\u001b[39m,',
     '  \u001b[33m52\u001b[39m, \u001b[33m53\u001b[39m, \u001b[33m54\u001b[39m, \u001b[33m55\u001b[39m,',
     '  \u001b[33m56\u001b[39m, \u001b[33m57\u001b[39m, \u001b[33m58\u001b[39m, \u001b[33m59\u001b[39m',
+    /* eslint-enable max-len */
     ']',
   ].join('\n');
 
@@ -2812,96 +2728,35 @@ assert.strictEqual(
 }
 
 {
-  const originalCWD = process.cwd();
-
-  process.cwd = () => (process.platform === 'win32' ?
-    'C:\\workspace\\node-test-binary-windows js-suites-%percent-encoded\\node' :
-    '/home/user directory/repository%encoded/node');
-
   // Use a fake stack to verify the expected colored outcome.
   const stack = [
-    'Error: CWD is grayed out, even cwd that are percent encoded!',
+    'TypedError: Wonderful message!',
     '    at A.<anonymous> (/test/node_modules/foo/node_modules/bar/baz.js:2:7)',
-    '    at Module._compile (node:internal/modules/cjs/loader:827:30)',
-    '    at Fancy (node:vm:697:32)',
+    '    at Module._compile (internal/modules/cjs/loader.js:827:30)',
+    '    at Fancy (vm.js:697:32)',
     // This file is not an actual Node.js core file.
-    '    at tryModuleLoad (node:internal/modules/cjs/foo:629:12)',
-    '    at Function.Module._load (node:internal/modules/cjs/loader:621:3)',
+    '    at tryModuleLoad (internal/modules/cjs/foo.js:629:12)',
+    '    at Function.Module._load (internal/modules/cjs/loader.js:621:3)',
     // This file is not an actual Node.js core file.
-    '    at Module.require [as weird/name] (node:internal/aaaaa/loader:735:19)',
-    '    at require (node:internal/modules/cjs/helpers:14:16)',
-    '    at Array.forEach (<anonymous>)',
-    `    at ${process.cwd()}/test/parallel/test-util-inspect.js:2760:12`,
-    `    at Object.<anonymous> (${process.cwd()}/node_modules/hyper_module/folder/file.js:2753:10)`,
+    '    at Module.require [as weird/name] (internal/aaaaaa/loader.js:735:19)',
+    '    at require (internal/modules/cjs/helpers.js:14:16)',
     '    at /test/test-util-inspect.js:2239:9',
-    '    at getActual (node:assert:592:5)',
+    '    at getActual (assert.js:592:5)',
   ];
-  const err = new Error('CWD is grayed out, even cwd that are percent encoded!');
+  const isNodeCoreFile = [
+    false, false, true, true, false, true, false, true, false, true,
+  ];
+  const err = new TypeError('Wonderful message!');
   err.stack = stack.join('\n');
-  if (process.platform === 'win32') {
-    err.stack = stack.map((frame) => (frame.includes('node:') ?
-      frame :
-      frame.replaceAll('/', '\\'))
-    ).join('\n');
-  }
-  const escapedCWD = util.inspect(process.cwd()).slice(1, -1);
   util.inspect(err, { colors: true }).split('\n').forEach((line, i) => {
-    let expected = stack[i].replace(/node_modules\/([^/]+)/gi, (_, m) => {
+    let actual = stack[i].replace(/node_modules\/([a-z]+)/g, (a, m) => {
       return `node_modules/\u001b[4m${m}\u001b[24m`;
-    }).replaceAll(new RegExp(`(\\(?${escapedCWD}(\\\\|/))`, 'gi'), (_, m) => {
-      return `\x1B[90m${m}\x1B[39m`;
     });
-    if (expected.includes(process.cwd()) && expected.endsWith(')')) {
-      expected = `${expected.slice(0, -1)}\x1B[90m)\x1B[39m`;
+    if (isNodeCoreFile[i]) {
+      actual = `\u001b[90m${actual}\u001b[39m`;
     }
-    if (line.includes('node:')) {
-      if (!line.includes('foo') && !line.includes('aaa')) {
-        expected = `\u001b[90m${expected}\u001b[39m`;
-      }
-    } else if (process.platform === 'win32') {
-      expected = expected.replaceAll('/', '\\');
-    }
-    assert.strictEqual(line, expected);
+    assert.strictEqual(actual, line);
   });
-
-  // Check ESM
-  const encodedCwd = url.pathToFileURL(process.cwd());
-  const sl = process.platform === 'win32' ? '\\' : '/';
-
-  // Use a fake stack to verify the expected colored outcome.
-  err.stack = 'Error: ESM and CJS mixed are both grayed out!\n' +
-              `    at ${encodedCwd}/test/parallel/test-esm.mjs:2760:12\n` +
-              `    at Object.<anonymous> (${encodedCwd}/node_modules/esm_module/folder/file.js:2753:10)\n` +
-              `    at ${process.cwd()}${sl}test${sl}parallel${sl}test-cjs.js:2760:12\n` +
-              `    at Object.<anonymous> (${process.cwd()}${sl}node_modules${sl}cjs_module${sl}folder${sl}file.js:2753:10)`;
-
-  let actual = util.inspect(err, { colors: true });
-  let expected = 'Error: ESM and CJS mixed are both grayed out!\n' +
-    `    at \x1B[90m${encodedCwd}/\x1B[39mtest/parallel/test-esm.mjs:2760:12\n` +
-    `    at Object.<anonymous> \x1B[90m(${encodedCwd}/\x1B[39mnode_modules/\x1B[4mesm_module\x1B[24m/folder/file.js:2753:10\x1B[90m)\x1B[39m\n` +
-    `    at \x1B[90m${process.cwd()}${sl}\x1B[39mtest${sl}parallel${sl}test-cjs.js:2760:12\n` +
-    `    at Object.<anonymous> \x1B[90m(${process.cwd()}${sl}\x1B[39mnode_modules${sl}\x1B[4mcjs_module\x1B[24m${sl}folder${sl}file.js:2753:10\x1B[90m)\x1B[39m`;
-
-  assert.strictEqual(actual, expected);
-
-  // ESM without need for encoding
-  process.cwd = () => (process.platform === 'win32' ?
-    'C:\\workspace\\node-test-binary-windows-js-suites\\node' :
-    '/home/user/repository/node');
-  let expectedCwd = process.cwd();
-  if (process.platform === 'win32') {
-    expectedCwd = `/${expectedCwd.replaceAll('\\', '/')}`;
-  }
-  // Use a fake stack to verify the expected colored outcome.
-  err.stack = 'Error: ESM without need for encoding!\n' +
-              `    at file://${expectedCwd}/file.js:15:15`;
-
-  actual = util.inspect(err, { colors: true });
-  expected = 'Error: ESM without need for encoding!\n' +
-  `    at \x1B[90mfile://${expectedCwd}/\x1B[39mfile.js:15:15`;
-  assert.strictEqual(actual, expected);
-
-  process.cwd = originalCWD;
 }
 
 {
@@ -3000,8 +2855,8 @@ assert.strictEqual(
     '<ref *1> Foo [Map] {\n' +
     '    [constructor]: [class Bar extends Foo] {\n' +
     '      [length]: 0,\n' +
-    "      [name]: 'Bar',\n" +
     '      [prototype]: [Circular *1],\n' +
+    "      [name]: 'Bar',\n" +
     '      [Symbol(Symbol.species)]: [Getter: <Inspection threw ' +
       "(Symbol.prototype.toString requires that 'this' be a Symbol)>]\n" +
     '    },\n' +
@@ -3079,7 +2934,6 @@ assert.strictEqual(
 
 {
   const x = 'a'.repeat(1e6);
-  assert(util.inspect(x).endsWith('... 990000 more characters'));
   assert.strictEqual(
     util.inspect(x, { maxStringLength: 4 }),
     "'aaaa'... 999996 more characters"
@@ -3246,68 +3100,4 @@ assert.strictEqual(
     util.inspect({ ['__proto__']: { a: 1 } }),
     "{ ['__proto__']: { a: 1 } }"
   );
-}
-
-{
-  const { numericSeparator } = util.inspect.defaultOptions;
-  util.inspect.defaultOptions.numericSeparator = true;
-
-  assert.strictEqual(
-    // eslint-disable-next-line no-loss-of-precision
-    util.inspect(1234567891234567891234),
-    '1.234567891234568e+21'
-  );
-  assert.strictEqual(
-    util.inspect(123456789.12345678),
-    '123_456_789.123_456_78'
-  );
-
-  assert.strictEqual(util.inspect(10_000_000), '10_000_000');
-  assert.strictEqual(util.inspect(1_000_000), '1_000_000');
-  assert.strictEqual(util.inspect(100_000), '100_000');
-  assert.strictEqual(util.inspect(99_999.9), '99_999.9');
-  assert.strictEqual(util.inspect(9_999), '9_999');
-  assert.strictEqual(util.inspect(999), '999');
-  assert.strictEqual(util.inspect(NaN), 'NaN');
-  assert.strictEqual(util.inspect(Infinity), 'Infinity');
-  assert.strictEqual(util.inspect(-Infinity), '-Infinity');
-
-  assert.strictEqual(
-    util.inspect(new Float64Array([100_000_000])),
-    'Float64Array(1) [ 100_000_000 ]'
-  );
-  assert.strictEqual(
-    util.inspect(new BigInt64Array([9_100_000_100n])),
-    'BigInt64Array(1) [ 9_100_000_100n ]'
-  );
-
-  assert.strictEqual(
-    util.inspect(123456789),
-    '123_456_789'
-  );
-  assert.strictEqual(
-    util.inspect(123456789n),
-    '123_456_789n'
-  );
-
-  util.inspect.defaultOptions.numericSeparator = numericSeparator;
-
-  assert.strictEqual(
-    util.inspect(123456789.12345678, { numericSeparator: true }),
-    '123_456_789.123_456_78'
-  );
-
-  assert.strictEqual(
-    util.inspect(-123456789.12345678, { numericSeparator: true }),
-    '-123_456_789.123_456_78'
-  );
-}
-
-// Regression test for https://github.com/nodejs/node/issues/41244
-{
-  assert.strictEqual(util.inspect({
-    get [Symbol.iterator]() {
-      throw new Error();
-    }
-  }), '{ [Symbol(Symbol.iterator)]: [Getter] }');
 }

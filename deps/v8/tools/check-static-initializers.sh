@@ -30,12 +30,9 @@
 # initializer in d8 matches the one defined below.
 
 # Allow:
-# _GLOBAL__I_000101
-# _GLOBAL__sub_I_iostream.cpp
 # _GLOBAL__sub_I_d8.cc
-# The first two are needed to set up std::cin/cout/cerr before main() runs.
-# See https://crbug.com/1177324 for more.
-expected_static_init_count=3
+# _GLOBAL__sub_I_iostream.cpp
+expected_static_init_count=2
 
 v8_root=$(readlink -f $(dirname $BASH_SOURCE)/../)
 

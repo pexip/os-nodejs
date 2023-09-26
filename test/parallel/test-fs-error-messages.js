@@ -199,7 +199,8 @@ function re(literals, ...values) {
               `expect ${err.dest} to end with 'foo'`);
     const regexp = new RegExp('^ENOENT: no such file or directory, link ' +
                               re`'${nonexistentFile}' -> ` + '\'.*foo\'');
-    assert.match(err.message, regexp);
+    assert.ok(regexp.test(err.message),
+              `Expect ${err.message} to match ${regexp}`);
     assert.strictEqual(err.errno, UV_ENOENT);
     assert.strictEqual(err.code, 'ENOENT');
     assert.strictEqual(err.syscall, 'link');
@@ -290,7 +291,8 @@ function re(literals, ...values) {
               `expect ${err.dest} to end with 'foo'`);
     const regexp = new RegExp('ENOENT: no such file or directory, rename ' +
                               re`'${nonexistentFile}' -> ` + '\'.*foo\'');
-    assert.match(err.message, regexp);
+    assert.ok(regexp.test(err.message),
+              `Expect ${err.message} to match ${regexp}`);
     assert.strictEqual(err.errno, UV_ENOENT);
     assert.strictEqual(err.code, 'ENOENT');
     assert.strictEqual(err.syscall, 'rename');
@@ -639,11 +641,13 @@ if (!common.isAIX) {
 {
   const validateError = (err) => {
     const pathPrefix = new RegExp('^' + re`${nonexistentDir}`);
-    assert.match(err.path, pathPrefix);
+    assert(pathPrefix.test(err.path),
+           `Expect ${err.path} to match ${pathPrefix}`);
 
     const prefix = new RegExp('^ENOENT: no such file or directory, mkdtemp ' +
                               re`'${nonexistentDir}`);
-    assert.match(err.message, prefix);
+    assert(prefix.test(err.message),
+           `Expect ${err.message} to match ${prefix}`);
 
     assert.strictEqual(err.errno, UV_ENOENT);
     assert.strictEqual(err.code, 'ENOENT');

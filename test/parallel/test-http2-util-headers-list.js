@@ -8,11 +8,7 @@ const common = require('../common');
 if (!common.hasCrypto)
   common.skip('missing crypto');
 const assert = require('assert');
-const {
-  getAuthority,
-  mapToHeaders,
-  toHeaderObject
-} = require('internal/http2/util');
+const { mapToHeaders, toHeaderObject } = require('internal/http2/util');
 const { sensitiveHeaders } = require('http2');
 const { internalBinding } = require('internal/test/binding');
 const {
@@ -38,7 +34,6 @@ const {
   HTTP2_HEADER_ETAG,
   HTTP2_HEADER_EXPIRES,
   HTTP2_HEADER_FROM,
-  HTTP2_HEADER_HOST,
   HTTP2_HEADER_IF_MATCH,
   HTTP2_HEADER_IF_MODIFIED_SINCE,
   HTTP2_HEADER_IF_NONE_MATCH,
@@ -91,6 +86,7 @@ const {
   HTTP2_HEADER_HTTP2_SETTINGS,
   HTTP2_HEADER_TE,
   HTTP2_HEADER_TRANSFER_ENCODING,
+  HTTP2_HEADER_HOST,
   HTTP2_HEADER_KEEP_ALIVE,
   HTTP2_HEADER_PROXY_CONNECTION
 } = internalBinding('http2').constants;
@@ -98,8 +94,8 @@ const {
 {
   const headers = {
     'abc': 1,
-    ':path': 'abc',
     ':status': 200,
+    ':path': 'abc',
     'xyz': [1, '2', { toString() { return '3'; } }, 4],
     'foo': [],
     'BAR': [1]
@@ -116,8 +112,8 @@ const {
 {
   const headers = {
     'abc': 1,
-    ':status': [200],
     ':path': 'abc',
+    ':status': [200],
     ':authority': [],
     'xyz': [1, 2, 3, 4]
   };
@@ -132,10 +128,10 @@ const {
 {
   const headers = {
     'abc': 1,
-    ':status': 200,
+    ':path': 'abc',
     'xyz': [1, 2, 3, 4],
     '': 1,
-    ':path': 'abc',
+    ':status': 200,
     [Symbol('test')]: 1 // Symbol keys are ignored
   };
 
@@ -150,10 +146,10 @@ const {
   // Only own properties are used
   const base = { 'abc': 1 };
   const headers = Object.create(base);
-  headers[':status'] = 200;
+  headers[':path'] = 'abc';
   headers.xyz = [1, 2, 3, 4];
   headers.foo = [];
-  headers[':path'] = 'abc';
+  headers[':status'] = 200;
 
   assert.deepStrictEqual(
     mapToHeaders(headers),
@@ -191,8 +187,8 @@ const {
 {
   const headers = {
     'abc': 1,
-    ':status': [200],
     ':path': 'abc',
+    ':status': [200],
     ':authority': [],
     'xyz': [1, 2, 3, 4],
     [sensitiveHeaders]: ['xyz']
@@ -229,7 +225,6 @@ const {
   HTTP2_HEADER_ETAG,
   HTTP2_HEADER_EXPIRES,
   HTTP2_HEADER_FROM,
-  HTTP2_HEADER_HOST,
   HTTP2_HEADER_IF_MATCH,
   HTTP2_HEADER_IF_MODIFIED_SINCE,
   HTTP2_HEADER_IF_NONE_MATCH,
@@ -294,6 +289,7 @@ const {
   HTTP2_HEADER_HTTP2_SETTINGS,
   HTTP2_HEADER_TE,
   HTTP2_HEADER_TRANSFER_ENCODING,
+  HTTP2_HEADER_HOST,
   HTTP2_HEADER_PROXY_CONNECTION,
   HTTP2_HEADER_KEEP_ALIVE,
   'Connection',
@@ -330,17 +326,6 @@ assert.throws(
 // These should not throw
 mapToHeaders({ te: 'trailers' });
 mapToHeaders({ te: ['trailers'] });
-
-// HTTP/2 encourages use of Host instead of :authority when converting
-// from HTTP/1 to HTTP/2, so we no longer disallow it.
-// Refs: https://github.com/nodejs/node/issues/29858
-mapToHeaders({ [HTTP2_HEADER_HOST]: 'abc' });
-
-// If both are present, the latter has priority
-assert.strictEqual(getAuthority({
-  [HTTP2_HEADER_AUTHORITY]: 'abc',
-  [HTTP2_HEADER_HOST]: 'def'
-}), 'abc');
 
 
 {

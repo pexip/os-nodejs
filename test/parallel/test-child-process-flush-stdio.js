@@ -27,7 +27,7 @@ const spawnWithReadable = () => {
   }));
   p.stdout.on('readable', () => {
     let buf;
-    while ((buf = p.stdout.read()) !== null)
+    while (buf = p.stdout.read())
       buffer.push(buf);
   });
 };

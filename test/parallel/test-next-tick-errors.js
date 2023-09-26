@@ -45,7 +45,7 @@ function testNextTickWith(val) {
   assert.throws(() => {
     process.nextTick(val);
   }, {
-    code: 'ERR_INVALID_ARG_TYPE',
+    code: 'ERR_INVALID_CALLBACK',
     name: 'TypeError'
   });
 }

@@ -19,8 +19,6 @@ class Graph;
 class NodeMarkerBase {
  public:
   NodeMarkerBase(Graph* graph, uint32_t num_states);
-  NodeMarkerBase(const NodeMarkerBase&) = delete;
-  NodeMarkerBase& operator=(const NodeMarkerBase&) = delete;
 
   V8_INLINE Mark Get(const Node* node) {
     Mark mark = node->mark();
@@ -39,6 +37,8 @@ class NodeMarkerBase {
  private:
   Mark const mark_min_;
   Mark const mark_max_;
+
+  DISALLOW_COPY_AND_ASSIGN(NodeMarkerBase);
 };
 
 // A NodeMarker assigns a local "state" to every node of a graph in constant

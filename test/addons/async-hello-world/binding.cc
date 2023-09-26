@@ -2,6 +2,13 @@
 #include <v8.h>
 #include <uv.h>
 
+#if defined _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
+
 struct async_req {
   uv_work_t req;
   int input;
@@ -14,7 +21,11 @@ struct async_req {
 void DoAsync(uv_work_t* r) {
   async_req* req = reinterpret_cast<async_req*>(r->data);
   // Simulate CPU intensive process...
-  uv_sleep(1000);
+#if defined _WIN32
+  Sleep(1000);
+#else
+  sleep(1);
+#endif
   req->output = req->input * 2;
 }
 

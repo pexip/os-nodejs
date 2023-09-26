@@ -22,8 +22,9 @@ const server = h2.createServer((request, response) => {
       ':method': 'GET'
     }, undefined),
     {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_CALLBACK',
       name: 'TypeError',
+      message: 'Callback must be a function. Received undefined'
     }
   );
 

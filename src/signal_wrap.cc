@@ -22,7 +22,6 @@
 #include "async_wrap-inl.h"
 #include "env-inl.h"
 #include "handle_wrap.h"
-#include "node_external_reference.h"
 #include "node_process-inl.h"
 #include "util-inl.h"
 #include "v8.h"
@@ -34,7 +33,6 @@ using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::HandleScope;
 using v8::Integer;
-using v8::Isolate;
 using v8::Local;
 using v8::Object;
 using v8::Value;
@@ -53,22 +51,15 @@ class SignalWrap : public HandleWrap {
                          Local<Context> context,
                          void* priv) {
     Environment* env = Environment::GetCurrent(context);
-    Isolate* isolate = env->isolate();
-    Local<FunctionTemplate> constructor = NewFunctionTemplate(isolate, New);
+    Local<FunctionTemplate> constructor = env->NewFunctionTemplate(New);
     constructor->InstanceTemplate()->SetInternalFieldCount(
         SignalWrap::kInternalFieldCount);
     constructor->Inherit(HandleWrap::GetConstructorTemplate(env));
 
-    SetProtoMethod(isolate, constructor, "start", Start);
-    SetProtoMethod(isolate, constructor, "stop", Stop);
+    env->SetProtoMethod(constructor, "start", Start);
+    env->SetProtoMethod(constructor, "stop", Stop);
 
-    SetConstructorFunction(context, target, "Signal", constructor);
-  }
-
-  static void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
-    registry->Register(New);
-    registry->Register(Start);
-    registry->Register(Stop);
+    env->SetConstructorFunction(target, "Signal", constructor);
   }
 
   SET_NO_MEMORY_INFO()
@@ -176,5 +167,3 @@ bool HasSignalJSHandler(int signum) {
 
 
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(signal_wrap, node::SignalWrap::Initialize)
-NODE_MODULE_EXTERNAL_REFERENCE(signal_wrap,
-                               node::SignalWrap::RegisterExternalReferences)

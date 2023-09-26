@@ -21,7 +21,6 @@ function main({ n, statSyncType }) {
       try {
         fs.statSync(arg);
       } catch {
-        // Continue regardless of error.
       }
     }
   }

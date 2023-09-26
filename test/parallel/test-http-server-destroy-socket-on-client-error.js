@@ -16,7 +16,7 @@ server.on('connection', mustCall((socket) => {
     name: 'Error',
     message: 'Parse Error: Invalid method encountered',
     code: 'HPE_INVALID_METHOD',
-    bytesParsed: 1,
+    bytesParsed: 0,
     rawPacket: Buffer.from('FOO /\r\n')
   }));
 }));

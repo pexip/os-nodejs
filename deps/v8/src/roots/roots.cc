@@ -17,10 +17,6 @@ const char* RootsTable::root_names_[RootsTable::kEntriesCount] = {
 #undef ROOT_NAME
 };
 
-MapWord ReadOnlyRoots::one_pointer_filler_map_word() {
-  return MapWord::FromMap(one_pointer_filler_map());
-}
-
 void ReadOnlyRoots::Iterate(RootVisitor* visitor) {
   visitor->VisitRootPointers(Root::kReadOnlyRootList, nullptr,
                              FullObjectSlot(read_only_roots_),

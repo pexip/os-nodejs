@@ -5,10 +5,6 @@
 #ifndef V8_JSON_JSON_PARSER_H_
 #define V8_JSON_JSON_PARSER_H_
 
-#include "include/v8-callbacks.h"
-#include "src/base/small-vector.h"
-#include "src/base/strings.h"
-#include "src/common/high-allocation-throughput-scope.h"
 #include "src/execution/isolate.h"
 #include "src/heap/factory.h"
 #include "src/objects/objects.h"
@@ -146,8 +142,6 @@ class JsonParser final {
 
   V8_WARN_UNUSED_RESULT static MaybeHandle<Object> Parse(
       Isolate* isolate, Handle<String> source, Handle<Object> reviver) {
-    HighAllocationThroughputScope high_throughput_scope(
-        V8::GetCurrentPlatform());
     Handle<Object> result;
     ASSIGN_RETURN_ON_EXCEPTION(isolate, result,
                                JsonParser(isolate, source).ParseJson(), Object);
@@ -157,13 +151,9 @@ class JsonParser final {
     return result;
   }
 
-  static constexpr base::uc32 kEndOfString = static_cast<base::uc32>(-1);
-  static constexpr base::uc32 kInvalidUnicodeCharacter =
-      static_cast<base::uc32>(-1);
+  static const int kEndOfString = -1;
 
  private:
-  template <typename T>
-  using SmallVector = base::SmallVector<T, 16>;
   struct JsonContinuation {
     enum Type : uint8_t { kReturn, kObjectProperty, kArrayElement };
     JsonContinuation(Isolate* isolate, Type type, size_t index)
@@ -192,12 +182,12 @@ class JsonParser final {
 
   void advance() { ++cursor_; }
 
-  base::uc32 CurrentCharacter() {
+  uc32 CurrentCharacter() {
     if (V8_UNLIKELY(is_at_end())) return kEndOfString;
     return *cursor_;
   }
 
-  base::uc32 NextCharacter() {
+  uc32 NextCharacter() {
     advance();
     return CurrentCharacter();
   }
@@ -240,13 +230,13 @@ class JsonParser final {
     STATIC_ASSERT(N > 2);
     size_t remaining = static_cast<size_t>(end_ - cursor_);
     if (V8_LIKELY(remaining >= N - 1 &&
-                  CompareCharsEqual(s + 1, cursor_ + 1, N - 2))) {
+                  CompareChars(s + 1, cursor_ + 1, N - 2) == 0)) {
       cursor_ += N - 1;
       return;
     }
 
     cursor_++;
-    for (size_t i = 0; i < std::min(N - 2, remaining - 1); i++) {
+    for (size_t i = 0; i < Min(N - 2, remaining - 1); i++) {
       if (*(s + 1 + i) != *cursor_) {
         ReportUnexpectedCharacter(*cursor_);
         return;
@@ -269,7 +259,7 @@ class JsonParser final {
   // four-digit hex escapes (uXXXX). Any other use of backslashes is invalid.
   JsonString ScanJsonString(bool needs_internalization);
   JsonString ScanJsonPropertyKey(JsonContinuation* cont);
-  base::uc32 ScanUnicodeCharacter();
+  uc32 ScanUnicodeCharacter();
   Handle<String> MakeString(const JsonString& string,
                             Handle<String> hint = Handle<String>());
 
@@ -296,13 +286,13 @@ class JsonParser final {
 
   Handle<Object> BuildJsonObject(
       const JsonContinuation& cont,
-      const SmallVector<JsonProperty>& property_stack, Handle<Map> feedback);
+      const std::vector<JsonProperty>& property_stack, Handle<Map> feedback);
   Handle<Object> BuildJsonArray(
       const JsonContinuation& cont,
-      const SmallVector<Handle<Object>>& element_stack);
+      const std::vector<Handle<Object>>& element_stack);
 
   // Mark that a parsing error has happened at the current character.
-  void ReportUnexpectedCharacter(base::uc32 c);
+  void ReportUnexpectedCharacter(uc32 c);
   // Mark that a parsing error has happened at the current token.
   void ReportUnexpectedToken(JsonToken token);
 
@@ -312,12 +302,13 @@ class JsonParser final {
 
   static const int kInitialSpecialStringLength = 32;
 
-  static void UpdatePointersCallback(void* parser) {
+  static void UpdatePointersCallback(v8::Isolate* v8_isolate, v8::GCType type,
+                                     v8::GCCallbackFlags flags, void* parser) {
     reinterpret_cast<JsonParser<Char>*>(parser)->UpdatePointers();
   }
 
   void UpdatePointers() {
-    DisallowGarbageCollection no_gc;
+    DisallowHeapAllocation no_gc;
     const Char* chars = Handle<SeqString>::cast(source_)->GetChars(no_gc);
     if (chars_ != chars) {
       size_t position = cursor_ - chars_;
@@ -350,7 +341,7 @@ class JsonParser final {
   // Cached pointer to the raw chars in source. In case source is on-heap, we
   // register an UpdatePointers callback. For this reason, chars_, cursor_ and
   // end_ should never be locally cached across a possible allocation. The scope
-  // in which we cache chars has to be guarded by a DisallowGarbageCollection
+  // in which we cache chars has to be guarded by a DisallowHeapAllocation
   // scope.
   const Char* cursor_;
   const Char* end_;

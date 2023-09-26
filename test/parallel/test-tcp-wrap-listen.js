@@ -14,13 +14,11 @@ const {
 
 const server = new TCP(TCPConstants.SOCKET);
 
-const r = (common.hasIPv6 ?
-  server.bind6('::', 0) :
-  server.bind('0.0.0.0', 0));
+const r = server.bind('0.0.0.0', 0);
 assert.strictEqual(r, 0);
-
-const port = {};
+let port = {};
 server.getsockname(port);
+port = port.port;
 
 server.listen(128);
 

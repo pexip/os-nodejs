@@ -1,8 +1,8 @@
 #include "arm_arch.h"
 
 #if __ARM_MAX_ARCH__>=7
-.arch	armv8-a+crypto
 .text
+.arch	armv8-a+crypto
 .globl	gcm_init_v8
 .type	gcm_init_v8,%function
 .align	4

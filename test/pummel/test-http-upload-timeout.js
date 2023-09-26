@@ -23,20 +23,19 @@
 // This tests setTimeout() by having multiple clients connecting and sending
 // data in random intervals. Clients are also randomly disconnecting until there
 // are no more clients left. If no false timeout occurs, this test has passed.
-const common = require('../common');
+require('../common');
 const http = require('http');
 const server = http.createServer();
 let connections = 0;
 
-const ontimeout = common.mustNotCall('Unexpected timeout');
-
 server.on('request', function(req, res) {
   req.socket.setTimeout(1000);
-  req.socket.on('timeout', ontimeout);
+  req.socket.on('timeout', function() {
+    throw new Error('Unexpected timeout');
+  });
   req.on('end', function() {
     connections--;
     res.writeHead(200);
-    req.socket.off('timeout', ontimeout);
     res.end('done\n');
     if (connections === 0) {
       server.close();
@@ -45,10 +44,10 @@ server.on('request', function(req, res) {
   req.resume();
 });
 
-server.listen(0, function() {
+server.listen(0, '127.0.0.1', function() {
   for (let i = 0; i < 10; i++) {
     connections++;
-    let count = 0;
+
     setTimeout(function() {
       const request = http.request({
         port: server.address().port,
@@ -57,12 +56,13 @@ server.listen(0, function() {
       });
 
       function ping() {
-        if (++count === 10) {
+        const nextPing = (Math.random() * 900).toFixed();
+        if (nextPing > 600) {
           request.end();
           return;
         }
         request.write('ping');
-        setTimeout(ping, 300);
+        setTimeout(ping, nextPing);
       }
       ping();
     }, i * 50);

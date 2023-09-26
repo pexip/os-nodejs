@@ -13,7 +13,6 @@ const options = {
   cert: fixtures.readKey('agent1-cert.pem'),
   ca: fixtures.readKey('ca1-cert.pem'),
   minVersion: 'TLSv1.1',
-  ciphers: 'ALL@SECLEVEL=0'
 };
 
 const server = https.Server(options, (req, res) => {
@@ -28,7 +27,6 @@ function getBaseOptions(port) {
     ca: options.ca,
     rejectUnauthorized: true,
     servername: 'agent1',
-    ciphers: 'ALL@SECLEVEL=0'
   };
 }
 

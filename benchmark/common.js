@@ -38,7 +38,7 @@ class Benchmark {
     this.config = this.queue[0];
 
     process.nextTick(() => {
-      if (process.env.NODE_RUN_BENCHMARK_FN !== undefined) {
+      if (process.env.hasOwnProperty('NODE_RUN_BENCHMARK_FN')) {
         fn(this.config);
       } else {
         // _run will use fork() to create a new process for each configuration
@@ -91,7 +91,7 @@ class Benchmark {
         process.exit(1);
       }
       const [, key, value] = match;
-      if (configs[key] !== undefined) {
+      if (Object.prototype.hasOwnProperty.call(configs, key)) {
         if (!cliOptions[key])
           cliOptions[key] = [];
         cliOptions[key].push(
@@ -289,15 +289,7 @@ function formatResult(data) {
 function sendResult(data) {
   if (process.send) {
     // If forked, report by process send
-    process.send(data, () => {
-      if (process.env.NODE_RUN_BENCHMARK_FN !== undefined) {
-        // If, for any reason, the process is unable to self close within
-        // a second after completing, forcefully close it.
-        require('timers').setTimeout(() => {
-          process.exit(0);
-        }, 5000).unref();
-      }
-    });
+    process.send(data);
   } else {
     // Otherwise report by stdout
     process.stdout.write(formatResult(data));

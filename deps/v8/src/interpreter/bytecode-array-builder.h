@@ -43,15 +43,12 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
       SourcePositionTableBuilder::RecordingMode source_position_mode =
           SourcePositionTableBuilder::RECORD_SOURCE_POSITIONS);
 
-  BytecodeArrayBuilder(const BytecodeArrayBuilder&) = delete;
-  BytecodeArrayBuilder& operator=(const BytecodeArrayBuilder&) = delete;
-
-  template <typename IsolateT>
+  template <typename LocalIsolate>
   EXPORT_TEMPLATE_DECLARE(V8_EXPORT_PRIVATE)
-  Handle<BytecodeArray> ToBytecodeArray(IsolateT* isolate);
-  template <typename IsolateT>
+  Handle<BytecodeArray> ToBytecodeArray(LocalIsolate* isolate);
+  template <typename LocalIsolate>
   EXPORT_TEMPLATE_DECLARE(V8_EXPORT_PRIVATE)
-  Handle<ByteArray> ToSourcePositionTable(IsolateT* isolate);
+  Handle<ByteArray> ToSourcePositionTable(LocalIsolate* isolate);
 
 #ifdef DEBUG
   int CheckBytecodeMatches(BytecodeArray bytecode);
@@ -90,6 +87,7 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
   BytecodeArrayBuilder& LoadLiteral(const AstRawString* raw_string);
   BytecodeArrayBuilder& LoadLiteral(const Scope* scope);
   BytecodeArrayBuilder& LoadLiteral(AstBigInt bigint);
+  BytecodeArrayBuilder& LoadLiteral(AstSymbol symbol);
   BytecodeArrayBuilder& LoadUndefined();
   BytecodeArrayBuilder& LoadNull();
   BytecodeArrayBuilder& LoadTheHole();
@@ -134,10 +132,9 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
   BytecodeArrayBuilder& LoadNamedProperty(Register object,
                                           const AstRawString* name,
                                           int feedback_slot);
-
-  BytecodeArrayBuilder& LoadNamedPropertyFromSuper(Register object,
-                                                   const AstRawString* name,
-                                                   int feedback_slot);
+  // Named load property without feedback
+  BytecodeArrayBuilder& LoadNamedPropertyNoFeedback(Register object,
+                                                    const AstRawString* name);
 
   // Keyed load property. The key should be in the accumulator.
   BytecodeArrayBuilder& LoadKeyedProperty(Register object, int feedback_slot);
@@ -156,54 +153,51 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
 
   // Store properties. Flag for NeedsSetFunctionName() should
   // be in the accumulator.
-  BytecodeArrayBuilder& DefineKeyedOwnPropertyInLiteral(
-      Register object, Register name,
-      DefineKeyedOwnPropertyInLiteralFlags flags, int feedback_slot);
+  BytecodeArrayBuilder& StoreDataPropertyInLiteral(
+      Register object, Register name, DataPropertyInLiteralFlags flags,
+      int feedback_slot);
 
   // Collect type information for developer tools. The value for which we
   // record the type is stored in the accumulator.
   BytecodeArrayBuilder& CollectTypeProfile(int position);
 
-  // Set a property named by a property name, trigger the setters and
-  // set traps if necessary. The value to be set should be in the
-  // accumulator.
-  BytecodeArrayBuilder& SetNamedProperty(Register object,
-                                         const AstRawString* name,
-                                         int feedback_slot,
-                                         LanguageMode language_mode);
-
-  // Set a property named by a constant from the constant pool,
-  // trigger the setters and set traps if necessary. The value to be
-  // set should be in the accumulator.
-  BytecodeArrayBuilder& SetNamedProperty(Register object,
-                                         size_t constant_pool_entry,
-                                         int feedback_slot,
-                                         LanguageMode language_mode);
-
-  // Define an own property named by a constant from the constant pool,
-  // trigger the defineProperty traps if necessary. The value to be
-  // defined should be in the accumulator.
-  BytecodeArrayBuilder& DefineNamedOwnProperty(Register object,
-                                               const AstRawString* name,
-                                               int feedback_slot);
-
-  // Set a property keyed by a value in a register, trigger the setters and
-  // set traps if necessary. The value to be set should be in the
-  // accumulator.
-  BytecodeArrayBuilder& SetKeyedProperty(Register object, Register key,
-                                         int feedback_slot,
-                                         LanguageMode language_mode);
-
-  // Define an own property keyed by a value in a register, trigger the
-  // defineProperty traps if necessary. The value to be defined should be
+  // Store a property named by a property name. The value to be stored should be
   // in the accumulator.
-  BytecodeArrayBuilder& DefineKeyedOwnProperty(Register object, Register key,
-                                               int feedback_slot);
+  BytecodeArrayBuilder& StoreNamedProperty(Register object,
+                                           const AstRawString* name,
+                                           int feedback_slot,
+                                           LanguageMode language_mode);
 
+  // Store a property named by a property name without feedback slot. The value
+  // to be stored should be in the accumulator.
+  BytecodeArrayBuilder& StoreNamedPropertyNoFeedback(
+      Register object, const AstRawString* name, LanguageMode language_mode);
+
+  // Store a property named by a constant from the constant pool. The value to
+  // be stored should be in the accumulator.
+  BytecodeArrayBuilder& StoreNamedProperty(Register object,
+                                           size_t constant_pool_entry,
+                                           int feedback_slot,
+                                           LanguageMode language_mode);
+  // Store an own property named by a constant from the constant pool. The
+  // value to be stored should be in the accumulator.
+  BytecodeArrayBuilder& StoreNamedOwnProperty(Register object,
+                                              const AstRawString* name,
+                                              int feedback_slot);
+  // Store a property keyed by a value in a register. The value to be stored
+  // should be in the accumulator.
+  BytecodeArrayBuilder& StoreKeyedProperty(Register object, Register key,
+                                           int feedback_slot,
+                                           LanguageMode language_mode);
   // Store an own element in an array literal. The value to be stored should be
   // in the accumulator.
   BytecodeArrayBuilder& StoreInArrayLiteral(Register array, Register index,
                                             int feedback_slot);
+  // Store the home object property. The value to be stored should be in the
+  // accumulator.
+  BytecodeArrayBuilder& StoreHomeObjectProperty(Register object,
+                                                int feedback_slot,
+                                                LanguageMode language_mode);
 
   // Store the class fields property. The initializer to be stored should
   // be in the accumulator.
@@ -309,6 +303,11 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
   // feedback is recorded in the |feedback_slot| in the type feedback vector.
   BytecodeArrayBuilder& CallAnyReceiver(Register callable, RegisterList args,
                                         int feedback_slot);
+
+  // Call a JS function with an any receiver, possibly (but not necessarily)
+  // undefined. The JSFunction or Callable to be called should be in |callable|.
+  // The arguments should be in |args|, with the receiver in |args[0]|.
+  BytecodeArrayBuilder& CallNoFeedback(Register callable, RegisterList args);
 
   // Tail call into a JS function. The JSFunction or Callable to be called
   // should be in |callable|. The arguments should be in |args|, with the
@@ -456,7 +455,6 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
   BytecodeArrayBuilder& ThrowReferenceErrorIfHole(const AstRawString* name);
   BytecodeArrayBuilder& ThrowSuperNotCalledIfHole();
   BytecodeArrayBuilder& ThrowSuperAlreadyCalledIfNotHole();
-  BytecodeArrayBuilder& ThrowIfNotSuperConstructor(Register constructor);
 
   // Debugger.
   BytecodeArrayBuilder& Debugger();
@@ -508,23 +506,8 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
   void InitializeReturnPosition(FunctionLiteral* literal);
 
   void SetStatementPosition(Statement* stmt) {
-    SetStatementPosition(stmt->position());
-  }
-
-  BytecodeSourceInfo PopSourcePosition() {
-    BytecodeSourceInfo source_info = latest_source_info_;
-    latest_source_info_.set_invalid();
-    return source_info;
-  }
-
-  void PushSourcePosition(BytecodeSourceInfo source_info) {
-    DCHECK(!latest_source_info_.is_valid());
-    latest_source_info_ = source_info;
-  }
-
-  void SetStatementPosition(int position) {
-    if (position == kNoSourcePosition) return;
-    latest_source_info_.MakeStatementPosition(position);
+    if (stmt->position() == kNoSourcePosition) return;
+    latest_source_info_.MakeStatementPosition(stmt->position());
   }
 
   void SetExpressionPosition(Expression* expr) {
@@ -541,7 +524,16 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
   }
 
   void SetExpressionAsStatementPosition(Expression* expr) {
-    SetStatementPosition(expr->position());
+    if (expr->position() == kNoSourcePosition) return;
+    latest_source_info_.MakeStatementPosition(expr->position());
+  }
+
+  void SetReturnPosition(int source_position, FunctionLiteral* literal) {
+    if (source_position != kNoSourcePosition) {
+      latest_source_info_.MakeStatementPosition(source_position);
+    } else if (literal->return_position() != kNoSourcePosition) {
+      latest_source_info_.MakeStatementPosition(literal->return_position());
+    }
   }
 
   bool RemainderOfBlockIsDead() const {
@@ -573,7 +565,7 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
 
  private:
   friend class BytecodeRegisterAllocator;
-  template <Bytecode bytecode, ImplicitRegisterUse implicit_register_use,
+  template <Bytecode bytecode, AccumulatorUse accumulator_use,
             OperandType... operand_types>
   friend class BytecodeNodeBuilder;
 
@@ -619,7 +611,7 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
   // during bytecode generation.
   BytecodeArrayBuilder& Illegal();
 
-  template <Bytecode bytecode, ImplicitRegisterUse implicit_register_use>
+  template <Bytecode bytecode, AccumulatorUse accumulator_use>
   void PrepareToOutputBytecode();
 
   BytecodeArrayWriter* bytecode_array_writer() {
@@ -647,6 +639,8 @@ class V8_EXPORT_PRIVATE BytecodeArrayBuilder final {
   BytecodeRegisterOptimizer* register_optimizer_;
   BytecodeSourceInfo latest_source_info_;
   BytecodeSourceInfo deferred_source_info_;
+
+  DISALLOW_COPY_AND_ASSIGN(BytecodeArrayBuilder);
 };
 
 V8_EXPORT_PRIVATE std::ostream& operator<<(

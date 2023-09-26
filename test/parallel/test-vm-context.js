@@ -22,6 +22,7 @@
 'use strict';
 require('../common');
 const assert = require('assert');
+const { inspect } = require('util');
 const vm = require('vm');
 const Script = vm.Script;
 let script = new Script('"passed";');
@@ -57,7 +58,8 @@ try {
   vm.runInContext('throw new Error()', context, 'expected-filename.js');
 } catch (e) {
   gh1140Exception = e;
-  assert.match(e.stack, /expected-filename/);
+  assert.ok(/expected-filename/.test(e.stack),
+            `expected appearance of filename in Error stack: ${inspect(e)}`);
 }
 // This is outside of catch block to confirm catch block ran.
 assert.strictEqual(gh1140Exception.toString(), 'Error');

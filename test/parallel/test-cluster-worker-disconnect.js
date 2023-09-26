@@ -34,7 +34,7 @@ if (cluster.isWorker) {
     process.exit(42);
   }));
 
-} else if (cluster.isPrimary) {
+} else if (cluster.isMaster) {
 
   const checks = {
     cluster: {

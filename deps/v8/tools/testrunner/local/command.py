@@ -2,6 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+# for py2/py3 compatibility
+from __future__ import print_function
+
 from contextlib import contextmanager
 import os
 import re
@@ -15,6 +18,7 @@ from ..local.android import (
     android_driver, CommandFailedException, TimeoutException)
 from ..local import utils
 from ..objects import output
+
 
 BASE_DIR = os.path.normpath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), '..' , '..', '..'))
@@ -113,8 +117,8 @@ class BaseCommand(object):
     return output.Output(
       process.returncode,
       timeout_occured[0],
-      stdout.decode('utf-8', 'replace'),
-      stderr.decode('utf-8', 'replace'),
+      stdout.decode('utf-8', 'replace').encode('utf-8'),
+      stderr.decode('utf-8', 'replace').encode('utf-8'),
       process.pid,
       duration
     )
@@ -196,17 +200,13 @@ class PosixCommand(BaseCommand):
         stderr=subprocess.PIPE,
         env=self._get_env(),
         shell=True,
-        # Make the new shell create its own process group. This allows to kill
-        # all spawned processes reliably (https://crbug.com/v8/8292).
-        preexec_fn=os.setsid,
       )
     except Exception as e:
       sys.stderr.write('Error executing: %s\n' % self)
       raise e
 
   def _kill_process(self, process):
-    # Kill the whole process group (PID == GPID after setsid).
-    os.killpg(process.pid, signal.SIGKILL)
+    process.kill()
 
 
 def taskkill_windows(process, verbose=False, force=True):

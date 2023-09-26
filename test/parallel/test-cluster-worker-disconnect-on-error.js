@@ -7,7 +7,7 @@ const assert = require('assert');
 cluster.schedulingPolicy = cluster.SCHED_NONE;
 
 const server = http.createServer();
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   let worker;
 
   server.listen(0, common.mustSucceed(() => {

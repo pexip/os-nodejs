@@ -125,9 +125,8 @@ class Variable final : public ZoneObject {
   bool IsLookupSlot() const { return location() == VariableLocation::LOOKUP; }
   bool IsGlobalObjectProperty() const;
 
-  // True for 'let' and 'const' variables declared in the script scope of a REPL
-  // script.
-  bool IsReplGlobal() const;
+  // True for 'let' variables declared in the script scope of a REPL script.
+  bool IsReplGlobalLet() const;
 
   bool is_dynamic() const { return IsDynamicVariableMode(mode()); }
 

@@ -90,7 +90,7 @@ class InstructionOperandConverter {
     return ToExternalReference(instr_->InputAt(index));
   }
 
-  Handle<CodeT> InputCode(size_t index) {
+  Handle<Code> InputCode(size_t index) {
     return ToCode(instr_->InputAt(index));
   }
 
@@ -168,7 +168,7 @@ class InstructionOperandConverter {
     return ToConstant(op).ToExternalReference();
   }
 
-  Handle<CodeT> ToCode(InstructionOperand* op) {
+  Handle<Code> ToCode(InstructionOperand* op) {
     return ToConstant(op).ToCode();
   }
 
@@ -187,10 +187,9 @@ class InstructionOperandConverter {
 // Deoptimization exit.
 class DeoptimizationExit : public ZoneObject {
  public:
-  explicit DeoptimizationExit(SourcePosition pos, BytecodeOffset bailout_id,
+  explicit DeoptimizationExit(SourcePosition pos, BailoutId bailout_id,
                               int translation_id, int pc_offset,
-                              DeoptimizeKind kind, DeoptimizeReason reason,
-                              NodeId node_id)
+                              DeoptimizeKind kind, DeoptimizeReason reason)
       : deoptimization_id_(kNoDeoptIndex),
         pos_(pos),
         bailout_id_(bailout_id),
@@ -198,8 +197,6 @@ class DeoptimizationExit : public ZoneObject {
         pc_offset_(pc_offset),
         kind_(kind),
         reason_(reason),
-        node_id_(node_id),
-        immediate_args_(nullptr),
         emitted_(false) {}
 
   bool has_deoptimization_id() const {
@@ -213,22 +210,12 @@ class DeoptimizationExit : public ZoneObject {
     deoptimization_id_ = deoptimization_id;
   }
   SourcePosition pos() const { return pos_; }
-  // The label for the deoptimization call.
   Label* label() { return &label_; }
-  // The label after the deoptimization check, which will resume execution.
-  Label* continue_label() { return &continue_label_; }
-  BytecodeOffset bailout_id() const { return bailout_id_; }
+  BailoutId bailout_id() const { return bailout_id_; }
   int translation_id() const { return translation_id_; }
   int pc_offset() const { return pc_offset_; }
   DeoptimizeKind kind() const { return kind_; }
   DeoptimizeReason reason() const { return reason_; }
-  NodeId node_id() const { return node_id_; }
-  const ZoneVector<ImmediateOperand*>* immediate_args() const {
-    return immediate_args_;
-  }
-  void set_immediate_args(ZoneVector<ImmediateOperand*>* immediate_args) {
-    immediate_args_ = immediate_args;
-  }
   // Returns whether the deopt exit has already been emitted. Most deopt exits
   // are emitted contiguously at the end of the code, but unconditional deopt
   // exits (kArchDeoptimize) may be inlined where they are encountered.
@@ -240,14 +227,11 @@ class DeoptimizationExit : public ZoneObject {
   int deoptimization_id_;
   const SourcePosition pos_;
   Label label_;
-  Label continue_label_;
-  const BytecodeOffset bailout_id_;
+  const BailoutId bailout_id_;
   const int translation_id_;
   const int pc_offset_;
   const DeoptimizeKind kind_;
   const DeoptimizeReason reason_;
-  const NodeId node_id_;
-  ZoneVector<ImmediateOperand*>* immediate_args_;
   bool emitted_;
 };
 
@@ -272,6 +256,11 @@ class OutOfLineCode : public ZoneObject {
   TurboAssembler* const tasm_;
   OutOfLineCode* const next_;
 };
+
+inline bool HasCallDescriptorFlag(Instruction* instr,
+                                  CallDescriptor::Flag flag) {
+  return MiscField::decode(instr->opcode()) & flag;
+}
 
 }  // namespace compiler
 }  // namespace internal

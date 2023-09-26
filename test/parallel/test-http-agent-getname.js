@@ -18,13 +18,7 @@ assert.strictEqual(
   'localhost:80:192.168.1.1'
 );
 
-// empty argument
-assert.strictEqual(
-  agent.getName(),
-  'localhost::'
-);
-
-// empty options
+// empty
 assert.strictEqual(
   agent.getName({}),
   'localhost::'

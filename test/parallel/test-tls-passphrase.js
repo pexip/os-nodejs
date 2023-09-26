@@ -223,7 +223,7 @@ server.listen(0, common.mustCall(function() {
   }, onSecureConnect());
 })).unref();
 
-const errMessageDecrypt = /bad decrypt/;
+const errMessagePassword = /bad decrypt/;
 
 // Missing passphrase
 assert.throws(function() {
@@ -233,7 +233,7 @@ assert.throws(function() {
     cert: cert,
     rejectUnauthorized: false
   });
-}, errMessageDecrypt);
+}, errMessagePassword);
 
 assert.throws(function() {
   tls.connect({
@@ -242,7 +242,7 @@ assert.throws(function() {
     cert: cert,
     rejectUnauthorized: false
   });
-}, errMessageDecrypt);
+}, errMessagePassword);
 
 assert.throws(function() {
   tls.connect({
@@ -251,7 +251,9 @@ assert.throws(function() {
     cert: cert,
     rejectUnauthorized: false
   });
-}, errMessageDecrypt);
+}, errMessagePassword);
+
+const errMessageDecrypt = /bad decrypt/;
 
 // Invalid passphrase
 assert.throws(function() {

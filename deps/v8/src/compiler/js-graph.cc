@@ -20,8 +20,7 @@ namespace compiler {
 
 Node* JSGraph::CEntryStubConstant(int result_size, SaveFPRegsMode save_doubles,
                                   ArgvMode argv_mode, bool builtin_exit_frame) {
-  if (save_doubles == SaveFPRegsMode::kIgnore &&
-      argv_mode == ArgvMode::kStack) {
+  if (save_doubles == kDontSaveFPRegs && argv_mode == kArgvOnStack) {
     DCHECK(result_size >= 1 && result_size <= 3);
     if (!builtin_exit_frame) {
       Node** ptr = nullptr;
@@ -49,12 +48,11 @@ Node* JSGraph::CEntryStubConstant(int result_size, SaveFPRegsMode save_doubles,
 
 Node* JSGraph::Constant(const ObjectRef& ref) {
   if (ref.IsSmi()) return Constant(ref.AsSmi());
-  if (ref.IsHeapNumber()) {
-    return Constant(ref.AsHeapNumber().value());
-  }
   OddballType oddball_type =
       ref.AsHeapObject().GetHeapObjectType().oddball_type();
-  if (oddball_type == OddballType::kUndefined) {
+  if (ref.IsHeapNumber()) {
+    return Constant(ref.AsHeapNumber().value());
+  } else if (oddball_type == OddballType::kUndefined) {
     DCHECK(ref.object().equals(isolate()->factory()->undefined_value()));
     return UndefinedConstant();
   } else if (oddball_type == OddballType::kNull) {
@@ -131,9 +129,6 @@ DEFINE_GETTER(BooleanMapConstant, HeapConstant(factory()->boolean_map()))
 DEFINE_GETTER(ToNumberBuiltinConstant,
               HeapConstant(BUILTIN_CODE(isolate(), ToNumber)))
 
-DEFINE_GETTER(PlainPrimitiveToNumberBuiltinConstant,
-              HeapConstant(BUILTIN_CODE(isolate(), PlainPrimitiveToNumber)))
-
 DEFINE_GETTER(EmptyFixedArrayConstant,
               HeapConstant(factory()->empty_fixed_array()))
 
@@ -146,9 +141,6 @@ DEFINE_GETTER(PropertyArrayMapConstant,
 
 DEFINE_GETTER(FixedDoubleArrayMapConstant,
               HeapConstant(factory()->fixed_double_array_map()))
-
-DEFINE_GETTER(WeakFixedArrayMapConstant,
-              HeapConstant(factory()->weak_fixed_array_map()))
 
 DEFINE_GETTER(HeapNumberMapConstant, HeapConstant(factory()->heap_number_map()))
 
@@ -181,11 +173,11 @@ DEFINE_GETTER(EmptyStateValues,
               graph()->NewNode(common()->StateValues(0,
                                                      SparseInputMask::Dense())))
 
-DEFINE_GETTER(
-    SingleDeadTypedStateValues,
-    graph()->NewNode(common()->TypedStateValues(
-        graph()->zone()->New<ZoneVector<MachineType>>(0, graph()->zone()),
-        SparseInputMask(SparseInputMask::kEndMarker << 1))))
+DEFINE_GETTER(SingleDeadTypedStateValues,
+              graph()->NewNode(common()->TypedStateValues(
+                  new (graph()->zone()->New(sizeof(ZoneVector<MachineType>)))
+                      ZoneVector<MachineType>(0, graph()->zone()),
+                  SparseInputMask(SparseInputMask::kEndMarker << 1))))
 
 #undef DEFINE_GETTER
 #undef GET_CACHED_FIELD

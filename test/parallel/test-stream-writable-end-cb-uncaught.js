@@ -9,16 +9,15 @@ process.on('uncaughtException', common.mustCall((err) => {
 }));
 
 const writable = new stream.Writable();
-const _err = new Error('kaboom');
 
 writable._write = (chunk, encoding, cb) => {
   cb();
 };
 writable._final = (cb) => {
-  cb(_err);
+  cb(new Error('kaboom'));
 };
 
 writable.write('asd');
 writable.end(common.mustCall((err) => {
-  assert.strictEqual(err, _err);
+  assert.strictEqual(err.message, 'kaboom');
 }));

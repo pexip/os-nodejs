@@ -17,18 +17,13 @@ const zlib = require('zlib');
 const assert = require('assert');
 
 const bench = common.createBenchmark(main, {
-  duration: [5],
-  encoding: ['', 'utf-8'],
+  dur: [5],
   len: [1024, 16 * 1024 * 1024],
   concurrent: [1, 10]
 });
 
-function main({ len, duration, concurrent, encoding }) {
-  try {
-    fs.unlinkSync(filename);
-  } catch {
-    // Continue regardless of error.
-  }
+function main({ len, dur, concurrent }) {
+  try { fs.unlinkSync(filename); } catch {}
   let data = Buffer.alloc(len, 'x');
   fs.writeFileSync(filename, data);
   data = null;
@@ -43,15 +38,11 @@ function main({ len, duration, concurrent, encoding }) {
     const totalOps = reads + zips;
     benchEnded = true;
     bench.end(totalOps);
-    try {
-      fs.unlinkSync(filename);
-    } catch {
-      // Continue regardless of error.
-    }
-  }, duration * 1000);
+    try { fs.unlinkSync(filename); } catch {}
+  }, dur * 1000);
 
   function read() {
-    fs.readFile(filename, encoding, afterRead);
+    fs.readFile(filename, afterRead);
   }
 
   function afterRead(er, data) {

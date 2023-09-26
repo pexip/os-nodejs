@@ -18,8 +18,6 @@
 namespace v8 {
 namespace internal {
 
-#include "torque-generated/src/objects/js-break-iterator-tq-inl.inc"
-
 TQ_OBJECT_CONSTRUCTORS_IMPL(JSV8BreakIterator)
 
 ACCESSORS(JSV8BreakIterator, break_iterator, Managed<icu::BreakIterator>,

@@ -20,6 +20,10 @@ testTransform(666, 777, {
   writableHighWaterMark: 777,
 });
 
+// test 0 overriding defaultHwm
+testTransform(0, DEFAULT, { readableHighWaterMark: 0 });
+testTransform(DEFAULT, 0, { writableHighWaterMark: 0 });
+
 // Test highWaterMark overriding
 testTransform(555, 555, {
   highWaterMark: 555,
@@ -31,6 +35,21 @@ testTransform(555, 555, {
 });
 testTransform(555, 555, {
   highWaterMark: 555,
+  readableHighWaterMark: 666,
+  writableHighWaterMark: 777,
+});
+
+// Test highWaterMark = 0 overriding
+testTransform(0, 0, {
+  highWaterMark: 0,
+  readableHighWaterMark: 666,
+});
+testTransform(0, 0, {
+  highWaterMark: 0,
+  writableHighWaterMark: 777,
+});
+testTransform(0, 0, {
+  highWaterMark: 0,
   readableHighWaterMark: 666,
   writableHighWaterMark: 777,
 });
@@ -49,18 +68,16 @@ testTransform(555, 555, {
     new Transform({ readableHighWaterMark: NaN });
   }, {
     name: 'TypeError',
-    code: 'ERR_INVALID_ARG_VALUE',
-    message: "The property 'options.readableHighWaterMark' is invalid. " +
-      'Received NaN'
+    code: 'ERR_INVALID_OPT_VALUE',
+    message: 'The value "NaN" is invalid for option "readableHighWaterMark"'
   });
 
   assert.throws(() => {
     new Transform({ writableHighWaterMark: NaN });
   }, {
     name: 'TypeError',
-    code: 'ERR_INVALID_ARG_VALUE',
-    message: "The property 'options.writableHighWaterMark' is invalid. " +
-      'Received NaN'
+    code: 'ERR_INVALID_OPT_VALUE',
+    message: 'The value "NaN" is invalid for option "writableHighWaterMark"'
   });
 }
 

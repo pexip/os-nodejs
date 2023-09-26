@@ -32,19 +32,16 @@ class MemoryLowering final : public Reducer {
   // An allocation state is propagated on the effect paths through the graph.
   class AllocationState final : public ZoneObject {
    public:
-    AllocationState(const AllocationState&) = delete;
-    AllocationState& operator=(const AllocationState&) = delete;
-
     static AllocationState const* Empty(Zone* zone) {
-      return zone->New<AllocationState>();
+      return new (zone) AllocationState();
     }
     static AllocationState const* Closed(AllocationGroup* group, Node* effect,
                                          Zone* zone) {
-      return zone->New<AllocationState>(group, effect);
+      return new (zone) AllocationState(group, effect);
     }
     static AllocationState const* Open(AllocationGroup* group, intptr_t size,
                                        Node* top, Node* effect, Zone* zone) {
-      return zone->New<AllocationState>(group, size, top, effect);
+      return new (zone) AllocationState(group, size, top, effect);
     }
 
     bool IsYoungGenerationAllocation() const;
@@ -55,8 +52,6 @@ class MemoryLowering final : public Reducer {
     intptr_t size() const { return size_; }
 
    private:
-    friend Zone;
-
     AllocationState();
     explicit AllocationState(AllocationGroup* group, Node* effect);
     AllocationState(AllocationGroup* group, intptr_t size, Node* top,
@@ -68,6 +63,8 @@ class MemoryLowering final : public Reducer {
     intptr_t const size_;
     Node* const top_;
     Node* const effect_;
+
+    DISALLOW_COPY_AND_ASSIGN(AllocationState);
   };
 
   using WriteBarrierAssertFailedCallback = std::function<void(
@@ -75,11 +72,13 @@ class MemoryLowering final : public Reducer {
 
   MemoryLowering(
       JSGraph* jsgraph, Zone* zone, JSGraphAssembler* graph_assembler,
+      PoisoningMitigationLevel poisoning_level,
       AllocationFolding allocation_folding =
           AllocationFolding::kDontAllocationFolding,
       WriteBarrierAssertFailedCallback callback = [](Node*, Node*, const char*,
                                                      Zone*) { UNREACHABLE(); },
       const char* function_debug_name = nullptr);
+  ~MemoryLowering() = default;
 
   const char* reducer_name() const override { return "MemoryReducer"; }
 
@@ -108,11 +107,9 @@ class MemoryLowering final : public Reducer {
                                            Node* value,
                                            AllocationState const* state,
                                            WriteBarrierKind);
-  Node* DecodeExternalPointer(Node* encoded_pointer, ExternalPointerTag tag);
-  Reduction ReduceLoadMap(Node* encoded_pointer);
+  Node* DecodeExternalPointer(Node* encoded_pointer);
   Node* ComputeIndex(ElementAccess const& access, Node* node);
-  void EnsureAllocateOperator();
-  Node* GetWasmInstanceNode();
+  bool NeedsPoisoning(LoadSensitivity load_sensitivity) const;
 
   Graph* graph() const { return graph_; }
   Isolate* isolate() const { return isolate_; }
@@ -123,7 +120,6 @@ class MemoryLowering final : public Reducer {
   JSGraphAssembler* gasm() const { return graph_assembler_; }
 
   SetOncePointer<const Operator> allocate_operator_;
-  SetOncePointer<Node> wasm_instance_node_;
   Isolate* isolate_;
   Zone* zone_;
   Graph* graph_;
@@ -131,6 +127,7 @@ class MemoryLowering final : public Reducer {
   MachineOperatorBuilder* machine_;
   JSGraphAssembler* graph_assembler_;
   AllocationFolding allocation_folding_;
+  PoisoningMitigationLevel poisoning_level_;
   WriteBarrierAssertFailedCallback write_barrier_assert_failed_;
   const char* function_debug_name_;
 

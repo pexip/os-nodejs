@@ -5,18 +5,14 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
-
 #include <iomanip>
 
 #include "include/libplatform/libplatform.h"
-#include "include/v8-initialization.h"
 #include "src/base/platform/platform.h"
-#include "src/base/platform/wrappers.h"
-#include "src/base/sanitizer/msan.h"
-#include "src/base/vector.h"
 #include "src/codegen/assembler-arch.h"
 #include "src/codegen/source-position-table.h"
 #include "src/flags/flags.h"
+#include "src/sanitizer/msan.h"
 #include "src/snapshot/context-serializer.h"
 #include "src/snapshot/embedded/embedded-file-writer.h"
 #include "src/snapshot/snapshot.h"
@@ -39,20 +35,19 @@ class SnapshotFileWriter {
     // we end up with a corrupted snapshot file. The build step would succeed,
     // but the build target is unusable. Ideally we would write out temporary
     // files and only move them to the final destination as last step.
-    v8::base::Vector<const i::byte> blob_vector(
+    i::Vector<const i::byte> blob_vector(
         reinterpret_cast<const i::byte*>(blob.data), blob.raw_size);
     MaybeWriteSnapshotFile(blob_vector);
     MaybeWriteStartupBlob(blob_vector);
   }
 
  private:
-  void MaybeWriteStartupBlob(
-      const v8::base::Vector<const i::byte>& blob) const {
+  void MaybeWriteStartupBlob(const i::Vector<const i::byte>& blob) const {
     if (!snapshot_blob_path_) return;
 
     FILE* fp = GetFileDescriptorOrDie(snapshot_blob_path_);
     size_t written = fwrite(blob.begin(), 1, blob.length(), fp);
-    v8::base::Fclose(fp);
+    fclose(fp);
     if (written != static_cast<size_t>(blob.length())) {
       i::PrintF("Writing snapshot file failed.. Aborting.\n");
       remove(snapshot_blob_path_);
@@ -60,8 +55,7 @@ class SnapshotFileWriter {
     }
   }
 
-  void MaybeWriteSnapshotFile(
-      const v8::base::Vector<const i::byte>& blob) const {
+  void MaybeWriteSnapshotFile(const i::Vector<const i::byte>& blob) const {
     if (!snapshot_cpp_path_) return;
 
     FILE* fp = GetFileDescriptorOrDie(snapshot_cpp_path_);
@@ -70,7 +64,7 @@ class SnapshotFileWriter {
     WriteSnapshotFileData(fp, blob);
     WriteSnapshotFileSuffix(fp);
 
-    v8::base::Fclose(fp);
+    fclose(fp);
   }
 
   static void WriteSnapshotFilePrefix(FILE* fp) {
@@ -90,8 +84,8 @@ class SnapshotFileWriter {
     fprintf(fp, "}  // namespace v8\n");
   }
 
-  static void WriteSnapshotFileData(
-      FILE* fp, const v8::base::Vector<const i::byte>& blob) {
+  static void WriteSnapshotFileData(FILE* fp,
+                                    const i::Vector<const i::byte>& blob) {
     fprintf(fp,
             "alignas(kPointerAlignment) static const byte blob_data[] = {\n");
     WriteBinaryContentsAsCArray(fp, blob);
@@ -102,7 +96,7 @@ class SnapshotFileWriter {
   }
 
   static void WriteBinaryContentsAsCArray(
-      FILE* fp, const v8::base::Vector<const i::byte>& blob) {
+      FILE* fp, const i::Vector<const i::byte>& blob) {
     for (int i = 0; i < blob.length(); i++) {
       if ((i & 0x1F) == 0x1F) fprintf(fp, "\n");
       if (i > 0) fprintf(fp, ",");
@@ -145,7 +139,7 @@ char* GetExtraCode(char* filename, const char* description) {
     }
     i += read;
   }
-  v8::base::Fclose(file);
+  fclose(file);
   return chars;
 }
 
@@ -159,7 +153,7 @@ v8::StartupData CreateSnapshotDataBlob(v8::Isolate* isolate,
       isolate);
 
   if (i::FLAG_profile_deserialization) {
-    i::PrintF("[Creating snapshot took %0.3f ms]\n",
+    i::PrintF("Creating snapshot took %0.3f ms\n",
               timer.Elapsed().InMillisecondsF());
   }
 
@@ -223,28 +217,18 @@ int main(int argc, char** argv) {
 
   // Print the usage if an error occurs when parsing the command line
   // flags or if the help flag is set.
-  using HelpOptions = i::FlagList::HelpOptions;
-  std::string usage = "Usage: " + std::string(argv[0]) +
-                      " [--startup-src=file]" + " [--startup-blob=file]" +
-                      " [--embedded-src=file]" + " [--embedded-variant=label]" +
-                      " [--target-arch=arch]" +
-                      " [--target-os=os] [extras]\n\n";
-  int result = i::FlagList::SetFlagsFromCommandLine(
-      &argc, argv, true, HelpOptions(HelpOptions::kExit, usage.c_str()));
-  if (result > 0 || (argc > 3)) {
-    i::PrintF(stdout, "%s", usage.c_str());
-    return result;
+  int result = i::FlagList::SetFlagsFromCommandLine(&argc, argv, true);
+  if (result > 0 || (argc > 3) || i::FLAG_help) {
+    ::printf("Usage: %s --startup_src=... --startup_blob=... [extras]\n",
+             argv[0]);
+    i::FlagList::PrintHelp();
+    return !i::FLAG_help;
   }
 
   i::CpuFeatures::Probe(true);
   v8::V8::InitializeICUDefaultLocation(argv[0]);
   std::unique_ptr<v8::Platform> platform = v8::platform::NewDefaultPlatform();
   v8::V8::InitializePlatform(platform.get());
-#ifdef V8_SANDBOX
-  if (!v8::V8::InitializeSandbox()) {
-    FATAL("Could not initialize the sandbox");
-  }
-#endif
   v8::V8::Initialize();
 
   {
@@ -308,6 +292,6 @@ int main(int argc, char** argv) {
   i::FreeCurrentEmbeddedBlob();
 
   v8::V8::Dispose();
-  v8::V8::DisposePlatform();
+  v8::V8::ShutdownPlatform();
   return 0;
 }

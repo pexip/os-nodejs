@@ -29,7 +29,7 @@ class CallPrinter final : public AstVisitor<CallPrinter> {
   // The following routine prints the node with position |position| into a
   // string.
   Handle<String> Print(FunctionLiteral* program, int position);
-  enum class ErrorHint {
+  enum ErrorHint {
     kNone,
     kNormalIterator,
     kAsyncIterator,
@@ -52,7 +52,6 @@ class CallPrinter final : public AstVisitor<CallPrinter> {
 #undef DECLARE_VISIT
 
  private:
-  void Print(char c);
   void Print(const char* str);
   void Print(Handle<String> str);
 
@@ -134,11 +133,8 @@ class AstPrinter final : public AstVisitor<AstPrinter> {
                            const char* prefix = "");
   void PrintObjectProperties(
       const ZonePtrList<ObjectLiteral::Property>* properties);
-  void PrintClassProperty(ClassLiteral::Property* property);
   void PrintClassProperties(
       const ZonePtrList<ClassLiteral::Property>* properties);
-  void PrintClassStaticElements(
-      const ZonePtrList<ClassLiteral::StaticElement>* static_elements);
 
   void inc_indent() { indent_++; }
   void dec_indent() { indent_--; }

@@ -279,9 +279,8 @@ void HandleGotoDefinitionRequest(GotoDefinitionRequest request,
     return;
   }
 
-  auto pos =
-      LineAndColumn::WithUnknownOffset(request.params().position().line(),
-                                       request.params().position().character());
+  LineAndColumn pos{request.params().position().line(),
+                    request.params().position().character()};
 
   if (auto maybe_definition = LanguageServerData::FindDefinition(id, pos)) {
     SourcePosition definition = *maybe_definition;
@@ -312,22 +311,22 @@ void HandleDocumentSymbolRequest(DocumentSymbolRequest request,
     DCHECK(symbol->IsUserDefined());
     if (symbol->IsMacro()) {
       Macro* macro = Macro::cast(symbol);
-      SymbolInformation info = response.add_result();
-      info.set_name(macro->ReadableName());
-      info.set_kind(SymbolKind::kFunction);
-      info.location().SetTo(macro->Position());
+      SymbolInformation symbol = response.add_result();
+      symbol.set_name(macro->ReadableName());
+      symbol.set_kind(SymbolKind::kFunction);
+      symbol.location().SetTo(macro->Position());
     } else if (symbol->IsBuiltin()) {
       Builtin* builtin = Builtin::cast(symbol);
-      SymbolInformation info = response.add_result();
-      info.set_name(builtin->ReadableName());
-      info.set_kind(SymbolKind::kFunction);
-      info.location().SetTo(builtin->Position());
+      SymbolInformation symbol = response.add_result();
+      symbol.set_name(builtin->ReadableName());
+      symbol.set_kind(SymbolKind::kFunction);
+      symbol.location().SetTo(builtin->Position());
     } else if (symbol->IsGenericCallable()) {
       GenericCallable* generic = GenericCallable::cast(symbol);
-      SymbolInformation info = response.add_result();
-      info.set_name(generic->name());
-      info.set_kind(SymbolKind::kFunction);
-      info.location().SetTo(generic->Position());
+      SymbolInformation symbol = response.add_result();
+      symbol.set_name(generic->name());
+      symbol.set_kind(SymbolKind::kFunction);
+      symbol.location().SetTo(generic->Position());
     } else if (symbol->IsTypeAlias()) {
       const Type* type = TypeAlias::cast(symbol)->type();
       SymbolKind kind =

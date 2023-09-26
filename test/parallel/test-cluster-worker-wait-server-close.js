@@ -28,7 +28,7 @@ if (cluster.isWorker) {
     assert(serverClosed);
     clearInterval(keepOpen);
   });
-} else if (cluster.isPrimary) {
+} else if (cluster.isMaster) {
   // start worker
   const worker = cluster.fork();
 

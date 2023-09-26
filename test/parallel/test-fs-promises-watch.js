@@ -1,3 +1,4 @@
+// Flags: --experimental-abortcontroller
 'use strict';
 const common = require('../common');
 
@@ -47,11 +48,9 @@ for (const testCase of kCases) {
   const content1 = Date.now() + testCase.fileName.toLowerCase().repeat(1e4);
   fs.writeFileSync(testCase.filePath, content1);
 
-  let interval;
   async function test() {
     const watcher = watch(testCase[testCase.field]);
     for await (const { eventType, filename } of watcher) {
-      clearInterval(interval);
       assert.strictEqual(['rename', 'change'].includes(eventType), true);
       assert.strictEqual(filename, testCase.fileName);
       break;
@@ -66,54 +65,42 @@ for (const testCase of kCases) {
 
   // Long content so it's actually flushed. toUpperCase so there's real change.
   const content2 = Date.now() + testCase.fileName.toUpperCase().repeat(1e4);
-  interval = setInterval(() => {
+  setImmediate(() => {
     fs.writeFileSync(testCase.filePath, '');
     fs.writeFileSync(testCase.filePath, content2);
-  }, 100);
+  });
 
   test().then(common.mustCall());
 }
 
 assert.rejects(
-  async () => {
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const _ of watch(1)) { }
-  },
+  // eslint-disable-next-line no-unused-vars
+  async () => { for await (const _ of watch(1)) {} },
   { code: 'ERR_INVALID_ARG_TYPE' });
 
 assert.rejects(
-  async () => {
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const _ of watch(__filename, 1)) { }
-  },
+  // eslint-disable-next-line no-unused-vars
+  async () => { for await (const _ of watch(__filename, 1)) {} },
   { code: 'ERR_INVALID_ARG_TYPE' });
 
 assert.rejects(
-  async () => {
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const _ of watch('', { persistent: 1 })) { }
-  },
+  // eslint-disable-next-line no-unused-vars
+  async () => { for await (const _ of watch('', { persistent: 1 })) {} },
   { code: 'ERR_INVALID_ARG_TYPE' });
 
 assert.rejects(
-  async () => {
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const _ of watch('', { recursive: 1 })) { }
-  },
+  // eslint-disable-next-line no-unused-vars
+  async () => { for await (const _ of watch('', { recursive: 1 })) {} },
   { code: 'ERR_INVALID_ARG_TYPE' });
 
 assert.rejects(
-  async () => {
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const _ of watch('', { encoding: 1 })) { }
-  },
+  // eslint-disable-next-line no-unused-vars
+  async () => { for await (const _ of watch('', { encoding: 1 })) {} },
   { code: 'ERR_INVALID_ARG_VALUE' });
 
 assert.rejects(
-  async () => {
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const _ of watch('', { signal: 1 })) { }
-  },
+  // eslint-disable-next-line no-unused-vars
+  async () => { for await (const _ of watch('', { signal: 1 })) {} },
   { code: 'ERR_INVALID_ARG_TYPE' });
 
 (async () => {
@@ -121,8 +108,8 @@ assert.rejects(
   const { signal } = ac;
   setImmediate(() => ac.abort());
   try {
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const _ of watch(__filename, { signal })) { }
+    // eslint-disable-next-line no-unused-vars
+    for await (const _ of watch(__filename, { signal })) {}
   } catch (err) {
     assert.strictEqual(err.name, 'AbortError');
   }

@@ -29,7 +29,7 @@ proc.once('exit', common.mustCall(() => {
         return false;
       if (trace.cat !== 'v8')
         return false;
-      if (!trace.name.startsWith('V8.'))
+      if (trace.name !== 'V8.ScriptCompiler')
         return false;
       return true;
     }));

@@ -25,10 +25,8 @@ const assert = require('assert');
 const exec = require('child_process').exec;
 const fixtures = require('../common/fixtures');
 
-function errExec(script, option, callback) {
-  callback = typeof option === 'function' ? option : callback;
-  option = typeof option === 'string' ? option : '';
-  const cmd = `"${process.argv[0]}" ${option} "${fixtures.path(script)}"`;
+function errExec(script, callback) {
+  const cmd = `"${process.argv[0]}" "${fixtures.path(script)}"`;
   return exec(cmd, (err, stdout, stderr) => {
     // There was some error
     assert.ok(err);
@@ -46,43 +44,38 @@ const syntaxErrorMessage = /\bSyntaxError\b/;
 
 // Simple throw error
 errExec('throws_error.js', common.mustCall((err, stdout, stderr) => {
-  assert.match(stderr, /blah/);
+  assert.ok(/blah/.test(stderr));
 }));
 
 
 // Trying to JSON.parse(undefined)
 errExec('throws_error2.js', common.mustCall((err, stdout, stderr) => {
-  assert.match(stderr, syntaxErrorMessage);
+  assert.ok(syntaxErrorMessage.test(stderr));
 }));
 
 
 // Trying to JSON.parse(undefined) in nextTick
 errExec('throws_error3.js', common.mustCall((err, stdout, stderr) => {
-  assert.match(stderr, syntaxErrorMessage);
+  assert.ok(syntaxErrorMessage.test(stderr));
 }));
 
 
 // throw ILLEGAL error
 errExec('throws_error4.js', common.mustCall((err, stdout, stderr) => {
-  assert.match(stderr, syntaxErrorMessage);
+  assert.ok(syntaxErrorMessage.test(stderr));
 }));
 
 // Specific long exception line doesn't result in stack overflow
 errExec('throws_error5.js', common.mustCall((err, stdout, stderr) => {
-  assert.match(stderr, syntaxErrorMessage);
+  assert.ok(syntaxErrorMessage.test(stderr));
 }));
 
 // Long exception line with length > errorBuffer doesn't result in assertion
 errExec('throws_error6.js', common.mustCall((err, stdout, stderr) => {
-  assert.match(stderr, syntaxErrorMessage);
+  assert.ok(syntaxErrorMessage.test(stderr));
 }));
 
 // Object that throws in toString() doesn't print garbage
 errExec('throws_error7.js', common.mustCall((err, stdout, stderr) => {
-  assert.match(stderr, /throw {\r?\n\^\r?\n{ toString: \[Function: toString] }\r?\n\r?\nNode\.js \S+\r?\n$/);
-}));
-
-// Regression tests for https://github.com/nodejs/node/issues/39149
-errExec('throws_error7.js', '--enable-source-maps', common.mustCall((err, stdout, stderr) => {
-  assert.match(stderr, /throw {\r?\n\^\r?\n{ toString: \[Function: toString] }\r?\n\r?\nNode\.js \S+\r?\n$/);
+  assert.ok(/throw {\r?\n\^\r?\n{ toString: \[Function: toString] }\r?\n$/.test(stderr));
 }));

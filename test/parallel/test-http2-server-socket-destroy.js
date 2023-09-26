@@ -8,7 +8,6 @@ if (!common.hasCrypto)
 const assert = require('assert');
 const h2 = require('http2');
 const { kSocket } = require('internal/http2/util');
-const { once } = require('events');
 
 const server = h2.createServer();
 
@@ -37,7 +36,7 @@ function onStream(stream) {
 
 server.listen(0);
 
-server.on('listening', common.mustCall(async () => {
+server.on('listening', common.mustCall(() => {
   const client = h2.connect(`http://localhost:${server.address().port}`);
   // The client may have an ECONNRESET error here depending on the operating
   // system, due mainly to differences in the timing of socket closing. Do
@@ -59,10 +58,5 @@ server.on('listening', common.mustCall(async () => {
 
   req.on('aborted', common.mustCall());
   req.resume();
-
-  try {
-    await once(req, 'end');
-  } catch {
-    // Continue regardless of error.
-  }
+  req.on('end', common.mustCall());
 }));

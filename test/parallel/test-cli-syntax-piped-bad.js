@@ -29,7 +29,7 @@ syntaxArgs.forEach(function(arg) {
   assert.strictEqual(c.stdout, '');
 
   // stderr should have a syntax error message
-  assert.match(c.stderr, syntaxErrorRE);
+  assert(syntaxErrorRE.test(c.stderr), `${syntaxErrorRE} === ${c.stderr}`);
 
   assert.strictEqual(c.status, 1);
 });
@@ -50,7 +50,7 @@ syntaxArgs.forEach(function(arg) {
   assert.strictEqual(c.stdout, '');
 
   // stderr should have a syntax error message
-  assert.match(c.stderr, syntaxErrorRE);
+  assert(syntaxErrorRE.test(c.stderr), `${syntaxErrorRE} === ${c.stderr}`);
 
   assert.strictEqual(c.status, 1);
 });

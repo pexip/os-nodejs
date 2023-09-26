@@ -15,7 +15,6 @@
 #include "src/objects/objects-inl.h"
 #include "src/objects/slots.h"
 #include "src/snapshot/read-only-serializer.h"
-#include "src/snapshot/shared-heap-serializer.h"
 
 namespace v8 {
 namespace internal {
@@ -24,10 +23,10 @@ namespace {
 
 // The isolate roots may not point at context-specific objects during
 // serialization.
-class V8_NODISCARD SanitizeIsolateScope final {
+class SanitizeIsolateScope final {
  public:
   SanitizeIsolateScope(Isolate* isolate, bool allow_active_isolate_for_testing,
-                       const DisallowGarbageCollection& no_gc)
+                       const DisallowHeapAllocation& no_gc)
       : isolate_(isolate),
         feedback_vectors_for_profiling_tools_(
             isolate->heap()->feedback_vectors_for_profiling_tools()),
@@ -63,25 +62,18 @@ class V8_NODISCARD SanitizeIsolateScope final {
 
 }  // namespace
 
-StartupSerializer::StartupSerializer(
-    Isolate* isolate, Snapshot::SerializerFlags flags,
-    ReadOnlySerializer* read_only_serializer,
-    SharedHeapSerializer* shared_heap_serializer)
+StartupSerializer::StartupSerializer(Isolate* isolate,
+                                     Snapshot::SerializerFlags flags,
+                                     ReadOnlySerializer* read_only_serializer)
     : RootsSerializer(isolate, flags, RootIndex::kFirstStrongRoot),
-      read_only_serializer_(read_only_serializer),
-      shared_heap_serializer_(shared_heap_serializer),
-      accessor_infos_(isolate->heap()),
-      call_handler_infos_(isolate->heap()) {
+      read_only_serializer_(read_only_serializer) {
+  allocator()->UseCustomChunkSize(FLAG_serialization_chunk_size);
   InitializeCodeAddressMap();
 }
 
 StartupSerializer::~StartupSerializer() {
-  for (Handle<AccessorInfo> info : accessor_infos_) {
-    RestoreExternalReferenceRedirector(isolate(), *info);
-  }
-  for (Handle<CallHandlerInfo> info : call_handler_infos_) {
-    RestoreExternalReferenceRedirector(isolate(), *info);
-  }
+  RestoreExternalReferenceRedirectors(isolate(), accessor_infos_);
+  RestoreExternalReferenceRedirectors(isolate(), call_handler_infos_);
   OutputStatistics("StartupSerializer");
 }
 
@@ -92,7 +84,13 @@ bool IsUnexpectedCodeObject(Isolate* isolate, HeapObject obj) {
   if (!obj.IsCode()) return false;
 
   Code code = Code::cast(obj);
-  if (code.kind() == CodeKind::REGEXP) return false;
+
+  // TODO(v8:8768): Deopt entry code should not be serialized.
+  if (code.kind() == Code::STUB && isolate->deoptimizer_data() != nullptr) {
+    if (isolate->deoptimizer_data()->IsDeoptEntryCode(code)) return false;
+  }
+
+  if (code.kind() == Code::REGEXP) return false;
   if (!code.is_builtin()) return true;
   if (code.is_off_heap_trampoline()) return false;
 
@@ -100,28 +98,11 @@ bool IsUnexpectedCodeObject(Isolate* isolate, HeapObject obj) {
   // trampoline copy stored on the root list and transitively called builtins.
   // See Heap::interpreter_entry_trampoline_for_profiling.
 
-  switch (code.builtin_id()) {
-    case Builtin::kAbort:
-    case Builtin::kCEntry_Return1_DontSaveFPRegs_ArgvOnStack_NoBuiltinExit:
-    case Builtin::kInterpreterEntryTrampoline:
-    case Builtin::kRecordWriteEmitRememberedSetSaveFP:
-    case Builtin::kRecordWriteOmitRememberedSetSaveFP:
-    case Builtin::kRecordWriteEmitRememberedSetIgnoreFP:
-    case Builtin::kRecordWriteOmitRememberedSetIgnoreFP:
-#ifdef V8_IS_TSAN
-    case Builtin::kTSANRelaxedStore8IgnoreFP:
-    case Builtin::kTSANRelaxedStore8SaveFP:
-    case Builtin::kTSANRelaxedStore16IgnoreFP:
-    case Builtin::kTSANRelaxedStore16SaveFP:
-    case Builtin::kTSANRelaxedStore32IgnoreFP:
-    case Builtin::kTSANRelaxedStore32SaveFP:
-    case Builtin::kTSANRelaxedStore64IgnoreFP:
-    case Builtin::kTSANRelaxedStore64SaveFP:
-    case Builtin::kTSANRelaxedLoad32IgnoreFP:
-    case Builtin::kTSANRelaxedLoad32SaveFP:
-    case Builtin::kTSANRelaxedLoad64IgnoreFP:
-    case Builtin::kTSANRelaxedLoad64SaveFP:
-#endif  // V8_IS_TSAN
+  switch (code.builtin_index()) {
+    case Builtins::kAbort:
+    case Builtins::kCEntry_Return1_DontSaveFPRegs_ArgvOnStack_NoBuiltinExit:
+    case Builtins::kInterpreterEntryTrampoline:
+    case Builtins::kRecordWrite:
       return false;
     default:
       return true;
@@ -132,67 +113,61 @@ bool IsUnexpectedCodeObject(Isolate* isolate, HeapObject obj) {
 
 }  // namespace
 #endif  // DEBUG
-void StartupSerializer::SerializeObjectImpl(Handle<HeapObject> obj) {
-  PtrComprCageBase cage_base(isolate());
+
+void StartupSerializer::SerializeObject(HeapObject obj) {
 #ifdef DEBUG
-  if (obj->IsJSFunction(cage_base)) {
+  if (obj.IsJSFunction()) {
     v8::base::OS::PrintError("Reference stack:\n");
     PrintStack(std::cerr);
-    obj->Print(std::cerr);
+    obj.Print(std::cerr);
     FATAL(
         "JSFunction should be added through the context snapshot instead of "
         "the isolate snapshot");
   }
 #endif  // DEBUG
-  {
-    DisallowGarbageCollection no_gc;
-    HeapObject raw = *obj;
-    DCHECK(!IsUnexpectedCodeObject(isolate(), raw));
-    if (SerializeHotObject(raw)) return;
-    if (IsRootAndHasBeenSerialized(raw) && SerializeRoot(raw)) return;
-  }
+  DCHECK(!IsUnexpectedCodeObject(isolate(), obj));
 
+  if (SerializeHotObject(obj)) return;
+  if (IsRootAndHasBeenSerialized(obj) && SerializeRoot(obj)) return;
   if (SerializeUsingReadOnlyObjectCache(&sink_, obj)) return;
-  if (SerializeUsingSharedHeapObjectCache(&sink_, obj)) return;
-  if (SerializeBackReference(*obj)) return;
+  if (SerializeBackReference(obj)) return;
 
   bool use_simulator = false;
 #ifdef USE_SIMULATOR
   use_simulator = true;
 #endif
 
-  if (use_simulator && obj->IsAccessorInfo(cage_base)) {
+  if (use_simulator && obj.IsAccessorInfo()) {
     // Wipe external reference redirects in the accessor info.
-    Handle<AccessorInfo> info = Handle<AccessorInfo>::cast(obj);
+    AccessorInfo info = AccessorInfo::cast(obj);
     Address original_address =
-        Foreign::cast(info->getter()).foreign_address(isolate());
-    Foreign::cast(info->js_getter())
+        Foreign::cast(info.getter()).foreign_address(isolate());
+    Foreign::cast(info.js_getter())
         .set_foreign_address(isolate(), original_address);
-    accessor_infos_.Push(*info);
-  } else if (use_simulator && obj->IsCallHandlerInfo(cage_base)) {
-    Handle<CallHandlerInfo> info = Handle<CallHandlerInfo>::cast(obj);
+    accessor_infos_.push_back(info);
+  } else if (use_simulator && obj.IsCallHandlerInfo()) {
+    CallHandlerInfo info = CallHandlerInfo::cast(obj);
     Address original_address =
-        Foreign::cast(info->callback()).foreign_address(isolate());
-    Foreign::cast(info->js_callback())
+        Foreign::cast(info.callback()).foreign_address(isolate());
+    Foreign::cast(info.js_callback())
         .set_foreign_address(isolate(), original_address);
-    call_handler_infos_.Push(*info);
-  } else if (obj->IsScript(cage_base) &&
-             Handle<Script>::cast(obj)->IsUserJavaScript()) {
-    Handle<Script>::cast(obj)->set_context_data(
+    call_handler_infos_.push_back(info);
+  } else if (obj.IsScript() && Script::cast(obj).IsUserJavaScript()) {
+    Script::cast(obj).set_context_data(
         ReadOnlyRoots(isolate()).uninitialized_symbol());
-  } else if (obj->IsSharedFunctionInfo(cage_base)) {
+  } else if (obj.IsSharedFunctionInfo()) {
     // Clear inferred name for native functions.
-    Handle<SharedFunctionInfo> shared = Handle<SharedFunctionInfo>::cast(obj);
-    if (!shared->IsSubjectToDebugging() && shared->HasUncompiledData()) {
-      shared->uncompiled_data().set_inferred_name(
+    SharedFunctionInfo shared = SharedFunctionInfo::cast(obj);
+    if (!shared.IsSubjectToDebugging() && shared.HasUncompiledData()) {
+      shared.uncompiled_data().set_inferred_name(
           ReadOnlyRoots(isolate()).empty_string());
     }
   }
 
-  CheckRehashability(*obj);
+  CheckRehashability(obj);
 
   // Object has not yet been serialized.  Serialize it here.
-  DCHECK(!ReadOnlyHeap::Contains(*obj));
+  DCHECK(!ReadOnlyHeap::Contains(obj));
   ObjectSerializer object_serializer(this, obj, &sink_);
   object_serializer.Serialize();
 }
@@ -204,7 +179,6 @@ void StartupSerializer::SerializeWeakReferencesAndDeferred() {
   Object undefined = ReadOnlyRoots(isolate()).undefined_value();
   VisitRootPointer(Root::kStartupObjectCache, nullptr,
                    FullObjectSlot(&undefined));
-
   isolate()->heap()->IterateWeakRoots(
       this, base::EnumSet<SkipRoot>{SkipRoot::kUnserializable});
   SerializeDeferredObjects();
@@ -212,10 +186,13 @@ void StartupSerializer::SerializeWeakReferencesAndDeferred() {
 }
 
 void StartupSerializer::SerializeStrongReferences(
-    const DisallowGarbageCollection& no_gc) {
+    const DisallowHeapAllocation& no_gc) {
   Isolate* isolate = this->isolate();
   // No active threads.
   CHECK_NULL(isolate->thread_manager()->FirstThreadStateInUse());
+  // No active or weak handles.
+  CHECK_IMPLIES(!allow_active_isolate_for_testing(),
+                isolate->handle_scope_implementer()->blocks()->empty());
 
   SanitizeIsolateScope sanitize_isolate(
       isolate, allow_active_isolate_for_testing(), no_gc);
@@ -238,18 +215,12 @@ SerializedHandleChecker::SerializedHandleChecker(Isolate* isolate,
 }
 
 bool StartupSerializer::SerializeUsingReadOnlyObjectCache(
-    SnapshotByteSink* sink, Handle<HeapObject> obj) {
+    SnapshotByteSink* sink, HeapObject obj) {
   return read_only_serializer_->SerializeUsingReadOnlyObjectCache(sink, obj);
 }
 
-bool StartupSerializer::SerializeUsingSharedHeapObjectCache(
-    SnapshotByteSink* sink, Handle<HeapObject> obj) {
-  return shared_heap_serializer_->SerializeUsingSharedHeapObjectCache(sink,
-                                                                      obj);
-}
-
-void StartupSerializer::SerializeUsingStartupObjectCache(
-    SnapshotByteSink* sink, Handle<HeapObject> obj) {
+void StartupSerializer::SerializeUsingStartupObjectCache(SnapshotByteSink* sink,
+                                                         HeapObject obj) {
   int cache_index = SerializeInObjectCache(obj);
   sink->Put(kStartupObjectCache, "StartupObjectCache");
   sink->PutInt(cache_index, "startup_object_cache_index");

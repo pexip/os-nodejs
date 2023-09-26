@@ -16,12 +16,10 @@
 namespace v8 {
 namespace internal {
 
-#include "torque-generated/src/objects/cell-tq-inl.inc"
-
 TQ_OBJECT_CONSTRUCTORS_IMPL(Cell)
 
-DEF_RELAXED_GETTER(Cell, value, Object) {
-  return TaggedField<Object, kValueOffset>::Relaxed_Load(cage_base, *this);
+Cell Cell::FromValueAddress(Address value) {
+  return Cell::cast(HeapObject::FromAddress(value - kValueOffset));
 }
 
 }  // namespace internal

@@ -23,7 +23,7 @@
 const common = require('../common');
 const cluster = require('cluster');
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   const worker = cluster.fork().on('online', common.mustCall(disconnect));
 
   function disconnect() {

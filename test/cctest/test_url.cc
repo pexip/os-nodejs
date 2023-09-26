@@ -44,11 +44,6 @@ TEST_F(URLTest, Simple2) {
   EXPECT_EQ(simple.fragment(), "fragment");
 }
 
-TEST_F(URLTest, ForbiddenHostCodePoint) {
-  URL error("https://exa|mple.org:81/a/b/c?query#fragment");
-  EXPECT_TRUE(error.flags() & URL_FLAGS_FAILED);
-}
-
 TEST_F(URLTest, NoBase1) {
   URL error("123noscheme");
   EXPECT_TRUE(error.flags() & URL_FLAGS_FAILED);
@@ -187,32 +182,26 @@ TEST_F(URLTest, FromFilePath) {
 #ifdef _WIN32
   file_url = URL::FromFilePath("C:\\Program Files\\");
   EXPECT_EQ("file:", file_url.protocol());
-  EXPECT_EQ("//C:/Program%20Files/", file_url.path());
-  EXPECT_EQ("file:///C:/Program%20Files/", file_url.href());
+  EXPECT_EQ("/C:/Program%20Files/", file_url.path());
 
   file_url = URL::FromFilePath("C:\\a\\b\\c");
   EXPECT_EQ("file:", file_url.protocol());
-  EXPECT_EQ("//C:/a/b/c", file_url.path());
-  EXPECT_EQ("file:///C:/a/b/c", file_url.href());
+  EXPECT_EQ("/C:/a/b/c", file_url.path());
 
   file_url = URL::FromFilePath("b:\\a\\%%.js");
   EXPECT_EQ("file:", file_url.protocol());
-  EXPECT_EQ("//b:/a/%25%25.js", file_url.path());
-  EXPECT_EQ("file:///b:/a/%25%25.js", file_url.href());
+  EXPECT_EQ("/b:/a/%25%25.js", file_url.path());
 #else
   file_url = URL::FromFilePath("/");
   EXPECT_EQ("file:", file_url.protocol());
-  EXPECT_EQ("//", file_url.path());
-  EXPECT_EQ("file:///", file_url.href());
+  EXPECT_EQ("/", file_url.path());
 
   file_url = URL::FromFilePath("/a/b/c");
   EXPECT_EQ("file:", file_url.protocol());
-  EXPECT_EQ("//a/b/c", file_url.path());
-  EXPECT_EQ("file:///a/b/c", file_url.href());
+  EXPECT_EQ("/a/b/c", file_url.path());
 
   file_url = URL::FromFilePath("/a/%%.js");
   EXPECT_EQ("file:", file_url.protocol());
-  EXPECT_EQ("//a/%25%25.js", file_url.path());
-  EXPECT_EQ("file:///a/%25%25.js", file_url.href());
+  EXPECT_EQ("/a/%25%25.js", file_url.path());
 #endif
 }

@@ -22,7 +22,6 @@
 #include "handle_wrap.h"
 #include "async_wrap-inl.h"
 #include "env-inl.h"
-#include "node_external_reference.h"
 #include "util-inl.h"
 
 namespace node {
@@ -31,7 +30,6 @@ using v8::Context;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::HandleScope;
-using v8::Isolate;
 using v8::Local;
 using v8::Object;
 using v8::Value;
@@ -158,28 +156,17 @@ void HandleWrap::OnClose(uv_handle_t* handle) {
 Local<FunctionTemplate> HandleWrap::GetConstructorTemplate(Environment* env) {
   Local<FunctionTemplate> tmpl = env->handle_wrap_ctor_template();
   if (tmpl.IsEmpty()) {
-    Isolate* isolate = env->isolate();
-    tmpl = NewFunctionTemplate(isolate, nullptr);
+    tmpl = env->NewFunctionTemplate(nullptr);
     tmpl->SetClassName(FIXED_ONE_BYTE_STRING(env->isolate(), "HandleWrap"));
     tmpl->Inherit(AsyncWrap::GetConstructorTemplate(env));
-    SetProtoMethod(isolate, tmpl, "close", HandleWrap::Close);
-    SetProtoMethodNoSideEffect(isolate, tmpl, "hasRef", HandleWrap::HasRef);
-    SetProtoMethod(isolate, tmpl, "ref", HandleWrap::Ref);
-    SetProtoMethod(isolate, tmpl, "unref", HandleWrap::Unref);
+    env->SetProtoMethod(tmpl, "close", HandleWrap::Close);
+    env->SetProtoMethodNoSideEffect(tmpl, "hasRef", HandleWrap::HasRef);
+    env->SetProtoMethod(tmpl, "ref", HandleWrap::Ref);
+    env->SetProtoMethod(tmpl, "unref", HandleWrap::Unref);
     env->set_handle_wrap_ctor_template(tmpl);
   }
   return tmpl;
 }
 
-void HandleWrap::RegisterExternalReferences(
-    ExternalReferenceRegistry* registry) {
-  registry->Register(HandleWrap::Close);
-  registry->Register(HandleWrap::HasRef);
-  registry->Register(HandleWrap::Ref);
-  registry->Register(HandleWrap::Unref);
-}
 
 }  // namespace node
-
-NODE_MODULE_EXTERNAL_REFERENCE(handle_wrap,
-                               node::HandleWrap::RegisterExternalReferences)

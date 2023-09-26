@@ -22,7 +22,8 @@
 'use strict';
 
 const common = require('../common');
-const { Readable, Writable } = require('stream');
+const Readable = require('_stream_readable');
+const Writable = require('_stream_writable');
 const assert = require('assert');
 
 function toArray(callback) {
@@ -60,7 +61,7 @@ function fromArray(list) {
 
   assert.deepStrictEqual(v1, { one: '1' });
   assert.deepStrictEqual(v2, { two: '2' });
-  assert.strictEqual(v3, null);
+  assert.deepStrictEqual(v3, null);
 }
 
 {

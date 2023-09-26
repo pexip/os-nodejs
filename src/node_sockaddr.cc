@@ -1,6 +1,5 @@
 #include "node_sockaddr-inl.h"  // NOLINT(build/include)
 #include "env-inl.h"
-#include "base64-inl.h"
 #include "base_object-inl.h"
 #include "memory_tracker-inl.h"
 #include "node_errors.h"
@@ -17,7 +16,6 @@ using v8::Context;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::Int32;
-using v8::Isolate;
 using v8::Local;
 using v8::MaybeLocal;
 using v8::Object;
@@ -216,7 +214,7 @@ bool in_network_ipv4(
     const SocketAddress& ip,
     const SocketAddress& net,
     int prefix) {
-  uint32_t mask = ((1ull << prefix) - 1) << (32 - prefix);
+  uint32_t mask = ((1 << prefix) - 1) << (32 - prefix);
 
   const sockaddr_in* ip_in =
       reinterpret_cast<const sockaddr_in*>(ip.data());
@@ -294,7 +292,7 @@ bool in_network_ipv6_ipv4(
   if (prefix == 32)
     return compare_ipv4_ipv6(net, ip) == SocketAddress::CompareResult::SAME;
 
-  uint32_t m = ((1ull << prefix) - 1) << (32 - prefix);
+  uint32_t m = ((1 << prefix) - 1) << (32 - prefix);
 
   const sockaddr_in6* ip_in =
       reinterpret_cast<const sockaddr_in6*>(ip.data());
@@ -308,7 +306,7 @@ bool in_network_ipv6_ipv4(
     return false;
 
   ptr += sizeof(mask);
-  uint32_t check = ReadUint32BE(ptr);
+  uint32_t check = ptr[0] << 24 | ptr[1] << 16 | ptr[2] << 8 | ptr[3];
 
   return (check & m) == (htonl(net_in->sin_addr.s_addr) & m);
 }
@@ -698,16 +696,15 @@ Local<FunctionTemplate> SocketAddressBlockListWrap::GetConstructorTemplate(
     Environment* env) {
   Local<FunctionTemplate> tmpl = env->blocklist_constructor_template();
   if (tmpl.IsEmpty()) {
-    Isolate* isolate = env->isolate();
-    tmpl = NewFunctionTemplate(isolate, SocketAddressBlockListWrap::New);
+    tmpl = env->NewFunctionTemplate(SocketAddressBlockListWrap::New);
     tmpl->SetClassName(FIXED_ONE_BYTE_STRING(env->isolate(), "BlockList"));
     tmpl->Inherit(BaseObject::GetConstructorTemplate(env));
     tmpl->InstanceTemplate()->SetInternalFieldCount(kInternalFieldCount);
-    SetProtoMethod(isolate, tmpl, "addAddress", AddAddress);
-    SetProtoMethod(isolate, tmpl, "addRange", AddRange);
-    SetProtoMethod(isolate, tmpl, "addSubnet", AddSubnet);
-    SetProtoMethod(isolate, tmpl, "check", Check);
-    SetProtoMethod(isolate, tmpl, "getRules", GetRules);
+    env->SetProtoMethod(tmpl, "addAddress", AddAddress);
+    env->SetProtoMethod(tmpl, "addRange", AddRange);
+    env->SetProtoMethod(tmpl, "addSubnet", AddSubnet);
+    env->SetProtoMethod(tmpl, "check", Check);
+    env->SetProtoMethod(tmpl, "getRules", GetRules);
     env->set_blocklist_constructor_template(tmpl);
   }
   return tmpl;
@@ -720,11 +717,11 @@ void SocketAddressBlockListWrap::Initialize(
     void* priv) {
   Environment* env = Environment::GetCurrent(context);
 
-  SetConstructorFunction(context,
-                         target,
-                         "BlockList",
-                         GetConstructorTemplate(env),
-                         SetConstructorFunctionFlag::NONE);
+  env->SetConstructorFunction(
+      target,
+      "BlockList",
+      GetConstructorTemplate(env),
+      Environment::SetConstructorFunctionFlag::NONE);
 
   SocketAddressBase::Initialize(env, target);
 
@@ -752,26 +749,25 @@ Local<FunctionTemplate> SocketAddressBase::GetConstructorTemplate(
     Environment* env) {
   Local<FunctionTemplate> tmpl = env->socketaddress_constructor_template();
   if (tmpl.IsEmpty()) {
-    Isolate* isolate = env->isolate();
-    tmpl = NewFunctionTemplate(isolate, New);
+    tmpl = env->NewFunctionTemplate(New);
     tmpl->SetClassName(FIXED_ONE_BYTE_STRING(env->isolate(), "SocketAddress"));
     tmpl->InstanceTemplate()->SetInternalFieldCount(
         SocketAddressBase::kInternalFieldCount);
     tmpl->Inherit(BaseObject::GetConstructorTemplate(env));
-    SetProtoMethod(isolate, tmpl, "detail", Detail);
-    SetProtoMethod(isolate, tmpl, "legacyDetail", LegacyDetail);
-    SetProtoMethodNoSideEffect(isolate, tmpl, "flowlabel", GetFlowLabel);
+    env->SetProtoMethod(tmpl, "detail", Detail);
+    env->SetProtoMethod(tmpl, "legacyDetail", LegacyDetail);
+    env->SetProtoMethodNoSideEffect(tmpl, "flowlabel", GetFlowLabel);
     env->set_socketaddress_constructor_template(tmpl);
   }
   return tmpl;
 }
 
 void SocketAddressBase::Initialize(Environment* env, Local<Object> target) {
-  SetConstructorFunction(env->context(),
-                         target,
-                         "SocketAddress",
-                         GetConstructorTemplate(env),
-                         SetConstructorFunctionFlag::NONE);
+  env->SetConstructorFunction(
+      target,
+      "SocketAddress",
+      GetConstructorTemplate(env),
+      Environment::SetConstructorFunctionFlag::NONE);
 }
 
 BaseObjectPtr<SocketAddressBase> SocketAddressBase::Create(
@@ -850,9 +846,7 @@ void SocketAddressBase::LegacyDetail(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   SocketAddressBase* base;
   ASSIGN_OR_RETURN_UNWRAP(&base, args.Holder());
-  Local<Object> address;
-  if (!base->address_->ToJS(env).ToLocal(&address)) return;
-  args.GetReturnValue().Set(address);
+  args.GetReturnValue().Set(base->address_->ToJS(env));
 }
 
 SocketAddressBase::SocketAddressBase(

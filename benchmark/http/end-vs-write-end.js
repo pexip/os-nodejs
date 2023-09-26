@@ -48,11 +48,10 @@ function main({ len, type, method, c, duration }) {
     fn(res);
   });
 
-  server.listen(0, () => {
+  server.listen(common.PORT, () => {
     bench.http({
       connections: c,
-      duration,
-      port: server.address().port,
+      duration
     }, () => {
       server.close();
     });

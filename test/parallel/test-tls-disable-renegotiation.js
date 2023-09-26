@@ -61,12 +61,12 @@ server.listen(0, common.mustCall(() => {
     });
 
     assert.throws(() => client.renegotiate({}, false), {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_CALLBACK',
       name: 'TypeError',
     });
 
     assert.throws(() => client.renegotiate({}, null), {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_CALLBACK',
       name: 'TypeError',
     });
 
@@ -88,7 +88,9 @@ server.listen(0, common.mustCall(() => {
       }));
     }));
     assert.strictEqual(ok, true);
-    client.on('secureConnect', common.mustCall());
-    client.on('secure', common.mustCall());
+    client.on('secureConnect', common.mustCall(() => {
+    }));
+    client.on('secure', common.mustCall(() => {
+    }));
   }));
 }));

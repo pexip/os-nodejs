@@ -29,15 +29,17 @@ server.on('stream', common.mustCall((stream) => {
   assert.throws(
     () => stream.setTimeout(0, Symbol('test')),
     {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_CALLBACK',
       name: 'TypeError',
+      message: 'Callback must be a function. Received Symbol(test)'
     }
   );
   assert.throws(
     () => stream.setTimeout(100, {}),
     {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_CALLBACK',
       name: 'TypeError',
+      message: 'Callback must be a function. Received {}'
     }
   );
 }));

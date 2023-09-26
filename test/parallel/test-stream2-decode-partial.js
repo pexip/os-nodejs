@@ -1,6 +1,6 @@
 'use strict';
 require('../common');
-const { Readable } = require('stream');
+const Readable = require('_stream_readable');
 const assert = require('assert');
 
 let buf = '';

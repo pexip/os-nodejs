@@ -14,7 +14,7 @@ cluster.schedulingPolicy = cluster.SCHED_NONE;
 const host = '::';
 const WORKER_ACCOUNT = 3;
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   const workers = [];
 
   for (let i = 0; i < WORKER_ACCOUNT; i += 1) {

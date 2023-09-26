@@ -152,11 +152,7 @@ class FlexibleBodyDescriptor : public SuffixRangeBodyDescriptor<start_offset> {
   static inline int SizeOf(Map map, HeapObject object);
 };
 
-// A forward-declacable descriptor body alias for most of the Struct successors.
-class StructBodyDescriptor
-    : public FlexibleBodyDescriptor<HeapObject::kHeaderSize> {
- public:
-};
+using StructBodyDescriptor = FlexibleBodyDescriptor<HeapObject::kHeaderSize>;
 
 // This class describes a body of an object in which all pointer fields are
 // located in the [start_offset, object_size) interval.

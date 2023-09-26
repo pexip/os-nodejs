@@ -22,7 +22,8 @@
 'use strict';
 const common = require('../common');
 const assert = require('assert');
-const { PassThrough, Transform } = require('stream');
+const PassThrough = require('_stream_passthrough');
+const Transform = require('_stream_transform');
 
 {
   // Verify writable side consumption
@@ -44,9 +45,10 @@ const { PassThrough, Transform } = require('stream');
 
   assert.strictEqual(tx.readableLength, 10);
   assert.strictEqual(transformed, 10);
+  assert.strictEqual(tx._transformState.writechunk.length, 5);
   assert.deepStrictEqual(tx.writableBuffer.map(function(c) {
     return c.chunk.length;
-  }), [5, 6, 7, 8, 9, 10]);
+  }), [6, 7, 8, 9, 10]);
 }
 
 {

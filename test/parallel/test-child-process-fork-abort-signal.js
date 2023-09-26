@@ -1,3 +1,4 @@
+// Flags: --experimental-abortcontroller
 'use strict';
 
 const { mustCall, mustNotCall } = require('../common');
@@ -23,7 +24,9 @@ const { fork } = require('child_process');
 }
 {
   // Test passing an already aborted signal to a forked child_process
-  const signal = AbortSignal.abort();
+  const ac = new AbortController();
+  const { signal } = ac;
+  ac.abort();
   const cp = fork(fixtures.path('child-process-stay-alive-forever.js'), {
     signal
   });
@@ -38,7 +41,9 @@ const { fork } = require('child_process');
 
 {
   // Test passing a different kill signal
-  const signal = AbortSignal.abort();
+  const ac = new AbortController();
+  const { signal } = ac;
+  ac.abort();
   const cp = fork(fixtures.path('child-process-stay-alive-forever.js'), {
     signal,
     killSignal: 'SIGKILL',

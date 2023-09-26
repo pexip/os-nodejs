@@ -29,7 +29,8 @@ const path = require('path');
 
 const backslash = /\\/g;
 
-process.on('warning', common.mustCall());
+if (!process.env.NODE_PENDING_DEPRECATION)
+  process.on('warning', common.mustNotCall());
 
 console.error('load test-module-loading.js');
 
@@ -106,16 +107,7 @@ const d2 = require('../fixtures/b/d');
 assert.strictEqual(require('../fixtures/packages/index').ok, 'ok');
 assert.strictEqual(require('../fixtures/packages/main').ok, 'ok');
 assert.strictEqual(require('../fixtures/packages/main-index').ok, 'ok');
-
-common.expectWarning(
-  'DeprecationWarning',
-  "Invalid 'main' field in '" +
-  require.resolve('../fixtures/packages/missing-main/package.json') +
-  "' of 'doesnotexist.js'. Please either fix that or report it to the" +
-  ' module author',
-  'DEP0128');
 assert.strictEqual(require('../fixtures/packages/missing-main').ok, 'ok');
-
 assert.throws(
   () => require('../fixtures/packages/missing-main-no-index'),
   {
@@ -214,9 +206,9 @@ assert.throws(
     (e) => {
       // Not a real .node module, but we know we require'd the right thing.
       if (common.isOpenBSD) { // OpenBSD errors with non-ELF object error
-        assert.match(e.message, /File not an ELF object/);
+        assert.ok(/File not an ELF object/.test(e.message.replace(backslash, '/')));
       } else {
-        assert.match(e.message, /file3\.node/);
+        assert.ok(/file3\.node/.test(e.message.replace(backslash, '/')));
       }
       return true;
     }
@@ -229,9 +221,9 @@ assert.throws(
     () => require(`${loadOrder}file7`),
     (e) => {
       if (common.isOpenBSD) {
-        assert.match(e.message, /File not an ELF object/);
+        assert.ok(/File not an ELF object/.test(e.message.replace(backslash, '/')));
       } else {
-        assert.match(e.message.replace(backslash, '/'), /file7\/index\.node/);
+        assert.ok(/file7\/index\.node/.test(e.message.replace(backslash, '/')));
       }
       return true;
     }

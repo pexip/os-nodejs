@@ -57,9 +57,9 @@ function test(statusCode) {
 
         conn.on('end', common.mustCall(() => {
           // Connection: close should be in the response
-          assert.match(resp, /^Connection: close\r\n$/m);
+          assert.strictEqual(/^Connection: close\r\n$/m.test(resp), true);
           // Make sure this doesn't end with 0\r\n\r\n
-          assert.doesNotMatch(resp, /^0\r\n$/m);
+          assert.strictEqual(/^0\r\n$/m.test(resp), false);
         }));
       })
     );

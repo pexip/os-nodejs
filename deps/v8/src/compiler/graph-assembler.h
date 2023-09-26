@@ -25,7 +25,8 @@ using Boolean = Oddball;
 
 namespace compiler {
 
-class Reducer;
+class Schedule;
+class BasicBlock;
 
 #define PURE_ASSEMBLER_MACH_UNOP_LIST(V) \
   V(BitcastFloat32ToInt32)               \
@@ -33,7 +34,6 @@ class Reducer;
   V(BitcastInt32ToFloat32)               \
   V(BitcastWord32ToWord64)               \
   V(BitcastInt64ToFloat64)               \
-  V(ChangeFloat32ToFloat64)              \
   V(ChangeFloat64ToInt32)                \
   V(ChangeFloat64ToInt64)                \
   V(ChangeFloat64ToUint32)               \
@@ -47,8 +47,7 @@ class Reducer;
   V(Float64ExtractLowWord32)             \
   V(Float64SilenceNaN)                   \
   V(RoundFloat64ToInt32)                 \
-  V(RoundInt32ToFloat32)                 \
-  V(TruncateFloat64ToFloat32)            \
+  V(TruncateFloat64ToInt64)              \
   V(TruncateFloat64ToWord32)             \
   V(TruncateInt64ToInt32)                \
   V(Word32ReverseBytes)                  \
@@ -90,18 +89,11 @@ class Reducer;
   V(Word64And)                            \
   V(Word64Equal)                          \
   V(Word64Or)                             \
-  V(Word64Sar)                            \
-  V(Word64SarShiftOutZeros)               \
-  V(Word64Shl)                            \
-  V(Word64Shr)                            \
-  V(Word64Xor)                            \
   V(WordAnd)                              \
   V(WordEqual)                            \
-  V(WordOr)                               \
   V(WordSar)                              \
   V(WordSarShiftOutZeros)                 \
   V(WordShl)                              \
-  V(WordShr)                              \
   V(WordXor)
 
 #define CHECKED_ASSEMBLER_MACH_BINOP_LIST(V) \
@@ -110,12 +102,8 @@ class Reducer;
   V(Int32Mod)                                \
   V(Int32MulWithOverflow)                    \
   V(Int32SubWithOverflow)                    \
-  V(Int64Div)                                \
-  V(Int64Mod)                                \
   V(Uint32Div)                               \
-  V(Uint32Mod)                               \
-  V(Uint64Div)                               \
-  V(Uint64Mod)
+  V(Uint32Mod)
 
 #define JSGRAPH_SINGLETON_CONSTANT_LIST(V)      \
   V(AllocateInOldGenerationStub, Code)          \
@@ -128,7 +116,6 @@ class Reducer;
   V(False, Boolean)                             \
   V(FixedArrayMap, Map)                         \
   V(FixedDoubleArrayMap, Map)                   \
-  V(WeakFixedArrayMap, Map)                     \
   V(HeapNumberMap, Map)                         \
   V(MinusOne, Number)                           \
   V(NaN, Number)                                \
@@ -137,12 +124,52 @@ class Reducer;
   V(One, Number)                                \
   V(TheHole, Oddball)                           \
   V(ToNumberBuiltin, Code)                      \
-  V(PlainPrimitiveToNumberBuiltin, Code)        \
   V(True, Boolean)                              \
   V(Undefined, Oddball)                         \
   V(Zero, Number)
 
 class GraphAssembler;
+
+// Wrapper classes for special node/edge types (effect, control, frame states)
+// that otherwise don't fit into the type system.
+
+class NodeWrapper {
+ public:
+  explicit constexpr NodeWrapper(Node* node) : node_(node) {}
+  operator Node*() const { return node_; }
+  Node* operator->() const { return node_; }
+
+ private:
+  Node* node_;
+};
+
+class Effect : public NodeWrapper {
+ public:
+  explicit constexpr Effect(Node* node) : NodeWrapper(node) {
+    // TODO(jgruber): Remove the End special case.
+    SLOW_DCHECK(node == nullptr || node->op()->opcode() == IrOpcode::kEnd ||
+                node->op()->EffectOutputCount() > 0);
+  }
+};
+
+class Control : public NodeWrapper {
+ public:
+  explicit constexpr Control(Node* node) : NodeWrapper(node) {
+    // TODO(jgruber): Remove the End special case.
+    SLOW_DCHECK(node == nullptr || node->opcode() == IrOpcode::kEnd ||
+                node->op()->ControlOutputCount() > 0);
+  }
+};
+
+class FrameState : public NodeWrapper {
+ public:
+  explicit constexpr FrameState(Node* node) : NodeWrapper(node) {
+    // TODO(jgruber): Disallow kStart (needed for PromiseConstructorBasic unit
+    // test, among others).
+    SLOW_DCHECK(node->opcode() == IrOpcode::kFrameState ||
+                node->opcode() == IrOpcode::kStart);
+  }
+};
 
 enum class GraphAssemblerLabelType { kDeferred, kNonDeferred, kLoop };
 
@@ -159,9 +186,11 @@ class GraphAssemblerLabel {
     return TNode<T>::UncheckedCast(PhiAt(index));
   }
 
-  GraphAssemblerLabel(GraphAssemblerLabelType type, int loop_nesting_level,
+  GraphAssemblerLabel(GraphAssemblerLabelType type, BasicBlock* basic_block,
+                      int loop_nesting_level,
                       const std::array<MachineRepresentation, VarCount>& reps)
       : type_(type),
+        basic_block_(basic_block),
         loop_nesting_level_(loop_nesting_level),
         representations_(reps) {}
 
@@ -179,9 +208,11 @@ class GraphAssemblerLabel {
     return type_ == GraphAssemblerLabelType::kDeferred;
   }
   bool IsLoop() const { return type_ == GraphAssemblerLabelType::kLoop; }
+  BasicBlock* basic_block() { return basic_block_; }
 
   bool is_bound_ = false;
   const GraphAssemblerLabelType type_;
+  BasicBlock* const basic_block_;
   const int loop_nesting_level_;
   size_t merged_count_ = 0;
   Node* effect_;
@@ -190,18 +221,15 @@ class GraphAssemblerLabel {
   const std::array<MachineRepresentation, VarCount> representations_;
 };
 
-using NodeChangedCallback = std::function<void(Node*)>;
 class V8_EXPORT_PRIVATE GraphAssembler {
  public:
   // Constructs a GraphAssembler. If {schedule} is not null, the graph assembler
   // will maintain the schedule as it updates blocks.
-  GraphAssembler(
-      MachineGraph* jsgraph, Zone* zone,
-      base::Optional<NodeChangedCallback> node_changed_callback = base::nullopt,
-      bool mark_loop_exits = false);
+  GraphAssembler(MachineGraph* jsgraph, Zone* zone,
+                 Schedule* schedule = nullptr, bool mark_loop_exits = false);
   virtual ~GraphAssembler();
 
-  void Reset();
+  void Reset(BasicBlock* block);
   void InitializeEffectControl(Node* effect, Node* control);
 
   // Create label.
@@ -217,7 +245,9 @@ class V8_EXPORT_PRIVATE GraphAssembler {
   GraphAssemblerLabel<VarCount> MakeLabel(
       std::array<MachineRepresentation, VarCount> reps_array,
       GraphAssemblerLabelType type) {
-    return GraphAssemblerLabel<VarCount>(type, loop_nesting_level_, reps_array);
+    return GraphAssemblerLabel<VarCount>(
+        type, NewBasicBlock(type == GraphAssemblerLabelType::kDeferred),
+        loop_nesting_level_, reps_array);
   }
 
   // Convenience wrapper for creating non-deferred labels.
@@ -240,17 +270,13 @@ class V8_EXPORT_PRIVATE GraphAssembler {
 
   // Value creation.
   Node* IntPtrConstant(intptr_t value);
-  Node* UintPtrConstant(uintptr_t value);
-  Node* Int32Constant(int32_t value);
   Node* Uint32Constant(uint32_t value);
+  Node* Int32Constant(int32_t value);
   Node* Int64Constant(int64_t value);
-  Node* Uint64Constant(uint64_t value);
   Node* UniqueIntPtrConstant(intptr_t value);
   Node* Float64Constant(double value);
   Node* Projection(int index, Node* value);
   Node* ExternalConstant(ExternalReference ref);
-
-  Node* Parameter(int index);
 
   Node* LoadFramePointer();
 
@@ -265,26 +291,10 @@ class V8_EXPORT_PRIVATE GraphAssembler {
   CHECKED_ASSEMBLER_MACH_BINOP_LIST(BINOP_DECL)
 #undef BINOP_DECL
 
-#ifdef V8_MAP_PACKING
-  Node* PackMapWord(TNode<Map> map);
-  TNode<Map> UnpackMapWord(Node* map_word);
-#endif
-  TNode<Map> LoadMap(Node* object);
-
+  // Debugging
   Node* DebugBreak();
 
-  // Unreachable nodes are similar to Goto in that they reset effect/control to
-  // nullptr and it's thus not possible to append other nodes without first
-  // binding a new label.
-  // The block_updater_successor label is a crutch to work around block updater
-  // weaknesses (see the related comment in ConnectUnreachableToEnd); if the
-  // block updater exists, we cannot connect unreachable to end, instead we
-  // must preserve the Goto pattern.
-  Node* Unreachable(GraphAssemblerLabel<0u>* block_updater_successor = nullptr);
-  // This special variant doesn't connect the Unreachable node to end, and does
-  // not reset current effect/control. Intended only for special use-cases like
-  // lowering DeadValue.
-  Node* UnreachableWithoutConnectToEnd();
+  Node* Unreachable();
 
   Node* IntPtrEqual(Node* left, Node* right);
   Node* TaggedEqual(Node* left, Node* right);
@@ -294,18 +304,14 @@ class V8_EXPORT_PRIVATE GraphAssembler {
 
   Node* Float64RoundDown(Node* value);
   Node* Float64RoundTruncate(Node* value);
-  Node* TruncateFloat64ToInt64(Node* value, TruncateKind kind);
 
   Node* BitcastWordToTagged(Node* value);
   Node* BitcastWordToTaggedSigned(Node* value);
   Node* BitcastTaggedToWord(Node* value);
   Node* BitcastTaggedToWordForTagAndSmiBits(Node* value);
-  Node* BitcastMaybeObjectToWord(Node* value);
 
   Node* TypeGuard(Type type, Node* value);
   Node* Checkpoint(FrameState frame_state);
-
-  TNode<RawPtrT> StackSlot(int size, int alignment);
 
   Node* Store(StoreRepresentation rep, Node* object, Node* offset, Node* value);
   Node* Store(StoreRepresentation rep, Node* object, int offset, Node* value);
@@ -316,27 +322,23 @@ class V8_EXPORT_PRIVATE GraphAssembler {
                        Node* value);
   Node* LoadUnaligned(MachineType type, Node* object, Node* offset);
 
-  Node* ProtectedStore(MachineRepresentation rep, Node* object, Node* offset,
-                       Node* value);
-  Node* ProtectedLoad(MachineType type, Node* object, Node* offset);
-
   Node* Retain(Node* buffer);
   Node* UnsafePointerAdd(Node* base, Node* external);
 
-  Node* DeoptimizeIf(DeoptimizeReason reason, FeedbackSource const& feedback,
-                     Node* condition, Node* frame_state);
-  Node* DeoptimizeIfNot(DeoptimizeReason reason, FeedbackSource const& feedback,
-                        Node* condition, Node* frame_state);
-  TNode<Object> Call(const CallDescriptor* call_descriptor, int inputs_size,
-                     Node** inputs);
-  TNode<Object> Call(const Operator* op, int inputs_size, Node** inputs);
+  Node* Word32PoisonOnSpeculation(Node* value);
+
+  Node* DeoptimizeIf(
+      DeoptimizeReason reason, FeedbackSource const& feedback, Node* condition,
+      Node* frame_state,
+      IsSafetyCheck is_safety_check = IsSafetyCheck::kSafetyCheck);
+  Node* DeoptimizeIfNot(
+      DeoptimizeReason reason, FeedbackSource const& feedback, Node* condition,
+      Node* frame_state,
+      IsSafetyCheck is_safety_check = IsSafetyCheck::kSafetyCheck);
   template <typename... Args>
-  TNode<Object> Call(const CallDescriptor* call_descriptor, Node* first_arg,
-                     Args... args);
+  Node* Call(const CallDescriptor* call_descriptor, Args... args);
   template <typename... Args>
-  TNode<Object> Call(const Operator* op, Node* first_arg, Args... args);
-  void TailCall(const CallDescriptor* call_descriptor, int inputs_size,
-                Node** inputs);
+  Node* Call(const Operator* op, Args... args);
 
   // Basic control operations.
   template <size_t VarCount>
@@ -362,22 +364,6 @@ class V8_EXPORT_PRIVATE GraphAssembler {
                       BranchHint hint, Vars...);
 
   // Control helpers.
-
-  // {GotoIf(c, l, h)} is equivalent to {BranchWithHint(c, l, templ, h);
-  // Bind(templ)}.
-  template <typename... Vars>
-  void GotoIf(Node* condition, GraphAssemblerLabel<sizeof...(Vars)>* label,
-              BranchHint hint, Vars...);
-
-  // {GotoIfNot(c, l, h)} is equivalent to {BranchWithHint(c, templ, l, h);
-  // Bind(templ)}.
-  // The branch hint refers to the expected outcome of the provided condition,
-  // so {GotoIfNot(..., BranchHint::kTrue)} means "optimize for the case where
-  // the branch is *not* taken".
-  template <typename... Vars>
-  void GotoIfNot(Node* condition, GraphAssemblerLabel<sizeof...(Vars)>* label,
-                 BranchHint hint, Vars...);
-
   // {GotoIf(c, l)} is equivalent to {Branch(c, l, templ);Bind(templ)}.
   template <typename... Vars>
   void GotoIf(Node* condition, GraphAssemblerLabel<sizeof...(Vars)>* label,
@@ -387,13 +373,6 @@ class V8_EXPORT_PRIVATE GraphAssembler {
   template <typename... Vars>
   void GotoIfNot(Node* condition, GraphAssemblerLabel<sizeof...(Vars)>* label,
                  Vars...);
-
-  bool HasActiveBlock() const {
-    // This is false if the current block has been terminated (e.g. by a Goto or
-    // Unreachable). In that case, a new label must be bound before we can
-    // continue emitting nodes.
-    return control() != nullptr;
-  }
 
   // Updates current effect and control based on outputs of {node}.
   V8_INLINE void UpdateEffectControlWith(Node* node) {
@@ -414,24 +393,25 @@ class V8_EXPORT_PRIVATE GraphAssembler {
     return TNode<T>::UncheckedCast(AddNode(node));
   }
 
+  // Finalizes the {block} being processed by the assembler, returning the
+  // finalized block (which may be different from the original block).
+  BasicBlock* FinalizeCurrentBlock(BasicBlock* block);
+
   void ConnectUnreachableToEnd();
 
-  // Add an inline reducers such that nodes added to the graph will be run
-  // through the reducers and possibly further lowered. Each reducer should
-  // operate on independent node types since once a reducer changes a node we
-  // no longer run any other reducers on that node. The reducers should also
-  // only generate new nodes that wouldn't be further reduced, as new nodes
-  // generated by a reducer won't be passed through the reducers again.
-  void AddInlineReducer(Reducer* reducer) {
-    inline_reducers_.push_back(reducer);
-  }
-
-  Control control() const { return Control(control_); }
-  Effect effect() const { return Effect(effect_); }
+  Control control() { return Control(control_); }
+  Effect effect() { return Effect(effect_); }
 
  protected:
+  class BasicBlockUpdater;
+
   template <typename... Vars>
   void MergeState(GraphAssemblerLabel<sizeof...(Vars)>* label, Vars... vars);
+  BasicBlock* NewBasicBlock(bool deferred);
+  void BindBasicBlock(BasicBlock* block);
+  void GotoBasicBlock(BasicBlock* block);
+  void GotoIfBasicBlock(BasicBlock* block, Node* branch,
+                        IrOpcode::Value goto_if);
 
   V8_INLINE Node* AddClonedNode(Node* node);
 
@@ -447,11 +427,11 @@ class V8_EXPORT_PRIVATE GraphAssembler {
   // All labels created while a LoopScope is live are considered to be inside
   // the loop.
   template <MachineRepresentation... Reps>
-  class V8_NODISCARD LoopScope final {
+  class LoopScope final {
    private:
     // The internal scope is only here to increment the graph assembler's
     // nesting level prior to `loop_header_label` creation below.
-    class V8_NODISCARD LoopScopeInternal {
+    class LoopScopeInternal {
      public:
       explicit LoopScopeInternal(GraphAssembler* gasm)
           : previous_loop_nesting_level_(gasm->loop_nesting_level_),
@@ -498,7 +478,7 @@ class V8_EXPORT_PRIVATE GraphAssembler {
   };
 
   // Upon destruction, restores effect and control to the state at construction.
-  class V8_NODISCARD RestoreEffectControlScope {
+  class RestoreEffectControlScope {
    public:
     explicit RestoreEffectControlScope(GraphAssembler* gasm)
         : gasm_(gasm), effect_(gasm->effect()), control_(gasm->control()) {}
@@ -515,26 +495,21 @@ class V8_EXPORT_PRIVATE GraphAssembler {
   };
 
  private:
-  class BlockInlineReduction;
-
   template <typename... Vars>
   void BranchImpl(Node* condition,
                   GraphAssemblerLabel<sizeof...(Vars)>* if_true,
                   GraphAssemblerLabel<sizeof...(Vars)>* if_false,
-                  BranchHint hint, Vars...);
+                  BranchHint hint, IsSafetyCheck is_safety_check, Vars...);
+  void RecordBranchInBlockUpdater(Node* branch, Node* if_true_control,
+                                  Node* if_false_control,
+                                  BasicBlock* if_true_block,
+                                  BasicBlock* if_false_block);
 
   Zone* temp_zone_;
   MachineGraph* mcgraph_;
   Node* effect_;
   Node* control_;
-  // {node_changed_callback_} should be called when a node outside the
-  // subgraph created by the graph assembler changes.
-  base::Optional<NodeChangedCallback> node_changed_callback_;
-
-  // Inline reducers enable reductions to be performed to nodes as they are
-  // added to the graph with the graph assembler.
-  ZoneVector<Reducer*> inline_reducers_;
-  bool inline_reductions_blocked_;
+  std::unique_ptr<BasicBlockUpdater> block_updater_;
 
   // Track loop information in order to properly mark loop exits with
   // {LoopExit,LoopExitEffect,LoopExitValue} nodes. The outermost level has
@@ -580,9 +555,8 @@ void GraphAssembler::MergeState(GraphAssemblerLabel<sizeof...(Vars)>* label,
                              *loop_headers_.back()));
     AddNode(graph()->NewNode(common()->LoopExitEffect(), effect(), control()));
     for (size_t i = 0; i < kVarCount; i++) {
-      var_array[i] = AddNode(graph()->NewNode(
-          common()->LoopExitValue(MachineRepresentation::kTagged), var_array[i],
-          control()));
+      var_array[i] = AddNode(
+          graph()->NewNode(common()->LoopExitValue(), var_array[i], control()));
     }
   }
 
@@ -674,6 +648,7 @@ void GraphAssembler::Bind(GraphAssemblerLabel<VarCount>* label) {
 
   control_ = label->control_;
   effect_ = label->effect_;
+  BindBasicBlock(label->basic_block());
 
   label->SetBound();
 
@@ -700,7 +675,8 @@ void GraphAssembler::Branch(Node* condition,
     hint = if_false->IsDeferred() ? BranchHint::kTrue : BranchHint::kFalse;
   }
 
-  BranchImpl(condition, if_true, if_false, hint, vars...);
+  BranchImpl(condition, if_true, if_false, hint, IsSafetyCheck::kNoSafetyCheck,
+             vars...);
 }
 
 template <typename... Vars>
@@ -708,23 +684,33 @@ void GraphAssembler::BranchWithHint(
     Node* condition, GraphAssemblerLabel<sizeof...(Vars)>* if_true,
     GraphAssemblerLabel<sizeof...(Vars)>* if_false, BranchHint hint,
     Vars... vars) {
-  BranchImpl(condition, if_true, if_false, hint, vars...);
+  BranchImpl(condition, if_true, if_false, hint, IsSafetyCheck::kNoSafetyCheck,
+             vars...);
 }
 
 template <typename... Vars>
 void GraphAssembler::BranchImpl(Node* condition,
                                 GraphAssemblerLabel<sizeof...(Vars)>* if_true,
                                 GraphAssemblerLabel<sizeof...(Vars)>* if_false,
-                                BranchHint hint, Vars... vars) {
+                                BranchHint hint, IsSafetyCheck is_safety_check,
+                                Vars... vars) {
   DCHECK_NOT_NULL(control());
 
-  Node* branch = graph()->NewNode(common()->Branch(hint), condition, control());
+  Node* branch = graph()->NewNode(common()->Branch(hint, is_safety_check),
+                                  condition, control());
 
-  control_ = graph()->NewNode(common()->IfTrue(), branch);
+  Node* if_true_control = control_ =
+      graph()->NewNode(common()->IfTrue(), branch);
   MergeState(if_true, vars...);
 
-  control_ = graph()->NewNode(common()->IfFalse(), branch);
+  Node* if_false_control = control_ =
+      graph()->NewNode(common()->IfFalse(), branch);
   MergeState(if_false, vars...);
+
+  if (block_updater_) {
+    RecordBranchInBlockUpdater(branch, if_true_control, if_false_control,
+                               if_true->basic_block(), if_false->basic_block());
+  }
 
   control_ = nullptr;
   effect_ = nullptr;
@@ -736,6 +722,7 @@ void GraphAssembler::Goto(GraphAssemblerLabel<sizeof...(Vars)>* label,
   DCHECK_NOT_NULL(control());
   DCHECK_NOT_NULL(effect());
   MergeState(label, vars...);
+  GotoBasicBlock(label->basic_block());
 
   control_ = nullptr;
   effect_ = nullptr;
@@ -744,34 +731,16 @@ void GraphAssembler::Goto(GraphAssemblerLabel<sizeof...(Vars)>* label,
 template <typename... Vars>
 void GraphAssembler::GotoIf(Node* condition,
                             GraphAssemblerLabel<sizeof...(Vars)>* label,
-                            BranchHint hint, Vars... vars) {
+                            Vars... vars) {
+  BranchHint hint =
+      label->IsDeferred() ? BranchHint::kFalse : BranchHint::kNone;
   Node* branch = graph()->NewNode(common()->Branch(hint), condition, control());
 
   control_ = graph()->NewNode(common()->IfTrue(), branch);
   MergeState(label, vars...);
 
+  GotoIfBasicBlock(label->basic_block(), branch, IrOpcode::kIfTrue);
   control_ = AddNode(graph()->NewNode(common()->IfFalse(), branch));
-}
-
-template <typename... Vars>
-void GraphAssembler::GotoIfNot(Node* condition,
-                               GraphAssemblerLabel<sizeof...(Vars)>* label,
-                               BranchHint hint, Vars... vars) {
-  Node* branch = graph()->NewNode(common()->Branch(hint), condition, control());
-
-  control_ = graph()->NewNode(common()->IfFalse(), branch);
-  MergeState(label, vars...);
-
-  control_ = AddNode(graph()->NewNode(common()->IfTrue(), branch));
-}
-
-template <typename... Vars>
-void GraphAssembler::GotoIf(Node* condition,
-                            GraphAssemblerLabel<sizeof...(Vars)>* label,
-                            Vars... vars) {
-  BranchHint hint =
-      label->IsDeferred() ? BranchHint::kFalse : BranchHint::kNone;
-  return GotoIf(condition, label, hint, vars...);
 }
 
 template <typename... Vars>
@@ -779,34 +748,38 @@ void GraphAssembler::GotoIfNot(Node* condition,
                                GraphAssemblerLabel<sizeof...(Vars)>* label,
                                Vars... vars) {
   BranchHint hint = label->IsDeferred() ? BranchHint::kTrue : BranchHint::kNone;
-  return GotoIfNot(condition, label, hint, vars...);
+  Node* branch = graph()->NewNode(common()->Branch(hint), condition, control());
+
+  control_ = graph()->NewNode(common()->IfFalse(), branch);
+  MergeState(label, vars...);
+
+  GotoIfBasicBlock(label->basic_block(), branch, IrOpcode::kIfFalse);
+  control_ = AddNode(graph()->NewNode(common()->IfTrue(), branch));
 }
 
 template <typename... Args>
-TNode<Object> GraphAssembler::Call(const CallDescriptor* call_descriptor,
-                                   Node* first_arg, Args... args) {
+Node* GraphAssembler::Call(const CallDescriptor* call_descriptor,
+                           Args... args) {
   const Operator* op = common()->Call(call_descriptor);
-  return Call(op, first_arg, args...);
+  return Call(op, args...);
 }
 
 template <typename... Args>
-TNode<Object> GraphAssembler::Call(const Operator* op, Node* first_arg,
-                                   Args... args) {
-  Node* args_array[] = {first_arg, args..., effect(), control()};
-  int size = static_cast<int>(1 + sizeof...(args)) + op->EffectInputCount() +
+Node* GraphAssembler::Call(const Operator* op, Args... args) {
+  DCHECK_EQ(IrOpcode::kCall, op->opcode());
+  Node* args_array[] = {args..., effect(), control()};
+  int size = static_cast<int>(sizeof...(args)) + op->EffectInputCount() +
              op->ControlInputCount();
-  return Call(op, size, args_array);
+  return AddNode(graph()->NewNode(op, size, args_array));
 }
 
 class V8_EXPORT_PRIVATE JSGraphAssembler : public GraphAssembler {
  public:
   // Constructs a JSGraphAssembler. If {schedule} is not null, the graph
   // assembler will maintain the schedule as it updates blocks.
-  JSGraphAssembler(
-      JSGraph* jsgraph, Zone* zone,
-      base::Optional<NodeChangedCallback> node_changed_callback = base::nullopt,
-      bool mark_loop_exits = false)
-      : GraphAssembler(jsgraph, zone, node_changed_callback, mark_loop_exits),
+  JSGraphAssembler(JSGraph* jsgraph, Zone* zone, Schedule* schedule = nullptr,
+                   bool mark_loop_exits = false)
+      : GraphAssembler(jsgraph, zone, schedule, mark_loop_exits),
         jsgraph_(jsgraph) {}
 
   Node* SmiConstant(int32_t value);
@@ -853,7 +826,6 @@ class V8_EXPORT_PRIVATE JSGraphAssembler : public GraphAssembler {
   TNode<Number> PlainPrimitiveToNumber(TNode<Object> value);
   TNode<Number> NumberMin(TNode<Number> lhs, TNode<Number> rhs);
   TNode<Number> NumberMax(TNode<Number> lhs, TNode<Number> rhs);
-  TNode<Boolean> NumberEqual(TNode<Number> lhs, TNode<Number> rhs);
   TNode<Boolean> NumberLessThan(TNode<Number> lhs, TNode<Number> rhs);
   TNode<Boolean> NumberLessThanOrEqual(TNode<Number> lhs, TNode<Number> rhs);
   TNode<Number> NumberAdd(TNode<Number> lhs, TNode<Number> rhs);
@@ -872,7 +844,6 @@ class V8_EXPORT_PRIVATE JSGraphAssembler : public GraphAssembler {
                                               TNode<FixedArrayBase> elements,
                                               TNode<Number> new_length,
                                               TNode<Number> old_length);
-  Node* StringCharCodeAt(TNode<String> string, TNode<Number> position);
 
   JSGraph* jsgraph() const { return jsgraph_; }
   Isolate* isolate() const { return jsgraph()->isolate(); }

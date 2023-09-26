@@ -1,3 +1,4 @@
+// Flags: --experimental-abortcontroller
 'use strict';
 
 const { mustCall } = require('../common');

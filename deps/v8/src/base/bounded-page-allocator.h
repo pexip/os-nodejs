@@ -12,17 +12,6 @@
 namespace v8 {
 namespace base {
 
-// Defines the page initialization mode of a BoundedPageAllocator.
-enum class PageInitializationMode {
-  // The contents of allocated pages must be zero initialized. This causes any
-  // committed pages to be decommitted during FreePages and ReleasePages.
-  kAllocatedPagesMustBeZeroInitialized,
-  // Allocated pages do not have to be be zero initialized and can contain old
-  // data. This is slightly faster as comitted pages are not decommitted
-  // during FreePages and ReleasePages, but only made inaccessible.
-  kAllocatedPagesCanBeUninitialized,
-};
-
 // This is a v8::PageAllocator implementation that allocates pages within the
 // pre-reserved region of virtual space. This class requires the virtual space
 // to be kept reserved during the lifetime of this object.
@@ -39,10 +28,7 @@ class V8_BASE_EXPORT BoundedPageAllocator : public v8::PageAllocator {
   using Address = uintptr_t;
 
   BoundedPageAllocator(v8::PageAllocator* page_allocator, Address start,
-                       size_t size, size_t allocate_page_size,
-                       PageInitializationMode page_initialization_mode);
-  BoundedPageAllocator(const BoundedPageAllocator&) = delete;
-  BoundedPageAllocator& operator=(const BoundedPageAllocator&) = delete;
+                       size_t size, size_t allocate_page_size);
   ~BoundedPageAllocator() override = default;
 
   // These functions are not inlined to avoid https://crbug.com/v8/8275.
@@ -70,8 +56,6 @@ class V8_BASE_EXPORT BoundedPageAllocator : public v8::PageAllocator {
   void* AllocatePages(void* hint, size_t size, size_t alignment,
                       Permission access) override;
 
-  bool ReserveForSharedMemoryMapping(void* address, size_t size) override;
-
   // Allocates pages at given address, returns true on success.
   bool AllocatePagesAt(Address address, size_t size, Permission access);
 
@@ -83,15 +67,14 @@ class V8_BASE_EXPORT BoundedPageAllocator : public v8::PageAllocator {
 
   bool DiscardSystemPages(void* address, size_t size) override;
 
-  bool DecommitPages(void* address, size_t size) override;
-
  private:
   v8::base::Mutex mutex_;
   const size_t allocate_page_size_;
   const size_t commit_page_size_;
   v8::PageAllocator* const page_allocator_;
   v8::base::RegionAllocator region_allocator_;
-  const PageInitializationMode page_initialization_mode_;
+
+  DISALLOW_COPY_AND_ASSIGN(BoundedPageAllocator);
 };
 
 }  // namespace base

@@ -15,27 +15,6 @@ namespace v8 {
 namespace internal {
 
 std::ostream& operator<<(std::ostream& os,
-                         const Representation& representation) {
-  switch (representation.kind()) {
-    case Representation::kNone:
-      return os << "none";
-    case Representation::kSmi:
-      return os << "smi";
-    case Representation::kDouble:
-      return os << "double";
-    case Representation::kHeapObject:
-      return os << "heap-object";
-    case Representation::kTagged:
-      return os << "tagged";
-    case Representation::kWasmValue:
-      return os << "wasm-value";
-    case Representation::kNumRepresentations:
-      UNREACHABLE();
-  }
-  UNREACHABLE();
-}
-
-std::ostream& operator<<(std::ostream& os,
                          const PropertyAttributes& attributes) {
   os << "[";
   os << (((attributes & READ_ONLY) == 0) ? "W" : "_");    // writable
@@ -89,19 +68,17 @@ Descriptor Descriptor::DataField(Handle<Name> key, int field_index,
                                  Representation representation,
                                  const MaybeObjectHandle& wrapped_field_type) {
   DCHECK(wrapped_field_type->IsSmi() || wrapped_field_type->IsWeak());
-  PropertyDetails details(PropertyKind::kData, attributes,
-                          PropertyLocation::kField, constness, representation,
+  PropertyDetails details(kData, attributes, kField, constness, representation,
                           field_index);
   return Descriptor(key, wrapped_field_type, details);
 }
 
 Descriptor Descriptor::DataConstant(Handle<Name> key, Handle<Object> value,
                                     PropertyAttributes attributes) {
-  PtrComprCageBase cage_base = GetPtrComprCageBase(*key);
-  return Descriptor(key, MaybeObjectHandle(value), PropertyKind::kData,
-                    attributes, PropertyLocation::kDescriptor,
-                    PropertyConstness::kConst,
-                    value->OptimalRepresentation(cage_base), 0);
+  const Isolate* isolate = GetIsolateForPtrCompr(*key);
+  return Descriptor(key, MaybeObjectHandle(value), kData, attributes,
+                    kDescriptor, PropertyConstness::kConst,
+                    value->OptimalRepresentation(isolate), 0);
 }
 
 Descriptor Descriptor::DataConstant(Isolate* isolate, Handle<Name> key,
@@ -115,19 +92,17 @@ Descriptor Descriptor::DataConstant(Isolate* isolate, Handle<Name> key,
 Descriptor Descriptor::AccessorConstant(Handle<Name> key,
                                         Handle<Object> foreign,
                                         PropertyAttributes attributes) {
-  return Descriptor(key, MaybeObjectHandle(foreign), PropertyKind::kAccessor,
-                    attributes, PropertyLocation::kDescriptor,
-                    PropertyConstness::kConst, Representation::Tagged(), 0);
+  return Descriptor(key, MaybeObjectHandle(foreign), kAccessor, attributes,
+                    kDescriptor, PropertyConstness::kConst,
+                    Representation::Tagged(), 0);
 }
 
 // Outputs PropertyDetails as a dictionary details.
-void PropertyDetails::PrintAsSlowTo(std::ostream& os, bool print_dict_index) {
+void PropertyDetails::PrintAsSlowTo(std::ostream& os) {
   os << "(";
   if (constness() == PropertyConstness::kConst) os << "const ";
-  os << (kind() == PropertyKind::kData ? "data" : "accessor");
-  if (print_dict_index) {
-    os << ", dict_index: " << dictionary_index();
-  }
+  os << (kind() == kData ? "data" : "accessor");
+  os << ", dict_index: " << dictionary_index();
   os << ", attrs: " << attributes() << ")";
 }
 
@@ -135,8 +110,8 @@ void PropertyDetails::PrintAsSlowTo(std::ostream& os, bool print_dict_index) {
 void PropertyDetails::PrintAsFastTo(std::ostream& os, PrintMode mode) {
   os << "(";
   if (constness() == PropertyConstness::kConst) os << "const ";
-  os << (kind() == PropertyKind::kData ? "data" : "accessor");
-  if (location() == PropertyLocation::kField) {
+  os << (kind() == kData ? "data" : "accessor");
+  if (location() == kField) {
     os << " field";
     if (mode & kPrintFieldIndex) {
       os << " " << field_index();
@@ -160,7 +135,7 @@ void PropertyDetails::PrintAsFastTo(std::ostream& os, PrintMode mode) {
 void PropertyDetails::Print(bool dictionary_mode) {
   StdoutStream os;
   if (dictionary_mode) {
-    PrintAsSlowTo(os, true);
+    PrintAsSlowTo(os);
   } else {
     PrintAsFastTo(os, PrintMode::kPrintFull);
   }

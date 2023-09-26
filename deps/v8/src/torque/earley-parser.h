@@ -44,8 +44,6 @@ enum class ParseResultHolderBase::TypeId {
   kStdString,
   kBool,
   kInt32,
-  kDouble,
-  kIntegerLiteral,
   kStdVectorOfString,
   kExpressionPtr,
   kIdentifierPtr,
@@ -56,8 +54,6 @@ enum class ParseResultHolderBase::TypeId {
   kOptionalTypeExpressionPtr,
   kTryHandlerPtr,
   kNameAndTypeExpression,
-  kEnumEntry,
-  kStdVectorOfEnumEntry,
   kImplicitParameters,
   kOptionalImplicitParameters,
   kNameAndExpression,
@@ -165,9 +161,10 @@ class ParseResultIterator {
   explicit ParseResultIterator(std::vector<ParseResult> results,
                                MatchedInput matched_input)
       : results_(std::move(results)), matched_input_(matched_input) {}
-
-  ParseResultIterator(const ParseResultIterator&) = delete;
-  ParseResultIterator& operator=(const ParseResultIterator&) = delete;
+  ~ParseResultIterator() {
+    // Check that all parse results have been used.
+    CHECK_EQ(results_.size(), i_);
+  }
 
   ParseResult Next() {
     CHECK_LT(i_, results_.size());
@@ -185,6 +182,8 @@ class ParseResultIterator {
   std::vector<ParseResult> results_;
   size_t i_ = 0;
   MatchedInput matched_input_;
+
+  DISALLOW_COPY_AND_ASSIGN(ParseResultIterator);
 };
 
 struct LexerResult {
@@ -247,12 +246,8 @@ class Rule final {
 // used in the parser.
 class Symbol {
  public:
-  Symbol() = default;
+  Symbol() : Symbol({}) {}
   Symbol(std::initializer_list<Rule> rules) { *this = rules; }
-
-  // Disallow copying and moving to ensure Symbol has a stable address.
-  Symbol(const Symbol&) = delete;
-  Symbol& operator=(const Symbol&) = delete;
 
   V8_EXPORT_PRIVATE Symbol& operator=(std::initializer_list<Rule> rules);
 
@@ -270,6 +265,9 @@ class Symbol {
 
  private:
   std::vector<std::unique_ptr<Rule>> rules_;
+
+  // Disallow copying and moving to ensure Symbol has a stable address.
+  DISALLOW_COPY_AND_ASSIGN(Symbol);
 };
 
 // Items are the core datastructure of Earley's algorithm.

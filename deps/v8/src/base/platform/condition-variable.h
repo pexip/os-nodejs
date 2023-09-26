@@ -9,10 +9,6 @@
 #include "src/base/lazy-instance.h"
 #include "src/base/platform/mutex.h"
 
-#if V8_OS_STARBOARD
-#include "starboard/common/condition_variable.h"
-#endif
-
 namespace v8 {
 namespace base {
 
@@ -36,8 +32,6 @@ class TimeDelta;
 class V8_BASE_EXPORT ConditionVariable final {
  public:
   ConditionVariable();
-  ConditionVariable(const ConditionVariable&) = delete;
-  ConditionVariable& operator=(const ConditionVariable&) = delete;
   ~ConditionVariable();
 
   // If any threads are waiting on this condition variable, calling
@@ -69,9 +63,7 @@ class V8_BASE_EXPORT ConditionVariable final {
 #if V8_OS_POSIX
   using NativeHandle = pthread_cond_t;
 #elif V8_OS_WIN
-  using NativeHandle = V8_CONDITION_VARIABLE;
-#elif V8_OS_STARBOARD
-  using NativeHandle = SbConditionVariable;
+  using NativeHandle = CONDITION_VARIABLE;
 #endif
 
   NativeHandle& native_handle() {
@@ -83,6 +75,8 @@ class V8_BASE_EXPORT ConditionVariable final {
 
  private:
   NativeHandle native_handle_;
+
+  DISALLOW_COPY_AND_ASSIGN(ConditionVariable);
 };
 
 // POD ConditionVariable initialized lazily (i.e. the first time Pointer() is

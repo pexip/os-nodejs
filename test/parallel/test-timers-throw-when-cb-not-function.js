@@ -9,7 +9,7 @@ function doSetTimeout(callback, after) {
 }
 
 const errMessage = {
-  code: 'ERR_INVALID_ARG_TYPE',
+  code: 'ERR_INVALID_CALLBACK',
   name: 'TypeError'
 };
 

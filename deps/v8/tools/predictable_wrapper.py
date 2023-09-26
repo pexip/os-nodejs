@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # Copyright 2017 the V8 project authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -16,7 +16,6 @@ compared. Differences are reported as errors.
 
 
 # for py2/py3 compatibility
-from __future__ import absolute_import
 from __future__ import print_function
 
 import sys
@@ -31,16 +30,10 @@ TIMEOUT = 120
 # Predictable mode works only when run on the host os.
 command.setup(utils.GuessOS(), None)
 
-def maybe_decode(message):
-  if not isinstance(message, str):
-    return message.decode()
-  return message
-
-
 def main(args):
   def allocation_str(stdout):
     for line in reversed((stdout or '').splitlines()):
-      if maybe_decode(line).startswith('### Allocations = '):
+      if line.startswith('### Allocations = '):
         return line
     return None
 

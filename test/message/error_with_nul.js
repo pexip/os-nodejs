@@ -1,6 +1,5 @@
 'use strict';
 require('../common');
-Error.stackTraceLimit = 2;
 
 function test() {
   const a = 'abc\0def';

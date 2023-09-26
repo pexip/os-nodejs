@@ -1,3 +1,4 @@
+// Flags: --experimental-abortcontroller
 'use strict';
 
 const common = require('../common');
@@ -25,14 +26,6 @@ const iterable = {
     yield 'c';
   }
 };
-
-const veryLargeBuffer = {
-  expected: 'dogs running'.repeat(512 * 1024),
-  *[Symbol.iterator]() {
-    yield Buffer.from('dogs running'.repeat(512 * 1024), 'utf8');
-  }
-};
-
 function iterableWith(value) {
   return {
     *[Symbol.iterator]() {
@@ -115,12 +108,6 @@ async function doWriteAsyncIterable() {
   assert.deepStrictEqual(data, asyncIterable.expected);
 }
 
-async function doWriteAsyncLargeIterable() {
-  await fsPromises.writeFile(dest, veryLargeBuffer);
-  const data = fs.readFileSync(dest, 'utf-8');
-  assert.deepStrictEqual(data, veryLargeBuffer.expected);
-}
-
 async function doWriteInvalidValues() {
   await Promise.all(
     [42, 42n, {}, Symbol('42'), true, undefined, null, NaN].map((value) =>
@@ -174,6 +161,5 @@ async function doReadWithEncoding() {
   await doWriteIterableWithEncoding();
   await doWriteBufferIterable();
   await doWriteAsyncIterable();
-  await doWriteAsyncLargeIterable();
   await doWriteInvalidValues();
 })().then(common.mustCall());

@@ -16,7 +16,7 @@ fs.writeFileSync(file, '');
 
 let counter = 0;
 
-const writeInterval = setInterval(() => {
+setInterval(() => {
   counter = counter + 1;
   const line = `hello at ${counter}\n`;
   fs.writeFileSync(file, line, { flag: 'a' });
@@ -28,7 +28,7 @@ let isLow = false;
 let cur = 0;
 let stream;
 
-const readInterval = setInterval(() => {
+setInterval(() => {
   if (stream) return;
 
   stream = fs.createReadStream(file, {
@@ -49,7 +49,7 @@ const readInterval = setInterval(() => {
           return false;
         });
       assert.strictEqual(brokenLines.length, 0);
-      exitTest();
+      process.exit();
       return;
     }
     if (chunk.length !== hwm) {
@@ -64,20 +64,6 @@ const readInterval = setInterval(() => {
 }, 10);
 
 // Time longer than 90 seconds to exit safely
-const endTimer = setTimeout(() => {
-  exitTest();
+setTimeout(() => {
+  process.exit();
 }, 90000);
-
-const exitTest = () => {
-  clearInterval(readInterval);
-  clearInterval(writeInterval);
-  clearTimeout(endTimer);
-  if (stream && !stream.destroyed) {
-    stream.on('close', () => {
-      process.exit();
-    });
-    stream.destroy();
-  } else {
-    process.exit();
-  }
-};

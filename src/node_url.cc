@@ -1,14 +1,11 @@
 #include "node_url.h"
 #include "base_object-inl.h"
 #include "node_errors.h"
-#include "node_external_reference.h"
 #include "node_i18n.h"
 #include "util-inl.h"
 
-#include <algorithm>
 #include <cmath>
 #include <cstdio>
-#include <numeric>
 #include <string>
 #include <vector>
 
@@ -54,12 +51,15 @@ namespace {
 // https://url.spec.whatwg.org/#eof-code-point
 constexpr char kEOL = -1;
 
+// Used in ToUSVString().
+constexpr char16_t kUnicodeReplacementCharacter = 0xFFFD;
+
 // https://url.spec.whatwg.org/#concept-host
 class URLHost {
  public:
   ~URLHost();
 
-  void ParseIPv4Host(const char* input, size_t length);
+  void ParseIPv4Host(const char* input, size_t length, bool* is_ipv4);
   void ParseIPv6Host(const char* input, size_t length);
   void ParseOpaqueHost(const char* input, size_t length);
   void ParseHost(const char* input,
@@ -143,11 +143,29 @@ URLHost::~URLHost() {
   XX(ARG_FRAGMENT)                                                            \
   XX(ARG_COUNT)  // This one has to be last.
 
+#define ERR_ARGS(XX)                                                          \
+  XX(ERR_ARG_FLAGS)                                                           \
+  XX(ERR_ARG_INPUT)                                                           \
+
 enum url_cb_args {
 #define XX(name) name,
   ARGS(XX)
 #undef XX
 };
+
+enum url_error_cb_args {
+#define XX(name) name,
+  ERR_ARGS(XX)
+#undef XX
+};
+
+#define CHAR_TEST(bits, name, expr)                                           \
+  template <typename T>                                                       \
+  bool name(const T ch) {                                              \
+    static_assert(sizeof(ch) >= (bits) / 8,                                   \
+                  "Character must be wider than " #bits " bits");             \
+    return (expr);                                                            \
+  }
 
 #define TWO_CHAR_STRING_TEST(bits, name, expr)                                \
   template <typename T>                                                       \
@@ -165,9 +183,6 @@ enum url_cb_args {
 
 // https://infra.spec.whatwg.org/#ascii-tab-or-newline
 CHAR_TEST(8, IsASCIITabOrNewline, (ch == '\t' || ch == '\n' || ch == '\r'))
-
-// https://infra.spec.whatwg.org/#c0-control
-CHAR_TEST(8, IsC0Control, (ch >= '\0' && ch <= '\x1f'))
 
 // https://infra.spec.whatwg.org/#c0-control-or-space
 CHAR_TEST(8, IsC0ControlOrSpace, (ch >= '\0' && ch <= ' '))
@@ -194,18 +209,11 @@ T ASCIILowercase(T ch) {
 }
 
 // https://url.spec.whatwg.org/#forbidden-host-code-point
-CHAR_TEST(8,
-          IsForbiddenHostCodePoint,
-          ch == '\0' || ch == '\t' || ch == '\n' || ch == '\r' || ch == ' ' ||
-              ch == '#' || ch == '/' || ch == ':' || ch == '?' || ch == '@' ||
-              ch == '[' || ch == '<' || ch == '>' || ch == '\\' || ch == ']' ||
-              ch == '^' || ch == '|')
-
-// https://url.spec.whatwg.org/#forbidden-domain-code-point
-CHAR_TEST(8,
-          IsForbiddenDomainCodePoint,
-          IsForbiddenHostCodePoint(ch) || IsC0Control(ch) || ch == '%' ||
-              ch == '\x7f')
+CHAR_TEST(8, IsForbiddenHostCodePoint,
+          ch == '\0' || ch == '\t' || ch == '\n' || ch == '\r' ||
+          ch == ' ' || ch == '#' || ch == '%' || ch == '/' ||
+          ch == ':' || ch == '?' || ch == '@' || ch == '[' ||
+          ch == '\\' || ch == ']')
 
 // https://url.spec.whatwg.org/#windows-drive-letter
 TWO_CHAR_STRING_TEST(8, IsWindowsDriveLetter,
@@ -215,7 +223,18 @@ TWO_CHAR_STRING_TEST(8, IsWindowsDriveLetter,
 TWO_CHAR_STRING_TEST(8, IsNormalizedWindowsDriveLetter,
                      (IsASCIIAlpha(ch1) && ch2 == ':'))
 
+// If a UTF-16 character is a low/trailing surrogate.
+CHAR_TEST(16, IsUnicodeTrail, (ch & 0xFC00) == 0xDC00)
+
+// If a UTF-16 character is a surrogate.
+CHAR_TEST(16, IsUnicodeSurrogate, (ch & 0xF800) == 0xD800)
+
+// If a UTF-16 surrogate is a low/trailing one.
+CHAR_TEST(16, IsUnicodeSurrogateTrail, (ch & 0x400) != 0)
+
+#undef CHAR_TEST
 #undef TWO_CHAR_STRING_TEST
+
 
 bool BitAt(const uint8_t a[], const uint8_t i) {
   return !!(a[i >> 3] & (1 << (i & 7)));
@@ -232,14 +251,15 @@ void AppendOrEscape(std::string* str,
     *str += ch;
 }
 
-unsigned hex2bin(const char ch) {
+template <typename T>
+unsigned hex2bin(const T ch) {
   if (ch >= '0' && ch <= '9')
     return ch - '0';
   if (ch >= 'A' && ch <= 'F')
     return 10 + (ch - 'A');
   if (ch >= 'a' && ch <= 'f')
     return 10 + (ch - 'a');
-  UNREACHABLE();
+  return static_cast<unsigned>(-1);
 }
 
 std::string PercentDecode(const char* input, size_t len) {
@@ -274,6 +294,7 @@ std::string PercentDecode(const char* input, size_t len) {
 #define SPECIALS(XX)                                                          \
   XX(ftp, 21, "ftp:")                                                         \
   XX(file, -1, "file:")                                                       \
+  XX(gopher, 70, "gopher:")                                                   \
   XX(http, 80, "http:")                                                       \
   XX(https, 443, "https:")                                                    \
   XX(ws, 80, "ws:")                                                           \
@@ -326,12 +347,10 @@ bool ToASCII(const std::string& input, std::string* output) {
   MaybeStackBuffer<char> buf;
   if (i18n::ToASCII(&buf, input.c_str(), input.length()) < 0)
     return false;
-  if (buf.length() == 0)
-    return false;
   output->assign(*buf, buf.length());
   return true;
 }
-#else  // !defined(NODE_HAVE_I18N_SUPPORT)
+#else
 // Intentional non-ops if ICU is not present.
 bool ToUnicode(const std::string& input, std::string* output) {
   *output = input;
@@ -342,7 +361,7 @@ bool ToASCII(const std::string& input, std::string* output) {
   *output = input;
   return true;
 }
-#endif  // !defined(NODE_HAVE_I18N_SUPPORT)
+#endif
 
 #define NS_IN6ADDRSZ 16
 
@@ -369,21 +388,18 @@ void URLHost::ParseIPv6Host(const char* input, size_t length) {
   type_ = HostType::H_IPV6;
 }
 
-// https://url.spec.whatwg.org/#ipv4-number-parser
-int64_t ParseIPv4Number(const char* start, const char* end) {
-  if (end - start == 0) return -1;
-
+int64_t ParseNumber(const char* start, const char* end) {
   unsigned R = 10;
   if (end - start >= 2 && start[0] == '0' && (start[1] | 0x20) == 'x') {
     start += 2;
     R = 16;
-  } else if (end - start >= 2 && start[0] == '0') {
+  }
+  if (end - start == 0) {
+    return 0;
+  } else if (R == 10 && end - start > 1 && start[0] == '0') {
     start++;
     R = 8;
   }
-
-  if (end - start == 0) return 0;
-
   const char* p = start;
 
   while (p < end) {
@@ -407,33 +423,9 @@ int64_t ParseIPv4Number(const char* start, const char* end) {
   return strtoll(start, nullptr, R);
 }
 
-// https://url.spec.whatwg.org/#ends-in-a-number-checker
-bool EndsInANumber(const std::string& input) {
-  std::vector<std::string> parts = SplitString(input, '.', false);
-
-  if (parts.empty()) return false;
-
-  if (parts.back().empty()) {
-    if (parts.size() == 1) return false;
-    parts.pop_back();
-  }
-
-  const std::string& last = parts.back();
-
-  // If last is non-empty and contains only ASCII digits, then return true
-  if (!last.empty() && std::all_of(last.begin(), last.end(), ::isdigit)) {
-    return true;
-  }
-
-  const char* last_str = last.c_str();
-  int64_t num = ParseIPv4Number(last_str, last_str + last.size());
-  if (num >= 0) return true;
-
-  return false;
-}
-
-void URLHost::ParseIPv4Host(const char* input, size_t length) {
+void URLHost::ParseIPv4Host(const char* input, size_t length, bool* is_ipv4) {
   CHECK_EQ(type_, HostType::H_FAILED);
+  *is_ipv4 = false;
   const char* pointer = input;
   const char* mark = input;
   const char* end = pointer + length;
@@ -452,7 +444,7 @@ void URLHost::ParseIPv4Host(const char* input, size_t length) {
         return;
       if (pointer == mark)
         return;
-      int64_t n = ParseIPv4Number(mark, pointer);
+      int64_t n = ParseNumber(mark, pointer);
       if (n < 0)
         return;
 
@@ -467,6 +459,7 @@ void URLHost::ParseIPv4Host(const char* input, size_t length) {
     pointer++;
   }
   CHECK_GT(parts, 0);
+  *is_ipv4 = true;
 
   // If any but the last item in numbers is greater than 255, return failure.
   // If the last item in numbers is greater than or equal to
@@ -494,7 +487,7 @@ void URLHost::ParseOpaqueHost(const char* input, size_t length) {
   output.reserve(length);
   for (size_t i = 0; i < length; i++) {
     const char ch = input[i];
-    if (IsForbiddenHostCodePoint(ch)) {
+    if (ch != '%' && IsForbiddenHostCodePoint(ch)) {
       return;
     } else {
       AppendOrEscape(&output, ch, C0_CONTROL_ENCODE_SET);
@@ -533,15 +526,16 @@ void URLHost::ParseHost(const char* input,
   // If any of the following characters are still present, we have to fail
   for (size_t n = 0; n < decoded.size(); n++) {
     const char ch = decoded[n];
-    if (IsForbiddenDomainCodePoint(ch)) {
+    if (IsForbiddenHostCodePoint(ch)) {
       return;
     }
   }
 
-  // If domain ends in a number, then return the result of IPv4 parsing domain
-  if (EndsInANumber(decoded)) {
-    return ParseIPv4Host(decoded.c_str(), decoded.length());
-  }
+  // Check to see if it's an IPv4 IP address
+  bool is_ipv4;
+  ParseIPv4Host(decoded.c_str(), decoded.length(), &is_ipv4);
+  if (is_ipv4)
+    return;
 
   // If the unicode flag is set, run the result through punycode ToUnicode
   if (unicode && !ToUnicode(decoded, &decoded))
@@ -603,11 +597,14 @@ std::string URLHost::ToString() const {
     case HostType::H_DOMAIN:
     case HostType::H_OPAQUE:
       return value_.domain_or_opaque;
+      break;
     case HostType::H_IPV4: {
       dest.reserve(15);
       uint32_t value = value_.ipv4;
       for (int n = 0; n < 4; n++) {
-        dest.insert(0, std::to_string(value % 256));
+        char buf[4];
+        snprintf(buf, sizeof(buf), "%d", value % 256);
+        dest.insert(0, buf);
         if (n < 3)
           dest.insert(0, 1, '.');
         value /= 256;
@@ -940,11 +937,13 @@ void URL::Parse(const char* input,
                 ((buffer == "file:") &&
                  ((url->flags & URL_FLAGS_HAS_USERNAME) ||
                   (url->flags & URL_FLAGS_HAS_PASSWORD) ||
-                  (url->port != -1))) ||
-                  (url->scheme == "file:" && url->host.empty())) {
+                  (url->port != -1)))) {
               url->flags |= URL_FLAGS_TERMINATED;
               return;
             }
+
+            // File scheme && (host == empty or null) check left to JS-land
+            // as it can be done before even entering C++ binding.
           }
 
           url->scheme = std::move(buffer);
@@ -956,10 +955,7 @@ void URL::Parse(const char* input,
             url->flags &= ~URL_FLAGS_SPECIAL;
             special = false;
           }
-          // `special_back_slash` equals to `(special && ch == '\\')` and `ch`
-          // here always not equals to `\\`. So `special_back_slash` here always
-          // equals to `false`.
-          special_back_slash = false;
+          special_back_slash = (special && ch == '\\');
           buffer.clear();
           if (has_state_override)
             return;
@@ -1247,9 +1243,6 @@ void URL::Parse(const char* input,
             url->flags |= URL_FLAGS_FAILED;
             return;
           }
-          if (state_override == kHostname) {
-            return;
-          }
           url->flags |= URL_FLAGS_HAS_HOST;
           if (!ParseHost(buffer, &url->host, special)) {
             url->flags |= URL_FLAGS_FAILED;
@@ -1257,6 +1250,9 @@ void URL::Parse(const char* input,
           }
           buffer.clear();
           state = kPort;
+          if (state_override == kHostname) {
+            return;
+          }
         } else if (ch == kEOL ||
                    ch == '/' ||
                    ch == '?' ||
@@ -1339,14 +1335,13 @@ void URL::Parse(const char* input,
         break;
       case kFile:
         url->scheme = "file:";
-        url->host.clear();
-        url->flags |= URL_FLAGS_HAS_HOST;
         if (ch == '/' || ch == '\\') {
           state = kFileSlash;
         } else if (has_base && base->scheme == "file:") {
           switch (ch) {
             case kEOL:
               if (base->flags & URL_FLAGS_HAS_HOST) {
+                url->flags |= URL_FLAGS_HAS_HOST;
                 url->host = base->host;
               }
               if (base->flags & URL_FLAGS_HAS_PATH) {
@@ -1360,6 +1355,7 @@ void URL::Parse(const char* input,
               break;
             case '?':
               if (base->flags & URL_FLAGS_HAS_HOST) {
+                url->flags |= URL_FLAGS_HAS_HOST;
                 url->host = base->host;
               }
               if (base->flags & URL_FLAGS_HAS_PATH) {
@@ -1372,6 +1368,7 @@ void URL::Parse(const char* input,
               break;
             case '#':
               if (base->flags & URL_FLAGS_HAS_HOST) {
+                url->flags |= URL_FLAGS_HAS_HOST;
                 url->host = base->host;
               }
               if (base->flags & URL_FLAGS_HAS_PATH) {
@@ -1387,18 +1384,16 @@ void URL::Parse(const char* input,
               state = kFragment;
               break;
             default:
-              url->query.clear();
-              if (base->flags & URL_FLAGS_HAS_HOST) {
-                url->host = base->host;
-              }
-              if (base->flags & URL_FLAGS_HAS_PATH) {
-                url->flags |= URL_FLAGS_HAS_PATH;
-                url->path = base->path;
-              }
               if (!StartsWithWindowsDriveLetter(p, end)) {
+                if (base->flags & URL_FLAGS_HAS_HOST) {
+                  url->flags |= URL_FLAGS_HAS_HOST;
+                  url->host = base->host;
+                }
+                if (base->flags & URL_FLAGS_HAS_PATH) {
+                  url->flags |= URL_FLAGS_HAS_PATH;
+                  url->path = base->path;
+                }
                 ShortenUrlPath(url);
-              } else {
-                url->path.clear();
               }
               state = kPath;
               continue;
@@ -1412,13 +1407,20 @@ void URL::Parse(const char* input,
         if (ch == '/' || ch == '\\') {
           state = kFileHost;
         } else {
-          if (has_base && base->scheme == "file:") {
-            url->flags |= URL_FLAGS_HAS_HOST;
-            url->host = base->host;
-            if (!StartsWithWindowsDriveLetter(p, end) &&
-                IsNormalizedWindowsDriveLetter(base->path[0])) {
+          if (has_base &&
+              base->scheme == "file:" &&
+              !StartsWithWindowsDriveLetter(p, end)) {
+            if (IsNormalizedWindowsDriveLetter(base->path[0])) {
               url->flags |= URL_FLAGS_HAS_PATH;
               url->path.push_back(base->path[0]);
+            } else {
+              if (base->flags & URL_FLAGS_HAS_HOST) {
+                url->flags |= URL_FLAGS_HAS_HOST;
+                url->host = base->host;
+              } else {
+                url->flags &= ~URL_FLAGS_HAS_HOST;
+                url->host.clear();
+              }
             }
           }
           state = kPath;
@@ -1480,9 +1482,6 @@ void URL::Parse(const char* input,
           if (ch != '/') {
             continue;
           }
-        } else if (has_state_override && !(url->flags & URL_FLAGS_HAS_HOST)) {
-          url->flags |= URL_FLAGS_HAS_PATH;
-          url->path.emplace_back("");
         }
         break;
       case kPath:
@@ -1505,19 +1504,29 @@ void URL::Parse(const char* input,
                 url->path.empty() &&
                 buffer.size() == 2 &&
                 IsWindowsDriveLetter(buffer)) {
+              if ((url->flags & URL_FLAGS_HAS_HOST) &&
+                  !url->host.empty()) {
+                url->host.clear();
+                url->flags |= URL_FLAGS_HAS_HOST;
+              }
               buffer[1] = ':';
             }
             url->flags |= URL_FLAGS_HAS_PATH;
             url->path.emplace_back(std::move(buffer));
           }
           buffer.clear();
+          if (url->scheme == "file:" &&
+              (ch == kEOL ||
+               ch == '?' ||
+               ch == '#')) {
+            while (url->path.size() > 1 && url->path[0].empty()) {
+              url->path.erase(url->path.begin());
+            }
+          }
           if (ch == '?') {
             url->flags |= URL_FLAGS_HAS_QUERY;
-            url->query.clear();
             state = kQuery;
           } else if (ch == '#') {
-            url->flags |= URL_FLAGS_HAS_FRAGMENT;
-            url->fragment.clear();
             state = kFragment;
           }
         } else {
@@ -1557,6 +1566,8 @@ void URL::Parse(const char* input,
             url->flags |= URL_FLAGS_HAS_FRAGMENT;
             url->fragment = std::move(buffer);
             break;
+          case 0:
+            break;
           default:
             AppendOrEscape(&buffer, ch, FRAGMENT_ENCODE_SET);
         }
@@ -1569,65 +1580,6 @@ void URL::Parse(const char* input,
     p++;
   }
 }  // NOLINT(readability/fn_size)
-
-// https://url.spec.whatwg.org/#url-serializing
-std::string URL::SerializeURL(const url_data& url,
-                              bool exclude = false) {
-  std::string output;
-  output.reserve(
-    10 +  // We generally insert < 10 separator characters between URL parts
-    url.scheme.size() +
-    url.username.size() +
-    url.password.size() +
-    url.host.size() +
-    url.query.size() +
-    url.fragment.size() +
-    url.href.size() +
-    std::accumulate(
-        url.path.begin(),
-        url.path.end(),
-        0,
-        [](size_t sum, const auto& str) { return sum + str.size(); }));
-
-  output += url.scheme;
-  if (url.flags & URL_FLAGS_HAS_HOST) {
-    output += "//";
-    if (url.flags & URL_FLAGS_HAS_USERNAME ||
-        url.flags & URL_FLAGS_HAS_PASSWORD) {
-      if (url.flags & URL_FLAGS_HAS_USERNAME) {
-        output += url.username;
-      }
-      if (url.flags & URL_FLAGS_HAS_PASSWORD) {
-        output += ":" + url.password;
-      }
-      output += "@";
-    }
-    output += url.host;
-    if (url.port != -1) {
-      output += ":" + std::to_string(url.port);
-    }
-  }
-  if (url.flags & URL_FLAGS_CANNOT_BE_BASE) {
-    output += url.path[0];
-  } else {
-    if (!(url.flags & URL_FLAGS_HAS_HOST) &&
-          url.path.size() > 1 &&
-          url.path[0].empty()) {
-      output += "/.";
-    }
-    for (size_t i = 1; i < url.path.size(); i++) {
-      output += "/" + url.path[i];
-    }
-  }
-  if (url.flags & URL_FLAGS_HAS_QUERY) {
-    output += "?" + url.query;
-  }
-  if (!exclude && (url.flags & URL_FLAGS_HAS_FRAGMENT)) {
-    output += "#" + url.fragment;
-  }
-  output.shrink_to_fit();
-  return output;
-}
 
 namespace {
 void SetArgs(Environment* env,
@@ -1701,10 +1653,14 @@ void Parse(Environment* env,
       null,  // fragment defaults to null
     };
     SetArgs(env, argv, url);
-    USE(cb->Call(context, recv, arraysize(argv), argv));
+    cb->Call(context, recv, arraysize(argv), argv).FromMaybe(Local<Value>());
   } else if (error_cb->IsFunction()) {
-    Local<Value> flags = Integer::NewFromUnsigned(isolate, url.flags);
-    USE(error_cb.As<Function>()->Call(context, recv, 1, &flags));
+    Local<Value> argv[2] = { undef, undef };
+    argv[ERR_ARG_FLAGS] = Integer::NewFromUnsigned(isolate, url.flags);
+    argv[ERR_ARG_INPUT] =
+      String::NewFromUtf8(env->isolate(), input).ToLocalChecked();
+    error_cb.As<Function>()->Call(context, recv, arraysize(argv), argv)
+        .FromMaybe(Local<Value>());
   }
 }
 
@@ -1751,6 +1707,40 @@ void EncodeAuthSet(const FunctionCallbackInfo<Value>& args) {
   }
   args.GetReturnValue().Set(
       String::NewFromUtf8(env->isolate(), output.c_str()).ToLocalChecked());
+}
+
+void ToUSVString(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+  CHECK_GE(args.Length(), 2);
+  CHECK(args[0]->IsString());
+  CHECK(args[1]->IsNumber());
+
+  TwoByteValue value(env->isolate(), args[0]);
+
+  int64_t start = args[1]->IntegerValue(env->context()).FromJust();
+  CHECK_GE(start, 0);
+
+  for (size_t i = start; i < value.length(); i++) {
+    char16_t c = value[i];
+    if (!IsUnicodeSurrogate(c)) {
+      continue;
+    } else if (IsUnicodeSurrogateTrail(c) || i == value.length() - 1) {
+      value[i] = kUnicodeReplacementCharacter;
+    } else {
+      char16_t d = value[i + 1];
+      if (IsUnicodeTrail(d)) {
+        i++;
+      } else {
+        value[i] = kUnicodeReplacementCharacter;
+      }
+    }
+  }
+
+  args.GetReturnValue().Set(
+      String::NewFromTwoByte(env->isolate(),
+                             *value,
+                             NewStringType::kNormal,
+                             value.length()).ToLocalChecked());
 }
 
 void DomainToASCII(const FunctionCallbackInfo<Value>& args) {
@@ -1800,11 +1790,13 @@ void Initialize(Local<Object> target,
                 Local<Value> unused,
                 Local<Context> context,
                 void* priv) {
-  SetMethod(context, target, "parse", Parse);
-  SetMethodNoSideEffect(context, target, "encodeAuth", EncodeAuthSet);
-  SetMethodNoSideEffect(context, target, "domainToASCII", DomainToASCII);
-  SetMethodNoSideEffect(context, target, "domainToUnicode", DomainToUnicode);
-  SetMethod(context, target, "setURLConstructor", SetURLConstructor);
+  Environment* env = Environment::GetCurrent(context);
+  env->SetMethod(target, "parse", Parse);
+  env->SetMethodNoSideEffect(target, "encodeAuth", EncodeAuthSet);
+  env->SetMethodNoSideEffect(target, "toUSVString", ToUSVString);
+  env->SetMethodNoSideEffect(target, "domainToASCII", DomainToASCII);
+  env->SetMethodNoSideEffect(target, "domainToUnicode", DomainToUnicode);
+  env->SetMethod(target, "setURLConstructor", SetURLConstructor);
 
 #define XX(name, _) NODE_DEFINE_CONSTANT(target, name);
   FLAGS(XX)
@@ -1815,14 +1807,6 @@ void Initialize(Local<Object> target,
 #undef XX
 }
 }  // namespace
-
-void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
-  registry->Register(Parse);
-  registry->Register(EncodeAuthSet);
-  registry->Register(DomainToASCII);
-  registry->Register(DomainToUnicode);
-  registry->Register(SetURLConstructor);
-}
 
 std::string URL::ToFilePath() const {
   if (context_.scheme != "file:") {
@@ -1945,4 +1929,3 @@ MaybeLocal<Value> URL::ToObject(Environment* env) const {
 }  // namespace node
 
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(url, node::url::Initialize)
-NODE_MODULE_EXTERNAL_REFERENCE(url, node::url::RegisterExternalReferences)

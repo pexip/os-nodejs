@@ -1,5 +1,4 @@
 'use strict';
-// Flags: --expose-internals
 
 require('../common');
 const {
@@ -8,8 +7,6 @@ const {
   setEnvironmentData,
   threadId,
 } = require('worker_threads');
-
-const { assignEnvironmentData } = require('internal/worker');
 
 const {
   deepStrictEqual,
@@ -29,8 +26,6 @@ if (!process.env.HAS_STARTED_WORKER) {
   strictEqual(getEnvironmentData('foo'), 'bar');
   deepStrictEqual(getEnvironmentData('hello'), { value: 'world' });
   strictEqual(getEnvironmentData(1), undefined);
-  assignEnvironmentData(undefined); // It won't setup any key.
-  strictEqual(getEnvironmentData(undefined), undefined);
 
   // Recurse to make sure the environment data is inherited
   if (threadId <= 2)

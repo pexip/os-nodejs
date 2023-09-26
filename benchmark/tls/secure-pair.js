@@ -25,7 +25,6 @@ function main({ dur, size, securing }) {
     isServer: true,
     requestCert: true,
     rejectUnauthorized: true,
-    maxVersion: 'TLSv1.2',
   };
 
   const server = net.createServer(onRedirectConnection);
@@ -39,7 +38,6 @@ function main({ dur, size, securing }) {
         cert: options.cert,
         isServer: false,
         rejectUnauthorized: false,
-        maxVersion: options.maxVersion,
       };
       const network = securing === 'clear' ? net : tls;
       const conn = network.connect(clientOptions, () => {

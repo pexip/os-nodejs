@@ -3,6 +3,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+# for py2/py3 compatibility
+from __future__ import print_function
+
 import argparse
 import os
 import sys
@@ -43,10 +46,14 @@ class DetectLastRoll(Step):
     self['json_output']['monitoring_state'] = 'detect_last_roll'
     self["last_roll"] = self._options.last_roll
     if not self["last_roll"]:
-      # Get last-rolled v8 revision from Chromium's DEPS file.
-      self["last_roll"] = self.Command(
-          "gclient", "getdep -r src/v8", cwd=self._options.chromium).strip()
+      # Interpret the DEPS file to retrieve the v8 revision.
+      # TODO(machenbach): This should be part or the setdep api of
+      # depot_tools.
+      Var = lambda var: '%s'
+      exec(FileToText(os.path.join(self._options.chromium, "DEPS")))
 
+      # The revision rolled last.
+      self["last_roll"] = vars['v8_revision']
     self["last_version"] = self.GetVersionTag(self["last_roll"])
     assert self["last_version"], "The last rolled v8 revision is not tagged."
 
@@ -77,7 +84,7 @@ class DetectRevisionToRoll(Step):
       version = self.GetVersionTag(revision)
       assert version, "Internal error. All recent releases should have a tag"
 
-      if LooseVersion(self["last_version"]) < LooseVersion(version):
+      if SortingKey(self["last_version"]) < SortingKey(version):
         self["roll"] = revision
         break
     else:
@@ -123,7 +130,7 @@ class UpdateChromiumCheckout(Step):
   def RunStep(self):
     self['json_output']['monitoring_state'] = 'update_chromium'
     cwd = self._options.chromium
-    self.GitCheckout("main", cwd=cwd)
+    self.GitCheckout("master", cwd=cwd)
     self.DeleteBranch("work-branch", cwd=cwd)
     self.GitPull(cwd=cwd)
 
@@ -152,20 +159,19 @@ class UploadCL(Step):
 
     message.append(ISSUE_MSG)
 
-    message.append("R=%s" % self._options.reviewer)
+    message.append("TBR=%s" % self._options.reviewer)
     self.GitCommit("\n\n".join(message),  author=self._options.author, cwd=cwd)
     if not self._options.dry_run:
       self.GitUpload(force=True,
                      bypass_hooks=True,
                      cq=self._options.use_commit_queue,
                      cq_dry_run=self._options.use_dry_run,
-                     set_bot_commit=True,
                      cwd=cwd)
       print("CL uploaded.")
     else:
       print("Dry run - don't upload.")
 
-    self.GitCheckout("main", cwd=cwd)
+    self.GitCheckout("master", cwd=cwd)
     self.GitDeleteBranch("work-branch", cwd=cwd)
 
 class CleanUp(Step):

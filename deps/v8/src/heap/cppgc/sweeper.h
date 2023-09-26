@@ -7,69 +7,29 @@
 
 #include <memory>
 
-#include "include/cppgc/heap.h"
 #include "src/base/macros.h"
-#include "src/base/platform/time.h"
-#include "src/heap/cppgc/memory.h"
 
 namespace cppgc {
-
-class Platform;
-
 namespace internal {
 
-class HeapBase;
-class ConcurrentSweeperTest;
-class NormalPageSpace;
+class RawHeap;
 
 class V8_EXPORT_PRIVATE Sweeper final {
  public:
-  struct SweepingConfig {
-    using SweepingType = cppgc::Heap::SweepingType;
-    enum class CompactableSpaceHandling { kSweep, kIgnore };
-    enum class FreeMemoryHandling { kDoNotDiscard, kDiscardWherePossible };
+  enum class Config { kAtomic, kIncrementalAndConcurrent };
 
-    SweepingType sweeping_type = SweepingType::kIncrementalAndConcurrent;
-    CompactableSpaceHandling compactable_space_handling =
-        CompactableSpaceHandling::kSweep;
-    FreeMemoryHandling free_memory_handling = FreeMemoryHandling::kDoNotDiscard;
-  };
-
-  static constexpr bool CanDiscardMemory() {
-    return CheckMemoryIsInaccessibleIsNoop();
-  }
-
-  explicit Sweeper(HeapBase&);
+  explicit Sweeper(RawHeap*);
   ~Sweeper();
 
   Sweeper(const Sweeper&) = delete;
   Sweeper& operator=(const Sweeper&) = delete;
 
-  // Sweeper::Start assumes the heap holds no linear allocation buffers.
-  void Start(SweepingConfig);
-  void FinishIfRunning();
-  void FinishIfOutOfWork();
-  void NotifyDoneIfNeeded();
-  // SweepForAllocationIfRunning sweeps the given |space| until a slot that can
-  // fit an allocation of size |size| is found. Returns true if a slot was
-  // found.
-  bool SweepForAllocationIfRunning(NormalPageSpace* space, size_t size);
-
-  bool IsSweepingOnMutatorThread() const;
-  bool IsSweepingInProgress() const;
-
-  // Assist with sweeping. Returns true if sweeping is done.
-  bool PerformSweepOnMutatorThread(double deadline_in_seconds);
+  void Start(Config);
+  void Finish();
 
  private:
-  void WaitForConcurrentSweepingForTesting();
-
   class SweeperImpl;
-
-  HeapBase& heap_;
   std::unique_ptr<SweeperImpl> impl_;
-
-  friend class ConcurrentSweeperTest;
 };
 
 }  // namespace internal

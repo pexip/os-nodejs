@@ -2,10 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#if !V8_ENABLE_WEBASSEMBLY
-#error This header should only be included if WebAssembly is enabled.
-#endif  // !V8_ENABLE_WEBASSEMBLY
-
 #ifndef V8_WASM_COMPILATION_ENVIRONMENT_H_
 #define V8_WASM_COMPILATION_ENVIRONMENT_H_
 
@@ -17,9 +13,6 @@
 #include "src/wasm/wasm-tier.h"
 
 namespace v8 {
-
-class JobHandle;
-
 namespace internal {
 
 class Counters;
@@ -28,7 +21,6 @@ namespace wasm {
 
 class NativeModule;
 class WasmCode;
-class WasmEngine;
 class WasmError;
 
 enum RuntimeExceptionSupport : bool {
@@ -36,16 +28,9 @@ enum RuntimeExceptionSupport : bool {
   kNoRuntimeExceptionSupport = false
 };
 
-enum BoundsCheckStrategy : int8_t {
-  // Emit protected instructions, use the trap handler for OOB detection.
-  kTrapHandler,
-  // Emit explicit bounds checks.
-  kExplicitBoundsChecks,
-  // Emit no bounds checks at all (for testing only).
-  kNoBoundsChecks
-};
+enum UseTrapHandler : bool { kUseTrapHandler = true, kNoTrapHandler = false };
 
-enum class DynamicTiering { kEnabled, kDisabled };
+enum LowerSimd : bool { kLowerSimd = true, kNoLowerSimd = false };
 
 // The {CompilationEnv} encapsulates the module data that is used during
 // compilation. CompilationEnvs are shareable across multiple compilations.
@@ -53,8 +38,9 @@ struct CompilationEnv {
   // A pointer to the decoded module's static representation.
   const WasmModule* const module;
 
-  // The bounds checking strategy to use.
-  const BoundsCheckStrategy bounds_checks;
+  // True if trap handling should be used in compiled code, rather than
+  // compiling in bounds checks for each memory access.
+  const UseTrapHandler use_trap_handler;
 
   // If the runtime doesn't support exception propagation,
   // we won't generate stack checks, and trap handling will also
@@ -63,38 +49,33 @@ struct CompilationEnv {
 
   // The smallest size of any memory that could be used with this module, in
   // bytes.
-  const uintptr_t min_memory_size;
+  const uint64_t min_memory_size;
 
   // The largest size of any memory that could be used with this module, in
   // bytes.
-  const uintptr_t max_memory_size;
+  const uint64_t max_memory_size;
 
   // Features enabled for this compilation.
   const WasmFeatures enabled_features;
 
-  const DynamicTiering dynamic_tiering;
+  const LowerSimd lower_simd;
 
   constexpr CompilationEnv(const WasmModule* module,
-                           BoundsCheckStrategy bounds_checks,
+                           UseTrapHandler use_trap_handler,
                            RuntimeExceptionSupport runtime_exception_support,
                            const WasmFeatures& enabled_features,
-                           DynamicTiering dynamic_tiering)
+                           LowerSimd lower_simd = kNoLowerSimd)
       : module(module),
-        bounds_checks(bounds_checks),
+        use_trap_handler(use_trap_handler),
         runtime_exception_support(runtime_exception_support),
-        // During execution, the memory can never be bigger than what fits in a
-        // uintptr_t.
-        min_memory_size(
-            std::min(kV8MaxWasmMemoryPages,
-                     uintptr_t{module ? module->initial_pages : 0}) *
-            kWasmPageSize),
+        min_memory_size(module ? module->initial_pages * uint64_t{kWasmPageSize}
+                               : 0),
         max_memory_size((module && module->has_maximum_pages
-                             ? std::min(kV8MaxWasmMemoryPages,
-                                        uintptr_t{module->maximum_pages})
-                             : kV8MaxWasmMemoryPages) *
-                        kWasmPageSize),
+                             ? module->maximum_pages
+                             : max_initial_mem_pages()) *
+                        uint64_t{kWasmPageSize}),
         enabled_features(enabled_features),
-        dynamic_tiering(dynamic_tiering) {}
+        lower_simd(lower_simd) {}
 };
 
 // The wire bytes are either owned by the StreamingDecoder, or (after streaming)
@@ -102,10 +83,7 @@ struct CompilationEnv {
 class WireBytesStorage {
  public:
   virtual ~WireBytesStorage() = default;
-  virtual base::Vector<const uint8_t> GetCode(WireBytesRef) const = 0;
-  // Returns the ModuleWireBytes corresponding to the underlying module if
-  // available. Not supported if the wire bytes are owned by a StreamingDecoder.
-  virtual base::Optional<ModuleWireBytes> GetModuleBytes() const = 0;
+  virtual Vector<const uint8_t> GetCode(WireBytesRef) const = 0;
 };
 
 // Callbacks will receive either {kFailedCompilation} or both
@@ -113,68 +91,34 @@ class WireBytesStorage {
 // order. If tier up is off, both events are delivered right after each other.
 enum class CompilationEvent : uint8_t {
   kFinishedBaselineCompilation,
-  kFinishedExportWrappers,
-  kFinishedCompilationChunk,
   kFinishedTopTierCompilation,
   kFailedCompilation,
   kFinishedRecompilation
 };
 
-class V8_EXPORT_PRIVATE CompilationEventCallback {
- public:
-  virtual ~CompilationEventCallback() = default;
-
-  virtual void call(CompilationEvent event) = 0;
-
-  enum class ReleaseAfterFinalEvent { kRelease, kKeep };
-
-  // Tells the module compiler whether to keep or to release a callback when the
-  // compilation state finishes all compilation units. Most callbacks should be
-  // released, that's why there is a default implementation, but the callback
-  // for code caching with dynamic tiering has to stay alive.
-  virtual ReleaseAfterFinalEvent release_after_final_event() {
-    return ReleaseAfterFinalEvent::kRelease;
-  }
-};
-
 // The implementation of {CompilationState} lives in module-compiler.cc.
 // This is the PIMPL interface to that private class.
-class V8_EXPORT_PRIVATE CompilationState {
+class CompilationState {
  public:
+  using callback_t = std::function<void(CompilationEvent)>;
+
   ~CompilationState();
 
-  void InitCompileJob();
-
-  void CancelCompilation();
-
-  void CancelInitialCompilation();
+  void AbortCompilation();
 
   void SetError();
 
   void SetWireBytesStorage(std::shared_ptr<WireBytesStorage>);
 
-  std::shared_ptr<WireBytesStorage> GetWireBytesStorage() const;
+  V8_EXPORT_PRIVATE std::shared_ptr<WireBytesStorage> GetWireBytesStorage()
+      const;
 
-  void AddCallback(std::unique_ptr<CompilationEventCallback> callback);
-
-  void InitializeAfterDeserialization(
-      base::Vector<const int> lazy_functions,
-      base::Vector<const int> liftoff_functions);
-
-  // Wait until top tier compilation finished, or compilation failed.
-  void WaitForTopTierFinished();
-
-  // Set a higher priority for the compilation job.
-  void SetHighPriority();
+  void AddCallback(callback_t);
 
   bool failed() const;
-  bool baseline_compilation_finished() const;
-  bool top_tier_compilation_finished() const;
-  bool recompilation_finished() const;
-
-  void set_compilation_id(int compilation_id);
-
-  DynamicTiering dynamic_tiering() const;
+  V8_EXPORT_PRIVATE bool baseline_compilation_finished() const;
+  V8_EXPORT_PRIVATE bool top_tier_compilation_finished() const;
+  V8_EXPORT_PRIVATE bool recompilation_finished() const;
 
   // Override {operator delete} to avoid implicit instantiation of {operator
   // delete} with {size_t} argument. The {size_t} argument would be incorrect.
@@ -190,8 +134,7 @@ class V8_EXPORT_PRIVATE CompilationState {
   // such that it can keep it alive (by regaining a {std::shared_ptr}) in
   // certain scopes.
   static std::unique_ptr<CompilationState> New(
-      const std::shared_ptr<NativeModule>&, std::shared_ptr<Counters>,
-      DynamicTiering dynamic_tiering);
+      const std::shared_ptr<NativeModule>&, std::shared_ptr<Counters>);
 };
 
 }  // namespace wasm

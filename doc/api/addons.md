@@ -1,7 +1,6 @@
 # C++ addons
 
 <!--introduced_in=v0.10.0-->
-
 <!-- type=misc -->
 
 _Addons_ are dynamically-linked shared objects written in C++. The
@@ -9,7 +8,7 @@ _Addons_ are dynamically-linked shared objects written in C++. The
 Addons provide an interface between JavaScript and C/C++ libraries.
 
 There are three options for implementing addons: Node-API, nan, or direct
-use of internal V8, libuv, and Node.js libraries. Unless there is a need for
+use of internal V8, libuv and Node.js libraries. Unless there is a need for
 direct access to functionality which is not exposed by Node-API, use Node-API.
 Refer to [C/C++ addons with Node-API](n-api.md) for more information on
 Node-API.
@@ -40,7 +39,7 @@ involving knowledge of several components and APIs:
 
 * Node.js includes other statically linked libraries including OpenSSL. These
   other libraries are located in the `deps/` directory in the Node.js source
-  tree. Only the libuv, OpenSSL, V8, and zlib symbols are purposefully
+  tree. Only the libuv, OpenSSL, V8 and zlib symbols are purposefully
   re-exported by Node.js and may be used to various extents by addons. See
   [Linking to libraries included with Node.js][] for additional information.
 
@@ -235,12 +234,9 @@ NODE_MODULE_INIT(/* exports, module, context */) {
 ```
 
 #### Worker support
-
 <!-- YAML
 changes:
-  - version:
-    - v14.8.0
-    - v12.19.0
+  - version: v14.8.0
     pr-url: https://github.com/nodejs/node/pull/34572
     description: Cleanup hooks may now be asynchronous.
 -->
@@ -393,7 +389,7 @@ try {
 
 ### Linking to libraries included with Node.js
 
-Node.js uses statically linked libraries such as V8, libuv, and OpenSSL. All
+Node.js uses statically linked libraries such as V8, libuv and OpenSSL. All
 addons are required to link to V8 and may link to any of the other dependencies
 as well. Typically, this is as simple as including the appropriate
 `#include <...>` statements (e.g. `#include <v8.h>`) and `node-gyp` will locate
@@ -458,7 +454,7 @@ in the Node-API are used.
 
 Creating and maintaining an addon that benefits from the ABI stability
 provided by Node-API carries with it certain
-[implementation considerations][].
+[implementation considerations](n-api.md#n_api_implications_of_abi_stability).
 
 To use Node-API in the above "Hello world" example, replace the content of
 `hello.cc` with the following. All other instructions remain the same.
@@ -967,10 +963,6 @@ provided by the underlying V8 JavaScript engine. They are subject to change
 or removal at any time. They are not documented by Node.js or V8, and they
 should never be used outside of testing.
 
-During shutdown of the process or worker threads destructors are not called
-by the JS engine. Therefore it's the responsibility of the user to track
-these objects and ensure proper destruction to avoid resource leaks.
-
 ### Factory of wrapped objects
 
 Alternatively, it is possible to use a factory pattern to avoid explicitly
@@ -1367,17 +1359,16 @@ console.log(result);
 ```
 
 [Electron]: https://electronjs.org/
-[Embedder's Guide]: https://v8.dev/docs/embed
-[Linking to libraries included with Node.js]: #linking-to-libraries-included-with-nodejs
+[Embedder's Guide]: https://github.com/v8/v8/wiki/Embedder's%20Guide
+[Linking to libraries included with Node.js]: #addons_linking_to_libraries_included_with_node_js
 [Native Abstractions for Node.js]: https://github.com/nodejs/nan
 [V8]: https://v8.dev/
-[`Worker`]: worker_threads.md#class-worker
+[`Worker`]: worker_threads.md#worker_threads_class_worker
 [bindings]: https://github.com/TooTallNate/node-bindings
 [download]: https://github.com/nodejs/node-addon-examples
 [examples]: https://github.com/nodejs/nan/tree/HEAD/examples/
-[implementation considerations]: n-api.md#implications-of-abi-stability
 [installation instructions]: https://github.com/nodejs/node-gyp#installation
 [libuv]: https://github.com/libuv/libuv
 [node-gyp]: https://github.com/nodejs/node-gyp
-[require]: modules.md#requireid
+[require]: modules.md#modules_require_id
 [v8-docs]: https://v8docs.nodesource.com/

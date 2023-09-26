@@ -30,27 +30,16 @@ class SourceId {
 };
 
 struct LineAndColumn {
-  static constexpr int kUnknownOffset = -1;
-
-  int offset;
   int line;
   int column;
 
-  static LineAndColumn Invalid() { return {-1, -1, -1}; }
-  static LineAndColumn WithUnknownOffset(int line, int column) {
-    return {kUnknownOffset, line, column};
-  }
+  static LineAndColumn Invalid() { return {-1, -1}; }
 
   bool operator==(const LineAndColumn& other) const {
-    if (offset == kUnknownOffset || other.offset == kUnknownOffset) {
-      return line == other.line && column == other.column;
-    }
-    DCHECK_EQ(offset == other.offset,
-              line == other.line && column == other.column);
-    return offset == other.offset;
+    return line == other.line && column == other.column;
   }
   bool operator!=(const LineAndColumn& other) const {
-    return !operator==(other);
+    return !(*this == other);
   }
 };
 
@@ -109,10 +98,7 @@ inline std::string PositionAsString(SourcePosition pos) {
 }
 
 inline std::ostream& operator<<(std::ostream& out, SourcePosition pos) {
-  return out << "https://source.chromium.org/chromium/chromium/src/+/main:v8/"
-             << SourceFileMap::PathFromV8Root(pos.source)
-             << "?l=" << (pos.start.line + 1)
-             << "&c=" << (pos.start.column + 1);
+  return out << PositionAsString(pos);
 }
 
 }  // namespace torque

@@ -11,7 +11,6 @@
 
 namespace node {
 
-using v8::Context;
 using v8::Exception;
 using v8::Integer;
 using v8::Isolate;
@@ -52,19 +51,18 @@ Local<Value> ErrnoException(Isolate* isolate,
   }
   e = Exception::Error(cons);
 
-  Local<Context> context = env->context();
   Local<Object> obj = e.As<Object>();
-  obj->Set(context,
+  obj->Set(env->context(),
            env->errno_string(),
            Integer::New(isolate, errorno)).Check();
-  obj->Set(context, env->code_string(), estring).Check();
+  obj->Set(env->context(), env->code_string(), estring).Check();
 
   if (path_string.IsEmpty() == false) {
-    obj->Set(context, env->path_string(), path_string).Check();
+    obj->Set(env->context(), env->path_string(), path_string).Check();
   }
 
   if (syscall != nullptr) {
-    obj->Set(context,
+    obj->Set(env->context(),
              env->syscall_string(),
              OneByteString(isolate, syscall)).Check();
   }
@@ -137,16 +135,15 @@ Local<Value> UVException(Isolate* isolate,
     Exception::Error(js_msg)->ToObject(isolate->GetCurrentContext())
       .ToLocalChecked();
 
-  Local<Context> context = env->context();
-  e->Set(context,
+  e->Set(env->context(),
          env->errno_string(),
          Integer::New(isolate, errorno)).Check();
-  e->Set(context, env->code_string(), js_code).Check();
-  e->Set(context, env->syscall_string(), js_syscall).Check();
+  e->Set(env->context(), env->code_string(), js_code).Check();
+  e->Set(env->context(), env->syscall_string(), js_syscall).Check();
   if (!js_path.IsEmpty())
-    e->Set(context, env->path_string(), js_path).Check();
+    e->Set(env->context(), env->path_string(), js_path).Check();
   if (!js_dest.IsEmpty())
-    e->Set(context, env->dest_string(), js_dest).Check();
+    e->Set(env->context(), env->dest_string(), js_dest).Check();
 
   return e;
 }
@@ -212,20 +209,19 @@ Local<Value> WinapiErrnoException(Isolate* isolate,
     e = Exception::Error(message);
   }
 
-  Local<Context> context = env->context();
   Local<Object> obj = e.As<Object>();
-  obj->Set(context, env->errno_string(), Integer::New(isolate, errorno))
+  obj->Set(env->context(), env->errno_string(), Integer::New(isolate, errorno))
       .Check();
 
   if (path != nullptr) {
-    obj->Set(context,
+    obj->Set(env->context(),
              env->path_string(),
              String::NewFromUtf8(isolate, path).ToLocalChecked())
         .Check();
   }
 
   if (syscall != nullptr) {
-    obj->Set(context,
+    obj->Set(env->context(),
              env->syscall_string(),
              OneByteString(isolate, syscall))
         .Check();
@@ -237,7 +233,7 @@ Local<Value> WinapiErrnoException(Isolate* isolate,
 
   return e;
 }
-#endif  // _WIN32
+#endif
 
 // Implement the legacy name exposed in node.h. This has not been in fact
 // fatal any more, as the user can handle the exception in the

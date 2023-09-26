@@ -72,20 +72,20 @@ class ArrayBuiltinsAssembler : public CodeStubAssembler {
       TNode<JSFunction> target, TNode<HeapObject> allocation_site_or_undefined,
       TNode<Int32T> argc);
 
-  void GenerateDispatchToArrayStub(
-      TNode<Context> context, TNode<JSFunction> target, TNode<Int32T> argc,
-      AllocationSiteOverrideMode mode,
-      base::Optional<TNode<AllocationSite>> allocation_site = base::nullopt);
+  void GenerateDispatchToArrayStub(TNode<Context> context,
+                                   TNode<JSFunction> target, TNode<Int32T> argc,
+                                   AllocationSiteOverrideMode mode,
+                                   TNode<AllocationSite> allocation_site = {});
 
   void CreateArrayDispatchNoArgument(
       TNode<Context> context, TNode<JSFunction> target, TNode<Int32T> argc,
       AllocationSiteOverrideMode mode,
-      base::Optional<TNode<AllocationSite>> allocation_site);
+      TNode<AllocationSite> allocation_site = {});
 
   void CreateArrayDispatchSingleArgument(
       TNode<Context> context, TNode<JSFunction> target, TNode<Int32T> argc,
       AllocationSiteOverrideMode mode,
-      base::Optional<TNode<AllocationSite>> allocation_site);
+      TNode<AllocationSite> allocation_site = {});
 
   void GenerateConstructor(TNode<Context> context,
                            TNode<HeapObject> array_function,
@@ -104,9 +104,8 @@ class ArrayBuiltinsAssembler : public CodeStubAssembler {
  private:
   void VisitAllTypedArrayElements(TNode<JSArrayBuffer> array_buffer,
                                   const CallResultProcessor& processor,
-                                  ForEachDirection direction,
-                                  TNode<JSTypedArray> typed_array,
-                                  bool can_shrink);
+                                  Label* detached, ForEachDirection direction,
+                                  TNode<JSTypedArray> typed_array);
 
   TNode<Object> callbackfn_;
   TNode<JSReceiver> o_;

@@ -39,22 +39,22 @@ common.expectWarning({
 assert.throws(() => {
   dns.lookup(false, 'cb');
 }, {
-  code: 'ERR_INVALID_ARG_TYPE',
+  code: 'ERR_INVALID_CALLBACK',
   name: 'TypeError'
 });
 
 assert.throws(() => {
   dns.lookup(false, 'options', 'cb');
 }, {
-  code: 'ERR_INVALID_ARG_TYPE',
+  code: 'ERR_INVALID_CALLBACK',
   name: 'TypeError'
 });
 
 {
   const err = {
-    code: 'ERR_INVALID_ARG_VALUE',
+    code: 'ERR_INVALID_OPT_VALUE',
     name: 'TypeError',
-    message: "The argument 'hints' is invalid. Received 100"
+    message: 'The value "100" is invalid for option "hints"'
   };
   const options = {
     hints: 100,
@@ -69,15 +69,15 @@ assert.throws(() => {
 }
 
 {
-  const family = 20;
   const err = {
-    code: 'ERR_INVALID_ARG_VALUE',
+    code: 'ERR_INVALID_OPT_VALUE',
     name: 'TypeError',
-    message: `The property 'options.family' must be one of: 0, 4, 6. Received ${family}`
+    message: 'The value "20" is invalid for option "family". ' +
+    'Must be one of: 0, 4, 6'
   };
   const options = {
     hints: 0,
-    family,
+    family: 20,
     all: false
   };
 
@@ -86,52 +86,6 @@ assert.throws(() => {
     dns.lookup(false, options, common.mustNotCall());
   }, err);
 }
-
-[1, 0n, 1n, '', '0', Symbol(), true, false, {}, [], () => {}]
-  .forEach((family) => {
-    const err = { code: 'ERR_INVALID_ARG_VALUE' };
-    const options = { family };
-    assert.throws(() => { dnsPromises.lookup(false, options); }, err);
-    assert.throws(() => {
-      dns.lookup(false, options, common.mustNotCall());
-    }, err);
-  });
-[0n, 1n, '', '0', Symbol(), true, false].forEach((family) => {
-  const err = { code: 'ERR_INVALID_ARG_TYPE' };
-  assert.throws(() => { dnsPromises.lookup(false, family); }, err);
-  assert.throws(() => {
-    dns.lookup(false, family, common.mustNotCall());
-  }, err);
-});
-assert.throws(() => dnsPromises.lookup(false, () => {}),
-              { code: 'ERR_INVALID_ARG_TYPE' });
-
-[0n, 1n, '', '0', Symbol(), true, false, {}, [], () => {}].forEach((hints) => {
-  const err = { code: 'ERR_INVALID_ARG_TYPE' };
-  const options = { hints };
-  assert.throws(() => { dnsPromises.lookup(false, options); }, err);
-  assert.throws(() => {
-    dns.lookup(false, options, common.mustNotCall());
-  }, err);
-});
-
-[0, 1, 0n, 1n, '', '0', Symbol(), {}, [], () => {}].forEach((all) => {
-  const err = { code: 'ERR_INVALID_ARG_TYPE' };
-  const options = { all };
-  assert.throws(() => { dnsPromises.lookup(false, options); }, err);
-  assert.throws(() => {
-    dns.lookup(false, options, common.mustNotCall());
-  }, err);
-});
-
-[0, 1, 0n, 1n, '', '0', Symbol(), {}, [], () => {}].forEach((verbatim) => {
-  const err = { code: 'ERR_INVALID_ARG_TYPE' };
-  const options = { verbatim };
-  assert.throws(() => { dnsPromises.lookup(false, options); }, err);
-  assert.throws(() => {
-    dns.lookup(false, options, common.mustNotCall());
-  }, err);
-});
 
 (async function() {
   let res;
@@ -184,7 +138,7 @@ dns.lookup('127.0.0.1', {
   family: 4,
   all: false
 }, common.mustSucceed((result, addressType) => {
-  assert.strictEqual(result, '127.0.0.1');
+  assert.deepStrictEqual(result, '127.0.0.1');
   assert.strictEqual(addressType, 4);
 }));
 

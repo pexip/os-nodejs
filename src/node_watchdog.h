@@ -110,7 +110,6 @@ class TraceSigintWatchdog : public HandleWrap, public SigintWatchdogBase {
 class SigintWatchdogHelper {
  public:
   static SigintWatchdogHelper* GetInstance() { return &instance; }
-  static Mutex& GetInstanceActionMutex() { return instance_action_mutex_; }
   void Register(SigintWatchdogBase* watchdog);
   void Unregister(SigintWatchdogBase* watchdog);
   bool HasPendingSignal();
@@ -124,7 +123,6 @@ class SigintWatchdogHelper {
 
   static bool InformWatchdogsAboutSignal();
   static SigintWatchdogHelper instance;
-  static Mutex instance_action_mutex_;
 
   int start_stop_count_;
 

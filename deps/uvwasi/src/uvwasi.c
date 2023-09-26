@@ -127,9 +127,6 @@ void* uvwasi__malloc(const uvwasi_t* uvwasi, size_t size) {
 }
 
 void uvwasi__free(const uvwasi_t* uvwasi, void* ptr) {
-  if (ptr == NULL)
-    return;
-
   uvwasi->allocator->free(ptr, uvwasi->allocator->mem_user_data);
 }
 
@@ -232,7 +229,7 @@ static uvwasi_errno_t uvwasi__setup_ciovs(const uvwasi_t* uvwasi,
 }
 
 
-uvwasi_errno_t uvwasi_init(uvwasi_t* uvwasi, const uvwasi_options_t* options) {
+uvwasi_errno_t uvwasi_init(uvwasi_t* uvwasi, uvwasi_options_t* options) {
   uv_fs_t realpath_req;
   uv_fs_t open_req;
   uvwasi_errno_t err;
@@ -1384,14 +1381,8 @@ uvwasi_errno_t uvwasi_fd_readdir(uvwasi_t* uvwasi,
       }
 
       /* Write dirent to the buffer if it will fit. */
-      if (UVWASI_SERDES_SIZE_dirent_t + *bufused > buf_len) {
-        /* If there are more entries to be written to the buffer we set
-         * bufused, which is the return value, to the length of the buffer
-         * which indicates that there are more entries to be read.
-         */
-        *bufused = buf_len;
+      if (UVWASI_SERDES_SIZE_dirent_t + *bufused > buf_len)
         break;
-      }
 
       uvwasi_serdes_write_dirent_t(buf, *bufused, &dirent);
       *bufused += UVWASI_SERDES_SIZE_dirent_t;

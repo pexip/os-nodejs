@@ -90,18 +90,6 @@ async function getHandle(dest) {
   return open(dest, 'r+');
 }
 
-async function executeOnHandle(dest, func) {
-  let handle;
-  try {
-    handle = await getHandle(dest);
-    await func(handle);
-  } finally {
-    if (handle) {
-      await handle.close();
-    }
-  }
-}
-
 {
   async function doTest() {
     tmpdir.refresh();
@@ -110,138 +98,140 @@ async function executeOnHandle(dest, func) {
 
     // handle is object
     {
-      await executeOnHandle(dest, async (handle) => {
-        assert.strictEqual(typeof handle, 'object');
-      });
+      const handle = await getHandle(dest);
+      assert.strictEqual(typeof handle, 'object');
+      await handle.close();
     }
 
     // file stats
     {
-      await executeOnHandle(dest, async (handle) => {
-        let stats = await handle.stat();
-        verifyStatObject(stats);
-        assert.strictEqual(stats.size, 35);
+      const handle = await getHandle(dest);
+      let stats = await handle.stat();
+      verifyStatObject(stats);
+      assert.strictEqual(stats.size, 35);
 
-        await handle.truncate(1);
+      await handle.truncate(1);
 
-        stats = await handle.stat();
-        verifyStatObject(stats);
-        assert.strictEqual(stats.size, 1);
+      stats = await handle.stat();
+      verifyStatObject(stats);
+      assert.strictEqual(stats.size, 1);
 
-        stats = await stat(dest);
-        verifyStatObject(stats);
+      stats = await stat(dest);
+      verifyStatObject(stats);
 
-        stats = await handle.stat();
-        verifyStatObject(stats);
+      stats = await handle.stat();
+      verifyStatObject(stats);
 
-        await handle.datasync();
-        await handle.sync();
-      });
+      await handle.datasync();
+      await handle.sync();
+      await handle.close();
     }
 
     // Test fs.read promises when length to read is zero bytes
     {
       const dest = path.resolve(tmpDir, 'test1.js');
-      await executeOnHandle(dest, async (handle) => {
-        const buf = Buffer.from('DAWGS WIN');
-        const bufLen = buf.length;
-        await handle.write(buf);
-        const ret = await handle.read(Buffer.alloc(bufLen), 0, 0, 0);
-        assert.strictEqual(ret.bytesRead, 0);
+      const handle = await getHandle(dest);
+      const buf = Buffer.from('DAWGS WIN');
+      const bufLen = buf.length;
+      await handle.write(buf);
+      const ret = await handle.read(Buffer.alloc(bufLen), 0, 0, 0);
+      assert.strictEqual(ret.bytesRead, 0);
 
-        await unlink(dest);
-      });
+      await unlink(dest);
+      await handle.close();
     }
 
     // Use fallback buffer allocation when input not buffer
     {
-      await executeOnHandle(dest, async (handle) => {
-        const ret = await handle.read(0, 0, 0, 0);
-        assert.strictEqual(ret.buffer.length, 16384);
-      });
+      const handle = await getHandle(dest);
+      const ret = await handle.read(0, 0, 0, 0);
+      assert.strictEqual(ret.buffer.length, 16384);
     }
 
     // Bytes written to file match buffer
     {
-      await executeOnHandle(dest, async (handle) => {
-        const buf = Buffer.from('hello fsPromises');
-        const bufLen = buf.length;
-        await handle.write(buf);
-        const ret = await handle.read(Buffer.alloc(bufLen), 0, bufLen, 0);
-        assert.strictEqual(ret.bytesRead, bufLen);
-        assert.deepStrictEqual(ret.buffer, buf);
-      });
+      const handle = await getHandle(dest);
+      const buf = Buffer.from('hello fsPromises');
+      const bufLen = buf.length;
+      await handle.write(buf);
+      const ret = await handle.read(Buffer.alloc(bufLen), 0, bufLen, 0);
+      assert.strictEqual(ret.bytesRead, bufLen);
+      assert.deepStrictEqual(ret.buffer, buf);
+      await handle.close();
     }
 
     // Truncate file to specified length
     {
-      await executeOnHandle(dest, async (handle) => {
-        const buf = Buffer.from('hello FileHandle');
-        const bufLen = buf.length;
-        await handle.write(buf, 0, bufLen, 0);
-        const ret = await handle.read(Buffer.alloc(bufLen), 0, bufLen, 0);
-        assert.strictEqual(ret.bytesRead, bufLen);
-        assert.deepStrictEqual(ret.buffer, buf);
-        await truncate(dest, 5);
-        assert.strictEqual((await readFile(dest)).toString(), 'hello');
-      });
+      const handle = await getHandle(dest);
+      const buf = Buffer.from('hello FileHandle');
+      const bufLen = buf.length;
+      await handle.write(buf, 0, bufLen, 0);
+      const ret = await handle.read(Buffer.alloc(bufLen), 0, bufLen, 0);
+      assert.strictEqual(ret.bytesRead, bufLen);
+      assert.deepStrictEqual(ret.buffer, buf);
+      await truncate(dest, 5);
+      assert.deepStrictEqual((await readFile(dest)).toString(), 'hello');
+      await handle.close();
     }
 
     // Invalid change of ownership
     {
-      await executeOnHandle(dest, async (handle) => {
-        await chmod(dest, 0o666);
-        await handle.chmod(0o666);
+      const handle = await getHandle(dest);
 
-        await chmod(dest, (0o10777));
-        await handle.chmod(0o10777);
+      await chmod(dest, 0o666);
+      await handle.chmod(0o666);
 
-        if (!common.isWindows) {
-          await chown(dest, process.getuid(), process.getgid());
-          await handle.chown(process.getuid(), process.getgid());
-        }
+      await chmod(dest, (0o10777));
+      await handle.chmod(0o10777);
 
-        await assert.rejects(
-          async () => {
-            await chown(dest, 1, -2);
-          },
-          {
-            code: 'ERR_OUT_OF_RANGE',
-            name: 'RangeError',
-            message: 'The value of "gid" is out of range. ' +
-                     'It must be >= -1 && <= 4294967295. Received -2'
-          });
+      if (!common.isWindows) {
+        await chown(dest, process.getuid(), process.getgid());
+        await handle.chown(process.getuid(), process.getgid());
+      }
 
-        await assert.rejects(
-          async () => {
-            await handle.chown(1, -2);
-          },
-          {
-            code: 'ERR_OUT_OF_RANGE',
-            name: 'RangeError',
-            message: 'The value of "gid" is out of range. ' +
-                      'It must be >= -1 && <= 4294967295. Received -2'
-          });
-      });
+      assert.rejects(
+        async () => {
+          await chown(dest, 1, -2);
+        },
+        {
+          code: 'ERR_OUT_OF_RANGE',
+          name: 'RangeError',
+          message: 'The value of "gid" is out of range. ' +
+                  'It must be >= -1 && <= 4294967295. Received -2'
+        });
+
+      assert.rejects(
+        async () => {
+          await handle.chown(1, -2);
+        },
+        {
+          code: 'ERR_OUT_OF_RANGE',
+          name: 'RangeError',
+          message: 'The value of "gid" is out of range. ' +
+                    'It must be >= -1 && <= 4294967295. Received -2'
+        });
+
+      await handle.close();
     }
 
     // Set modification times
     {
-      await executeOnHandle(dest, async (handle) => {
+      const handle = await getHandle(dest);
 
-        await utimes(dest, new Date(), new Date());
+      await utimes(dest, new Date(), new Date());
 
-        try {
-          await handle.utimes(new Date(), new Date());
-        } catch (err) {
-          // Some systems do not have futimes. If there is an error,
-          // expect it to be ENOSYS
-          common.expectsError({
-            code: 'ENOSYS',
-            name: 'Error'
-          })(err);
-        }
-      });
+      try {
+        await handle.utimes(new Date(), new Date());
+      } catch (err) {
+        // Some systems do not have futimes. If there is an error,
+        // expect it to be ENOSYS
+        common.expectsError({
+          code: 'ENOSYS',
+          name: 'Error'
+        })(err);
+      }
+
+      await handle.close();
     }
 
     // Set modification times with lutimes
@@ -446,31 +436,6 @@ async function executeOnHandle(dest, func) {
       );
     }
 
-    // Regression test for https://github.com/nodejs/node/issues/38168
-    {
-      await executeOnHandle(dest, async (handle) => {
-        await assert.rejects(
-          async () => handle.write('abc', 0, 'hex'),
-          {
-            code: 'ERR_INVALID_ARG_VALUE',
-            message: /'encoding' is invalid for data of length 3/
-          }
-        );
-
-        const ret = await handle.write('abcd', 0, 'hex');
-        assert.strictEqual(ret.bytesWritten, 2);
-      });
-    }
-
-    // Test prototype methods calling with contexts other than FileHandle
-    {
-      await executeOnHandle(dest, async (handle) => {
-        await assert.rejects(() => handle.stat.call({}), {
-          code: 'ERR_INTERNAL_ASSERTION',
-          message: /handle must be an instance of FileHandle/
-        });
-      });
-    }
   }
 
   doTest().then(common.mustCall());

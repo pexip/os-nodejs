@@ -10,6 +10,8 @@
 namespace v8 {
 namespace internal {
 
+using compiler::Node;
+
 class GrowableFixedArray;
 
 class IteratorBuiltinsAssembler : public CodeStubAssembler {
@@ -67,8 +69,8 @@ class IteratorBuiltinsAssembler : public CodeStubAssembler {
 
   // Currently at https://tc39.github.io/proposal-intl-list-format/
   // #sec-createstringlistfromiterable
-  TNode<FixedArray> StringListFromIterable(TNode<Context> context,
-                                           TNode<Object> iterable);
+  TNode<JSArray> StringListFromIterable(TNode<Context> context,
+                                        TNode<Object> iterable);
 
   void FastIterableToList(TNode<Context> context, TNode<Object> iterable,
                           TVariable<JSArray>* var_result, Label* slow);

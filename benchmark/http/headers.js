@@ -27,12 +27,11 @@ function main({ len, n, duration }) {
     res.writeHead(200, headers);
     res.end();
   });
-  server.listen(0, () => {
+  server.listen(common.PORT, () => {
     bench.http({
       path: '/',
       connections: 10,
-      duration,
-      port: server.address().port,
+      duration
     }, () => {
       server.close();
     });

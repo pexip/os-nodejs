@@ -13,5 +13,5 @@ process.on('warning', common.mustCall((warning) => {
 }));
 
 domain.create().run(() => {
-  inspector.open(0);
+  inspector.open();
 });

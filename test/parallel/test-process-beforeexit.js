@@ -59,21 +59,12 @@ function tryRepeatedTimer() {
     if (++n < N)
       setTimeout(repeatedTimer, 1);
     else // n == N
-      process.once('beforeExit', common.mustCall(tryNextTickSetImmediate));
+      process.once('beforeExit', common.mustCall(tryNextTick));
   }, N);
   setTimeout(repeatedTimer, 1);
 }
 
 // Test if the callback of `process.nextTick` can be invoked.
-function tryNextTickSetImmediate() {
-  process.nextTick(common.mustCall(function() {
-    setImmediate(common.mustCall(() => {
-      process.once('beforeExit', common.mustCall(tryNextTick));
-    }));
-  }));
-}
-
-// Test that `process.nextTick` won't keep the event loop running by itself.
 function tryNextTick() {
   process.nextTick(common.mustCall(function() {
     process.once('beforeExit', common.mustNotCall());

@@ -28,14 +28,7 @@ const { debuglog, getSystemErrorName } = require('util');
 const debug = debuglog('test');
 
 const TIMER = 200;
-let SLEEP = common.platformTimeout(5000);
-
-if (common.isWindows) {
-  // Some of the windows machines in the CI need more time to launch
-  // and receive output from child processes.
-  // https://github.com/nodejs/build/issues/3014
-  SLEEP = common.platformTimeout(15000);
-}
+const SLEEP = common.platformTimeout(5000);
 
 switch (process.argv[2]) {
   case 'child':
@@ -44,7 +37,7 @@ switch (process.argv[2]) {
       process.exit(1);
     }, SLEEP);
     break;
-  default: {
+  default:
     const start = Date.now();
     const ret = spawnSync(process.execPath, [__filename, 'child'],
                           { timeout: TIMER });
@@ -54,5 +47,4 @@ switch (process.argv[2]) {
     assert(end < SLEEP);
     assert(ret.status > 128 || ret.signal);
     break;
-  }
 }

@@ -16,9 +16,6 @@ namespace compiler {
 class V8_EXPORT_PRIVATE MoveOptimizer final {
  public:
   MoveOptimizer(Zone* local_zone, InstructionSequence* code);
-  MoveOptimizer(const MoveOptimizer&) = delete;
-  MoveOptimizer& operator=(const MoveOptimizer&) = delete;
-
   void Run();
 
  private:
@@ -60,6 +57,8 @@ class V8_EXPORT_PRIVATE MoveOptimizer final {
   // at any given time, so we create two buffers.
   ZoneVector<InstructionOperand> operand_buffer1;
   ZoneVector<InstructionOperand> operand_buffer2;
+
+  DISALLOW_COPY_AND_ASSIGN(MoveOptimizer);
 };
 
 }  // namespace compiler

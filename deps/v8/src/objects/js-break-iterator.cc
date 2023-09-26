@@ -10,8 +10,6 @@
 
 #include "src/objects/intl-objects.h"
 #include "src/objects/js-break-iterator-inl.h"
-#include "src/objects/managed-inl.h"
-#include "src/objects/option-utils.h"
 #include "unicode/brkiter.h"
 
 namespace v8 {
@@ -58,7 +56,7 @@ MaybeHandle<JSV8BreakIterator> JSV8BreakIterator::New(
   Intl::ResolvedLocale r = maybe_resolve_locale.FromJust();
 
   // Extract type from options
-  Maybe<Type> maybe_type = GetStringOption<Type>(
+  Maybe<Type> maybe_type = Intl::GetStringOption<Type>(
       isolate, options, "type", service,
       {"word", "character", "sentence", "line"},
       {Type::WORD, Type::CHARACTER, Type::SENTENCE, Type::LINE}, Type::WORD);
@@ -115,7 +113,7 @@ MaybeHandle<JSV8BreakIterator> JSV8BreakIterator::New(
   Handle<JSV8BreakIterator> break_iterator_holder =
       Handle<JSV8BreakIterator>::cast(
           isolate->factory()->NewFastOrSlowJSObjectFromMap(map));
-  DisallowGarbageCollection no_gc;
+  DisallowHeapAllocation no_gc;
   break_iterator_holder->set_locale(*locale_str);
   break_iterator_holder->set_break_iterator(*managed_break_iterator);
   break_iterator_holder->set_unicode_string(*managed_unicode_string);
@@ -194,7 +192,7 @@ void JSV8BreakIterator::AdoptText(
     Handle<String> text) {
   icu::BreakIterator* break_iterator =
       break_iterator_holder->break_iterator().raw();
-  DCHECK_NOT_NULL(break_iterator);
+  CHECK_NOT_NULL(break_iterator);
   Handle<Managed<icu::UnicodeString>> unicode_string =
       Intl::SetTextToBreakIterator(isolate, text, break_iterator);
   break_iterator_holder->set_unicode_string(*unicode_string);

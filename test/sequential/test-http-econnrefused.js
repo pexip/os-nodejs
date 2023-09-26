@@ -74,26 +74,26 @@ function afterPing(result) {
   const successRE = /success/;
   switch (responses.length) {
     case 2:
-      assert.match(responses[0], ECONNREFUSED_RE);
-      assert.match(responses[1], ECONNREFUSED_RE);
+      assert.ok(ECONNREFUSED_RE.test(responses[0]));
+      assert.ok(ECONNREFUSED_RE.test(responses[1]));
       serverOn();
       break;
 
     case 4:
-      assert.match(responses[2], successRE);
-      assert.match(responses[3], successRE);
+      assert.ok(successRE.test(responses[2]));
+      assert.ok(successRE.test(responses[3]));
       serverOff();
       break;
 
     case 6:
-      assert.match(responses[4], ECONNREFUSED_RE);
-      assert.match(responses[5], ECONNREFUSED_RE);
+      assert.ok(ECONNREFUSED_RE.test(responses[4]));
+      assert.ok(ECONNREFUSED_RE.test(responses[5]));
       serverOn();
       break;
 
     case 8:
-      assert.match(responses[6], successRE);
-      assert.match(responses[7], successRE);
+      assert.ok(successRE.test(responses[6]));
+      assert.ok(successRE.test(responses[7]));
       server.close();
       // We should go to process.on('exit') from here.
       break;

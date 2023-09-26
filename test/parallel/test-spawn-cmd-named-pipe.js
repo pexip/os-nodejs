@@ -17,7 +17,8 @@ if (!process.argv[2]) {
   const stdoutPipeName = `\\\\.\\pipe\\${pipeNamePrefix}.stdout`;
 
   const stdinPipeServer = net.createServer(function(c) {
-    c.on('end', common.mustCall());
+    c.on('end', common.mustCall(function() {
+    }));
     c.end('hello');
   });
   stdinPipeServer.listen(stdinPipeName);

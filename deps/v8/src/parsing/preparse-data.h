@@ -7,11 +7,10 @@
 
 #include <memory>
 
-#include "src/base/vector.h"
 #include "src/common/globals.h"
 #include "src/handles/handles.h"
 #include "src/handles/maybe-handles.h"
-#include "src/utils/scoped-list.h"
+#include "src/utils/vector.h"
 #include "src/zone/zone-chunk-list.h"
 #include "src/zone/zone-containers.h"
 
@@ -101,20 +100,16 @@ class V8_EXPORT_PRIVATE PreparseDataBuilder : public ZoneObject,
   explicit PreparseDataBuilder(Zone* zone, PreparseDataBuilder* parent_builder,
                                std::vector<void*>* children_buffer);
   ~PreparseDataBuilder() {}
-  PreparseDataBuilder(const PreparseDataBuilder&) = delete;
-  PreparseDataBuilder& operator=(const PreparseDataBuilder&) = delete;
 
   PreparseDataBuilder* parent() const { return parent_; }
 
   // For gathering the inner function data and splitting it up according to the
   // laziness boundaries. Each lazy function gets its own
   // ProducedPreparseData, and so do all lazy functions inside it.
-  class V8_NODISCARD DataGatheringScope {
+  class DataGatheringScope {
    public:
     explicit DataGatheringScope(PreParser* preparser)
         : preparser_(preparser), builder_(nullptr) {}
-    DataGatheringScope(const DataGatheringScope&) = delete;
-    DataGatheringScope& operator=(const DataGatheringScope&) = delete;
 
     void Start(DeclarationScope* function_scope);
     void SetSkippableFunction(DeclarationScope* function_scope,
@@ -129,6 +124,8 @@ class V8_EXPORT_PRIVATE PreparseDataBuilder : public ZoneObject,
 
     PreParser* preparser_;
     PreparseDataBuilder* builder_;
+
+    DISALLOW_COPY_AND_ASSIGN(DataGatheringScope);
   };
 
   class V8_EXPORT_PRIVATE ByteData : public ZoneObject,
@@ -141,8 +138,8 @@ class V8_EXPORT_PRIVATE PreparseDataBuilder : public ZoneObject,
     void Finalize(Zone* zone);
 
     Handle<PreparseData> CopyToHeap(Isolate* isolate, int children_length);
-    Handle<PreparseData> CopyToLocalHeap(LocalIsolate* isolate,
-                                         int children_length);
+    Handle<PreparseData> CopyToOffThreadHeap(OffThreadIsolate* isolate,
+                                             int children_length);
     inline ZonePreparseData* CopyToZone(Zone* zone, int children_length);
 
     void Reserve(size_t bytes);
@@ -168,7 +165,7 @@ class V8_EXPORT_PRIVATE PreparseDataBuilder : public ZoneObject,
       };
       // Once the data is finalized, it lives in a Zone, this implies
       // is_finalized_ == true.
-      base::Vector<uint8_t> zone_byte_data_;
+      Vector<uint8_t> zone_byte_data_;
     };
     uint8_t free_quarters_in_last_byte_;
 
@@ -211,7 +208,7 @@ class V8_EXPORT_PRIVATE PreparseDataBuilder : public ZoneObject,
   friend class BuilderProducedPreparseData;
 
   Handle<PreparseData> Serialize(Isolate* isolate);
-  Handle<PreparseData> Serialize(LocalIsolate* isolate);
+  Handle<PreparseData> Serialize(OffThreadIsolate* isolate);
   ZonePreparseData* Serialize(Zone* zone);
 
   void FinalizeChildren(Zone* zone);
@@ -228,7 +225,7 @@ class V8_EXPORT_PRIVATE PreparseDataBuilder : public ZoneObject,
   ByteData byte_data_;
   union {
     ScopedPtrList<PreparseDataBuilder> children_buffer_;
-    base::Vector<PreparseDataBuilder*> children_;
+    Vector<PreparseDataBuilder*> children_;
   };
 
   DeclarationScope* function_scope_;
@@ -243,6 +240,8 @@ class V8_EXPORT_PRIVATE PreparseDataBuilder : public ZoneObject,
 #ifdef DEBUG
   bool finalized_children_ = false;
 #endif
+
+  DISALLOW_COPY_AND_ASSIGN(PreparseDataBuilder);
 };
 
 class ProducedPreparseData : public ZoneObject {
@@ -255,7 +254,7 @@ class ProducedPreparseData : public ZoneObject {
   // If there is data (if the Scope contains skippable inner functions), move
   // the data into the heap and return a Handle to it; otherwise return a null
   // MaybeHandle.
-  virtual Handle<PreparseData> Serialize(LocalIsolate* isolate) = 0;
+  virtual Handle<PreparseData> Serialize(OffThreadIsolate* isolate) = 0;
 
   // If there is data (if the Scope contains skippable inner functions), return
   // an off-heap ZonePreparseData representing the data; otherwise
@@ -281,8 +280,6 @@ class ConsumedPreparseData {
   // PreparseData |data|.
   V8_EXPORT_PRIVATE static std::unique_ptr<ConsumedPreparseData> For(
       Isolate* isolate, Handle<PreparseData> data);
-  V8_EXPORT_PRIVATE static std::unique_ptr<ConsumedPreparseData> For(
-      LocalIsolate* isolate, Handle<PreparseData> data);
 
   // Creates a ConsumedPreparseData representing the data of an off-heap
   // ZonePreparseData |data|.
@@ -290,9 +287,6 @@ class ConsumedPreparseData {
                                                    ZonePreparseData* data);
 
   virtual ~ConsumedPreparseData() = default;
-
-  ConsumedPreparseData(const ConsumedPreparseData&) = delete;
-  ConsumedPreparseData& operator=(const ConsumedPreparseData&) = delete;
 
   virtual ProducedPreparseData* GetDataForSkippableFunction(
       Zone* zone, int start_position, int* end_position, int* num_parameters,
@@ -307,6 +301,9 @@ class ConsumedPreparseData {
 
  protected:
   ConsumedPreparseData() = default;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(ConsumedPreparseData);
 };
 
 }  // namespace internal

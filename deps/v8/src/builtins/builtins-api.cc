@@ -6,8 +6,8 @@
 #include "src/api/api-natives.h"
 #include "src/builtins/builtins-utils-inl.h"
 #include "src/builtins/builtins.h"
+#include "src/logging/counters.h"
 #include "src/logging/log.h"
-#include "src/logging/runtime-call-stats-scope.h"
 #include "src/objects/objects-inl.h"
 #include "src/objects/prototype.h"
 #include "src/objects/templates.h"
@@ -23,7 +23,6 @@ namespace {
 // TODO(dcarney): CallOptimization duplicates this logic, merge.
 JSReceiver GetCompatibleReceiver(Isolate* isolate, FunctionTemplateInfo info,
                                  JSReceiver receiver) {
-  RCS_SCOPE(isolate, RuntimeCallCounterId::kGetCompatibleReceiver);
   Object recv_type = info.signature();
   // No signature, return holder.
   if (!recv_type.IsFunctionTemplateInfo()) return receiver;
@@ -100,7 +99,7 @@ V8_WARN_UNUSED_RESULT MaybeHandle<Object> HandleApiCallHelper(
     }
   }
 
-  Object raw_call_data = fun_data->call_code(kAcquireLoad);
+  Object raw_call_data = fun_data->call_code();
   if (!raw_call_data.IsUndefined(isolate)) {
     DCHECK(raw_call_data.IsCallHandlerInfo());
     CallHandlerInfo call_data = CallHandlerInfo::cast(raw_call_data);
@@ -152,14 +151,14 @@ class RelocatableArguments : public BuiltinArguments, public Relocatable {
   RelocatableArguments(Isolate* isolate, int length, Address* arguments)
       : BuiltinArguments(length, arguments), Relocatable(isolate) {}
 
-  RelocatableArguments(const RelocatableArguments&) = delete;
-  RelocatableArguments& operator=(const RelocatableArguments&) = delete;
-
   inline void IterateInstance(RootVisitor* v) override {
     if (length() == 0) return;
     v->VisitRootPointers(Root::kRelocatable, nullptr, first_slot(),
                          last_slot() + 1);
   }
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(RelocatableArguments);
 };
 
 }  // namespace
@@ -170,7 +169,8 @@ MaybeHandle<Object> Builtins::InvokeApiFunction(Isolate* isolate,
                                                 Handle<Object> receiver,
                                                 int argc, Handle<Object> args[],
                                                 Handle<HeapObject> new_target) {
-  RCS_SCOPE(isolate, RuntimeCallCounterId::kInvokeApiFunction);
+  RuntimeCallTimerScope timer(isolate,
+                              RuntimeCallCounterId::kInvokeApiFunction);
   DCHECK(function->IsFunctionTemplateInfo() ||
          (function->IsJSFunction() &&
           JSFunction::cast(*function).shared().IsApiFunction()));
@@ -206,6 +206,7 @@ MaybeHandle<Object> Builtins::InvokeApiFunction(Isolate* isolate,
   } else {
     argv = new Address[frame_argc];
   }
+#ifdef V8_REVERSE_JSARGS
   argv[BuiltinArguments::kNewTargetOffset] = new_target->ptr();
   argv[BuiltinArguments::kTargetOffset] = function->ptr();
   argv[BuiltinArguments::kArgcOffset] = Smi::FromInt(frame_argc).ptr();
@@ -216,6 +217,19 @@ MaybeHandle<Object> Builtins::InvokeApiFunction(Isolate* isolate,
   for (int i = 0; i < argc; ++i) {
     argv[cursor++] = args[i]->ptr();
   }
+#else
+  int cursor = frame_argc - 1;
+  argv[cursor--] = receiver->ptr();
+  for (int i = 0; i < argc; ++i) {
+    argv[cursor--] = args[i]->ptr();
+  }
+  DCHECK_EQ(cursor, BuiltinArguments::kPaddingOffset);
+  argv[BuiltinArguments::kPaddingOffset] =
+      ReadOnlyRoots(isolate).the_hole_value().ptr();
+  argv[BuiltinArguments::kArgcOffset] = Smi::FromInt(frame_argc).ptr();
+  argv[BuiltinArguments::kTargetOffset] = function->ptr();
+  argv[BuiltinArguments::kNewTargetOffset] = new_target->ptr();
+#endif
   MaybeHandle<Object> result;
   {
     RelocatableArguments arguments(isolate, frame_argc, &argv[frame_argc - 1]);
@@ -267,6 +281,7 @@ V8_WARN_UNUSED_RESULT static Object HandleApiCallAsFunctionOrConstructor(
   Object result;
   {
     HandleScope scope(isolate);
+    LOG(isolate, ApiObjectAccess("call non-function", obj));
     FunctionCallbackArguments custom(
         isolate, call_data.data(), constructor, obj, new_target,
         args.address_of_first_argument(), args.length() - 1);

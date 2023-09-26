@@ -34,21 +34,13 @@ Reduction SelectLowering::LowerSelect(Node* node) {
   Node* vtrue = node->InputAt(1);
   Node* vfalse = node->InputAt(2);
 
-  bool reset_gasm = false;
-  if (gasm()->control() == nullptr) {
-    gasm()->InitializeEffectControl(start(), start());
-    reset_gasm = true;
-  }
+  gasm()->InitializeEffectControl(start(), start());
 
   auto done = __ MakeLabel(p.representation());
 
   __ GotoIf(condition, &done, vtrue);
   __ Goto(&done, vfalse);
   __ Bind(&done);
-
-  if (reset_gasm) {
-    gasm()->Reset();
-  }
 
   return Changed(done.PhiAt(0));
 }

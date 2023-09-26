@@ -52,7 +52,11 @@ function legacyWrite(algo, message, encoding, writes, len, outEnc) {
   while (writes-- > 0) {
     const h = crypto.createHash(algo);
     h.update(message, encoding);
-    h.digest(outEnc);
+    let res = h.digest(outEnc);
+
+    // Include buffer creation costs for older versions
+    if (outEnc === 'buffer' && typeof res === 'string')
+      res = Buffer.from(res, 'binary');
   }
 
   bench.end(gbits);

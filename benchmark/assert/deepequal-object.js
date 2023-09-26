@@ -24,7 +24,8 @@ function createObj(source, add = '') {
 }
 
 function main({ size, n, method, strict }) {
-  const len = Math.min(Math.ceil(n / size), 20);
+  // TODO: Fix this "hack". `n` should not be manipulated.
+  n = Math.min(Math.ceil(n / size), 20);
 
   const source = Array.apply(null, Array(size));
   const actual = createObj(source);
@@ -38,8 +39,8 @@ function main({ size, n, method, strict }) {
   const value2 = method.includes('not') ? expectedWrong : expected;
 
   bench.start();
-  for (let i = 0; i < len; ++i) {
+  for (let i = 0; i < n; ++i) {
     fn(actual, value2);
   }
-  bench.end(len);
+  bench.end(n);
 }

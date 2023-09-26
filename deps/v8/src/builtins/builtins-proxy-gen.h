@@ -10,6 +10,7 @@
 
 namespace v8 {
 namespace internal {
+using compiler::Node;
 
 class ProxiesCodeStubAssembler : public CodeStubAssembler {
  public:
@@ -32,6 +33,7 @@ class ProxiesCodeStubAssembler : public CodeStubAssembler {
   void CheckDeleteTrapResult(TNode<Context> context, TNode<JSReceiver> target,
                              TNode<JSProxy> proxy, TNode<Name> name);
 
+ protected:
   enum ProxyRevokeFunctionContextSlot {
     kProxySlot = Context::MIN_CONTEXT_SLOTS,
     kProxyContextLength,

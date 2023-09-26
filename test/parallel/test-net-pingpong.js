@@ -130,4 +130,6 @@ const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 pingPongTest(common.PIPE);
 pingPongTest(0);
-if (common.hasIPv6) pingPongTest(0, '::1'); else pingPongTest(0, '127.0.0.1');
+pingPongTest(0, 'localhost');
+if (common.hasIPv6)
+  pingPongTest(0, '::1');

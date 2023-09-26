@@ -104,10 +104,10 @@ BasicBlock* BasicBlock::GetCommonDominator(BasicBlock* b1, BasicBlock* b2) {
   return b1;
 }
 
-void BasicBlock::Print() { StdoutStream{} << *this << "\n"; }
+void BasicBlock::Print() { StdoutStream{} << this; }
 
 std::ostream& operator<<(std::ostream& os, const BasicBlock& block) {
-  os << "id:" << block.id();
+  os << "B" << block.id();
 #if DEBUG
   AssemblerDebugInfo info = block.debug_info();
   if (info.name) os << info;
@@ -117,7 +117,7 @@ std::ostream& operator<<(std::ostream& os, const BasicBlock& block) {
   const BasicBlock* current_block = &block;
   while (current_block->PredecessorCount() > 0 && i++ < kMaxDisplayedBlocks) {
     current_block = current_block->predecessors().front();
-    os << " <= id:" << current_block->id();
+    os << " <= B" << current_block->id();
     info = current_block->debug_info();
     if (info.name) os << info;
   }
@@ -191,8 +191,8 @@ bool Schedule::SameBasicBlock(Node* a, Node* b) const {
 }
 
 BasicBlock* Schedule::NewBasicBlock() {
-  BasicBlock* block = zone_->New<BasicBlock>(
-      zone_, BasicBlock::Id::FromSize(all_blocks_.size()));
+  BasicBlock* block = new (zone_)
+      BasicBlock(zone_, BasicBlock::Id::FromSize(all_blocks_.size()));
   all_blocks_.push_back(block);
   return block;
 }
@@ -200,8 +200,8 @@ BasicBlock* Schedule::NewBasicBlock() {
 void Schedule::PlanNode(BasicBlock* block, Node* node) {
   if (FLAG_trace_turbo_scheduler) {
     StdoutStream{} << "Planning #" << node->id() << ":"
-                   << node->op()->mnemonic()
-                   << " for future add to id:" << block->id() << "\n";
+                   << node->op()->mnemonic() << " for future add to B"
+                   << block->id() << "\n";
   }
   DCHECK_NULL(this->block(node));
   SetBlockForNode(block, node);
@@ -210,7 +210,7 @@ void Schedule::PlanNode(BasicBlock* block, Node* node) {
 void Schedule::AddNode(BasicBlock* block, Node* node) {
   if (FLAG_trace_turbo_scheduler) {
     StdoutStream{} << "Adding #" << node->id() << ":" << node->op()->mnemonic()
-                   << " to id:" << block->id() << "\n";
+                   << " to B" << block->id() << "\n";
   }
   DCHECK(this->block(node) == nullptr || this->block(node) == block);
   block->AddNode(node);
@@ -228,7 +228,7 @@ namespace {
 
 bool IsPotentiallyThrowingCall(IrOpcode::Value opcode) {
   switch (opcode) {
-#define BUILD_BLOCK_JS_CASE(Name, ...) case IrOpcode::k##Name:
+#define BUILD_BLOCK_JS_CASE(Name) case IrOpcode::k##Name:
     JS_OP_LIST(BUILD_BLOCK_JS_CASE)
 #undef BUILD_BLOCK_JS_CASE
     case IrOpcode::kCall:
@@ -465,7 +465,7 @@ std::ostream& operator<<(std::ostream& os, const Schedule& s) {
        ((s.RpoBlockCount() == 0) ? *s.all_blocks() : *s.rpo_order())) {
     if (block == nullptr) continue;
     if (block->rpo_number() == -1) {
-      os << "--- BLOCK id:" << block->id();
+      os << "--- BLOCK id:" << block->id().ToInt();
     } else {
       os << "--- BLOCK B" << block->rpo_number();
     }
@@ -476,7 +476,7 @@ std::ostream& operator<<(std::ostream& os, const Schedule& s) {
       if (comma) os << ", ";
       comma = true;
       if (predecessor->rpo_number() == -1) {
-        os << "id:" << predecessor->id();
+        os << "id:" << predecessor->id().ToInt();
       } else {
         os << "B" << predecessor->rpo_number();
       }
@@ -503,7 +503,7 @@ std::ostream& operator<<(std::ostream& os, const Schedule& s) {
         if (comma) os << ", ";
         comma = true;
         if (successor->rpo_number() == -1) {
-          os << "id:" << successor->id();
+          os << "id:" << successor->id().ToInt();
         } else {
           os << "B" << successor->rpo_number();
         }

@@ -13,8 +13,7 @@ namespace internal {
 RUNTIME_FUNCTION(Runtime_ShrinkFinalizationRegistryUnregisterTokenMap) {
   HandleScope scope(isolate);
   DCHECK_EQ(1, args.length());
-  Handle<JSFinalizationRegistry> finalization_registry =
-      args.at<JSFinalizationRegistry>(0);
+  CONVERT_ARG_HANDLE_CHECKED(JSFinalizationRegistry, finalization_registry, 0);
 
   if (!finalization_registry->key_map().IsUndefined(isolate)) {
     Handle<SimpleNumberDictionary> key_map =
@@ -23,30 +22,6 @@ RUNTIME_FUNCTION(Runtime_ShrinkFinalizationRegistryUnregisterTokenMap) {
     key_map = SimpleNumberDictionary::Shrink(isolate, key_map);
     finalization_registry->set_key_map(*key_map);
   }
-
-  return ReadOnlyRoots(isolate).undefined_value();
-}
-
-RUNTIME_FUNCTION(
-    Runtime_JSFinalizationRegistryRegisterWeakCellWithUnregisterToken) {
-  HandleScope scope(isolate);
-  DCHECK_EQ(2, args.length());
-  Handle<JSFinalizationRegistry> finalization_registry =
-      args.at<JSFinalizationRegistry>(0);
-  Handle<WeakCell> weak_cell = args.at<WeakCell>(1);
-
-  JSFinalizationRegistry::RegisterWeakCellWithUnregisterToken(
-      finalization_registry, weak_cell, isolate);
-
-  return ReadOnlyRoots(isolate).undefined_value();
-}
-
-RUNTIME_FUNCTION(Runtime_JSWeakRefAddToKeptObjects) {
-  HandleScope scope(isolate);
-  DCHECK_EQ(1, args.length());
-  Handle<JSReceiver> object = args.at<JSReceiver>(0);
-
-  isolate->heap()->KeepDuringJob(object);
 
   return ReadOnlyRoots(isolate).undefined_value();
 }

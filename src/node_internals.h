@@ -43,8 +43,8 @@ struct sockaddr;
 
 namespace node {
 
-namespace builtins {
-class BuiltinLoader;
+namespace native_module {
+class NativeModuleLoader;
 }
 
 namespace per_process {
@@ -58,7 +58,7 @@ class Environment;
 // Convert a struct sockaddr to a { address: '1.2.3.4', port: 1234 } JS object.
 // Sets address and port properties on the info object and returns it.
 // If |info| is omitted, a new object is returned.
-v8::MaybeLocal<v8::Object> AddressToJS(
+v8::Local<v8::Object> AddressToJS(
     Environment* env,
     const sockaddr* addr,
     v8::Local<v8::Object> info = v8::Local<v8::Object>());
@@ -92,10 +92,8 @@ void SignalExit(int signal, siginfo_t* info, void* ucontext);
 std::string GetProcessTitle(const char* default_title);
 std::string GetHumanReadableProcessName();
 
-v8::Maybe<bool> InitializeBaseContextForSnapshot(
-    v8::Local<v8::Context> context);
-v8::Maybe<bool> InitializeContextRuntime(v8::Local<v8::Context> context);
-v8::Maybe<bool> InitializePrimordials(v8::Local<v8::Context> context);
+void InitializeContextRuntime(v8::Local<v8::Context>);
+bool InitializePrimordials(v8::Local<v8::Context> context);
 
 class NodeArrayBufferAllocator : public ArrayBufferAllocator {
  public:
@@ -120,10 +118,6 @@ class NodeArrayBufferAllocator : public ArrayBufferAllocator {
  private:
   uint32_t zero_fill_field_ = 1;  // Boolean but exposed as uint32 to JS land.
   std::atomic<size_t> total_mem_usage_ {0};
-
-  // Delegate to V8's allocator for compatibility with the V8 memory cage.
-  std::unique_ptr<v8::ArrayBuffer::Allocator> allocator_{
-      v8::ArrayBuffer::Allocator::NewDefaultAllocator()};
 };
 
 class DebuggingArrayBufferAllocator final : public NodeArrayBufferAllocator {
@@ -201,12 +195,6 @@ v8::MaybeLocal<v8::Value> InternalMakeCallback(
     v8::Local<v8::Value> argv[],
     async_context asyncContext);
 
-v8::MaybeLocal<v8::Value> MakeSyncCallback(v8::Isolate* isolate,
-                                           v8::Local<v8::Object> recv,
-                                           v8::Local<v8::Function> callback,
-                                           int argc,
-                                           v8::Local<v8::Value> argv[]);
-
 class InternalCallbackScope {
  public:
   enum Flags {
@@ -258,8 +246,7 @@ class DebugSealHandleScope {
 
 class ThreadPoolWork {
  public:
-  explicit inline ThreadPoolWork(Environment* env, const char* type)
-      : env_(env), type_(type) {
+  explicit inline ThreadPoolWork(Environment* env) : env_(env) {
     CHECK_NOT_NULL(env);
   }
   inline virtual ~ThreadPoolWork() = default;
@@ -275,7 +262,6 @@ class ThreadPoolWork {
  private:
   Environment* env_;
   uv_work_t work_req_;
-  const char* type_;
 };
 
 #define TRACING_CATEGORY_NODE "node"
@@ -291,13 +277,10 @@ class ThreadPoolWork {
 
 #if defined(__POSIX__) && !defined(__ANDROID__) && !defined(__CloudABI__)
 #define NODE_IMPLEMENTS_POSIX_CREDENTIALS 1
-#endif  // defined(__POSIX__) && !defined(__ANDROID__) && !defined(__CloudABI__)
+#endif  // __POSIX__ && !defined(__ANDROID__) && !defined(__CloudABI__)
 
 namespace credentials {
-bool SafeGetenv(const char* key,
-                std::string* text,
-                std::shared_ptr<KVStore> env_vars = nullptr,
-                v8::Isolate* isolate = nullptr);
+bool SafeGetenv(const char* key, std::string* text, Environment* env = nullptr);
 }  // namespace credentials
 
 void DefineZlibConstants(v8::Local<v8::Object> target);
@@ -309,26 +292,21 @@ v8::Isolate* NewIsolate(v8::Isolate::CreateParams* params,
 v8::MaybeLocal<v8::Value> StartExecution(Environment* env,
                                          StartExecutionCallback cb = nullptr);
 v8::MaybeLocal<v8::Object> GetPerContextExports(v8::Local<v8::Context> context);
+v8::MaybeLocal<v8::Value> ExecuteBootstrapper(
+    Environment* env,
+    const char* id,
+    std::vector<v8::Local<v8::String>>* parameters,
+    std::vector<v8::Local<v8::Value>>* arguments);
 void MarkBootstrapComplete(const v8::FunctionCallbackInfo<v8::Value>& args);
 
-class InitializationResultImpl final : public InitializationResult {
- public:
-  ~InitializationResultImpl();
-  int exit_code() const { return exit_code_; }
-  bool early_return() const { return early_return_; }
-  const std::vector<std::string>& args() const { return args_; }
-  const std::vector<std::string>& exec_args() const { return exec_args_; }
-  const std::vector<std::string>& errors() const { return errors_; }
-  MultiIsolatePlatform* platform() const { return platform_; }
-
-  int exit_code_ = 0;
-  std::vector<std::string> args_;
-  std::vector<std::string> exec_args_;
-  std::vector<std::string> errors_;
-  bool early_return_ = false;
-  MultiIsolatePlatform* platform_ = nullptr;
+struct InitializationResult {
+  int exit_code = 0;
+  std::vector<std::string> args;
+  std::vector<std::string> exec_args;
+  bool early_return = false;
 };
-
+InitializationResult InitializeOncePerProcess(int argc, char** argv);
+void TearDownOncePerProcess();
 void SetIsolateErrorHandlers(v8::Isolate* isolate, const IsolateSettings& s);
 void SetIsolateMiscHandlers(v8::Isolate* isolate, const IsolateSettings& s);
 void SetIsolateCreateParamsForNode(v8::Isolate::CreateParams* params);
@@ -381,8 +359,25 @@ class DiagnosticFilename {
 };
 
 namespace heap {
-v8::Maybe<void> WriteSnapshot(Environment* env, const char* filename);
+bool WriteSnapshot(v8::Isolate* isolate, const char* filename);
 }
+
+class TraceEventScope {
+ public:
+  TraceEventScope(const char* category,
+                  const char* name,
+                  void* id) : category_(category), name_(name), id_(id) {
+    TRACE_EVENT_NESTABLE_ASYNC_BEGIN0(category_, name_, id_);
+  }
+  ~TraceEventScope() {
+    TRACE_EVENT_NESTABLE_ASYNC_END0(category_, name_, id_);
+  }
+
+ private:
+  const char* category_;
+  const char* name_;
+  void* id_;
+};
 
 namespace heap {
 
@@ -400,28 +395,6 @@ std::string Basename(const std::string& str, const std::string& extension);
 
 node_module napi_module_to_node_module(const napi_module* mod);
 
-std::ostream& operator<<(std::ostream& output,
-                         const std::vector<SnapshotIndex>& v);
-std::ostream& operator<<(std::ostream& output,
-                         const std::vector<std::string>& vec);
-std::ostream& operator<<(std::ostream& output,
-                         const std::vector<PropInfo>& vec);
-std::ostream& operator<<(std::ostream& output, const PropInfo& d);
-std::ostream& operator<<(std::ostream& output, const EnvSerializeInfo& d);
-std::ostream& operator<<(std::ostream& output,
-                         const ImmediateInfo::SerializeInfo& d);
-std::ostream& operator<<(std::ostream& output,
-                         const TickInfo::SerializeInfo& d);
-std::ostream& operator<<(std::ostream& output,
-                         const AsyncHooks::SerializeInfo& d);
-std::ostream& operator<<(std::ostream& output, const SnapshotMetadata& d);
-
-namespace performance {
-std::ostream& operator<<(std::ostream& output,
-                         const PerformanceState::SerializeInfo& d);
-}
-
-bool linux_at_secure();
 }  // namespace node
 
 #endif  // defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS

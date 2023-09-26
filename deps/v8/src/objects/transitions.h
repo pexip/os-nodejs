@@ -6,7 +6,6 @@
 #define V8_OBJECTS_TRANSITIONS_H_
 
 #include "src/common/checks.h"
-#include "src/execution/isolate.h"
 #include "src/objects/descriptor-array.h"
 #include "src/objects/elements-kind.h"
 #include "src/objects/map.h"
@@ -19,13 +18,6 @@
 
 namespace v8 {
 namespace internal {
-
-namespace third_party_heap {
-class Impl;
-}
-
-// Find all transitions with given name and calls the callback.
-using ForEachTransitionCallback = std::function<void(Map)>;
 
 // TransitionsAccessor is a helper class to encapsulate access to the various
 // ways a Map can store transitions to other maps in its respective field at
@@ -46,27 +38,19 @@ using ForEachTransitionCallback = std::function<void(Map)>;
 // cleared when the map they refer to is not otherwise reachable.
 class V8_EXPORT_PRIVATE TransitionsAccessor {
  public:
-  // {concurrent_access} signals that the TransitionsAccessor will only be used
-  // in background threads. It acquires a reader lock for critical paths, as
-  // well as blocking the accessor from modifying the TransitionsArray.
   inline TransitionsAccessor(Isolate* isolate, Map map,
-                             bool concurrent_access = false);
-
+                             DisallowHeapAllocation* no_gc);
+  inline TransitionsAccessor(Isolate* isolate, Handle<Map> map);
   // Insert a new transition into |map|'s transition array, extending it
-  // as necessary. This can trigger GC.
-  static void Insert(Isolate* isolate, Handle<Map> map, Handle<Name> name,
-                     Handle<Map> target, SimpleTransitionFlag flag);
+  // as necessary.
+  // Requires the constructor that takes a Handle<Map> to have been used.
+  // This TransitionsAccessor instance is unusable after this operation.
+  void Insert(Handle<Name> name, Handle<Map> target, SimpleTransitionFlag flag);
 
   Map SearchTransition(Name name, PropertyKind kind,
                        PropertyAttributes attributes);
-  static inline MaybeHandle<Map> SearchTransition(
-      Isolate* isolate, Handle<Map> map, Name name, PropertyKind kind,
-      PropertyAttributes attributes);
 
   Map SearchSpecial(Symbol name);
-  static inline MaybeHandle<Map> SearchSpecial(Isolate* isolate,
-                                               Handle<Map> map, Symbol name);
-
   // Returns true for non-property transitions like elements kind, or
   // or frozen/sealed transitions.
   static bool IsSpecialTransition(ReadOnlyRoots roots, Name name);
@@ -79,14 +63,6 @@ class V8_EXPORT_PRIVATE TransitionsAccessor {
     return FindTransitionToDataProperty(name, kFieldOnly);
   }
 
-  // Find all transitions with given name and calls the callback.
-  // Neither GCs nor operations requiring Isolate::full_transition_array_access
-  // lock are allowed inside the callback.
-  // If any of the GC- or lock-requiring processing is necessary, it has to be
-  // done outside of the callback.
-  void ForEachTransitionTo(Name name, const ForEachTransitionCallback& callback,
-                           DisallowGarbageCollection* no_gc);
-
   inline Handle<String> ExpectedTransitionKey();
   inline Handle<Map> ExpectedTransitionTarget();
 
@@ -95,11 +71,10 @@ class V8_EXPORT_PRIVATE TransitionsAccessor {
   // object space. Otherwise ClearNonLiveReferences would leak memory while
   // applying in-place right trimming.
   static const int kMaxNumberOfTransitions = 1024 + 512;
+  bool CanHaveMoreTransitions();
   inline Name GetKey(int transition_number);
   inline Map GetTarget(int transition_number);
   static inline PropertyDetails GetTargetDetails(Name name, Map target);
-
-  static bool CanHaveMoreTransitions(Isolate* isolate, Handle<Map> map);
 
   static bool IsMatchingMap(Map target, Name name, PropertyKind kind,
                             PropertyAttributes attributes);
@@ -109,15 +84,13 @@ class V8_EXPORT_PRIVATE TransitionsAccessor {
       PropertyAttributes* out_integrity_level = nullptr);
 
   // ===== ITERATION =====
-  using TraverseCallback = std::function<void(Map)>;
+  using TraverseCallback = void (*)(Map map, void* data);
 
-  // Traverse the transition tree in preorder.
-  void TraverseTransitionTree(const TraverseCallback& callback) {
+  // Traverse the transition tree in postorder.
+  void TraverseTransitionTree(TraverseCallback callback, void* data) {
     // Make sure that we do not allocate in the callback.
-    DisallowGarbageCollection no_gc;
-    base::SharedMutexGuardIf<base::kShared> scope(
-        isolate_->full_transition_array_access(), concurrent_access_);
-    TraverseTransitionTreeInternal(callback, &no_gc);
+    DisallowHeapAllocation no_allocation;
+    TraverseTransitionTreeInternal(callback, data, &no_allocation);
   }
 
   // ===== PROTOTYPE TRANSITIONS =====
@@ -128,20 +101,15 @@ class V8_EXPORT_PRIVATE TransitionsAccessor {
   // prototype is set, rather than creating a new map every time.  The
   // transitions are in the form of a map where the keys are prototype objects
   // and the values are the maps they transition to.
-  // PutPrototypeTransition can trigger GC.
-  static void PutPrototypeTransition(Isolate* isolate, Handle<Map>,
-                                     Handle<Object> prototype,
-                                     Handle<Map> target_map);
-  static Handle<Map> GetPrototypeTransition(Isolate* isolate, Handle<Map> map,
-                                            Handle<Object> prototype);
+  void PutPrototypeTransition(Handle<Object> prototype, Handle<Map> target_map);
+  Handle<Map> GetPrototypeTransition(Handle<Object> prototype);
 
   // During the first-time Map::Update and Map::TryUpdate, the migration target
   // map could be cached in the raw_transitions slot of the old map that is
   // deprecated from the map transition tree. The next time old map is updated,
   // we will check this cache slot as a shortcut to get the migration target
   // map.
-  static void SetMigrationTarget(Isolate* isolate, Handle<Map> map,
-                                 Map migration_target);
+  void SetMigrationTarget(Map migration_target);
   Map GetMigrationTarget();
 
 #if DEBUG || OBJECT_PRINT
@@ -149,12 +117,11 @@ class V8_EXPORT_PRIVATE TransitionsAccessor {
   static void PrintOneTransition(std::ostream& os, Name key, Map target);
   void PrintTransitionTree();
   void PrintTransitionTree(std::ostream& os, int level,
-                           DisallowGarbageCollection* no_gc);
+                           DisallowHeapAllocation* no_gc);
 #endif
 #if DEBUG
-  static void CheckNewTransitionsAreConsistent(Isolate* isolate,
-                                               Handle<Map> map,
-                                               Object transitions);
+  void CheckNewTransitionsAreConsistent(TransitionArray old_transitions,
+                                        Object transitions);
   bool IsConsistentWithBackPointers();
   bool IsSortedNoDuplicates();
 #endif
@@ -169,59 +136,55 @@ class V8_EXPORT_PRIVATE TransitionsAccessor {
     kFullTransitionArray,
   };
 
-  inline Encoding encoding() { return encoding_; }
+  inline void Reload();
 
-  inline int Capacity();
+  inline Encoding encoding() {
+    DCHECK(!needs_reload_);
+    return encoding_;
+  }
 
   inline TransitionArray transitions();
 
-  DISALLOW_GARBAGE_COLLECTION(no_gc_)
-
  private:
   friend class MarkCompactCollector;  // For HasSimpleTransitionTo.
-  friend class third_party_heap::Impl;
   friend class TransitionArray;
 
-  static inline Encoding GetEncoding(Isolate* isolate,
-                                     MaybeObject raw_transitions);
-  static inline Encoding GetEncoding(Isolate* isolate, TransitionArray array);
-  static inline Encoding GetEncoding(Isolate* isolate, Handle<Map> map);
-
-  static inline TransitionArray GetTransitionArray(Isolate* isolate,
-                                                   MaybeObject raw_transitions);
-  static inline TransitionArray GetTransitionArray(Isolate* isolate,
-                                                   Handle<Map> map);
-
-  static inline Map GetSimpleTransition(Isolate* isolate, Handle<Map> map);
-  static inline Name GetSimpleTransitionKey(Map transition);
   inline PropertyDetails GetSimpleTargetDetails(Map transition);
+
+  static inline Name GetSimpleTransitionKey(Map transition);
 
   static inline Map GetTargetFromRaw(MaybeObject raw);
 
-  static void EnsureHasFullTransitionArray(Isolate* isolate, Handle<Map> map);
-  static void SetPrototypeTransitions(Isolate* isolate, Handle<Map> map,
-                                      Handle<WeakFixedArray> proto_transitions);
-  static WeakFixedArray GetPrototypeTransitions(Isolate* isolate,
-                                                Handle<Map> map);
+  void MarkNeedsReload() {
+#if DEBUG
+    needs_reload_ = true;
+#endif
+  }
 
-  static inline void ReplaceTransitions(Isolate* isolate, Handle<Map> map,
-                                        MaybeObject new_transitions);
-  static inline void ReplaceTransitions(
-      Isolate* isolate, Handle<Map> map,
-      Handle<TransitionArray> new_transitions);
+  inline void Initialize();
 
+  inline Map GetSimpleTransition();
   bool HasSimpleTransitionTo(Map map);
+
+  void ReplaceTransitions(MaybeObject new_transitions);
 
   inline Map GetTargetMapFromWeakRef();
 
-  void TraverseTransitionTreeInternal(const TraverseCallback& callback,
-                                      DisallowGarbageCollection* no_gc);
+  void EnsureHasFullTransitionArray();
+  void SetPrototypeTransitions(Handle<WeakFixedArray> proto_transitions);
+  WeakFixedArray GetPrototypeTransitions();
+
+  void TraverseTransitionTreeInternal(TraverseCallback callback, void* data,
+                                      DisallowHeapAllocation* no_gc);
 
   Isolate* isolate_;
+  Handle<Map> map_handle_;
   Map map_;
   MaybeObject raw_transitions_;
   Encoding encoding_;
-  bool concurrent_access_;
+#if DEBUG
+  bool needs_reload_;
+#endif
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(TransitionsAccessor);
 };
@@ -265,7 +228,7 @@ class TransitionArray : public WeakFixedArray {
   int GetSortedKeyIndex(int transition_number) { return transition_number; }
   inline int number_of_entries() const;
 #ifdef DEBUG
-  V8_EXPORT_PRIVATE bool IsSortedNoDuplicates();
+  V8_EXPORT_PRIVATE bool IsSortedNoDuplicates(int valid_entries = -1);
 #endif
 
   V8_EXPORT_PRIVATE void Sort();
@@ -303,7 +266,6 @@ class TransitionArray : public WeakFixedArray {
  private:
   friend class Factory;
   friend class MarkCompactCollector;
-  friend class third_party_heap::Impl;
   friend class TransitionsAccessor;
 
   inline void SetNumberOfTransitions(int number_of_transitions);
@@ -342,19 +304,13 @@ class TransitionArray : public WeakFixedArray {
 
   // Search a non-property transition (like elements kind, observe or frozen
   // transitions).
-  inline int SearchSpecial(Symbol symbol, bool concurrent_search = false,
-                           int* out_insertion_index = nullptr);
+  inline int SearchSpecial(Symbol symbol, int* out_insertion_index = nullptr);
   // Search a first transition for a given property name.
-  inline int SearchName(Name name, bool concurrent_search = false,
-                        int* out_insertion_index = nullptr);
+  inline int SearchName(Name name, int* out_insertion_index = nullptr);
   int SearchDetails(int transition, PropertyKind kind,
                     PropertyAttributes attributes, int* out_insertion_index);
   Map SearchDetailsAndGetTarget(int transition, PropertyKind kind,
                                 PropertyAttributes attributes);
-
-  // Find all transitions with given name and calls the callback.
-  void ForEachTransitionTo(Name name,
-                           const ForEachTransitionCallback& callback);
 
   inline int number_of_transitions() const;
 
@@ -384,6 +340,8 @@ class TransitionArray : public WeakFixedArray {
                                    PropertyAttributes attributes2);
 
   inline void Set(int transition_number, Name key, MaybeObject target);
+
+  void Zap(Isolate* isolate);
 
   OBJECT_CONSTRUCTORS(TransitionArray, WeakFixedArray);
 };

@@ -22,18 +22,18 @@ This directory contains modules used to test the Node.js implementation.
 * [Report module](#report-module)
 * [tick module](#tick-module)
 * [tmpdir module](#tmpdir-module)
-* [UDP pair helper](#udp-pair-helper)
 * [WPT module](#wpt-module)
 
 ## Benchmark Module
 
 The `benchmark` module is used by tests to run benchmarks.
 
-### `runBenchmark(name, env)`
+### `runBenchmark(name, args, env)`
 
-* `name` [\<string>][<string>] Name of benchmark suite to be run.
-* `env` [\<Object>][<Object>] Environment variables to be applied during the
-  run.
+* `name` [&lt;string>][] Name of benchmark suite to be run.
+* `args` [&lt;Array>][] Array of environment variable key/value pairs (ex:
+  `n=1`) to be applied via `--set`.
+* `env` [&lt;Object>][] Environment variables to be applied during the run.
 
 ## Common Module API
 
@@ -42,38 +42,53 @@ tasks.
 
 ### `allowGlobals(...allowlist)`
 
-* `allowlist` [\<Array>][<Array>] Array of Globals
-* return [\<Array>][<Array>]
+* `allowlist` [&lt;Array>][] Array of Globals
+* return [&lt;Array>][]
 
 Takes `allowlist` and concats that with predefined `knownGlobals`.
 
 ### `canCreateSymLink()`
 
-* return [\<boolean>][<boolean>]
+* return [&lt;boolean>][]
 
 Checks whether the current running process can create symlinks. On Windows, this
 returns `false` if the process running doesn't have privileges to create
 symlinks
-([SeCreateSymbolicLinkPrivilege](https://msdn.microsoft.com/en-us/library/windows/desktop/bb530716\(v=vs.85\).aspx)).
+([SeCreateSymbolicLinkPrivilege](https://msdn.microsoft.com/en-us/library/windows/desktop/bb530716(v=vs.85).aspx)).
 On non-Windows platforms, this always returns `true`.
 
 ### `createZeroFilledFile(filename)`
 
-Creates a 10 MiB file of all null characters.
+Creates a 10 MB file of all null characters.
+
+### `disableCrashOnUnhandledRejection()`
+
+Removes the `process.on('unhandledRejection')` handler that crashes the process
+after a tick. The handler is useful for tests that use Promises and need to make
+sure no unexpected rejections occur, because currently they result in silent
+failures. However, it is useful in some rare cases to disable it, for example if
+the `unhandledRejection` hook is directly used by the test.
+
+### `enoughTestCpu`
+
+* [&lt;boolean>][]
+
+Indicates if there is more than 1 CPU or that the single CPU has a speed of at
+least 1 GHz.
 
 ### `enoughTestMem`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Indicates if there is more than 1gb of total memory.
 
 ### `expectsError(validator[, exact])`
 
-* `validator` [\<Object>][<Object>] | [\<RegExp>][<RegExp>] |
-  [\<Function>][<Function>] | [\<Error>][<Error>] The validator behaves
-  identical to `assert.throws(fn, validator)`.
-* `exact` [\<number>][<number>] default = 1
-* return [\<Function>][<Function>] A callback function that expects an error.
+* `validator` [&lt;Object>][] | [&lt;RegExp>][] | [&lt;Function>][] |
+  [&lt;Error>][] The validator behaves identical to
+  `assert.throws(fn, validator)`.
+* `exact` [&lt;number>][] default = 1
+* return [&lt;Function>][] A callback function that expects an error.
 
 A function suitable as callback to validate callback based errors. The error is
 validated using `assert.throws(() => { throw error; }, validator)`. If the
@@ -82,9 +97,9 @@ test is complete, then the test will fail.
 
 ### `expectWarning(name[, expected[, code]])`
 
-* `name` [\<string>][<string>] | [\<Object>][<Object>]
-* `expected` [\<string>][<string>] | [\<Array>][<Array>] | [\<Object>][<Object>]
-* `code` [\<string>][<string>]
+* `name` [&lt;string>][] | [&lt;Object>][]
+* `expected` [&lt;string>][] | [&lt;Array>][] | [&lt;Object>][]
+* `code` [&lt;string>][]
 
 Tests whether `name`, `expected`, and `code` are part of a raised warning.
 
@@ -110,42 +125,42 @@ expectWarning('DeprecationWarning', [
 
 expectWarning('DeprecationWarning', {
   DEP0XXX: 'Foobar is deprecated',
-  DEP0XX2: 'Baz is also deprecated',
+  DEP0XX2: 'Baz is also deprecated'
 });
 
 expectWarning({
   DeprecationWarning: {
     DEP0XXX: 'Foobar is deprecated',
-    DEP0XX1: 'Baz is also deprecated',
+    DEP0XX1: 'Baz is also deprecated'
   },
   Warning: [
     ['Multiple array entries are fine', 'SpecialWarningCode'],
     ['No code is also fine'],
   ],
   SingleEntry: ['This will also work', 'WarningCode'],
-  SingleString: 'Single string entries without code will also work',
+  SingleString: 'Single string entries without code will also work'
 });
 ```
 
 ### `getArrayBufferViews(buf)`
 
-* `buf` [\<Buffer>][<Buffer>]
-* return [\<ArrayBufferView>][<ArrayBufferView>]\[]
+* `buf` [&lt;Buffer>][]
+* return [&lt;ArrayBufferView>][]\[\]
 
 Returns an instance of all possible `ArrayBufferView`s of the provided Buffer.
 
 ### `getBufferSources(buf)`
 
-* `buf` [\<Buffer>][<Buffer>]
-* return [\<BufferSource>][<BufferSource>]\[]
+* `buf` [&lt;Buffer>][]
+* return [&lt;BufferSource>][]\[\]
 
 Returns an instance of all possible `BufferSource`s of the provided Buffer,
 consisting of all `ArrayBufferView` and an `ArrayBuffer`.
 
 ### `getCallSite(func)`
 
-* `func` [\<Function>][<Function>]
-* return [\<string>][<string>]
+* `func` [&lt;Function>][]
+* return [&lt;string>][]
 
 Returns the file name and line number for the provided Function.
 
@@ -157,13 +172,13 @@ The TTY file descriptor is assumed to be capable of being writable.
 
 ### `hasCrypto`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Indicates whether OpenSSL is available.
 
 ### `hasFipsCrypto`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Indicates that Node.js has been linked with a FIPS compatible OpenSSL library,
 and that FIPS as been enabled using `--enable-fips`.
@@ -174,104 +189,104 @@ used to determine that situation.
 
 ### `hasIntl`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Indicates if [internationalization][] is supported.
 
 ### `hasIPv6`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Indicates whether `IPv6` is supported on this platform.
 
 ### `hasMultiLocalhost`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Indicates if there are multiple localhosts available.
 
 ### `inFreeBSDJail`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Checks whether free BSD Jail is true or false.
 
 ### `isAIX`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Platform check for Advanced Interactive eXecutive (AIX).
 
 ### `isAlive(pid)`
 
-* `pid` [\<number>][<number>]
-* return [\<boolean>][<boolean>]
+* `pid` [&lt;number>][]
+* return [&lt;boolean>][]
 
 Attempts to 'kill' `pid`
 
 ### `isDumbTerminal`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 ### `isFreeBSD`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Platform check for Free BSD.
 
 ### `isIBMi`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Platform check for IBMi.
 
 ### `isLinux`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Platform check for Linux.
 
 ### `isLinuxPPCBE`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Platform check for Linux on PowerPC.
 
 ### `isOSX`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Platform check for macOS.
 
 ### `isSunOS`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Platform check for SunOS.
 
 ### `isWindows`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Platform check for Windows.
 
 ### `localhostIPv4`
 
-* [\<string>][<string>]
+* [&lt;string>][]
 
 IP of `localhost`.
 
 ### `localIPv6Hosts`
 
-* [\<Array>][<Array>]
+* [&lt;Array>][]
 
 Array of IPV6 representations for `localhost`.
 
 ### `mustCall([fn][, exact])`
 
-* `fn` [\<Function>][<Function>] default = () => {}
-* `exact` [\<number>][<number>] default = 1
-* return [\<Function>][<Function>]
+* `fn` [&lt;Function>][] default = () => {}
+* `exact` [&lt;number>][] default = 1
+* return [&lt;Function>][]
 
 Returns a function that calls `fn`. If the returned function has not been called
 exactly `exact` number of times when the test is complete, then the test will
@@ -281,9 +296,9 @@ If `fn` is not provided, an empty function will be used.
 
 ### `mustCallAtLeast([fn][, minimum])`
 
-* `fn` [\<Function>][<Function>] default = () => {}
-* `minimum` [\<number>][<number>] default = 1
-* return [\<Function>][<Function>]
+* `fn` [&lt;Function>][] default = () => {}
+* `minimum` [&lt;number>][] default = 1
+* return [&lt;Function>][]
 
 Returns a function that calls `fn`. If the returned function has not been called
 at least `minimum` number of times when the test is complete, then the test will
@@ -293,50 +308,16 @@ If `fn` is not provided, an empty function will be used.
 
 ### `mustNotCall([msg])`
 
-* `msg` [\<string>][<string>] default = 'function should not have been called'
-* return [\<Function>][<Function>]
+* `msg` [&lt;string>][] default = 'function should not have been called'
+* return [&lt;Function>][]
 
 Returns a function that triggers an `AssertionError` if it is invoked. `msg` is
 used as the error message for the `AssertionError`.
 
-### `mustNotMutateObjectDeep([target])`
-
-* `target` [\<any>][<any>] default = `undefined`
-* return [\<any>][<any>]
-
-If `target` is an Object, returns a proxy object that triggers
-an `AssertionError` on mutation attempt, including mutation of deeply nested
-Objects. Otherwise, it returns `target` directly.
-
-Use of this function is encouraged for relevant regression tests.
-
-```mjs
-import { open } from 'node:fs/promises';
-import { mustNotMutateObjectDeep } from '../common/index.mjs';
-
-const _mutableOptions = { length: 4, position: 8 };
-const options = mustNotMutateObjectDeep(_mutableOptions);
-
-// In filehandle.read or filehandle.write, attempt to mutate options will throw
-// In the test code, options can still be mutated via _mutableOptions
-const fh = await open('/path/to/file', 'r+');
-const { buffer } = await fh.read(options);
-_mutableOptions.position = 4;
-await fh.write(buffer, options);
-
-// Inline usage
-const stats = await fh.stat(mustNotMutateObjectDeep({ bigint: true }));
-console.log(stats.size);
-```
-
-Caveats: built-in objects that make use of their internal slots (for example,
-`Map`s and `Set`s) might not work with this function. It returns Functions
-directly, not preventing their mutation.
-
 ### `mustSucceed([fn])`
 
-* `fn` [\<Function>][<Function>] default = () => {}
-* return [\<Function>][<Function>]
+* `fn` [&lt;Function>][] default = () => {}
+* return [&lt;Function>][]
 
 Returns a function that accepts arguments `(err, ...args)`. If `err` is not
 `undefined` or `null`, it triggers an `AssertionError`. Otherwise, it calls
@@ -344,9 +325,9 @@ Returns a function that accepts arguments `(err, ...args)`. If `err` is not
 
 ### `nodeProcessAborted(exitCode, signal)`
 
-* `exitCode` [\<number>][<number>]
-* `signal` [\<string>][<string>]
-* return [\<boolean>][<boolean>]
+* `exitCode` [&lt;number>][]
+* `signal` [&lt;string>][]
+* return [&lt;boolean>][]
 
 Returns `true` if the exit code `exitCode` and/or signal name `signal` represent
 the exit code and/or signal name of a node process that aborted, `false`
@@ -354,14 +335,14 @@ otherwise.
 
 ### `opensslCli`
 
-* [\<boolean>][<boolean>]
+* [&lt;boolean>][]
 
 Indicates whether 'opensslCli' is supported.
 
 ### `platformTimeout(ms)`
 
-* `ms` [\<number>][<number>] | [\<bigint>][<bigint>]
-* return [\<number>][<number>] | [\<bigint>][<bigint>]
+* `ms` [&lt;number>][] | [&lt;bigint>][]
+* return [&lt;number>][] | [&lt;bigint>][]
 
 Returns a timeout value based on detected conditions. For example, a debug build
 may need extra time so the returned value will be larger than on a release
@@ -369,45 +350,44 @@ build.
 
 ### `PIPE`
 
-* [\<string>][<string>]
+* [&lt;string>][]
 
 Path to the test socket.
 
 ### `PORT`
 
-* [\<number>][<number>]
+* [&lt;number>][]
 
 A port number for tests to use if one is needed.
 
 ### `printSkipMessage(msg)`
 
-* `msg` [\<string>][<string>]
+* `msg` [&lt;string>][]
 
 Logs '1..0 # Skipped: ' + `msg`
 
 ### `pwdCommand`
 
-* [\<array>][<array>] First two argument for the `spawn`/`exec` functions.
+* [&lt;array>][] First two argument for the `spawn`/`exec` functions.
 
 Platform normalized `pwd` command options. Usage example:
-
 ```js
 const common = require('../common');
-const { spawn } = require('node:child_process');
+const { spawn } = require('child_process');
 
 spawn(...common.pwdCommand, { stdio: ['pipe'] });
 ```
 
 ### `requireNoPackageJSONAbove([dir])`
 
-* `dir` [\<string>][<string>] default = \_\_dirname
+* `dir` [&lt;string>][] default = \_\_dirname
 
 Throws an `AssertionError` if a `package.json` file exists in any ancestor
 directory above `dir`. Such files may interfere with proper test functionality.
 
 ### `runWithInvalidFD(func)`
 
-* `func` [\<Function>][<Function>]
+* `func` [&lt;Function>][]
 
 Runs `func` with an invalid file descriptor that is an unsigned integer and
 can be used to trigger `EBADF` as the first argument. If no such file
@@ -416,7 +396,7 @@ will not be run.
 
 ### `skip(msg)`
 
-* `msg` [\<string>][<string>]
+* `msg` [&lt;string>][]
 
 Logs '1..0 # Skipped: ' + `msg` and exits with exit code `0`.
 
@@ -450,7 +430,6 @@ The `ArrayStream` module provides a simple `Stream` that pushes elements from
 a given array.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 const ArrayStream = require('../common/arraystream');
 const stream = new ArrayStream();
@@ -467,7 +446,6 @@ tasks (for instance, shutting down an HTTP server after a specific number of
 requests). The Countdown will fail the test if the remainder did not reach 0.
 
 <!-- eslint-disable strict, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 const Countdown = require('../common/countdown');
 
@@ -502,14 +480,14 @@ The `cpu-prof` module provides utilities related to CPU profiling tests.
 
 ### `env`
 
-* Default: { ...process.env, NODE\_DEBUG\_NATIVE: 'INSPECTOR\_PROFILER' }
+* Default: { ...process.env, NODE_DEBUG_NATIVE: 'INSPECTOR_PROFILER' }
 
 Environment variables used in profiled processes.
 
 ### `getCpuProfiles(dir)`
 
 * `dir` {string} The directory containing the CPU profile files.
-* return [\<string>][<string>]
+* return [&lt;string>][]
 
 Returns an array of all `.cpuprofile` files found in `dir`.
 
@@ -517,7 +495,7 @@ Returns an array of all `.cpuprofile` files found in `dir`.
 
 * `file` {string} Path to a `.cpuprofile` file.
 * `suffix` {string} Suffix of the URL of call frames to retrieve.
-* returns { frames: [\<Object>][<Object>], nodes: [\<Object>][<Object>] }
+* returns { frames: [&lt;Object>][], nodes: [&lt;Object>][] }
 
 Returns an object containing an array of the relevant call frames and an array
 of all the profile nodes.
@@ -541,10 +519,10 @@ Provides common functionality for tests for `node inspect`.
 
 ### `startCLI(args[[, flags], spawnOpts])`
 
-* `args` [\<string>][<string>]
-* `flags` [\<string>][<string>] default = \[]
-* `showOpts` [\<Object>][<Object>] default = {}
-* return [\<Object>][<Object>]
+* `args` [&lt;string>][]
+* `flags` [&lt;string>][] default = []
+* `showOpts` [&lt;Object>][] default = {}
+* return [&lt;Object>][]
 
 Returns a null-prototype object with properties that are functions and getters
 used to interact with the `node inspect` CLI. These functions are:
@@ -569,9 +547,9 @@ The `DNS` module provides utilities related to the `dns` built-in module.
 
 ### `errorLookupMock(code, syscall)`
 
-* `code` [\<string>][<string>] Defaults to `dns.mockedErrorCode`.
-* `syscall` [\<string>][<string>] Defaults to `dns.mockedSysCall`.
-* return [\<Function>][<Function>]
+* `code` [&lt;string>][] Defaults to `dns.mockedErrorCode`.
+* `syscall` [&lt;string>][] Defaults to `dns.mockedSysCall`.
+* return [&lt;Function>][]
 
 A mock for the `lookup` option of `net.connect()` that would result in an error
 with the `code` and the `syscall` specified. Returns a function that has the
@@ -587,39 +565,39 @@ The default `syscall` of errors generated by `errorLookupMock`.
 
 ### `readDomainFromPacket(buffer, offset)`
 
-* `buffer` [\<Buffer>][<Buffer>]
-* `offset` [\<number>][<number>]
-* return [\<Object>][<Object>]
+* `buffer` [&lt;Buffer>][]
+* `offset` [&lt;number>][]
+* return [&lt;Object>][]
 
 Reads the domain string from a packet and returns an object containing the
 number of bytes read and the domain.
 
 ### `parseDNSPacket(buffer)`
 
-* `buffer` [\<Buffer>][<Buffer>]
-* return [\<Object>][<Object>]
+* `buffer` [&lt;Buffer>][]
+* return [&lt;Object>][]
 
 Parses a DNS packet. Returns an object with the values of the various flags of
 the packet depending on the type of packet.
 
 ### `writeIPv6(ip)`
 
-* `ip` [\<string>][<string>]
-* return [\<Buffer>][<Buffer>]
+* `ip` [&lt;string>][]
+* return [&lt;Buffer>][]
 
 Reads an IPv6 String and returns a Buffer containing the parts.
 
 ### `writeDomainName(domain)`
 
-* `domain` [\<string>][<string>]
-* return [\<Buffer>][<Buffer>]
+* `domain` [&lt;string>][]
+* return [&lt;Buffer>][]
 
 Reads a Domain String and returns a Buffer containing the domain.
 
 ### `writeDNSPacket(parsed)`
 
-* `parsed` [\<Object>][<Object>]
-* return [\<Buffer>][<Buffer>]
+* `parsed` [&lt;Object>][]
+* return [&lt;Buffer>][]
 
 Takes in a parsed Object and writes its fields to a DNS packet as a Buffer
 object.
@@ -640,7 +618,7 @@ environment variables.
 ### `NODE_COMMON_PORT`
 
 If set, `NODE_COMMON_PORT`'s value overrides the `common.PORT` default value of
-12346\.
+12346.
 
 ### `NODE_SKIP_FLAG_CHECK`
 
@@ -663,26 +641,26 @@ files in the `test/fixtures` directory.
 
 ### `fixtures.fixturesDir`
 
-* [\<string>][<string>]
+* [&lt;string>][]
 
 The absolute path to the `test/fixtures/` directory.
 
 ### `fixtures.path(...args)`
 
-* `...args` [\<string>][<string>]
+* `...args` [&lt;string>][]
 
 Returns the result of `path.join(fixtures.fixturesDir, ...args)`.
 
 ### `fixtures.readSync(args[, enc])`
 
-* `args` [\<string>][<string>] | [\<Array>][<Array>]
+* `args` [&lt;string>][] | [&lt;Array>][]
 
 Returns the result of
 `fs.readFileSync(path.join(fixtures.fixturesDir, ...args), 'enc')`.
 
 ### `fixtures.readKey(arg[, enc])`
 
-* `arg` [\<string>][<string>]
+* `arg` [&lt;string>][]
 
 Returns the result of
 `fs.readFileSync(path.join(fixtures.fixturesDir, 'keys', arg), 'enc')`.
@@ -701,18 +679,16 @@ one listed below. (`heap.validateSnapshotNodes(...)` is a shortcut for
 
 ### `heap.validateSnapshotNodes(name, expected, options)`
 
-* `name` [\<string>][<string>] Look for this string as the name of heap dump
-  nodes.
-* `expected` [\<Array>][<Array>] A list of objects, possibly with an `children`
+* `name` [&lt;string>][] Look for this string as the name of heap dump nodes.
+* `expected` [&lt;Array>][] A list of objects, possibly with an `children`
   property that points to expected other adjacent nodes.
-* `options` [\<Array>][<Array>]
-  * `loose` [\<boolean>][<boolean>] Do not expect an exact listing of
-    occurrences of nodes with name `name` in `expected`.
+* `options` [&lt;Array>][]
+  * `loose` [&lt;boolean>][] Do not expect an exact listing of occurrences
+    of nodes with name `name` in `expected`.
 
 Create a heap dump and an embedder graph copy and validate occurrences.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 validateSnapshotNodes('TLSWRAP', [
   {
@@ -720,7 +696,7 @@ validateSnapshotNodes('TLSWRAP', [
       { name: 'enc_out' },
       { name: 'enc_in' },
       { name: 'TLSWrap' },
-    ],
+    ]
   },
 ]);
 ```
@@ -731,7 +707,6 @@ The `hijackstdio` module provides utility functions for temporarily redirecting
 `stdout` and `stderr` output.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 const { hijackStdout, restoreStdout } = require('../common/hijackstdio');
 
@@ -745,7 +720,7 @@ console.log('this is sent to the hijacked listener');
 
 ### `hijackStderr(listener)`
 
-* `listener` [\<Function>][<Function>]: a listener with a single parameter
+* `listener` [&lt;Function>][]: a listener with a single parameter
   called `data`.
 
 Eavesdrop to `process.stderr.write()` calls. Once `process.stderr.write()` is
@@ -755,7 +730,7 @@ the number of calls.
 
 ### `hijackStdout(listener)`
 
-* `listener` [\<Function>][<Function>]: a listener with a single parameter
+* `listener` [&lt;Function>][]: a listener with a single parameter
   called `data`.
 
 Eavesdrop to `process.stdout.write()` calls. Once `process.stdout.write()` is
@@ -779,7 +754,6 @@ The http2.js module provides a handful of utilities for creating mock HTTP/2
 frames for testing of HTTP/2 endpoints
 
 <!-- eslint-disable no-unused-vars, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 const http2 = require('../common/http2');
 ```
@@ -790,7 +764,6 @@ The `http2.Frame` is a base class that creates a `Buffer` containing a
 serialized HTTP/2 frame header.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 // length is a 24-bit unsigned integer
 // type is an 8-bit unsigned integer identifying the frame type
@@ -810,7 +783,6 @@ The `http2.DataFrame` is a subclass of `http2.Frame` that serializes a `DATA`
 frame.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 // id is the 32-bit stream identifier
 // payload is a Buffer containing the DATA payload
@@ -828,7 +800,6 @@ The `http2.HeadersFrame` is a subclass of `http2.Frame` that serializes a
 `HEADERS` frame.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 // id is the 32-bit stream identifier
 // payload is a Buffer containing the HEADERS payload (see either
@@ -847,7 +818,6 @@ The `http2.SettingsFrame` is a subclass of `http2.Frame` that serializes an
 empty `SETTINGS` frame.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 // ack is a boolean indicating whether or not to set the ACK flag.
 const frame = new http2.SettingsFrame(ack);
@@ -861,7 +831,6 @@ Set to a `Buffer` instance that contains a minimal set of serialized HTTP/2
 request headers to be used as the payload of a `http2.HeadersFrame`.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 const frame = new http2.HeadersFrame(1, http2.kFakeRequestHeaders, 0, true);
 
@@ -874,7 +843,6 @@ Set to a `Buffer` instance that contains a minimal set of serialized HTTP/2
 response headers to be used as the payload a `http2.HeadersFrame`.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 const frame = new http2.HeadersFrame(1, http2.kFakeResponseHeaders, 0, true);
 
@@ -887,7 +855,6 @@ Set to a `Buffer` containing the preamble bytes an HTTP/2 client must send
 upon initial establishment of a connection.
 
 <!-- eslint-disable no-undef, node-core/require-common-first, node-core/required-modules -->
-
 ```js
 socket.write(http2.kClientMagic);
 ```
@@ -899,27 +866,27 @@ internet-related tests.
 
 ### `internet.addresses`
 
-* [\<Object>][<Object>]
-  * `INET_HOST` [\<string>][<string>] A generic host that has registered common
+* [&lt;Object>][]
+  * `INET_HOST` [&lt;string>][] A generic host that has registered common
     DNS records, supports both IPv4 and IPv6, and provides basic HTTP/HTTPS
     services
-  * `INET4_HOST` [\<string>][<string>] A host that provides IPv4 services
-  * `INET6_HOST` [\<string>][<string>] A host that provides IPv6 services
-  * `INET4_IP` [\<string>][<string>] An accessible IPv4 IP, defaults to the
+  * `INET4_HOST` [&lt;string>][] A host that provides IPv4 services
+  * `INET6_HOST` [&lt;string>][] A host that provides IPv6 services
+  * `INET4_IP` [&lt;string>][] An accessible IPv4 IP, defaults to the
     Google Public DNS IPv4 address
-  * `INET6_IP` [\<string>][<string>] An accessible IPv6 IP, defaults to the
+  * `INET6_IP` [&lt;string>][] An accessible IPv6 IP, defaults to the
     Google Public DNS IPv6 address
-  * `INVALID_HOST` [\<string>][<string>] An invalid host that cannot be resolved
-  * `MX_HOST` [\<string>][<string>] A host with MX records registered
-  * `SRV_HOST` [\<string>][<string>] A host with SRV records registered
-  * `PTR_HOST` [\<string>][<string>] A host with PTR records registered
-  * `NAPTR_HOST` [\<string>][<string>] A host with NAPTR records registered
-  * `SOA_HOST` [\<string>][<string>] A host with SOA records registered
-  * `CNAME_HOST` [\<string>][<string>] A host with CNAME records registered
-  * `NS_HOST` [\<string>][<string>] A host with NS records registered
-  * `TXT_HOST` [\<string>][<string>] A host with TXT records registered
-  * `DNS4_SERVER` [\<string>][<string>] An accessible IPv4 DNS server
-  * `DNS6_SERVER` [\<string>][<string>] An accessible IPv6 DNS server
+  * `INVALID_HOST` [&lt;string>][] An invalid host that cannot be resolved
+  * `MX_HOST` [&lt;string>][] A host with MX records registered
+  * `SRV_HOST` [&lt;string>][] A host with SRV records registered
+  * `PTR_HOST` [&lt;string>][] A host with PTR records registered
+  * `NAPTR_HOST` [&lt;string>][] A host with NAPTR records registered
+  * `SOA_HOST` [&lt;string>][] A host with SOA records registered
+  * `CNAME_HOST` [&lt;string>][] A host with CNAME records registered
+  * `NS_HOST` [&lt;string>][] A host with NS records registered
+  * `TXT_HOST` [&lt;string>][] A host with TXT records registered
+  * `DNS4_SERVER` [&lt;string>][] An accessible IPv4 DNS server
+  * `DNS6_SERVER` [&lt;string>][] An accessible IPv6 DNS server
 
 A set of addresses for internet-related tests. All properties are configurable
 via `NODE_TEST_*` environment variables. For example, to configure
@@ -940,9 +907,9 @@ onGC({}, { ongc() { console.log('collected'); } });
 
 ### `onGC(target, listener)`
 
-* `target` [\<Object>][<Object>]
-* `listener` [\<Object>][<Object>]
-  * `ongc` [\<Function>][<Function>]
+* `target` [&lt;Object>][]
+* `listener` [&lt;Object>][]
+  * `ongc` [&lt;Function>][]
 
 Installs a GC listener for the collection of `target`.
 
@@ -961,25 +928,24 @@ functionality.
 
 ### `findReports(pid, dir)`
 
-* `pid` [\<number>][<number>] Process ID to retrieve diagnostic report files
-  for.
-* `dir` [\<string>][<string>] Directory to search for diagnostic report files.
-* return [\<Array>][<Array>]
+* `pid` [&lt;number>][] Process ID to retrieve diagnostic report files for.
+* `dir` [&lt;string>][] Directory to search for diagnostic report files.
+* return [&lt;Array>][]
 
 Returns an array of diagnostic report file names found in `dir`. The files
 should have been generated by a process whose PID matches `pid`.
 
 ### `validate(filepath)`
 
-* `filepath` [\<string>][<string>] Diagnostic report filepath to validate.
+* `filepath` [&lt;string>][] Diagnostic report filepath to validate.
 
 Validates the schema of a diagnostic report file whose path is specified in
 `filepath`. If the report fails validation, an exception is thrown.
 
 ### `validateContent(report)`
 
-* `report` [\<Object>][<Object>] | [\<string>][<string>] JSON contents of a
-  diagnostic report file, the parsed Object thereof, or the result of
+* `report` [&lt;Object>][] | [&lt;string>][] JSON contents of a diagnostic
+  report file, the parsed Object thereof, or the result of
   `process.report.getReport()`.
 
 Validates the schema of a diagnostic report whose content is specified in
@@ -992,8 +958,8 @@ after a given number of event loop "ticks".
 
 ### `tick(x, cb)`
 
-* `x` [\<number>][<number>] Number of event loop "ticks".
-* `cb` [\<Function>][<Function>] A callback function.
+* `x` [&lt;number>][] Number of event loop "ticks".
+* `cb` [&lt;Function>][] A callback function.
 
 ## tmpdir Module
 
@@ -1001,7 +967,7 @@ The `tmpdir` module supports the use of a temporary directory for testing.
 
 ### `path`
 
-* [\<string>][<string>]
+* [&lt;string>][]
 
 The realpath of the testing temporary directory.
 
@@ -1032,7 +998,7 @@ an `emitReceived()` API for actin as if data has been received on it.
 `makeUDPPair` returns an object `{ clientSide, serverSide }` where each side
 is an `FakeUDPWrap` connected to the other side.
 
-There is no difference between client or server side beyond their names.
+There is no difference between cient or server side beyond their names.
 
 ## WPT Module
 
@@ -1050,21 +1016,20 @@ A driver class for running WPT with the WPT harness in a worker thread.
 
 See [the WPT tests README][] for details.
 
-[<Array>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array
-[<ArrayBufferView>]: https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView
-[<Buffer>]: https://nodejs.org/api/buffer.html#buffer_class_buffer
-[<BufferSource>]: https://developer.mozilla.org/en-US/docs/Web/API/BufferSource
-[<Error>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
-[<Function>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
-[<Object>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object
-[<RegExp>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
-[<any>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types
-[<bigint>]: https://github.com/tc39/proposal-bigint
-[<boolean>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type
-[<number>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type
-[<string>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type
+[&lt;Array>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array
+[&lt;ArrayBufferView>]: https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView
+[&lt;Buffer>]: https://nodejs.org/api/buffer.html#buffer_class_buffer
+[&lt;BufferSource>]: https://developer.mozilla.org/en-US/docs/Web/API/BufferSource
+[&lt;Error>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
+[&lt;Function>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
+[&lt;Object>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object
+[&lt;RegExp>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
+[&lt;bigint>]: https://github.com/tc39/proposal-bigint
+[&lt;boolean>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type
+[&lt;number>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type
+[&lt;string>]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type
 [Web Platform Tests]: https://github.com/web-platform-tests/wpt
 [`hijackstdio.hijackStdErr()`]: #hijackstderrlistener
 [`hijackstdio.hijackStdOut()`]: #hijackstdoutlistener
-[internationalization]: ../../doc/api/intl.md
+[internationalization]: https://github.com/nodejs/node/wiki/Intl
 [the WPT tests README]: ../wpt/README.md

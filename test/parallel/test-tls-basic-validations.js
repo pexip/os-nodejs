@@ -30,7 +30,7 @@ assert.throws(
   {
     code: 'ERR_INVALID_ARG_TYPE',
     name: 'TypeError',
-    message: /The "options\.passphrase" property must be of type string/
+    message: 'Pass phrase must be a string'
   });
 
 assert.throws(
@@ -38,7 +38,7 @@ assert.throws(
   {
     code: 'ERR_INVALID_ARG_TYPE',
     name: 'TypeError',
-    message: /The "options\.passphrase" property must be of type string/
+    message: 'Pass phrase must be a string'
   });
 
 assert.throws(
@@ -46,7 +46,7 @@ assert.throws(
   {
     code: 'ERR_INVALID_ARG_TYPE',
     name: 'TypeError',
-    message: /The "options\.ecdhCurve" property must be of type string/
+    message: 'ECDH curve name must be a string'
   });
 
 assert.throws(
@@ -64,7 +64,7 @@ assert.throws(
   {
     code: 'ERR_INVALID_ARG_TYPE',
     name: 'TypeError',
-    message: /The "options\.sessionTimeout" property must be of type number/
+    message: 'Session timeout must be a 32-bit integer'
   });
 
 assert.throws(
@@ -72,13 +72,11 @@ assert.throws(
   {
     code: 'ERR_INVALID_ARG_TYPE',
     name: 'TypeError',
-    message: /The "options\.ticketKeys" property must be an instance of/
+    message: 'Ticket keys must be a buffer'
   });
 
-assert.throws(() => tls.createServer({ ticketKeys: Buffer.alloc(0) }), {
-  code: 'ERR_INVALID_ARG_VALUE',
-  message: /The property 'options\.ticketKeys' must be exactly 48 bytes/
-});
+assert.throws(() => tls.createServer({ ticketKeys: Buffer.alloc(0) }),
+              /TypeError: Ticket keys length must be 48 bytes/);
 
 assert.throws(
   () => tls.createSecurePair({}),
@@ -103,11 +101,8 @@ assert.throws(
   const inputBuffer = Buffer.from(arrayBufferViewStr.repeat(8), 'utf8');
   for (const expectView of common.getArrayBufferViews(inputBuffer)) {
     const out = {};
-    const expected = Buffer.from(expectView.buffer.slice(),
-                                 expectView.byteOffset,
-                                 expectView.byteLength);
     tls.convertALPNProtocols(expectView, out);
-    assert(out.ALPNProtocols.equals(expected));
+    assert(out.ALPNProtocols.equals(Buffer.from(expectView)));
   }
 }
 

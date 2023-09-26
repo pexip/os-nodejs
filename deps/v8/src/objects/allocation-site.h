@@ -16,8 +16,6 @@ namespace internal {
 
 enum InstanceType : uint16_t;
 
-#include "torque-generated/src/objects/allocation-site-tq.inc"
-
 class AllocationSite : public Struct {
  public:
   NEVER_READ_ONLY_SPACE
@@ -31,7 +29,7 @@ class AllocationSite : public Struct {
     kDontTenure = 1,
     kMaybeTenure = 2,
     kTenure = 3,
-    kZombie = 4,  // See comment to IsZombie() for documentation.
+    kZombie = 4,
     kLastPretenureDecisionValue = kZombie
   };
 
@@ -40,9 +38,7 @@ class AllocationSite : public Struct {
   // Contains either a Smi-encoded bitfield or a boilerplate. If it's a Smi the
   // AllocationSite is for a constructed Array.
   DECL_ACCESSORS(transition_info_or_boilerplate, Object)
-  DECL_RELEASE_ACQUIRE_ACCESSORS(transition_info_or_boilerplate, Object)
-  DECL_GETTER(boilerplate, JSObject)
-  DECL_RELEASE_ACQUIRE_ACCESSORS(boilerplate, JSObject)
+  DECL_ACCESSORS(boilerplate, JSObject)
   DECL_INT_ACCESSORS(transition_info)
 
   // nested_site threads a list of sites that represent nested literals
@@ -51,7 +47,7 @@ class AllocationSite : public Struct {
   DECL_ACCESSORS(nested_site, Object)
 
   // Bitfield containing pretenuring information.
-  DECL_RELAXED_INT32_ACCESSORS(pretenure_data)
+  DECL_INT32_ACCESSORS(pretenure_data)
 
   DECL_INT32_ACCESSORS(pretenure_create_count)
   DECL_ACCESSORS(dependent_code, DependentCode)
@@ -70,9 +66,9 @@ class AllocationSite : public Struct {
   bool IsNested();
 
   // transition_info bitfields, for constructed array transition info.
-  using ElementsKindBits = base::BitField<ElementsKind, 0, 6>;
-  using DoNotInlineBit = base::BitField<bool, 6, 1>;
-  // Unused bits 7-30.
+  using ElementsKindBits = base::BitField<ElementsKind, 0, 5>;
+  using DoNotInlineBit = base::BitField<bool, 5, 1>;
+  // Unused bits 6-30.
 
   // Bitfields for pretenure_data
   using MementoFoundCountBits = base::BitField<int, 0, 26>;
@@ -102,14 +98,10 @@ class AllocationSite : public Struct {
   inline int memento_create_count() const;
   inline void set_memento_create_count(int count);
 
-  // A "zombie" AllocationSite is one which has no more strong roots to
-  // it, and yet must be maintained until the next GC. The reason is that
-  // it may be that in new space there are AllocationMementos hanging around
-  // which point to the AllocationSite. If we scavenge these AllocationSites
-  // too soon, those AllocationMementos will end up pointing to garbage
-  // addresses. The garbage collector marks such AllocationSites as zombies
-  // when it discovers there are no roots, allowing the subsequent collection
-  // pass to recognize zombies and discard them later.
+  // The pretenuring decision is made during gc, and the zombie state allows
+  // us to recognize when an allocation site is just being kept alive because
+  // a later traversal of new space may discover AllocationMementos that point
+  // to this AllocationSite.
   inline bool IsZombie() const;
 
   inline bool IsMaybeTenure() const;
@@ -180,8 +172,6 @@ class AllocationMemento
   inline Address GetAllocationSiteUnchecked() const;
 
   DECL_PRINTER(AllocationMemento)
-
-  using BodyDescriptor = StructBodyDescriptor;
 
   TQ_OBJECT_CONSTRUCTORS(AllocationMemento)
 };

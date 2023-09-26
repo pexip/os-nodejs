@@ -5,9 +5,8 @@
 #ifndef V8_PARSING_LITERAL_BUFFER_H_
 #define V8_PARSING_LITERAL_BUFFER_H_
 
-#include "src/base/strings.h"
-#include "src/base/vector.h"
 #include "src/strings/unicode-decoder.h"
+#include "src/utils/vector.h"
 
 namespace v8 {
 namespace internal {
@@ -19,17 +18,14 @@ class LiteralBuffer final {
 
   ~LiteralBuffer() { backing_store_.Dispose(); }
 
-  LiteralBuffer(const LiteralBuffer&) = delete;
-  LiteralBuffer& operator=(const LiteralBuffer&) = delete;
-
   V8_INLINE void AddChar(char code_unit) {
     DCHECK(IsValidAscii(code_unit));
     AddOneByteChar(static_cast<byte>(code_unit));
   }
 
-  V8_INLINE void AddChar(base::uc32 code_unit) {
+  V8_INLINE void AddChar(uc32 code_unit) {
     if (is_one_byte()) {
-      if (code_unit <= static_cast<base::uc32>(unibrow::Latin1::kMaxChar)) {
+      if (code_unit <= static_cast<uc32>(unibrow::Latin1::kMaxChar)) {
         AddOneByteChar(static_cast<byte>(code_unit));
         return;
       }
@@ -40,24 +36,22 @@ class LiteralBuffer final {
 
   bool is_one_byte() const { return is_one_byte_; }
 
-  bool Equals(base::Vector<const char> keyword) const {
+  bool Equals(Vector<const char> keyword) const {
     return is_one_byte() && keyword.length() == position_ &&
            (memcmp(keyword.begin(), backing_store_.begin(), position_) == 0);
   }
 
-  base::Vector<const uint16_t> two_byte_literal() const {
+  Vector<const uint16_t> two_byte_literal() const {
     return literal<uint16_t>();
   }
 
-  base::Vector<const uint8_t> one_byte_literal() const {
-    return literal<uint8_t>();
-  }
+  Vector<const uint8_t> one_byte_literal() const { return literal<uint8_t>(); }
 
   template <typename Char>
-  base::Vector<const Char> literal() const {
+  Vector<const Char> literal() const {
     DCHECK_EQ(is_one_byte_, sizeof(Char) == 1);
     DCHECK_EQ(position_ & (sizeof(Char) - 1), 0);
-    return base::Vector<const Char>(
+    return Vector<const Char>(
         reinterpret_cast<const Char*>(backing_store_.begin()),
         position_ >> (sizeof(Char) - 1));
   }
@@ -69,8 +63,8 @@ class LiteralBuffer final {
     is_one_byte_ = true;
   }
 
-  template <typename IsolateT>
-  Handle<String> Internalize(IsolateT* isolate) const;
+  template <typename LocalIsolate>
+  Handle<String> Internalize(LocalIsolate* isolate) const;
 
  private:
   static const int kInitialCapacity = 16;
@@ -92,15 +86,17 @@ class LiteralBuffer final {
     position_ += kOneByteSize;
   }
 
-  void AddTwoByteChar(base::uc32 code_unit);
+  void AddTwoByteChar(uc32 code_unit);
   int NewCapacity(int min_capacity);
   void ExpandBuffer();
   void ConvertToTwoByte();
 
-  base::Vector<byte> backing_store_;
+  Vector<byte> backing_store_;
   int position_;
 
   bool is_one_byte_;
+
+  DISALLOW_COPY_AND_ASSIGN(LiteralBuffer);
 };
 
 }  // namespace internal

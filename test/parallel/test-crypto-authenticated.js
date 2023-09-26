@@ -18,7 +18,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
-// Flags: --no-warnings
+
 'use strict';
 const common = require('../common');
 if (!common.hasCrypto)
@@ -26,7 +26,6 @@ if (!common.hasCrypto)
 
 const assert = require('assert');
 const crypto = require('crypto');
-const { inspect } = require('util');
 const fixtures = require('../common/fixtures');
 
 crypto.DEFAULT_ENCODING = 'buffer';
@@ -43,7 +42,7 @@ const errMessages = {
   auth: / auth/,
   state: / state/,
   FIPS: /not supported in FIPS mode/,
-  length: /Invalid initialization vector/,
+  length: /Invalid IV length/,
   authTagLength: /Invalid authentication tag length/
 };
 
@@ -70,7 +69,6 @@ const expectedWarnings = common.hasFipsCrypto ?
     ['Use Cipheriv for counter mode of aes-256-ccm'],
     ['Use Cipheriv for counter mode of aes-256-ccm'],
     ['Use Cipheriv for counter mode of aes-256-ccm'],
-    ['Use Cipheriv for counter mode of aes-128-ccm'],
   ];
 
 const expectedDeprecationWarnings = [
@@ -96,9 +94,10 @@ for (const test of TEST_CASES) {
 
   const isCCM = /^aes-(128|192|256)-ccm$/.test(test.algo);
   const isOCB = /^aes-(128|192|256)-ocb$/.test(test.algo);
+  const isChacha20Poly1305 = test.algo === 'chacha20-poly1305';
 
   let options;
-  if (isCCM || isOCB)
+  if (isCCM || isOCB || isChacha20Poly1305)
     options = { authTagLength: test.tag.length / 2 };
 
   const inputEncoding = test.plainIsHex ? 'hex' : 'ascii';
@@ -244,8 +243,8 @@ for (const test of TEST_CASES) {
                                               'qkuZpJWCewa6Szih');
       decrypt.setAuthTag(Buffer.from('1'.repeat(length)));
     }, {
-      name: 'TypeError',
-      message: /Invalid authentication tag length/
+      name: 'Error',
+      message: `Invalid authentication tag length: ${length}`
     });
 
     assert.throws(() => {
@@ -256,8 +255,8 @@ for (const test of TEST_CASES) {
                               authTagLength: length
                             });
     }, {
-      name: 'TypeError',
-      message: /Invalid authentication tag length/
+      name: 'Error',
+      message: `Invalid authentication tag length: ${length}`
     });
 
     assert.throws(() => {
@@ -268,8 +267,8 @@ for (const test of TEST_CASES) {
                                 authTagLength: length
                               });
     }, {
-      name: 'TypeError',
-      message: /Invalid authentication tag length/
+      name: 'Error',
+      message: `Invalid authentication tag length: ${length}`
     });
   }
 }
@@ -303,8 +302,8 @@ for (const test of TEST_CASES) {
     // This tag would normally be allowed.
     decipher.setAuthTag(Buffer.from('1'.repeat(12)));
   }, {
-    name: 'TypeError',
-    message: /Invalid authentication tag length/
+    name: 'Error',
+    message: 'Invalid authentication tag length: 12'
   });
 
   // The Decipher object should be left intact.
@@ -329,9 +328,9 @@ for (const test of TEST_CASES) {
                             });
     }, {
       name: 'TypeError',
-      code: 'ERR_INVALID_ARG_VALUE',
-      message: "The property 'options.authTagLength' is invalid. " +
-               `Received ${inspect(authTagLength)}`
+      code: 'ERR_INVALID_OPT_VALUE',
+      message: `The value "${authTagLength}" is invalid for option ` +
+               '"authTagLength"'
     });
 
     assert.throws(() => {
@@ -343,9 +342,9 @@ for (const test of TEST_CASES) {
                               });
     }, {
       name: 'TypeError',
-      code: 'ERR_INVALID_ARG_VALUE',
-      message: "The property 'options.authTagLength' is invalid. " +
-        `Received ${inspect(authTagLength)}`
+      code: 'ERR_INVALID_OPT_VALUE',
+      message: `The value "${authTagLength}" is invalid for option ` +
+               '"authTagLength"'
     });
 
     if (!common.hasFipsCrypto) {
@@ -353,18 +352,18 @@ for (const test of TEST_CASES) {
         crypto.createCipher('aes-256-ccm', 'bad password', { authTagLength });
       }, {
         name: 'TypeError',
-        code: 'ERR_INVALID_ARG_VALUE',
-        message: "The property 'options.authTagLength' is invalid. " +
-          `Received ${inspect(authTagLength)}`
+        code: 'ERR_INVALID_OPT_VALUE',
+        message: `The value "${authTagLength}" is invalid for option ` +
+                 '"authTagLength"'
       });
 
       assert.throws(() => {
         crypto.createDecipher('aes-256-ccm', 'bad password', { authTagLength });
       }, {
         name: 'TypeError',
-        code: 'ERR_INVALID_ARG_VALUE',
-        message: "The property 'options.authTagLength' is invalid. " +
-          `Received ${inspect(authTagLength)}`
+        code: 'ERR_INVALID_OPT_VALUE',
+        message: `The value "${authTagLength}" is invalid for option ` +
+                 '"authTagLength"'
       });
     }
   }
@@ -453,9 +452,9 @@ for (const test of TEST_CASES) {
       cipher.setAAD(Buffer.from('0123456789', 'hex'), { plaintextLength });
     }, {
       name: 'TypeError',
-      code: 'ERR_INVALID_ARG_VALUE',
-      message: "The property 'options.plaintextLength' is invalid. " +
-        `Received ${inspect(plaintextLength)}`
+      code: 'ERR_INVALID_OPT_VALUE',
+      message: `The value "${plaintextLength}" is invalid for option ` +
+               '"plaintextLength"'
     });
   }
 }
@@ -475,12 +474,12 @@ for (const test of TEST_CASES) {
       cipher().setAAD(Buffer.alloc(0), {
         plaintextLength: maxMessageSize + 1
       });
-    }, /Invalid message length$/);
+    }, /^Error: Message exceeds maximum size$/);
 
     const msg = Buffer.alloc(maxMessageSize + 1);
     assert.throws(() => {
       cipher().update(msg);
-    }, /Invalid message length/);
+    }, /^Error: Message exceeds maximum size$/);
 
     const c = cipher();
     c.setAAD(Buffer.alloc(0), {
@@ -501,7 +500,7 @@ for (const test of TEST_CASES) {
                                            authTagLength: 10
                                          });
     cipher.setAAD(Buffer.from('0123456789', 'hex'));
-  }, /options\.plaintextLength required for CCM mode with AAD/);
+  }, /^Error: plaintextLength required for CCM mode with AAD$/);
 
   if (!common.hasFipsCrypto) {
     assert.throws(() => {
@@ -512,7 +511,7 @@ for (const test of TEST_CASES) {
                                                authTagLength: 10
                                              });
       cipher.setAAD(Buffer.from('0123456789', 'hex'));
-    }, /options\.plaintextLength required for CCM mode with AAD/);
+    }, /^Error: plaintextLength required for CCM mode with AAD$/);
   }
 }
 
@@ -658,131 +657,10 @@ for (const test of TEST_CASES) {
     assert.throws(() => crypto.createCipheriv(
       valid.algo,
       Buffer.from(valid.key, 'hex'),
-      Buffer.from(H(prefix) + valid.iv, 'hex')
+      Buffer.from(H(prefix) + valid.iv, 'hex'),
+      { authTagLength: valid.tag.length / 2 }
     ), errMessages.length, `iv length ${ivLength} was not rejected`);
 
     function H(length) { return '00'.repeat(length); }
-  }
-}
-
-{
-  // CCM cipher without data should not crash, see https://github.com/nodejs/node/issues/38035.
-  const algo = 'aes-128-ccm';
-  const key = Buffer.alloc(16);
-  const iv = Buffer.alloc(12);
-  const opts = { authTagLength: 10 };
-
-  for (const cipher of [
-    crypto.createCipher(algo, 'foo', opts),
-    crypto.createCipheriv(algo, key, iv, opts),
-  ]) {
-    assert.throws(() => {
-      cipher.final();
-    }, common.hasOpenSSL3 ? {
-      code: 'ERR_OSSL_TAG_NOT_SET'
-    } : {
-      message: /Unsupported state/
-    });
-  }
-}
-
-{
-  const key = Buffer.alloc(32);
-  const iv = Buffer.alloc(12);
-
-  for (const authTagLength of [0, 17]) {
-    assert.throws(() => {
-      crypto.createCipheriv('chacha20-poly1305', key, iv, { authTagLength });
-    }, {
-      code: 'ERR_CRYPTO_INVALID_AUTH_TAG',
-      message: errMessages.authTagLength
-    });
-  }
-}
-
-// ChaCha20-Poly1305 should respect the authTagLength option and should not
-// require the authentication tag before calls to update() during decryption.
-{
-  const key = Buffer.alloc(32);
-  const iv = Buffer.alloc(12);
-
-  for (let authTagLength = 1; authTagLength <= 16; authTagLength++) {
-    const cipher =
-        crypto.createCipheriv('chacha20-poly1305', key, iv, { authTagLength });
-    const ciphertext = Buffer.concat([cipher.update('foo'), cipher.final()]);
-    const authTag = cipher.getAuthTag();
-    assert.strictEqual(authTag.length, authTagLength);
-
-    // The decipher operation should reject all authentication tags other than
-    // that of the expected length.
-    for (let other = 1; other <= 16; other++) {
-      const decipher = crypto.createDecipheriv('chacha20-poly1305', key, iv, {
-        authTagLength: other
-      });
-      // ChaCha20 is a stream cipher so we do not need to call final() to obtain
-      // the full plaintext.
-      const plaintext = decipher.update(ciphertext);
-      assert.strictEqual(plaintext.toString(), 'foo');
-      if (other === authTagLength) {
-        // The authentication tag length is as expected and the tag itself is
-        // correct, so this should work.
-        decipher.setAuthTag(authTag);
-        decipher.final();
-      } else {
-        // The authentication tag that we are going to pass to setAuthTag is
-        // either too short or too long. If other < authTagLength, the
-        // authentication tag is still correct, but it should still be rejected
-        // because its security assurance is lower than expected.
-        assert.throws(() => {
-          decipher.setAuthTag(authTag);
-        }, {
-          code: 'ERR_CRYPTO_INVALID_AUTH_TAG',
-          message: `Invalid authentication tag length: ${authTagLength}`
-        });
-      }
-    }
-  }
-}
-
-// ChaCha20-Poly1305 should default to an authTagLength of 16. When encrypting,
-// this matches the behavior of GCM ciphers. When decrypting, however, it is
-// stricter than GCM in that it only allows authentication tags that are exactly
-// 16 bytes long, whereas, when no authTagLength was specified, GCM would accept
-// shorter tags as long as their length was valid according to NIST SP 800-38D.
-// For ChaCha20-Poly1305, we intentionally deviate from that because there are
-// no recommended or approved authentication tag lengths below 16 bytes.
-{
-  const rfcTestCases = TEST_CASES.filter(({ algo, tampered }) => {
-    return algo === 'chacha20-poly1305' && tampered === false;
-  });
-  assert.strictEqual(rfcTestCases.length, 1);
-
-  const [testCase] = rfcTestCases;
-  const key = Buffer.from(testCase.key, 'hex');
-  const iv = Buffer.from(testCase.iv, 'hex');
-  const aad = Buffer.from(testCase.aad, 'hex');
-
-  for (const opt of [
-    undefined,
-    { authTagLength: undefined },
-    { authTagLength: 16 },
-  ]) {
-    const cipher = crypto.createCipheriv('chacha20-poly1305', key, iv, opt);
-    const ciphertext = Buffer.concat([
-      cipher.setAAD(aad).update(testCase.plain, 'hex'),
-      cipher.final(),
-    ]);
-    const authTag = cipher.getAuthTag();
-
-    assert.strictEqual(ciphertext.toString('hex'), testCase.ct);
-    assert.strictEqual(authTag.toString('hex'), testCase.tag);
-
-    const decipher = crypto.createDecipheriv('chacha20-poly1305', key, iv, opt);
-    const plaintext = Buffer.concat([
-      decipher.setAAD(aad).update(ciphertext),
-      decipher.setAuthTag(authTag).final(),
-    ]);
-
-    assert.strictEqual(plaintext.toString('hex'), testCase.plain);
   }
 }

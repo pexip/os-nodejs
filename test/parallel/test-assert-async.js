@@ -103,9 +103,8 @@ const invalidThenableFunc = () => {
   promises.push(assert.rejects(promise, {
     name: 'TypeError',
     code: 'ERR_INVALID_RETURN_VALUE',
-    // FIXME(JakobJingleheimer): This should match on key words, like /Promise/ and /undefined/.
     message: 'Expected instance of Promise to be returned ' +
-             'from the "promiseFn" function but got undefined.'
+             'from the "promiseFn" function but got type undefined.'
   }));
 
   promise = assert.rejects(Promise.resolve(), common.mustNotCall());
@@ -137,7 +136,7 @@ promises.push(assert.rejects(
     assert.strictEqual(err.code, 'ERR_ASSERTION');
     assert.strictEqual(err.actual, actual);
     assert.strictEqual(err.operator, 'rejects');
-    assert.match(err.stack, /rejects/);
+    assert(/rejects/.test(err.stack));
     return true;
   };
   const err = new Error();
@@ -163,7 +162,7 @@ promises.push(assert.rejects(
   let promise = assert.doesNotReject(() => new Map(), common.mustNotCall());
   promises.push(assert.rejects(promise, {
     message: 'Expected instance of Promise to be returned ' +
-             'from the "promiseFn" function but got an instance of Map.',
+             'from the "promiseFn" function but got instance of Map.',
     code: 'ERR_INVALID_RETURN_VALUE',
     name: 'TypeError'
   }));

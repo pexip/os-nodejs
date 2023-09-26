@@ -19,19 +19,18 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include "cares_wrap.h"
 #include "async_wrap-inl.h"
-#include "base64-inl.h"
 #include "base_object-inl.h"
+#include "base64-inl.h"
+#include "cares_wrap.h"
 #include "env-inl.h"
 #include "memory_tracker-inl.h"
 #include "node.h"
 #include "node_errors.h"
-#include "node_external_reference.h"
 #include "req_wrap-inl.h"
 #include "util-inl.h"
-#include "uv.h"
 #include "v8.h"
+#include "uv.h"
 
 #include <cerrno>
 #include <cstring>
@@ -1429,8 +1428,7 @@ static void Query(const FunctionCallbackInfo<Value>& args) {
 
 
 void AfterGetAddrInfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
-  auto cleanup = OnScopeLeave([&]() { uv_freeaddrinfo(res); });
-  BaseObjectPtr<GetAddrInfoReqWrap> req_wrap{
+  std::unique_ptr<GetAddrInfoReqWrap> req_wrap {
       static_cast<GetAddrInfoReqWrap*>(req->data)};
   Environment* env = req_wrap->env();
 
@@ -1442,7 +1440,7 @@ void AfterGetAddrInfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
     Null(env->isolate())
   };
 
-  uint32_t n = 0;
+  uint64_t n = 0;
   const bool verbatim = req_wrap->verbatim();
 
   if (status == 0) {
@@ -1490,6 +1488,8 @@ void AfterGetAddrInfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
     argv[1] = results;
   }
 
+  uv_freeaddrinfo(res);
+
   TRACE_EVENT_NESTABLE_ASYNC_END2(
       TRACING_CATEGORY_NODE2(dns, native), "lookup", req_wrap.get(),
       "count", n, "verbatim", verbatim);
@@ -1503,7 +1503,7 @@ void AfterGetNameInfo(uv_getnameinfo_t* req,
                       int status,
                       const char* hostname,
                       const char* service) {
-  BaseObjectPtr<GetNameInfoReqWrap> req_wrap{
+  std::unique_ptr<GetNameInfoReqWrap> req_wrap {
       static_cast<GetNameInfoReqWrap*>(req->data)};
   Environment* env = req_wrap->env();
 
@@ -1533,18 +1533,28 @@ void AfterGetNameInfo(uv_getnameinfo_t* req,
   req_wrap->MakeCallback(env->oncomplete_string(), arraysize(argv), argv);
 }
 
+using ParseIPResult =
+    decltype(static_cast<ares_addr_port_node*>(nullptr)->addr);
+
+int ParseIP(const char* ip, ParseIPResult* result = nullptr) {
+  ParseIPResult tmp;
+  if (result == nullptr) result = &tmp;
+  if (0 == uv_inet_pton(AF_INET, ip, result)) return 4;
+  if (0 == uv_inet_pton(AF_INET6, ip, result)) return 6;
+  return 0;
+}
+
 void CanonicalizeIP(const FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = args.GetIsolate();
   node::Utf8Value ip(isolate, args[0]);
 
-  int af;
-  unsigned char result[sizeof(ares_addr_port_node::addr)];
-  if (uv_inet_pton(af = AF_INET, *ip, result) != 0 &&
-      uv_inet_pton(af = AF_INET6, *ip, result) != 0)
-    return;
+  ParseIPResult result;
+  const int rc = ParseIP(*ip, &result);
+  if (rc == 0) return;
 
   char canonical_ip[INET6_ADDRSTRLEN];
-  CHECK_EQ(0, uv_inet_ntop(af, result, canonical_ip, sizeof(canonical_ip)));
+  const int af = (rc == 4 ? AF_INET : AF_INET6);
+  CHECK_EQ(0, uv_inet_ntop(af, &result, canonical_ip, sizeof(canonical_ip)));
   Local<String> val = String::NewFromUtf8(isolate, canonical_ip)
       .ToLocalChecked();
   args.GetReturnValue().Set(val);
@@ -1691,7 +1701,7 @@ void SetServers(const FunctionCallbackInfo<Value>& args) {
 
   CHECK(args[0]->IsArray());
 
-  Local<Array> arr = args[0].As<Array>();
+  Local<Array> arr = Local<Array>::Cast(args[0]);
 
   uint32_t len = arr->Length();
 
@@ -1708,7 +1718,8 @@ void SetServers(const FunctionCallbackInfo<Value>& args) {
   for (uint32_t i = 0; i < len; i++) {
     CHECK(arr->Get(env->context(), i).ToLocalChecked()->IsArray());
 
-    Local<Array> elm = arr->Get(env->context(), i).ToLocalChecked().As<Array>();
+    Local<Array> elm =
+        Local<Array>::Cast(arr->Get(env->context(), i).ToLocalChecked());
 
     CHECK(elm->Get(env->context(),
                    0).ToLocalChecked()->Int32Value(env->context()).FromJust());
@@ -1877,13 +1888,12 @@ void Initialize(Local<Object> target,
                 Local<Context> context,
                 void* priv) {
   Environment* env = Environment::GetCurrent(context);
-  Isolate* isolate = env->isolate();
 
-  SetMethod(context, target, "getaddrinfo", GetAddrInfo);
-  SetMethod(context, target, "getnameinfo", GetNameInfo);
-  SetMethodNoSideEffect(context, target, "canonicalizeIP", CanonicalizeIP);
+  env->SetMethod(target, "getaddrinfo", GetAddrInfo);
+  env->SetMethod(target, "getnameinfo", GetNameInfo);
+  env->SetMethodNoSideEffect(target, "canonicalizeIP", CanonicalizeIP);
 
-  SetMethod(context, target, "strerror", StrError);
+  env->SetMethod(target, "strerror", StrError);
 
   target->Set(env->context(), FIXED_ONE_BYTE_STRING(env->isolate(), "AF_INET"),
               Integer::New(env->isolate(), AF_INET)).Check();
@@ -1905,77 +1915,47 @@ void Initialize(Local<Object> target,
   Local<FunctionTemplate> aiw =
       BaseObject::MakeLazilyInitializedJSTemplate(env);
   aiw->Inherit(AsyncWrap::GetConstructorTemplate(env));
-  SetConstructorFunction(context, target, "GetAddrInfoReqWrap", aiw);
+  env->SetConstructorFunction(target, "GetAddrInfoReqWrap", aiw);
 
   Local<FunctionTemplate> niw =
       BaseObject::MakeLazilyInitializedJSTemplate(env);
   niw->Inherit(AsyncWrap::GetConstructorTemplate(env));
-  SetConstructorFunction(context, target, "GetNameInfoReqWrap", niw);
+  env->SetConstructorFunction(target, "GetNameInfoReqWrap", niw);
 
   Local<FunctionTemplate> qrw =
       BaseObject::MakeLazilyInitializedJSTemplate(env);
   qrw->Inherit(AsyncWrap::GetConstructorTemplate(env));
-  SetConstructorFunction(context, target, "QueryReqWrap", qrw);
+  env->SetConstructorFunction(target, "QueryReqWrap", qrw);
 
   Local<FunctionTemplate> channel_wrap =
-      NewFunctionTemplate(isolate, ChannelWrap::New);
+      env->NewFunctionTemplate(ChannelWrap::New);
   channel_wrap->InstanceTemplate()->SetInternalFieldCount(
       ChannelWrap::kInternalFieldCount);
   channel_wrap->Inherit(AsyncWrap::GetConstructorTemplate(env));
 
-  SetProtoMethod(isolate, channel_wrap, "queryAny", Query<QueryAnyWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryA", Query<QueryAWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryAaaa", Query<QueryAaaaWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryCaa", Query<QueryCaaWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryCname", Query<QueryCnameWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryMx", Query<QueryMxWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryNs", Query<QueryNsWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryTxt", Query<QueryTxtWrap>);
-  SetProtoMethod(isolate, channel_wrap, "querySrv", Query<QuerySrvWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryPtr", Query<QueryPtrWrap>);
-  SetProtoMethod(isolate, channel_wrap, "queryNaptr", Query<QueryNaptrWrap>);
-  SetProtoMethod(isolate, channel_wrap, "querySoa", Query<QuerySoaWrap>);
-  SetProtoMethod(
-      isolate, channel_wrap, "getHostByAddr", Query<GetHostByAddrWrap>);
+  env->SetProtoMethod(channel_wrap, "queryAny", Query<QueryAnyWrap>);
+  env->SetProtoMethod(channel_wrap, "queryA", Query<QueryAWrap>);
+  env->SetProtoMethod(channel_wrap, "queryAaaa", Query<QueryAaaaWrap>);
+  env->SetProtoMethod(channel_wrap, "queryCaa", Query<QueryCaaWrap>);
+  env->SetProtoMethod(channel_wrap, "queryCname", Query<QueryCnameWrap>);
+  env->SetProtoMethod(channel_wrap, "queryMx", Query<QueryMxWrap>);
+  env->SetProtoMethod(channel_wrap, "queryNs", Query<QueryNsWrap>);
+  env->SetProtoMethod(channel_wrap, "queryTxt", Query<QueryTxtWrap>);
+  env->SetProtoMethod(channel_wrap, "querySrv", Query<QuerySrvWrap>);
+  env->SetProtoMethod(channel_wrap, "queryPtr", Query<QueryPtrWrap>);
+  env->SetProtoMethod(channel_wrap, "queryNaptr", Query<QueryNaptrWrap>);
+  env->SetProtoMethod(channel_wrap, "querySoa", Query<QuerySoaWrap>);
+  env->SetProtoMethod(channel_wrap, "getHostByAddr", Query<GetHostByAddrWrap>);
 
-  SetProtoMethodNoSideEffect(isolate, channel_wrap, "getServers", GetServers);
-  SetProtoMethod(isolate, channel_wrap, "setServers", SetServers);
-  SetProtoMethod(isolate, channel_wrap, "setLocalAddress", SetLocalAddress);
-  SetProtoMethod(isolate, channel_wrap, "cancel", Cancel);
+  env->SetProtoMethodNoSideEffect(channel_wrap, "getServers", GetServers);
+  env->SetProtoMethod(channel_wrap, "setServers", SetServers);
+  env->SetProtoMethod(channel_wrap, "setLocalAddress", SetLocalAddress);
+  env->SetProtoMethod(channel_wrap, "cancel", Cancel);
 
-  SetConstructorFunction(context, target, "ChannelWrap", channel_wrap);
-}
-
-void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
-  registry->Register(GetAddrInfo);
-  registry->Register(GetNameInfo);
-  registry->Register(CanonicalizeIP);
-  registry->Register(StrError);
-  registry->Register(ChannelWrap::New);
-
-  registry->Register(Query<QueryAnyWrap>);
-  registry->Register(Query<QueryAWrap>);
-  registry->Register(Query<QueryAaaaWrap>);
-  registry->Register(Query<QueryCaaWrap>);
-  registry->Register(Query<QueryCnameWrap>);
-  registry->Register(Query<QueryMxWrap>);
-  registry->Register(Query<QueryNsWrap>);
-  registry->Register(Query<QueryTxtWrap>);
-  registry->Register(Query<QuerySrvWrap>);
-  registry->Register(Query<QueryPtrWrap>);
-  registry->Register(Query<QueryNaptrWrap>);
-  registry->Register(Query<QuerySoaWrap>);
-  registry->Register(Query<GetHostByAddrWrap>);
-
-  registry->Register(GetServers);
-  registry->Register(SetServers);
-  registry->Register(SetLocalAddress);
-  registry->Register(Cancel);
+  env->SetConstructorFunction(target, "ChannelWrap", channel_wrap);
 }
 
 }  // namespace cares_wrap
 }  // namespace node
 
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(cares_wrap, node::cares_wrap::Initialize)
-NODE_MODULE_EXTERNAL_REFERENCE(cares_wrap,
-                               node::cares_wrap::RegisterExternalReferences)

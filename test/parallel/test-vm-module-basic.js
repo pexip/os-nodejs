@@ -8,8 +8,7 @@ const {
   Module,
   SourceTextModule,
   SyntheticModule,
-  createContext,
-  compileFunction,
+  createContext
 } = require('vm');
 const util = require('util');
 
@@ -139,7 +138,7 @@ const util = require('util');
 // https://github.com/nodejs/node/issues/32806
 {
   assert.throws(() => new SyntheticModule(['x', 'x'], () => {}, {}), {
-    message: 'The property \'exportNames.x\' is duplicated. Received \'x\'',
+    message: 'The argument \'exportNames.x\' is duplicated. Received \'x\'',
     name: 'TypeError',
   });
 }
@@ -159,21 +158,5 @@ const util = require('util');
     message: 'The "options" argument must be of type object.' +
       ' Received null',
     name: 'TypeError'
-  });
-}
-
-// Test compileFunction importModuleDynamically
-{
-  const module = new SyntheticModule([], () => {});
-  module.link(() => {});
-  const f = compileFunction('return import("x")', [], {
-    importModuleDynamically(specifier, referrer) {
-      assert.strictEqual(specifier, 'x');
-      assert.strictEqual(referrer, f);
-      return module;
-    },
-  });
-  f().then((ns) => {
-    assert.strictEqual(ns, module.namespace);
   });
 }

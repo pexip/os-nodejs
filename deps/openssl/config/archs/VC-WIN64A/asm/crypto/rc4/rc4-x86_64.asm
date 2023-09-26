@@ -21,7 +21,6 @@ $L$SEH_begin_RC4:
 
 
 
-DB	243,15,30,250
 	or	rsi,rsi
 	jne	NEAR $L$entry
 	mov	rdi,QWORD[8+rsp]	;WIN64 epilogue
@@ -561,7 +560,6 @@ $L$SEH_begin_RC4_set_key:
 
 
 
-DB	243,15,30,250
 	lea	rdi,[8+rdi]
 	lea	rdx,[rsi*1+rdx]
 	neg	rsi
@@ -638,7 +636,6 @@ global	RC4_options
 ALIGN	16
 RC4_options:
 
-DB	243,15,30,250
 	lea	rax,[$L$opts]
 	mov	edx,DWORD[OPENSSL_ia32cap_P]
 	bt	edx,20

@@ -21,10 +21,10 @@
 
 #include "async_wrap-inl.h"
 #include "env-inl.h"
-#include "handle_wrap.h"
 #include "node.h"
-#include "node_external_reference.h"
+#include "handle_wrap.h"
 #include "string_bytes.h"
+
 
 namespace node {
 
@@ -35,7 +35,6 @@ using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::HandleScope;
 using v8::Integer;
-using v8::Isolate;
 using v8::Local;
 using v8::MaybeLocal;
 using v8::Object;
@@ -53,7 +52,6 @@ class FSEventWrap: public HandleWrap {
                          Local<Value> unused,
                          Local<Context> context,
                          void* priv);
-  static void RegisterExternalReferences(ExternalReferenceRegistry* registry);
   static void New(const FunctionCallbackInfo<Value>& args);
   static void Start(const FunctionCallbackInfo<Value>& args);
   static void GetInitialized(const FunctionCallbackInfo<Value>& args);
@@ -96,14 +94,13 @@ void FSEventWrap::Initialize(Local<Object> target,
                              Local<Context> context,
                              void* priv) {
   Environment* env = Environment::GetCurrent(context);
-  Isolate* isolate = env->isolate();
 
-  Local<FunctionTemplate> t = NewFunctionTemplate(isolate, New);
+  Local<FunctionTemplate> t = env->NewFunctionTemplate(New);
   t->InstanceTemplate()->SetInternalFieldCount(
       FSEventWrap::kInternalFieldCount);
 
   t->Inherit(HandleWrap::GetConstructorTemplate(env));
-  SetProtoMethod(isolate, t, "start", Start);
+  env->SetProtoMethod(t, "start", Start);
 
   Local<FunctionTemplate> get_initialized_templ =
       FunctionTemplate::New(env->isolate(),
@@ -117,15 +114,9 @@ void FSEventWrap::Initialize(Local<Object> target,
       Local<FunctionTemplate>(),
       static_cast<PropertyAttribute>(ReadOnly | DontDelete | DontEnum));
 
-  SetConstructorFunction(context, target, "FSEvent", t);
+  env->SetConstructorFunction(target, "FSEvent", t);
 }
 
-void FSEventWrap::RegisterExternalReferences(
-    ExternalReferenceRegistry* registry) {
-  registry->Register(New);
-  registry->Register(Start);
-  registry->Register(GetInitialized);
-}
 
 void FSEventWrap::New(const FunctionCallbackInfo<Value>& args) {
   CHECK(args.IsConstructCall());
@@ -238,5 +229,3 @@ void FSEventWrap::OnEvent(uv_fs_event_t* handle, const char* filename,
 }  // namespace node
 
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(fs_event_wrap, node::FSEventWrap::Initialize)
-NODE_MODULE_EXTERNAL_REFERENCE(fs_event_wrap,
-                               node::FSEventWrap::RegisterExternalReferences)

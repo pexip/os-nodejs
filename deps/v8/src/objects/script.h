@@ -7,12 +7,10 @@
 
 #include <memory>
 
-#include "include/v8-script.h"
 #include "src/base/export-template.h"
 #include "src/objects/fixed-array.h"
 #include "src/objects/objects.h"
 #include "src/objects/struct.h"
-#include "torque-generated/bit-fields.h"
 
 // Has to be the last include (doesn't have include guards):
 #include "src/objects/object-macros.h"
@@ -21,17 +19,8 @@ namespace v8 {
 
 namespace internal {
 
-class FunctionLiteral;
-class StructBodyDescriptor;
-
-namespace wasm {
-class NativeModule;
-}  // namespace wasm
-
-#include "torque-generated/src/objects/script-tq.inc"
-
 // Script describes a script which has been added to the VM.
-class Script : public TorqueGeneratedScript<Script, Struct> {
+class Script : public Struct {
  public:
   // Script ID used for temporary scripts, which shouldn't be added to the
   // script list.
@@ -43,11 +32,8 @@ class Script : public TorqueGeneratedScript<Script, Struct> {
     TYPE_NATIVE = 0,
     TYPE_EXTENSION = 1,
     TYPE_NORMAL = 2,
-#if V8_ENABLE_WEBASSEMBLY
     TYPE_WASM = 3,
-#endif  // V8_ENABLE_WEBASSEMBLY
-    TYPE_INSPECTOR = 4,
-    TYPE_WEB_SNAPSHOT = 5
+    TYPE_INSPECTOR = 4
   };
 
   // Script compilation types.
@@ -59,10 +45,32 @@ class Script : public TorqueGeneratedScript<Script, Struct> {
     COMPILATION_STATE_COMPILED = 1
   };
 
+  // [source]: the script source.
+  DECL_ACCESSORS(source, Object)
+
+  // [name]: the script name.
+  DECL_ACCESSORS(name, Object)
+
+  // [id]: the script id.
+  DECL_INT_ACCESSORS(id)
+
+  // [line_offset]: script line offset in resource from where it was extracted.
+  DECL_INT_ACCESSORS(line_offset)
+
+  // [column_offset]: script column offset in resource from where it was
+  // extracted.
+  DECL_INT_ACCESSORS(column_offset)
+
+  // [context_data]: context data for the context this script was compiled in.
+  DECL_ACCESSORS(context_data, Object)
+
   // [type]: the script type.
   DECL_INT_ACCESSORS(type)
 
-  DECL_ACCESSORS(eval_from_shared_or_wrapped_arguments_or_sfi_table, Object)
+  // [line_ends]: FixedArray of line ends positions.
+  DECL_ACCESSORS(line_ends, Object)
+
+  DECL_ACCESSORS(eval_from_shared_or_wrapped_arguments, Object)
 
   // [eval_from_shared]: for eval scripts the shared function info for the
   // function from which eval was called.
@@ -70,12 +78,6 @@ class Script : public TorqueGeneratedScript<Script, Struct> {
 
   // [wrapped_arguments]: for the list of arguments in a wrapped script.
   DECL_ACCESSORS(wrapped_arguments, FixedArray)
-
-  // For web snapshots: a hash table mapping function positions to indices in
-  // shared_function_infos.
-  // TODO(v8:11525): Replace with a more efficient data structure mapping
-  // function positions to weak pointers to SharedFunctionInfos directly.
-  DECL_ACCESSORS(shared_function_info_table, ObjectHashTable)
 
   // Whether the script is implicitly wrapped in a function.
   inline bool is_wrapped() const;
@@ -93,9 +95,15 @@ class Script : public TorqueGeneratedScript<Script, Struct> {
   // function infos created from this script.
   DECL_ACCESSORS(shared_function_infos, WeakFixedArray)
 
-  inline int shared_function_info_count() const;
+  // [flags]: Holds an exciting bitfield.
+  DECL_INT_ACCESSORS(flags)
 
-#if V8_ENABLE_WEBASSEMBLY
+  // [source_url]: sourceURL from magic comment
+  DECL_ACCESSORS(source_url, Object)
+
+  // [source_mapping_url]: sourceMappingURL magic comment
+  DECL_ACCESSORS(source_mapping_url, Object)
+
   // [wasm_breakpoint_infos]: the list of {BreakPointInfo} objects describing
   // all WebAssembly breakpoints for modules/instances managed via this script.
   // This must only be called if the type of this script is TYPE_WASM.
@@ -112,16 +120,8 @@ class Script : public TorqueGeneratedScript<Script, Struct> {
   // This must only be called if the type of this script is TYPE_WASM.
   DECL_ACCESSORS(wasm_weak_instance_list, WeakArrayList)
 
-  // [break_on_entry] (wasm only): whether an instrumentation breakpoint is set
-  // for this script; this information will be transferred to existing and
-  // future instances to make sure that we stop before executing any code in
-  // this wasm module.
-  inline bool break_on_entry() const;
-  inline void set_break_on_entry(bool value);
-
-  // Check if the script contains any Asm modules.
-  bool ContainsAsmModule();
-#endif  // V8_ENABLE_WEBASSEMBLY
+  // [host_defined_options]: Options defined by the embedder.
+  DECL_ACCESSORS(host_defined_options, FixedArray)
 
   // [compilation_type]: how the the script was compiled. Encoded in the
   // 'flags' field.
@@ -144,27 +144,24 @@ class Script : public TorqueGeneratedScript<Script, Struct> {
   inline v8::ScriptOriginOptions origin_options();
   inline void set_origin_options(ScriptOriginOptions origin_options);
 
+  DECL_CAST(Script)
+
   // If script source is an external string, check that the underlying
   // resource is accessible. Otherwise, always return true.
   inline bool HasValidSource();
-
-  // If the script has a non-empty sourceURL comment.
-  inline bool HasSourceURLComment() const;
-
-  // Streaming compilation only attaches the source to the Script upon
-  // finalization. This predicate returns true, if this script may still be
-  // unfinalized.
-  inline bool IsMaybeUnfinalized(Isolate* isolate) const;
 
   Object GetNameOrSourceURL();
 
   // Retrieve source position from where eval was called.
   static int GetEvalPosition(Isolate* isolate, Handle<Script> script);
 
+  // Check if the script contains any Asm modules.
+  bool ContainsAsmModule();
+
   // Init line_ends array with source code positions of line ends.
-  template <typename IsolateT>
+  template <typename LocalIsolate>
   EXPORT_TEMPLATE_DECLARE(V8_EXPORT_PRIVATE)
-  static void InitLineEnds(IsolateT* isolate, Handle<Script> script);
+  static void InitLineEnds(LocalIsolate* isolate, Handle<Script> script);
 
   // Carries information about a source position.
   struct PositionInfo {
@@ -191,13 +188,6 @@ class Script : public TorqueGeneratedScript<Script, Struct> {
   V8_EXPORT_PRIVATE bool GetPositionInfo(int position, PositionInfo* info,
                                          OffsetFlag offset_flag) const;
 
-  // Tells whether this script should be subject to debugging, e.g. for
-  // - scope inspection
-  // - internal break points
-  // - coverage and type profile
-  // - error stack trace
-  bool IsSubjectToDebugging() const;
-
   bool IsUserJavaScript() const;
 
   // Wrappers for GetPositionInfo
@@ -208,43 +198,40 @@ class Script : public TorqueGeneratedScript<Script, Struct> {
   int GetLineNumber(int code_pos) const;
 
   // Look through the list of existing shared function infos to find one
-  // that matches the function literal. Return empty handle if not found.
-  template <typename IsolateT>
-  static MaybeHandle<SharedFunctionInfo> FindSharedFunctionInfo(
-      Handle<Script> script, IsolateT* isolate,
-      FunctionLiteral* function_literal);
-
-  static MaybeHandle<SharedFunctionInfo> FindWebSnapshotSharedFunctionInfo(
-      Handle<Script> script, Isolate* isolate,
-      FunctionLiteral* function_literal);
-
-  static MaybeHandle<SharedFunctionInfo> FindWebSnapshotSharedFunctionInfo(
-      Handle<Script> script, LocalIsolate* isolate,
-      FunctionLiteral* function_literal);
+  // that matches the function literal.  Return empty handle if not found.
+  template <typename LocalIsolate>
+  MaybeHandle<SharedFunctionInfo> FindSharedFunctionInfo(
+      LocalIsolate* isolate, int function_literal_id);
 
   // Iterate over all script objects on the heap.
   class V8_EXPORT_PRIVATE Iterator {
    public:
     explicit Iterator(Isolate* isolate);
-    Iterator(const Iterator&) = delete;
-    Iterator& operator=(const Iterator&) = delete;
     Script Next();
 
    private:
     WeakArrayList::Iterator iterator_;
+    DISALLOW_COPY_AND_ASSIGN(Iterator);
   };
 
   // Dispatched behavior.
   DECL_PRINTER(Script)
   DECL_VERIFIER(Script)
 
-  using BodyDescriptor = StructBodyDescriptor;
+  DEFINE_FIELD_OFFSET_CONSTANTS(HeapObject::kHeaderSize,
+                                TORQUE_GENERATED_SCRIPT_FIELDS)
 
  private:
   // Bit positions in the flags field.
-  DEFINE_TORQUE_GENERATED_SCRIPT_FLAGS()
+  static const int kCompilationTypeBit = 0;
+  static const int kCompilationStateBit = 1;
+  static const int kREPLModeBit = 2;
+  static const int kOriginOptionsShift = 3;
+  static const int kOriginOptionsSize = 4;
+  static const int kOriginOptionsMask = ((1 << kOriginOptionsSize) - 1)
+                                        << kOriginOptionsShift;
 
-  TQ_OBJECT_CONSTRUCTORS(Script)
+  OBJECT_CONSTRUCTORS(Script, Struct);
 };
 
 }  // namespace internal

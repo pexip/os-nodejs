@@ -3,6 +3,7 @@
 
 #if defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
 
+#include "allocated_buffer-inl.h"
 #include "async_wrap-inl.h"
 #include "base_object-inl.h"
 #include "node.h"
@@ -149,22 +150,20 @@ int StreamBase::Shutdown(v8::Local<v8::Object> req_wrap_obj) {
 
   const char* msg = Error();
   if (msg != nullptr) {
-    if (req_wrap_obj->Set(env->context(),
-                          env->error_string(),
-                          OneByteString(env->isolate(), msg)).IsNothing()) {
-      return UV_EBUSY;
-    }
+    req_wrap_obj->Set(
+        env->context(),
+        env->error_string(), OneByteString(env->isolate(), msg)).Check();
     ClearError();
   }
 
   return err;
 }
 
-StreamWriteResult StreamBase::Write(uv_buf_t* bufs,
-                                    size_t count,
-                                    uv_stream_t* send_handle,
-                                    v8::Local<v8::Object> req_wrap_obj,
-                                    bool skip_try_write) {
+StreamWriteResult StreamBase::Write(
+    uv_buf_t* bufs,
+    size_t count,
+    uv_stream_t* send_handle,
+    v8::Local<v8::Object> req_wrap_obj) {
   Environment* env = stream_env();
   int err;
 
@@ -173,7 +172,7 @@ StreamWriteResult StreamBase::Write(uv_buf_t* bufs,
     total_bytes += bufs[i].len;
   bytes_written_ += total_bytes;
 
-  if (send_handle == nullptr && !skip_try_write) {
+  if (send_handle == nullptr) {
     err = DoTryWrite(&bufs, &count);
     if (err != 0 || count == 0) {
       return StreamWriteResult { false, err, nullptr, total_bytes, {} };
@@ -205,11 +204,9 @@ StreamWriteResult StreamBase::Write(uv_buf_t* bufs,
 
   const char* msg = Error();
   if (msg != nullptr) {
-    if (req_wrap_obj->Set(env->context(),
-                          env->error_string(),
-                          OneByteString(env->isolate(), msg)).IsNothing()) {
-      return StreamWriteResult { false, UV_EBUSY, nullptr, 0, {} };
-    }
+    req_wrap_obj->Set(env->context(),
+                      env->error_string(),
+                      OneByteString(env->isolate(), msg)).Check();
     ClearError();
   }
 
@@ -273,9 +270,9 @@ ShutdownWrap* ShutdownWrap::FromObject(
   return FromObject(base_obj->object());
 }
 
-void WriteWrap::SetBackingStore(std::unique_ptr<v8::BackingStore> bs) {
-  CHECK(!backing_store_);
-  backing_store_ = std::move(bs);
+void WriteWrap::SetAllocatedStorage(AllocatedBuffer&& storage) {
+  CHECK_NULL(storage_.data());
+  storage_ = std::move(storage);
 }
 
 void StreamReq::Done(int status, const char* error_str) {
@@ -283,12 +280,10 @@ void StreamReq::Done(int status, const char* error_str) {
   Environment* env = async_wrap->env();
   if (error_str != nullptr) {
     v8::HandleScope handle_scope(env->isolate());
-    if (async_wrap->object()->Set(
-            env->context(),
-            env->error_string(),
-            OneByteString(env->isolate(), error_str)).IsNothing()) {
-      return;
-    }
+    async_wrap->object()->Set(env->context(),
+                              env->error_string(),
+                              OneByteString(env->isolate(), error_str))
+                              .Check();
   }
 
   OnDone(status);

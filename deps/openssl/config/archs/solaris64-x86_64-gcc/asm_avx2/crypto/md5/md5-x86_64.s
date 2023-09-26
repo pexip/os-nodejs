@@ -1,9 +1,9 @@
 .text	
 .align	16
 
-.globl	ossl_md5_block_asm_data_order
-.type	ossl_md5_block_asm_data_order,@function
-ossl_md5_block_asm_data_order:
+.globl	md5_block_asm_data_order
+.type	md5_block_asm_data_order,@function
+md5_block_asm_data_order:
 .cfi_startproc	
 	pushq	%rbp
 .cfi_adjust_cfa_offset	8
@@ -680,25 +680,4 @@ ossl_md5_block_asm_data_order:
 .Lepilogue:
 	.byte	0xf3,0xc3
 .cfi_endproc	
-.size	ossl_md5_block_asm_data_order,.-ossl_md5_block_asm_data_order
-	.section ".note.gnu.property", "a"
-	.p2align 3
-	.long 1f - 0f
-	.long 4f - 1f
-	.long 5
-0:
-	# "GNU" encoded with .byte, since .asciz isn't supported
-	# on Solaris.
-	.byte 0x47
-	.byte 0x4e
-	.byte 0x55
-	.byte 0
-1:
-	.p2align 3
-	.long 0xc0000002
-	.long 3f - 2f
-2:
-	.long 3
-3:
-	.p2align 3
-4:
+.size	md5_block_asm_data_order,.-md5_block_asm_data_order

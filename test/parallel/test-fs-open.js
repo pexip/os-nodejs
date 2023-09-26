@@ -67,7 +67,7 @@ for (const extra of [[], ['r'], ['r', 0], ['r', 0, 'bad callback']]) {
   assert.throws(
     () => fs.open(__filename, ...extra),
     {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_CALLBACK',
       name: 'TypeError'
     }
   );
@@ -102,19 +102,22 @@ for (const extra of [[], ['r'], ['r', 0], ['r', 0, 'bad callback']]) {
   assert.throws(
     () => fs.open(__filename, 'r', mode, common.mustNotCall()),
     {
-      code: 'ERR_INVALID_ARG_TYPE'
+      message: /'mode' must be a 32-bit/,
+      code: 'ERR_INVALID_ARG_VALUE'
     }
   );
   assert.throws(
     () => fs.openSync(__filename, 'r', mode, common.mustNotCall()),
     {
-      code: 'ERR_INVALID_ARG_TYPE'
+      message: /'mode' must be a 32-bit/,
+      code: 'ERR_INVALID_ARG_VALUE'
     }
   );
   assert.rejects(
     fs.promises.open(__filename, 'r', mode),
     {
-      code: 'ERR_INVALID_ARG_TYPE'
+      message: /'mode' must be a 32-bit/,
+      code: 'ERR_INVALID_ARG_VALUE'
     }
   );
 });

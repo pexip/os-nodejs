@@ -93,7 +93,8 @@ const char* NameForNativeContextIndex(uint32_t idx) {
 
 // static
 std::ostream& BytecodeDecoder::Decode(std::ostream& os,
-                                      const uint8_t* bytecode_start) {
+                                      const uint8_t* bytecode_start,
+                                      int parameter_count) {
   Bytecode bytecode = Bytecodes::FromByte(bytecode_start[0]);
   int prefix_offset = 0;
   OperandScale operand_scale = OperandScale::kSingle;
@@ -168,22 +169,22 @@ std::ostream& BytecodeDecoder::Decode(std::ostream& os,
       case interpreter::OperandType::kRegOut: {
         Register reg =
             DecodeRegisterOperand(operand_start, op_type, operand_scale);
-        os << reg.ToString();
+        os << reg.ToString(parameter_count);
         break;
       }
       case interpreter::OperandType::kRegOutTriple: {
         RegisterList reg_list =
             DecodeRegisterListOperand(operand_start, 3, op_type, operand_scale);
-        os << reg_list.first_register().ToString() << "-"
-           << reg_list.last_register().ToString();
+        os << reg_list.first_register().ToString(parameter_count) << "-"
+           << reg_list.last_register().ToString(parameter_count);
         break;
       }
       case interpreter::OperandType::kRegOutPair:
       case interpreter::OperandType::kRegPair: {
         RegisterList reg_list =
             DecodeRegisterListOperand(operand_start, 2, op_type, operand_scale);
-        os << reg_list.first_register().ToString() << "-"
-           << reg_list.last_register().ToString();
+        os << reg_list.first_register().ToString(parameter_count) << "-"
+           << reg_list.last_register().ToString(parameter_count);
         break;
       }
       case interpreter::OperandType::kRegOutList:
@@ -199,14 +200,15 @@ std::ostream& BytecodeDecoder::Decode(std::ostream& os,
             reg_count_operand, OperandType::kRegCount, operand_scale);
         RegisterList reg_list = DecodeRegisterListOperand(
             operand_start, count, op_type, operand_scale);
-        os << reg_list.first_register().ToString() << "-"
-           << reg_list.last_register().ToString();
+        os << reg_list.first_register().ToString(parameter_count) << "-"
+           << reg_list.last_register().ToString(parameter_count);
         i++;  // Skip kRegCount.
         break;
       }
       case interpreter::OperandType::kNone:
       case interpreter::OperandType::kRegCount:  // Dealt with in kRegList.
         UNREACHABLE();
+        break;
     }
     if (i != number_of_operands - 1) {
       os << ", ";

@@ -172,7 +172,7 @@ exit:
 
 
 uvwasi_errno_t uvwasi_fd_table_init(uvwasi_t* uvwasi,
-                                    const uvwasi_options_t* options) {
+                                    uvwasi_options_t* options) {
   struct uvwasi_fd_table_t* table;
   uvwasi_errno_t err;
   int r;

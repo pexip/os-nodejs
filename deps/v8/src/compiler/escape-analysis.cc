@@ -5,12 +5,10 @@
 #include "src/compiler/escape-analysis.h"
 
 #include "src/codegen/tick-counter.h"
-#include "src/compiler/frame-states.h"
 #include "src/compiler/linkage.h"
 #include "src/compiler/node-matchers.h"
 #include "src/compiler/operator-properties.h"
 #include "src/compiler/simplified-operator.h"
-#include "src/compiler/state-values-utils.h"
 #include "src/handles/handles-inl.h"
 #include "src/init/bootstrapper.h"
 #include "src/objects/map-inl.h"
@@ -78,8 +76,6 @@ class ReduceScope {
   explicit ReduceScope(Node* node, Reduction* reduction)
       : current_node_(node), reduction_(reduction) {}
 
-  void SetValueChanged() { reduction()->set_value_changed(); }
-
  protected:
   Node* current_node() const { return current_node_; }
   Reduction* reduction() { return reduction_; }
@@ -123,21 +119,18 @@ class VariableTracker {
 
  public:
   VariableTracker(JSGraph* graph, EffectGraphReducer* reducer, Zone* zone);
-  VariableTracker(const VariableTracker&) = delete;
-  VariableTracker& operator=(const VariableTracker&) = delete;
-
   Variable NewVariable() { return Variable(next_variable_++); }
   Node* Get(Variable var, Node* effect) { return table_.Get(effect).Get(var); }
   Zone* zone() { return zone_; }
 
-  class V8_NODISCARD Scope : public ReduceScope {
+  class Scope : public ReduceScope {
    public:
     Scope(VariableTracker* tracker, Node* node, Reduction* reduction);
     ~Scope();
     Maybe<Node*> Get(Variable var) {
       Node* node = current_state_.Get(var);
       if (node && node->opcode() == IrOpcode::kDead) {
-        // TODO(turbofan): We use {Dead} as a sentinel for uninitialized memory.
+        // TODO(tebbi): We use {Dead} as a sentinel for uninitialized memory.
         // Reading uninitialized memory can only happen in unreachable code. In
         // this case, we have to mark the object as escaping to avoid dead nodes
         // in the graph. This is a workaround that should be removed once we can
@@ -162,6 +155,8 @@ class VariableTracker {
   EffectGraphReducer* reducer_;
   int next_variable_ = 0;
   TickCounter* const tick_counter_;
+
+  DISALLOW_COPY_AND_ASSIGN(VariableTracker);
 };
 
 // Encapsulates the current state of the escape analysis reducer to preserve
@@ -175,10 +170,8 @@ class EscapeAnalysisTracker : public ZoneObject {
         variable_states_(jsgraph, reducer, zone),
         jsgraph_(jsgraph),
         zone_(zone) {}
-  EscapeAnalysisTracker(const EscapeAnalysisTracker&) = delete;
-  EscapeAnalysisTracker& operator=(const EscapeAnalysisTracker&) = delete;
 
-  class V8_NODISCARD Scope : public VariableTracker::Scope {
+  class Scope : public VariableTracker::Scope {
    public:
     Scope(EffectGraphReducer* reducer, EscapeAnalysisTracker* tracker,
           Node* node, Reduction* reduction)
@@ -228,11 +221,6 @@ class EscapeAnalysisTracker : public ZoneObject {
       return tracker_->ResolveReplacement(
           NodeProperties::GetContextInput(current_node()));
     }
-    // Accessing the current node is fine for `FrameState nodes.
-    Node* CurrentNode() {
-      DCHECK_EQ(current_node()->opcode(), IrOpcode::kFrameState);
-      return current_node();
-    }
 
     void SetReplacement(Node* replacement) {
       replacement_ = replacement;
@@ -278,8 +266,8 @@ class EscapeAnalysisTracker : public ZoneObject {
 
   VirtualObject* NewVirtualObject(int size) {
     if (next_object_id_ >= kMaxTrackedObjects) return nullptr;
-    return zone_->New<VirtualObject>(&variable_states_, next_object_id_++,
-                                     size);
+    return new (zone_)
+        VirtualObject(&variable_states_, next_object_id_++, size);
   }
 
   SparseSidetable<VirtualObject*> virtual_objects_;
@@ -288,6 +276,8 @@ class EscapeAnalysisTracker : public ZoneObject {
   VirtualObject::Id next_object_id_ = 0;
   JSGraph* const jsgraph_;
   Zone* const zone_;
+
+  DISALLOW_COPY_AND_ASSIGN(EscapeAnalysisTracker);
 };
 
 EffectGraphReducer::EffectGraphReducer(
@@ -307,7 +297,7 @@ void EffectGraphReducer::ReduceFrom(Node* node) {
   DCHECK(stack_.empty());
   stack_.push({node, 0});
   while (!stack_.empty()) {
-    tick_counter_->TickAndMaybeEnterSafepoint();
+    tick_counter_->DoTick();
     Node* current = stack_.top().node;
     int& input_index = stack_.top().input_index;
     if (input_index < current->InputCount()) {
@@ -422,7 +412,7 @@ VariableTracker::State VariableTracker::MergeInputs(Node* effect_phi) {
   State first_input = table_.Get(NodeProperties::GetEffectInput(effect_phi, 0));
   State result = first_input;
   for (std::pair<Variable, Node*> var_value : first_input) {
-    tick_counter_->TickAndMaybeEnterSafepoint();
+    tick_counter_->DoTick();
     if (Node* value = var_value.second) {
       Variable var = var_value.first;
       TRACE("var %i:\n", var.id_);
@@ -488,8 +478,8 @@ VariableTracker::State VariableTracker::MergeInputs(Node* effect_phi) {
             Node* phi = graph_->graph()->NewNode(
                 graph_->common()->Phi(MachineRepresentation::kTagged, arity),
                 arity + 1, &buffer_.front());
-            // TODO(turbofan): Computing precise types here is tricky, because
-            // of the necessary revisitations. If we really need this, we should
+            // TODO(tebbi): Computing precise types here is tricky, because of
+            // the necessary revisitations. If we really need this, we should
             // probably do it afterwards.
             NodeProperties::SetType(phi, Type::Any());
             reducer_->AddRoot(phi);
@@ -519,15 +509,12 @@ int OffsetOfFieldAccess(const Operator* op) {
   return access.offset;
 }
 
-Maybe<int> OffsetOfElementAt(ElementAccess const& access, int index) {
-  MachineRepresentation representation = access.machine_type.representation();
-  // Double elements accesses are not yet supported. See chromium:1237821.
-  if (representation == MachineRepresentation::kFloat64) return Nothing<int>();
-
+int OffsetOfElementAt(ElementAccess const& access, int index) {
   DCHECK_GE(index, 0);
-  DCHECK_GE(ElementSizeLog2Of(representation), kTaggedSizeLog2);
-  return Just(access.header_size +
-              (index << ElementSizeLog2Of(representation)));
+  DCHECK_GE(ElementSizeLog2Of(access.machine_type.representation()),
+            kTaggedSizeLog2);
+  return access.header_size +
+         (index << ElementSizeLog2Of(access.machine_type.representation()));
 }
 
 Maybe<int> OffsetOfElementsAccess(const Operator* op, Node* index_node) {
@@ -539,7 +526,7 @@ Maybe<int> OffsetOfElementsAccess(const Operator* op, Node* index_node) {
   double min = index_type.Min();
   int index = static_cast<int>(min);
   if (index < 0 || index != min || index != max) return Nothing<int>();
-  return OffsetOfElementAt(ElementAccessOf(op), index);
+  return Just(OffsetOfElementAt(ElementAccessOf(op), index));
 }
 
 Node* LowerCompareMapsWithoutLoad(Node* checked_map,
@@ -572,9 +559,9 @@ void ReduceNode(const Operator* op, EscapeAnalysisTracker::Scope* current,
   switch (op->opcode()) {
     case IrOpcode::kAllocate: {
       NumberMatcher size(current->ValueInput(0));
-      if (!size.HasResolvedValue()) break;
-      int size_int = static_cast<int>(size.ResolvedValue());
-      if (size_int != size.ResolvedValue()) break;
+      if (!size.HasValue()) break;
+      int size_int = static_cast<int>(size.Value());
+      if (size_int != size.Value()) break;
       if (const VirtualObject* vobject = current->InitVirtualObject(size_int)) {
         // Initialize with dead nodes as a sentinel for uninitialized memory.
         for (Variable field : *vobject) {
@@ -723,7 +710,7 @@ void ReduceNode(const Operator* op, EscapeAnalysisTracker::Scope* current,
       } else if (right_object && !right_object->HasEscaped()) {
         replacement = jsgraph->FalseConstant();
       }
-      // TODO(turbofan) This is a workaround for uninhabited types. If we
+      // TODO(tebbi) This is a workaround for uninhabited types. If we
       // replaced a value of uninhabited type with a constant, we would
       // widen the type of the node. This could produce inconsistent
       // types (which might confuse representation selection). We get
@@ -808,27 +795,9 @@ void ReduceNode(const Operator* op, EscapeAnalysisTracker::Scope* current,
       break;
     }
     case IrOpcode::kStateValues:
-      // We visit StateValue nodes through their correpsonding FrameState node,
-      // so we need to make sure we revisit the FrameState.
-      current->SetValueChanged();
+    case IrOpcode::kFrameState:
+      // These uses are always safe.
       break;
-    case IrOpcode::kFrameState: {
-      // We mark the receiver as escaping due to the non-standard `.getThis`
-      // API.
-      FrameState frame_state{current->CurrentNode()};
-      if (frame_state.frame_state_info().type() !=
-          FrameStateType::kUnoptimizedFunction)
-        break;
-      StateValuesAccess::iterator it =
-          StateValuesAccess(frame_state.parameters()).begin();
-      if (!it.done()) {
-        if (Node* receiver = it.node()) {
-          current->SetEscaped(receiver);
-        }
-        current->SetEscaped(frame_state.function());
-      }
-      break;
-    }
     default: {
       // For unknown nodes, treat all value inputs as escaping.
       int value_input_count = op->ValueInputCount();
@@ -860,7 +829,7 @@ EscapeAnalysis::EscapeAnalysis(JSGraph* jsgraph, TickCounter* tick_counter,
           jsgraph->graph(),
           [this](Node* node, Reduction* reduction) { Reduce(node, reduction); },
           tick_counter, zone),
-      tracker_(zone->New<EscapeAnalysisTracker>(jsgraph, this, zone)),
+      tracker_(new (zone) EscapeAnalysisTracker(jsgraph, this, zone)),
       jsgraph_(jsgraph) {}
 
 Node* EscapeAnalysisResult::GetReplacementOf(Node* node) {

@@ -10,8 +10,9 @@ if (!common.isMainThread)
 const assert = require('assert');
 const spawn = require('child_process').spawn;
 
+process.env.REPL_TEST_PPID = process.pid;
 const child = spawn(process.execPath, [ '-i' ], {
-  stdio: [null, null, 2, 'ipc']
+  stdio: [null, null, 2]
 });
 
 let stdout = '';
@@ -21,8 +22,7 @@ child.stdout.on('data', function(c) {
 });
 
 child.stdout.once('data', common.mustCall(() => {
-  child.on('message', common.mustCall((msg) => {
-    assert.strictEqual(msg, 'repl is busy');
+  process.on('SIGUSR2', common.mustCall(() => {
     process.kill(child.pid, 'SIGINT');
     child.stdout.once('data', common.mustCall(() => {
       // Make sure REPL still works.
@@ -30,10 +30,9 @@ child.stdout.once('data', common.mustCall(() => {
     }));
   }));
 
-  child.stdin.write(
-    'vm.runInThisContext("process.send(\'repl is busy\'); while(true){}", ' +
-    '{ breakOnSigint: true });\n'
-  );
+  child.stdin.write('process.kill(+process.env.REPL_TEST_PPID, "SIGUSR2");' +
+                    'vm.runInThisContext("while(true){}", ' +
+                    '{ breakOnSigint: true });\n');
 }));
 
 child.on('close', function(code) {

@@ -23,6 +23,7 @@
 const common = require('../common');
 const net = require('net');
 const assert = require('assert');
+const { inspect } = require('util');
 
 // Verify that invalid delays throw
 const s = new net.Socket();
@@ -53,12 +54,14 @@ for (let i = 0; i < validDelays.length; i++) {
 }
 
 for (let i = 0; i < invalidCallbacks.length; i++) {
-  [0, 1].forEach((msec) =>
+  [0, 1].forEach((mesc) =>
     assert.throws(
-      () => s.setTimeout(msec, invalidCallbacks[i]),
+      () => s.setTimeout(mesc, invalidCallbacks[i]),
       {
-        code: 'ERR_INVALID_ARG_TYPE',
+        code: 'ERR_INVALID_CALLBACK',
         name: 'TypeError',
+        message: 'Callback must be a function. ' +
+                 `Received ${inspect(invalidCallbacks[i])}`
       }
     )
   );

@@ -106,7 +106,10 @@ fs.open(file2, 'w', common.mustSucceed((fd) => {
     assert.throws(
       () => fs.fchmod(fd, {}),
       {
-        code: 'ERR_INVALID_ARG_TYPE',
+        code: 'ERR_INVALID_ARG_VALUE',
+        name: 'TypeError',
+        message: 'The argument \'mode\' must be a 32-bit unsigned integer ' +
+                 'or an octal string. Received {}'
       }
     );
 

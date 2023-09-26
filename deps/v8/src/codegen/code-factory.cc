@@ -14,7 +14,7 @@ namespace v8 {
 namespace internal {
 
 // static
-Handle<CodeT> CodeFactory::RuntimeCEntry(Isolate* isolate, int result_size) {
+Handle<Code> CodeFactory::RuntimeCEntry(Isolate* isolate, int result_size) {
   return CodeFactory::CEntry(isolate, result_size);
 }
 
@@ -22,44 +22,34 @@ Handle<CodeT> CodeFactory::RuntimeCEntry(Isolate* isolate, int result_size) {
   BUILTIN_CODE(isolate, CEntry_##RS##_##SD##_##AM##_##BE)
 
 // static
-Handle<CodeT> CodeFactory::CEntry(Isolate* isolate, int result_size,
-                                  SaveFPRegsMode save_doubles,
-                                  ArgvMode argv_mode, bool builtin_exit_frame) {
+Handle<Code> CodeFactory::CEntry(Isolate* isolate, int result_size,
+                                 SaveFPRegsMode save_doubles,
+                                 ArgvMode argv_mode, bool builtin_exit_frame) {
   // Aliases for readability below.
   const int rs = result_size;
   const SaveFPRegsMode sd = save_doubles;
   const ArgvMode am = argv_mode;
   const bool be = builtin_exit_frame;
 
-  if (rs == 1 && sd == SaveFPRegsMode::kIgnore && am == ArgvMode::kStack &&
-      !be) {
+  if (rs == 1 && sd == kDontSaveFPRegs && am == kArgvOnStack && !be) {
     return CENTRY_CODE(Return1, DontSaveFPRegs, ArgvOnStack, NoBuiltinExit);
-  } else if (rs == 1 && sd == SaveFPRegsMode::kIgnore &&
-             am == ArgvMode::kStack && be) {
+  } else if (rs == 1 && sd == kDontSaveFPRegs && am == kArgvOnStack && be) {
     return CENTRY_CODE(Return1, DontSaveFPRegs, ArgvOnStack, BuiltinExit);
-  } else if (rs == 1 && sd == SaveFPRegsMode::kIgnore &&
-             am == ArgvMode::kRegister && !be) {
+  } else if (rs == 1 && sd == kDontSaveFPRegs && am == kArgvInRegister && !be) {
     return CENTRY_CODE(Return1, DontSaveFPRegs, ArgvInRegister, NoBuiltinExit);
-  } else if (rs == 1 && sd == SaveFPRegsMode::kSave && am == ArgvMode::kStack &&
-             !be) {
+  } else if (rs == 1 && sd == kSaveFPRegs && am == kArgvOnStack && !be) {
     return CENTRY_CODE(Return1, SaveFPRegs, ArgvOnStack, NoBuiltinExit);
-  } else if (rs == 1 && sd == SaveFPRegsMode::kSave && am == ArgvMode::kStack &&
-             be) {
+  } else if (rs == 1 && sd == kSaveFPRegs && am == kArgvOnStack && be) {
     return CENTRY_CODE(Return1, SaveFPRegs, ArgvOnStack, BuiltinExit);
-  } else if (rs == 2 && sd == SaveFPRegsMode::kIgnore &&
-             am == ArgvMode::kStack && !be) {
+  } else if (rs == 2 && sd == kDontSaveFPRegs && am == kArgvOnStack && !be) {
     return CENTRY_CODE(Return2, DontSaveFPRegs, ArgvOnStack, NoBuiltinExit);
-  } else if (rs == 2 && sd == SaveFPRegsMode::kIgnore &&
-             am == ArgvMode::kStack && be) {
+  } else if (rs == 2 && sd == kDontSaveFPRegs && am == kArgvOnStack && be) {
     return CENTRY_CODE(Return2, DontSaveFPRegs, ArgvOnStack, BuiltinExit);
-  } else if (rs == 2 && sd == SaveFPRegsMode::kIgnore &&
-             am == ArgvMode::kRegister && !be) {
+  } else if (rs == 2 && sd == kDontSaveFPRegs && am == kArgvInRegister && !be) {
     return CENTRY_CODE(Return2, DontSaveFPRegs, ArgvInRegister, NoBuiltinExit);
-  } else if (rs == 2 && sd == SaveFPRegsMode::kSave && am == ArgvMode::kStack &&
-             !be) {
+  } else if (rs == 2 && sd == kSaveFPRegs && am == kArgvOnStack && !be) {
     return CENTRY_CODE(Return2, SaveFPRegs, ArgvOnStack, NoBuiltinExit);
-  } else if (rs == 2 && sd == SaveFPRegsMode::kSave && am == ArgvMode::kStack &&
-             be) {
+  } else if (rs == 2 && sd == kSaveFPRegs && am == kArgvOnStack && be) {
     return CENTRY_CODE(Return2, SaveFPRegs, ArgvOnStack, BuiltinExit);
   }
 
@@ -70,37 +60,144 @@ Handle<CodeT> CodeFactory::CEntry(Isolate* isolate, int result_size,
 
 // static
 Callable CodeFactory::ApiGetter(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kCallApiGetter);
+  return Builtins::CallableFor(isolate, Builtins::kCallApiGetter);
 }
 
 // static
 Callable CodeFactory::CallApiCallback(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kCallApiCallback);
+  return Builtins::CallableFor(isolate, Builtins::kCallApiCallback);
 }
 
 // static
 Callable CodeFactory::LoadGlobalIC(Isolate* isolate, TypeofMode typeof_mode) {
-  return typeof_mode == TypeofMode::kNotInside
-             ? Builtins::CallableFor(isolate, Builtin::kLoadGlobalICTrampoline)
+  return typeof_mode == NOT_INSIDE_TYPEOF
+             ? Builtins::CallableFor(isolate, Builtins::kLoadGlobalICTrampoline)
              : Builtins::CallableFor(
-                   isolate, Builtin::kLoadGlobalICInsideTypeofTrampoline);
+                   isolate, Builtins::kLoadGlobalICInsideTypeofTrampoline);
 }
 
 // static
 Callable CodeFactory::LoadGlobalICInOptimizedCode(Isolate* isolate,
                                                   TypeofMode typeof_mode) {
-  return typeof_mode == TypeofMode::kNotInside
-             ? Builtins::CallableFor(isolate, Builtin::kLoadGlobalIC)
+  return typeof_mode == NOT_INSIDE_TYPEOF
+             ? Builtins::CallableFor(isolate, Builtins::kLoadGlobalIC)
              : Builtins::CallableFor(isolate,
-                                     Builtin::kLoadGlobalICInsideTypeof);
+                                     Builtins::kLoadGlobalICInsideTypeof);
 }
 
-Callable CodeFactory::DefineNamedOwnIC(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kDefineNamedOwnICTrampoline);
+Callable CodeFactory::StoreOwnIC(Isolate* isolate) {
+  // TODO(ishell): Currently we use StoreOwnIC only for storing properties that
+  // already exist in the boilerplate therefore we can use StoreIC.
+  return Builtins::CallableFor(isolate, Builtins::kStoreICTrampoline);
 }
 
-Callable CodeFactory::DefineNamedOwnICInOptimizedCode(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kDefineNamedOwnIC);
+Callable CodeFactory::StoreOwnICInOptimizedCode(Isolate* isolate) {
+  // TODO(ishell): Currently we use StoreOwnIC only for storing properties that
+  // already exist in the boilerplate therefore we can use StoreIC.
+  return Builtins::CallableFor(isolate, Builtins::kStoreIC);
+}
+
+Callable CodeFactory::KeyedStoreIC_SloppyArguments(Isolate* isolate,
+                                                   KeyedAccessStoreMode mode) {
+  Builtins::Name builtin_index;
+  switch (mode) {
+    case STANDARD_STORE:
+      builtin_index = Builtins::kKeyedStoreIC_SloppyArguments_Standard;
+      break;
+    case STORE_AND_GROW_HANDLE_COW:
+      builtin_index =
+          Builtins::kKeyedStoreIC_SloppyArguments_GrowNoTransitionHandleCOW;
+      break;
+    case STORE_IGNORE_OUT_OF_BOUNDS:
+      builtin_index =
+          Builtins::kKeyedStoreIC_SloppyArguments_NoTransitionIgnoreOOB;
+      break;
+    case STORE_HANDLE_COW:
+      builtin_index =
+          Builtins::kKeyedStoreIC_SloppyArguments_NoTransitionHandleCOW;
+      break;
+    default:
+      UNREACHABLE();
+  }
+  return isolate->builtins()->CallableFor(isolate, builtin_index);
+}
+
+Callable CodeFactory::ElementsTransitionAndStore(Isolate* isolate,
+                                                 KeyedAccessStoreMode mode) {
+  Builtins::Name builtin_index;
+  switch (mode) {
+    case STANDARD_STORE:
+      builtin_index = Builtins::kElementsTransitionAndStore_Standard;
+      break;
+    case STORE_AND_GROW_HANDLE_COW:
+      builtin_index =
+          Builtins::kElementsTransitionAndStore_GrowNoTransitionHandleCOW;
+      break;
+    case STORE_IGNORE_OUT_OF_BOUNDS:
+      builtin_index =
+          Builtins::kElementsTransitionAndStore_NoTransitionIgnoreOOB;
+      break;
+    case STORE_HANDLE_COW:
+      builtin_index =
+          Builtins::kElementsTransitionAndStore_NoTransitionHandleCOW;
+      break;
+    default:
+      UNREACHABLE();
+  }
+  return isolate->builtins()->CallableFor(isolate, builtin_index);
+}
+
+Callable CodeFactory::StoreFastElementIC(Isolate* isolate,
+                                         KeyedAccessStoreMode mode) {
+  Builtins::Name builtin_index;
+  switch (mode) {
+    case STANDARD_STORE:
+      builtin_index = Builtins::kStoreFastElementIC_Standard;
+      break;
+    case STORE_AND_GROW_HANDLE_COW:
+      builtin_index = Builtins::kStoreFastElementIC_GrowNoTransitionHandleCOW;
+      break;
+    case STORE_IGNORE_OUT_OF_BOUNDS:
+      builtin_index = Builtins::kStoreFastElementIC_NoTransitionIgnoreOOB;
+      break;
+    case STORE_HANDLE_COW:
+      builtin_index = Builtins::kStoreFastElementIC_NoTransitionHandleCOW;
+      break;
+    default:
+      UNREACHABLE();
+  }
+  return isolate->builtins()->CallableFor(isolate, builtin_index);
+}
+
+// static
+Callable CodeFactory::BinaryOperation(Isolate* isolate, Operation op) {
+  switch (op) {
+    case Operation::kShiftRight:
+      return Builtins::CallableFor(isolate, Builtins::kShiftRight);
+    case Operation::kShiftLeft:
+      return Builtins::CallableFor(isolate, Builtins::kShiftLeft);
+    case Operation::kShiftRightLogical:
+      return Builtins::CallableFor(isolate, Builtins::kShiftRightLogical);
+    case Operation::kAdd:
+      return Builtins::CallableFor(isolate, Builtins::kAdd);
+    case Operation::kSubtract:
+      return Builtins::CallableFor(isolate, Builtins::kSubtract);
+    case Operation::kMultiply:
+      return Builtins::CallableFor(isolate, Builtins::kMultiply);
+    case Operation::kDivide:
+      return Builtins::CallableFor(isolate, Builtins::kDivide);
+    case Operation::kModulus:
+      return Builtins::CallableFor(isolate, Builtins::kModulus);
+    case Operation::kBitwiseOr:
+      return Builtins::CallableFor(isolate, Builtins::kBitwiseOr);
+    case Operation::kBitwiseAnd:
+      return Builtins::CallableFor(isolate, Builtins::kBitwiseAnd);
+    case Operation::kBitwiseXor:
+      return Builtins::CallableFor(isolate, Builtins::kBitwiseXor);
+    default:
+      break;
+  }
+  UNREACHABLE();
 }
 
 // static
@@ -121,18 +218,28 @@ Callable CodeFactory::OrdinaryToPrimitive(Isolate* isolate,
 Callable CodeFactory::StringAdd(Isolate* isolate, StringAddFlags flags) {
   switch (flags) {
     case STRING_ADD_CHECK_NONE:
-      return Builtins::CallableFor(isolate, Builtin::kStringAdd_CheckNone);
+      return Builtins::CallableFor(isolate, Builtins::kStringAdd_CheckNone);
     case STRING_ADD_CONVERT_LEFT:
-      return Builtins::CallableFor(isolate, Builtin::kStringAddConvertLeft);
+      return Builtins::CallableFor(isolate, Builtins::kStringAddConvertLeft);
     case STRING_ADD_CONVERT_RIGHT:
-      return Builtins::CallableFor(isolate, Builtin::kStringAddConvertRight);
+      return Builtins::CallableFor(isolate, Builtins::kStringAddConvertRight);
   }
   UNREACHABLE();
 }
 
 // static
 Callable CodeFactory::ResumeGenerator(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kResumeGeneratorTrampoline);
+  return Builtins::CallableFor(isolate, Builtins::kResumeGeneratorTrampoline);
+}
+
+// static
+Callable CodeFactory::FrameDropperTrampoline(Isolate* isolate) {
+  return Builtins::CallableFor(isolate, Builtins::kFrameDropperTrampoline);
+}
+
+// static
+Callable CodeFactory::HandleDebuggerStatement(Isolate* isolate) {
+  return Builtins::CallableFor(isolate, Builtins::kHandleDebuggerStatement);
 }
 
 // static
@@ -141,13 +248,18 @@ Callable CodeFactory::FastNewFunctionContext(Isolate* isolate,
   switch (scope_type) {
     case ScopeType::EVAL_SCOPE:
       return Builtins::CallableFor(isolate,
-                                   Builtin::kFastNewFunctionContextEval);
+                                   Builtins::kFastNewFunctionContextEval);
     case ScopeType::FUNCTION_SCOPE:
       return Builtins::CallableFor(isolate,
-                                   Builtin::kFastNewFunctionContextFunction);
+                                   Builtins::kFastNewFunctionContextFunction);
     default:
       UNREACHABLE();
   }
+}
+
+// static
+Callable CodeFactory::ArgumentAdaptor(Isolate* isolate) {
+  return Builtins::CallableFor(isolate, Builtins::kArgumentsAdaptorTrampoline);
 }
 
 // static
@@ -156,30 +268,13 @@ Callable CodeFactory::Call(Isolate* isolate, ConvertReceiverMode mode) {
 }
 
 // static
-Callable CodeFactory::Call_WithFeedback(Isolate* isolate,
-                                        ConvertReceiverMode mode) {
-  switch (mode) {
-    case ConvertReceiverMode::kNullOrUndefined:
-      return Builtins::CallableFor(
-          isolate, Builtin::kCall_ReceiverIsNullOrUndefined_WithFeedback);
-    case ConvertReceiverMode::kNotNullOrUndefined:
-      return Builtins::CallableFor(
-          isolate, Builtin::kCall_ReceiverIsNotNullOrUndefined_WithFeedback);
-    case ConvertReceiverMode::kAny:
-      return Builtins::CallableFor(isolate,
-                                   Builtin::kCall_ReceiverIsAny_WithFeedback);
-  }
-  UNREACHABLE();
-}
-
-// static
 Callable CodeFactory::CallWithArrayLike(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kCallWithArrayLike);
+  return Builtins::CallableFor(isolate, Builtins::kCallWithArrayLike);
 }
 
 // static
 Callable CodeFactory::CallWithSpread(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kCallWithSpread);
+  return Builtins::CallableFor(isolate, Builtins::kCallWithSpread);
 }
 
 // static
@@ -190,48 +285,48 @@ Callable CodeFactory::CallFunction(Isolate* isolate, ConvertReceiverMode mode) {
 
 // static
 Callable CodeFactory::CallVarargs(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kCallVarargs);
+  return Builtins::CallableFor(isolate, Builtins::kCallVarargs);
 }
 
 // static
 Callable CodeFactory::CallForwardVarargs(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kCallForwardVarargs);
+  return Builtins::CallableFor(isolate, Builtins::kCallForwardVarargs);
 }
 
 // static
 Callable CodeFactory::CallFunctionForwardVarargs(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kCallFunctionForwardVarargs);
+  return Builtins::CallableFor(isolate, Builtins::kCallFunctionForwardVarargs);
 }
 
 // static
 Callable CodeFactory::Construct(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kConstruct);
+  return Builtins::CallableFor(isolate, Builtins::kConstruct);
 }
 
 // static
 Callable CodeFactory::ConstructWithSpread(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kConstructWithSpread);
+  return Builtins::CallableFor(isolate, Builtins::kConstructWithSpread);
 }
 
 // static
 Callable CodeFactory::ConstructFunction(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kConstructFunction);
+  return Builtins::CallableFor(isolate, Builtins::kConstructFunction);
 }
 
 // static
 Callable CodeFactory::ConstructVarargs(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kConstructVarargs);
+  return Builtins::CallableFor(isolate, Builtins::kConstructVarargs);
 }
 
 // static
 Callable CodeFactory::ConstructForwardVarargs(Isolate* isolate) {
-  return Builtins::CallableFor(isolate, Builtin::kConstructForwardVarargs);
+  return Builtins::CallableFor(isolate, Builtins::kConstructForwardVarargs);
 }
 
 // static
 Callable CodeFactory::ConstructFunctionForwardVarargs(Isolate* isolate) {
   return Builtins::CallableFor(isolate,
-                               Builtin::kConstructFunctionForwardVarargs);
+                               Builtins::kConstructFunctionForwardVarargs);
 }
 
 // static
@@ -245,16 +340,16 @@ Callable CodeFactory::InterpreterPushArgsThenCall(
       UNREACHABLE();
     case InterpreterPushArgsMode::kWithFinalSpread:
       return Builtins::CallableFor(
-          isolate, Builtin::kInterpreterPushArgsThenCallWithFinalSpread);
+          isolate, Builtins::kInterpreterPushArgsThenCallWithFinalSpread);
     case InterpreterPushArgsMode::kOther:
       switch (receiver_mode) {
         case ConvertReceiverMode::kNullOrUndefined:
           return Builtins::CallableFor(
-              isolate, Builtin::kInterpreterPushUndefinedAndArgsThenCall);
+              isolate, Builtins::kInterpreterPushUndefinedAndArgsThenCall);
         case ConvertReceiverMode::kNotNullOrUndefined:
         case ConvertReceiverMode::kAny:
           return Builtins::CallableFor(isolate,
-                                       Builtin::kInterpreterPushArgsThenCall);
+                                       Builtins::kInterpreterPushArgsThenCall);
       }
   }
   UNREACHABLE();
@@ -266,13 +361,13 @@ Callable CodeFactory::InterpreterPushArgsThenConstruct(
   switch (mode) {
     case InterpreterPushArgsMode::kArrayFunction:
       return Builtins::CallableFor(
-          isolate, Builtin::kInterpreterPushArgsThenConstructArrayFunction);
+          isolate, Builtins::kInterpreterPushArgsThenConstructArrayFunction);
     case InterpreterPushArgsMode::kWithFinalSpread:
       return Builtins::CallableFor(
-          isolate, Builtin::kInterpreterPushArgsThenConstructWithFinalSpread);
+          isolate, Builtins::kInterpreterPushArgsThenConstructWithFinalSpread);
     case InterpreterPushArgsMode::kOther:
       return Builtins::CallableFor(isolate,
-                                   Builtin::kInterpreterPushArgsThenConstruct);
+                                   Builtins::kInterpreterPushArgsThenConstruct);
   }
   UNREACHABLE();
 }
@@ -281,8 +376,8 @@ Callable CodeFactory::InterpreterPushArgsThenConstruct(
 Callable CodeFactory::InterpreterCEntry(Isolate* isolate, int result_size) {
   // Note: If we ever use fpregs in the interpreter then we will need to
   // save fpregs too.
-  Handle<CodeT> code = CodeFactory::CEntry(
-      isolate, result_size, SaveFPRegsMode::kIgnore, ArgvMode::kRegister);
+  Handle<Code> code = CodeFactory::CEntry(isolate, result_size, kDontSaveFPRegs,
+                                          kArgvInRegister);
   if (result_size == 1) {
     return Callable(code, InterpreterCEntry1Descriptor{});
   } else {
@@ -294,14 +389,7 @@ Callable CodeFactory::InterpreterCEntry(Isolate* isolate, int result_size) {
 // static
 Callable CodeFactory::InterpreterOnStackReplacement(Isolate* isolate) {
   return Builtins::CallableFor(isolate,
-                               Builtin::kInterpreterOnStackReplacement);
-}
-
-// static
-Callable CodeFactory::InterpreterOnStackReplacement_ToBaseline(
-    Isolate* isolate) {
-  return Builtins::CallableFor(
-      isolate, Builtin::kInterpreterOnStackReplacement_ToBaseline);
+                               Builtins::kInterpreterOnStackReplacement);
 }
 
 // static
@@ -312,7 +400,7 @@ Callable CodeFactory::ArrayNoArgumentConstructor(
   case kind_caps:                               \
     return Builtins::CallableFor(               \
         isolate,                                \
-        Builtin::kArrayNoArgumentConstructor_##kind_camel##_##mode_camel);
+        Builtins::kArrayNoArgumentConstructor_##kind_camel##_##mode_camel);
   if (override_mode == DONT_OVERRIDE && AllocationSite::ShouldTrack(kind)) {
     DCHECK(IsSmiElementsKind(kind));
     switch (kind) {
@@ -346,7 +434,7 @@ Callable CodeFactory::ArraySingleArgumentConstructor(
   case kind_caps:                               \
     return Builtins::CallableFor(               \
         isolate,                                \
-        Builtin::kArraySingleArgumentConstructor_##kind_camel##_##mode_camel)
+        Builtins::kArraySingleArgumentConstructor_##kind_camel##_##mode_camel)
   if (override_mode == DONT_OVERRIDE && AllocationSite::ShouldTrack(kind)) {
     DCHECK(IsSmiElementsKind(kind));
     switch (kind) {
@@ -371,67 +459,6 @@ Callable CodeFactory::ArraySingleArgumentConstructor(
   }
 #undef CASE
 }
-
-#ifdef V8_IS_TSAN
-// static
-Builtin CodeFactory::GetTSANStoreStub(SaveFPRegsMode fp_mode, int size,
-                                      std::memory_order order) {
-  if (order == std::memory_order_relaxed) {
-    if (size == kInt8Size) {
-      return fp_mode == SaveFPRegsMode::kIgnore
-                 ? Builtin::kTSANRelaxedStore8IgnoreFP
-                 : Builtin::kTSANRelaxedStore8SaveFP;
-    } else if (size == kInt16Size) {
-      return fp_mode == SaveFPRegsMode::kIgnore
-                 ? Builtin::kTSANRelaxedStore16IgnoreFP
-                 : Builtin::kTSANRelaxedStore16SaveFP;
-    } else if (size == kInt32Size) {
-      return fp_mode == SaveFPRegsMode::kIgnore
-                 ? Builtin::kTSANRelaxedStore32IgnoreFP
-                 : Builtin::kTSANRelaxedStore32SaveFP;
-    } else {
-      CHECK_EQ(size, kInt64Size);
-      return fp_mode == SaveFPRegsMode::kIgnore
-                 ? Builtin::kTSANRelaxedStore64IgnoreFP
-                 : Builtin::kTSANRelaxedStore64SaveFP;
-    }
-  } else {
-    DCHECK_EQ(order, std::memory_order_seq_cst);
-    if (size == kInt8Size) {
-      return fp_mode == SaveFPRegsMode::kIgnore
-                 ? Builtin::kTSANSeqCstStore8IgnoreFP
-                 : Builtin::kTSANSeqCstStore8SaveFP;
-    } else if (size == kInt16Size) {
-      return fp_mode == SaveFPRegsMode::kIgnore
-                 ? Builtin::kTSANSeqCstStore16IgnoreFP
-                 : Builtin::kTSANSeqCstStore16SaveFP;
-    } else if (size == kInt32Size) {
-      return fp_mode == SaveFPRegsMode::kIgnore
-                 ? Builtin::kTSANSeqCstStore32IgnoreFP
-                 : Builtin::kTSANSeqCstStore32SaveFP;
-    } else {
-      CHECK_EQ(size, kInt64Size);
-      return fp_mode == SaveFPRegsMode::kIgnore
-                 ? Builtin::kTSANSeqCstStore64IgnoreFP
-                 : Builtin::kTSANSeqCstStore64SaveFP;
-    }
-  }
-}
-
-// static
-Builtin CodeFactory::GetTSANRelaxedLoadStub(SaveFPRegsMode fp_mode, int size) {
-  if (size == kInt32Size) {
-    return fp_mode == SaveFPRegsMode::kIgnore
-               ? Builtin::kTSANRelaxedLoad32IgnoreFP
-               : Builtin::kTSANRelaxedLoad32SaveFP;
-  } else {
-    CHECK_EQ(size, kInt64Size);
-    return fp_mode == SaveFPRegsMode::kIgnore
-               ? Builtin::kTSANRelaxedLoad64IgnoreFP
-               : Builtin::kTSANRelaxedLoad64SaveFP;
-  }
-}
-#endif  // V8_IS_TSAN
 
 }  // namespace internal
 }  // namespace v8

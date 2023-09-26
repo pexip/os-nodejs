@@ -1,6 +1,6 @@
 'use strict';
 
-const common = require('../common');
+require('../common');
 const assert = require('assert');
 
 // No args
@@ -38,7 +38,3 @@ assert.throws(() => {
   name: 'TypeError',
   message: 'custom message'
 });
-
-Object.prototype.get = common.mustNotCall();
-assert.throws(() => assert.fail(''), { code: 'ERR_ASSERTION' });
-delete Object.prototype.get;

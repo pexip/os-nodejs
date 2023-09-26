@@ -37,7 +37,6 @@
 #if V8_TARGET_ARCH_MIPS64
 
 #include "src/base/cpu.h"
-#include "src/codegen/machine-type.h"
 #include "src/codegen/mips64/assembler-mips64-inl.h"
 #include "src/codegen/safepoint-table.h"
 #include "src/codegen/string-constants.h"
@@ -67,8 +66,6 @@ static unsigned CpuFeaturesImpliedByCompiler() {
   return answer;
 }
 
-bool CpuFeatures::SupportsWasmSimd128() { return IsSupported(MIPS_SIMD); }
-
 void CpuFeatures::ProbeImpl(bool cross_compile) {
   supported_ |= CpuFeaturesImpliedByCompiler();
 
@@ -93,12 +90,6 @@ void CpuFeatures::ProbeImpl(bool cross_compile) {
   if (cpu.has_msa()) supported_ |= 1u << MIPS_SIMD;
 #endif
 #endif
-
-  // Set a static value on whether Simd is supported.
-  // This variable is only used for certain archs to query SupportWasmSimd128()
-  // at runtime in builtins using an extern ref. Other callers should use
-  // CpuFeatures::SupportWasmSimd128().
-  CpuFeatures::supports_wasm_simd_128_ = CpuFeatures::SupportsWasmSimd128();
 }
 
 void CpuFeatures::PrintTarget() {}
@@ -235,27 +226,29 @@ void Assembler::AllocateAndInstallRequestedHeapObjects(Isolate* isolate) {
 // operations as post-increment of sp.
 const Instr kPopInstruction = DADDIU | (sp.code() << kRsShift) |
                               (sp.code() << kRtShift) |
-                              (kPointerSize & kImm16Mask);
+                              (kPointerSize & kImm16Mask);  // NOLINT
 // daddiu(sp, sp, -8) part of Push(r) operation as pre-decrement of sp.
 const Instr kPushInstruction = DADDIU | (sp.code() << kRsShift) |
                                (sp.code() << kRtShift) |
-                               (-kPointerSize & kImm16Mask);
+                               (-kPointerSize & kImm16Mask);  // NOLINT
 // Sd(r, MemOperand(sp, 0))
-const Instr kPushRegPattern = SD | (sp.code() << kRsShift) | (0 & kImm16Mask);
+const Instr kPushRegPattern =
+    SD | (sp.code() << kRsShift) | (0 & kImm16Mask);  // NOLINT
 //  Ld(r, MemOperand(sp, 0))
-const Instr kPopRegPattern = LD | (sp.code() << kRsShift) | (0 & kImm16Mask);
+const Instr kPopRegPattern =
+    LD | (sp.code() << kRsShift) | (0 & kImm16Mask);  // NOLINT
 
 const Instr kLwRegFpOffsetPattern =
-    LW | (fp.code() << kRsShift) | (0 & kImm16Mask);
+    LW | (fp.code() << kRsShift) | (0 & kImm16Mask);  // NOLINT
 
 const Instr kSwRegFpOffsetPattern =
-    SW | (fp.code() << kRsShift) | (0 & kImm16Mask);
+    SW | (fp.code() << kRsShift) | (0 & kImm16Mask);  // NOLINT
 
 const Instr kLwRegFpNegOffsetPattern =
-    LW | (fp.code() << kRsShift) | (kNegOffset & kImm16Mask);
+    LW | (fp.code() << kRsShift) | (kNegOffset & kImm16Mask);  // NOLINT
 
 const Instr kSwRegFpNegOffsetPattern =
-    SW | (fp.code() << kRsShift) | (kNegOffset & kImm16Mask);
+    SW | (fp.code() << kRsShift) | (kNegOffset & kImm16Mask);  // NOLINT
 // A mask for the Rt register for push, pop, lw, sw instructions.
 const Instr kRtMask = kRtFieldMask;
 const Instr kLwSwInstrTypeMask = 0xFFE00000;
@@ -265,7 +258,7 @@ const Instr kLwSwOffsetMask = kImm16Mask;
 Assembler::Assembler(const AssemblerOptions& options,
                      std::unique_ptr<AssemblerBuffer> buffer)
     : AssemblerBase(options, std::move(buffer)),
-      scratch_register_list_({at, s0}) {
+      scratch_register_list_(at.bit()) {
   if (CpuFeatures::IsSupported(MIPS_SIMD)) {
     EnableCpuFeature(MIPS_SIMD);
   }
@@ -290,15 +283,6 @@ Assembler::Assembler(const AssemblerOptions& options,
 void Assembler::GetCode(Isolate* isolate, CodeDesc* desc,
                         SafepointTableBuilder* safepoint_table_builder,
                         int handler_table_offset) {
-  // As a crutch to avoid having to add manual Align calls wherever we use a
-  // raw workflow to create Code objects (mostly in tests), add another Align
-  // call here. It does no harm - the end of the Code object is aligned to the
-  // (larger) kCodeAlignment anyways.
-  // TODO(jgruber): Consider moving responsibility for proper alignment to
-  // metadata table builders (safepoint, handler, constant pool, code
-  // comments).
-  DataAlign(Code::kMetadataAlignment);
-
   EmitForbiddenSlotInstruction();
 
   int code_comments_size = WriteCodeComments();
@@ -321,7 +305,7 @@ void Assembler::GetCode(Isolate* isolate, CodeDesc* desc,
   const int safepoint_table_offset =
       (safepoint_table_builder == kNoSafepointTable)
           ? handler_table_offset2
-          : safepoint_table_builder->safepoint_table_offset();
+          : safepoint_table_builder->GetCodeOffset();
   const int reloc_info_offset =
       static_cast<int>(reloc_info_writer.pos() - buffer_->start());
   CodeDesc::Initialize(desc, this, safepoint_table_offset,
@@ -885,10 +869,8 @@ void Assembler::target_at_put(int pos, int target_pos, bool is_internal) {
       Instr instr_branch_delay;
 
       if (IsJump(instr_j)) {
-        // Case when branch delay slot is protected.
-        instr_branch_delay = nopInstr;
+        instr_branch_delay = instr_at(pos + 6 * kInstrSize);
       } else {
-        // Case when branch delay slot is used.
         instr_branch_delay = instr_at(pos + 7 * kInstrSize);
       }
       instr_at_put(pos, instr_b);
@@ -1061,7 +1043,7 @@ int Assembler::BranchOffset(Instr instr) {
 // space.  There is no guarantee that the relocated location can be similarly
 // encoded.
 bool Assembler::MustUseReg(RelocInfo::Mode rmode) {
-  return !RelocInfo::IsNoInfo(rmode);
+  return !RelocInfo::IsNone(rmode);
 }
 
 void Assembler::GenInstrRegister(Opcode opcode, Register rs, Register rt,
@@ -3614,7 +3596,7 @@ void Assembler::insve_d(MSARegister wd, uint32_t n, MSARegister ws) {
 }
 
 void Assembler::move_v(MSARegister wd, MSARegister ws) {
-  DCHECK(IsEnabled(MIPS_SIMD));
+  DCHECK((kArchVariant == kMips64r6) && IsEnabled(MIPS_SIMD));
   DCHECK(ws.is_valid() && wd.is_valid());
   Instr instr = MSA | MOVE_V | (ws.code() << kWsShift) |
                 (wd.code() << kWdShift) | MSA_ELM_MINOR;
@@ -3622,7 +3604,7 @@ void Assembler::move_v(MSARegister wd, MSARegister ws) {
 }
 
 void Assembler::ctcmsa(MSAControlRegister cd, Register rs) {
-  DCHECK(IsEnabled(MIPS_SIMD));
+  DCHECK((kArchVariant == kMips64r6) && IsEnabled(MIPS_SIMD));
   DCHECK(cd.is_valid() && rs.is_valid());
   Instr instr = MSA | CTCMSA | (rs.code() << kWsShift) |
                 (cd.code() << kWdShift) | MSA_ELM_MINOR;
@@ -3630,7 +3612,7 @@ void Assembler::ctcmsa(MSAControlRegister cd, Register rs) {
 }
 
 void Assembler::cfcmsa(Register rd, MSAControlRegister cs) {
-  DCHECK(IsEnabled(MIPS_SIMD));
+  DCHECK((kArchVariant == kMips64r6) && IsEnabled(MIPS_SIMD));
   DCHECK(rd.is_valid() && cs.is_valid());
   Instr instr = MSA | CFCMSA | (cs.code() << kWsShift) |
                 (rd.code() << kWdShift) | MSA_ELM_MINOR;
@@ -3764,50 +3746,34 @@ void Assembler::GrowBuffer() {
   buffer_ = std::move(new_buffer);
   buffer_start_ = new_start;
   pc_ += pc_delta;
-  pc_for_safepoint_ += pc_delta;
   reloc_info_writer.Reposition(reloc_info_writer.pos() + rc_delta,
                                reloc_info_writer.last_pc() + pc_delta);
 
   // Relocate runtime entries.
-  base::Vector<byte> instructions{buffer_start_,
-                                  static_cast<size_t>(pc_offset())};
-  base::Vector<const byte> reloc_info{reloc_info_writer.pos(), reloc_size};
+  Vector<byte> instructions{buffer_start_, pc_offset()};
+  Vector<const byte> reloc_info{reloc_info_writer.pos(), reloc_size};
   for (RelocIterator it(instructions, reloc_info, 0); !it.done(); it.next()) {
     RelocInfo::Mode rmode = it.rinfo()->rmode();
     if (rmode == RelocInfo::INTERNAL_REFERENCE) {
       RelocateInternalReference(rmode, it.rinfo()->pc(), pc_delta);
     }
   }
-
   DCHECK(!overflow());
 }
 
 void Assembler::db(uint8_t data) {
   CheckForEmitInForbiddenSlot();
-  *reinterpret_cast<uint8_t*>(pc_) = data;
-  pc_ += sizeof(uint8_t);
+  EmitHelper(data);
 }
 
-void Assembler::dd(uint32_t data, RelocInfo::Mode rmode) {
+void Assembler::dd(uint32_t data) {
   CheckForEmitInForbiddenSlot();
-  if (!RelocInfo::IsNoInfo(rmode)) {
-    DCHECK(RelocInfo::IsDataEmbeddedObject(rmode) ||
-           RelocInfo::IsLiteralConstant(rmode));
-    RecordRelocInfo(rmode);
-  }
-  *reinterpret_cast<uint32_t*>(pc_) = data;
-  pc_ += sizeof(uint32_t);
+  EmitHelper(data);
 }
 
-void Assembler::dq(uint64_t data, RelocInfo::Mode rmode) {
+void Assembler::dq(uint64_t data) {
   CheckForEmitInForbiddenSlot();
-  if (!RelocInfo::IsNoInfo(rmode)) {
-    DCHECK(RelocInfo::IsDataEmbeddedObject(rmode) ||
-           RelocInfo::IsLiteralConstant(rmode));
-    RecordRelocInfo(rmode);
-  }
-  *reinterpret_cast<uint64_t*>(pc_) = data;
-  pc_ += sizeof(uint64_t);
+  EmitHelper(data);
 }
 
 void Assembler::dd(Label* label) {
@@ -3890,12 +3856,8 @@ void Assembler::CheckTrampolinePool() {
         }
       }
       nop();
-      // If unbound_labels_count_ is big enough, label after_pool will
-      // need a trampoline too, so we must create the trampoline before
-      // the bind operation to make sure function 'bind' can get this
-      // information.
-      trampoline_ = Trampoline(pool_start, unbound_labels_count_);
       bind(&after_pool);
+      trampoline_ = Trampoline(pool_start, unbound_labels_count_);
 
       trampoline_emitted_ = true;
       // As we are only going to emit trampoline once, we need to prevent any
@@ -3991,32 +3953,14 @@ UseScratchRegisterScope::~UseScratchRegisterScope() {
 
 Register UseScratchRegisterScope::Acquire() {
   DCHECK_NOT_NULL(available_);
-  return available_->PopFirst();
+  DCHECK_NE(*available_, 0);
+  int index = static_cast<int>(base::bits::CountTrailingZeros32(*available_));
+  *available_ &= ~(1UL << index);
+
+  return Register::from_code(index);
 }
 
-bool UseScratchRegisterScope::hasAvailable() const {
-  return !available_->is_empty();
-}
-
-LoadStoreLaneParams::LoadStoreLaneParams(MachineRepresentation rep,
-                                         uint8_t laneidx) {
-  switch (rep) {
-    case MachineRepresentation::kWord8:
-      *this = LoadStoreLaneParams(laneidx, MSA_B, 16);
-      break;
-    case MachineRepresentation::kWord16:
-      *this = LoadStoreLaneParams(laneidx, MSA_H, 8);
-      break;
-    case MachineRepresentation::kWord32:
-      *this = LoadStoreLaneParams(laneidx, MSA_W, 4);
-      break;
-    case MachineRepresentation::kWord64:
-      *this = LoadStoreLaneParams(laneidx, MSA_D, 2);
-      break;
-    default:
-      UNREACHABLE();
-  }
-}
+bool UseScratchRegisterScope::hasAvailable() const { return *available_ != 0; }
 
 }  // namespace internal
 }  // namespace v8

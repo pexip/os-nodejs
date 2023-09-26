@@ -27,7 +27,7 @@ const syntaxErrorRE = /^SyntaxError: \b/m;
       assert.strictEqual(stdout, '');
 
       // stderr should have a syntax error message
-      assert.match(stderr, syntaxErrorRE);
+      assert(syntaxErrorRE.test(stderr), `${syntaxErrorRE} === ${stderr}`);
 
       // stderr should include the filename
       assert(stderr.startsWith(file), `${stderr} starts with ${file}`);

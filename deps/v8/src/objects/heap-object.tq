@@ -3,8 +3,6 @@
 // found in the LICENSE file.
 
 @abstract
-@doNotGenerateCast
-@doNotGenerateCppClass
 extern class HeapObject extends StrongTagged {
   const map: Map;
 }

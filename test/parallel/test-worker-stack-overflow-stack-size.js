@@ -23,6 +23,7 @@ async function runWorker(options = {}) {
   });
 
   const [ error ] = await once(worker, 'error');
+
   if (!options.skipErrorCheck) {
     common.expectsError({
       constructor: RangeError,
@@ -55,9 +56,7 @@ async function runWorker(options = {}) {
   }
 
   // Test that various low stack sizes result in an 'error' event.
-  // Currently the stack size needs to be at least 0.3MB for the worker to be
-  // bootstrapped properly.
-  for (const stackSizeMb of [ 0.3, 0.5, 1 ]) {
+  for (const stackSizeMb of [ 0.001, 0.01, 0.1, 0.2, 0.3, 0.5 ]) {
     await runWorker({ resourceLimits: { stackSizeMb }, skipErrorCheck: true });
   }
 })().then(common.mustCall());

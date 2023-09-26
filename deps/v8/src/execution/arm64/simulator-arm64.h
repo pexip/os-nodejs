@@ -11,11 +11,9 @@
 #if defined(USE_SIMULATOR)
 
 #include <stdarg.h>
-
 #include <vector>
 
 #include "src/base/compiler-specific.h"
-#include "src/base/platform/wrappers.h"
 #include "src/codegen/arm64/assembler-arm64.h"
 #include "src/codegen/arm64/decoder-arm64.h"
 #include "src/codegen/assembler.h"
@@ -730,11 +728,6 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
   // Start the debugging command line.
   void Debug();
 
-  // Executes a single debug command. Takes ownership of the command (so that it
-  // can store it for repeat executions), and returns true if the debugger
-  // should resume execution after this command completes.
-  bool ExecDebugCommand(ArrayUniquePtr<char> command);
-
   bool GetValue(const char* desc, int64_t* value);
 
   bool PrintValue(const char* desc);
@@ -761,7 +754,7 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
   // Simulation helpers.
   template <typename T>
   void set_pc(T new_pc) {
-    STATIC_ASSERT(sizeof(T) == sizeof(pc_));
+    DCHECK(sizeof(T) == sizeof(pc_));
     memcpy(&pc_, &new_pc, sizeof(T));
     pc_modified_ = true;
   }
@@ -835,8 +828,8 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
   void CheckBTypeForPAuth() {
     DCHECK(pc_->IsPAuth());
     Instr instr = pc_->Mask(SystemPAuthMask);
-    // Only PACI[AB]SP allowed here, and we only support PACIBSP.
-    CHECK(instr == PACIBSP);
+    // Only PACI[AB]SP allowed here, but we don't currently support PACIBSP.
+    CHECK_EQ(instr, PACIASP);
     // Check BType allows PACI[AB]SP instructions.
     switch (btype()) {
       case BranchFromGuardedNotToIP:
@@ -844,7 +837,7 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
         // here to be set. This makes PACI[AB]SP behave like "BTI c",
         // disallowing its execution when BTYPE is BranchFromGuardedNotToIP
         // (0b11).
-        FATAL("Executing PACIBSP with wrong BType.");
+        FATAL("Executing PACIASP with wrong BType.");
       case BranchFromUnguardedOrToIP:
       case BranchAndLink:
         break;
@@ -1404,7 +1397,7 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
     int number;
   };
 
-  static const PACKey kPACKeyIB;
+  static const PACKey kPACKeyIA;
 
   // Current implementation is that all pointers are tagged.
   static bool HasTBI(uint64_t ptr, PointerType type) {
@@ -1501,18 +1494,6 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
   void NEONLoadStoreSingleStructHelper(const Instruction* instr,
                                        AddrMode addr_mode);
   void CheckMemoryAccess(uintptr_t address, uintptr_t stack);
-
-  // "Probe" if an address range can be read. This is currently implemented
-  // by doing a 1-byte read of the last accessed byte, since the assumption is
-  // that if the last byte is accessible, also all lower bytes are accessible
-  // (which holds true for Wasm).
-  // Returns true if the access was successful, false if the access raised a
-  // signal which was then handled by the trap handler (also see
-  // {trap_handler::ProbeMemory}). If the access raises a signal which is not
-  // handled by the trap handler (e.g. because the current PC is not registered
-  // as a protected instruction), the signal will propagate and make the process
-  // crash. If no trap handler is available, this always returns true.
-  bool ProbeMemory(uintptr_t address, uintptr_t access_size);
 
   // Memory read helpers.
   template <typename T, typename A>
@@ -2198,7 +2179,6 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
   int64_t FPToInt64(double value, FPRounding rmode);
   uint32_t FPToUInt32(double value, FPRounding rmode);
   uint64_t FPToUInt64(double value, FPRounding rmode);
-  int32_t FPToFixedJS(double value);
 
   template <typename T>
   T FPAdd(T op1, T op2);
@@ -2343,11 +2323,12 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
   static const char* vreg_names[];
 
   // Debugger input.
-  void set_last_debugger_input(ArrayUniquePtr<char> input) {
-    last_debugger_input_ = std::move(input);
+  void set_last_debugger_input(char* input) {
+    DeleteArray(last_debugger_input_);
+    last_debugger_input_ = input;
   }
-  const char* last_debugger_input() { return last_debugger_input_.get(); }
-  ArrayUniquePtr<char> last_debugger_input_;
+  char* last_debugger_input() { return last_debugger_input_; }
+  char* last_debugger_input_;
 
   // Synchronization primitives. See ARM DDI 0487A.a, B2.10. Pair types not
   // implemented.
@@ -2448,9 +2429,6 @@ class Simulator : public DecoderVisitor, public SimulatorBase {
   void Init(FILE* stream);
 
   V8_EXPORT_PRIVATE void CallImpl(Address entry, CallArgument* args);
-
-  void CallAnyCTypeFunction(Address target_address,
-                            const EncodedCSignature& signature);
 
   // Read floating point return values.
   template <typename T>

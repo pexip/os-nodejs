@@ -8,9 +8,8 @@ const test_fatal = require(`./build/${common.buildType}/test_fatal`);
 // that crashes the process.
 if (process.argv[2] === 'child') {
   test_fatal.TestThread();
-  while (true) {
-    // Busy loop to allow the work thread to abort.
-  }
+  // Busy loop to allow the work thread to abort.
+  while (true) {}
 }
 
 const p = child_process.spawnSync(

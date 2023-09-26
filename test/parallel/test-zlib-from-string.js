@@ -55,9 +55,7 @@ const expectedBase64Gzip = 'H4sIAAAAAAAAA11RS05DMQy8yhzg6d2BPSAkJPZu4laWkjiN4' +
                            'sHnHNzRtagj5AQAA';
 
 zlib.deflate(inputString, common.mustCall((err, buffer) => {
-  zlib.inflate(buffer, common.mustCall((err, inflated) => {
-    assert.strictEqual(inflated.toString(), inputString);
-  }));
+  assert.strictEqual(buffer.toString('base64'), expectedBase64Deflate);
 }));
 
 zlib.gzip(inputString, common.mustCall((err, buffer) => {

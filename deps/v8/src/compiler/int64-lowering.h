@@ -12,7 +12,6 @@
 #include "src/compiler/graph.h"
 #include "src/compiler/machine-operator.h"
 #include "src/compiler/node-marker.h"
-#include "src/compiler/simplified-operator.h"
 #include "src/zone/zone-containers.h"
 
 namespace v8 {
@@ -34,8 +33,8 @@ class V8_EXPORT_PRIVATE Int64Lowering {
  public:
   Int64Lowering(
       Graph* graph, MachineOperatorBuilder* machine,
-      CommonOperatorBuilder* common, SimplifiedOperatorBuilder* simplified_,
-      Zone* zone, Signature<MachineRepresentation>* signature,
+      CommonOperatorBuilder* common, Zone* zone,
+      Signature<MachineRepresentation>* signature,
       std::unique_ptr<Int64LoweringSpecialCase> special_case = nullptr);
 
   void LowerGraph();
@@ -55,7 +54,6 @@ class V8_EXPORT_PRIVATE Int64Lowering {
   Graph* graph() const { return graph_; }
   MachineOperatorBuilder* machine() const { return machine_; }
   CommonOperatorBuilder* common() const { return common_; }
-  SimplifiedOperatorBuilder* simplified() const { return simplified_; }
   Signature<MachineRepresentation>* signature() const { return signature_; }
 
   void PushNode(Node* node);
@@ -65,10 +63,6 @@ class V8_EXPORT_PRIVATE Int64Lowering {
                        const Operator* unsigned_op);
   void LowerWord64AtomicBinop(Node* node, const Operator* op);
   void LowerWord64AtomicNarrowOp(Node* node, const Operator* op);
-  void LowerLoadOperator(Node* node, MachineRepresentation rep,
-                         const Operator* load_op);
-  void LowerStoreOperator(Node* node, MachineRepresentation rep,
-                          const Operator* store_op);
 
   const CallDescriptor* LowerCallDescriptor(
       const CallDescriptor* call_descriptor);
@@ -92,8 +86,7 @@ class V8_EXPORT_PRIVATE Int64Lowering {
   Graph* const graph_;
   MachineOperatorBuilder* machine_;
   CommonOperatorBuilder* common_;
-  SimplifiedOperatorBuilder* simplified_;
-  std::vector<State> state_;
+  NodeMarker<State> state_;
   ZoneDeque<NodeState> stack_;
   Replacement* replacements_;
   Signature<MachineRepresentation>* signature_;

@@ -15,22 +15,19 @@ const path = require('path');
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 const loc = fixtures.path('person-large.jpg');
-const fn = path.join(tmpdir.path, 'person-large.jpg');
+const fn = path.join(tmpdir.path, 'http2-url-tests.js');
 
 const server = http2.createServer();
 
 server.on('stream', common.mustCall((stream) => {
   const dest = stream.pipe(fs.createWriteStream(fn));
 
-  stream.on('end', common.mustCall(() => {
-    stream.respond();
-    stream.end();
-  }));
-
-  dest.on('finish', common.mustCall(() => {
-    assert.strictEqual(fs.readFileSync(fn).length,
-                       fs.readFileSync(loc).length);
-  }));
+  dest.on('finish', () => {
+    assert.strictEqual(fs.readFileSync(loc).length,
+                       fs.readFileSync(fn).length);
+  });
+  stream.respond();
+  stream.end();
 }));
 
 server.listen(common.PIPE, common.mustCall(() => {

@@ -17,7 +17,6 @@
 #include "src/objects/objects-inl.h"
 #include "src/objects/oddball.h"
 #include "src/objects/string-inl.h"
-#include "src/objects/string-table-inl.h"
 #include "src/strings/string-hasher.h"
 
 namespace v8 {
@@ -30,20 +29,14 @@ namespace internal {
 ROOT_LIST(ROOT_ACCESSOR)
 #undef ROOT_ACCESSOR
 
-bool Factory::CodeBuilder::CompiledWithConcurrentBaseline() const {
-  return FLAG_concurrent_sparkplug && kind_ == CodeKind::BASELINE &&
-         !local_isolate_->is_main_thread();
-}
-
 Handle<String> Factory::InternalizeString(Handle<String> string) {
   if (string->IsInternalizedString()) return string;
-  return isolate()->string_table()->LookupString(isolate(), string);
+  return StringTable::LookupString(isolate(), string);
 }
 
 Handle<Name> Factory::InternalizeName(Handle<Name> name) {
   if (name->IsUniqueName()) return name;
-  return isolate()->string_table()->LookupString(isolate(),
-                                                 Handle<String>::cast(name));
+  return StringTable::LookupString(isolate(), Handle<String>::cast(name));
 }
 
 Handle<String> Factory::NewSubString(Handle<String> str, int begin, int end) {
@@ -72,22 +65,7 @@ Handle<Object> Factory::NewURIError() {
                   MessageTemplate::kURIMalformed);
 }
 
-ReadOnlyRoots Factory::read_only_roots() const {
-  return ReadOnlyRoots(isolate());
-}
-
-HeapAllocator* Factory::allocator() const {
-  return isolate()->heap()->allocator();
-}
-
-Factory::CodeBuilder& Factory::CodeBuilder::set_interpreter_data(
-    Handle<HeapObject> interpreter_data) {
-  // This DCHECK requires this function to be in -inl.h.
-  DCHECK(interpreter_data->IsInterpreterData() ||
-         interpreter_data->IsBytecodeArray());
-  interpreter_data_ = interpreter_data;
-  return *this;
-}
+ReadOnlyRoots Factory::read_only_roots() { return ReadOnlyRoots(isolate()); }
 
 }  // namespace internal
 }  // namespace v8

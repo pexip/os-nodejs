@@ -7,7 +7,7 @@ import htmlStringify from 'rehype-stringify';
 import gfm from 'remark-gfm';
 import markdown from 'remark-parse';
 import remark2rehype from 'remark-rehype';
-import { unified } from 'unified';
+import unified from 'unified';
 import { visit } from 'unist-util-visit';
 
 const source = new URL('../../out/doc/api/', import.meta.url);
@@ -30,22 +30,16 @@ function collectStability(data) {
     if (mod.displayName && mod.stability >= 0) {
       const link = mod.source.replace('doc/api/', '').replace('.md', '.html');
 
-      let { stabilityText } = mod;
-      if (stabilityText.includes('. ')) {
-        stabilityText = stabilityText.slice(0, stabilityText.indexOf('.'));
-      }
-
       stability.push({
         api: mod.name,
-        displayName: mod.textRaw,
         link: link,
         stability: mod.stability,
-        stabilityText: `(${mod.stability}) ${stabilityText}`,
+        stabilityText: `(${mod.stability}) ${mod.stabilityText}`,
       });
     }
   }
 
-  stability.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  stability.sort((a, b) => a.api.localeCompare(b.api));
   return stability;
 }
 
@@ -53,7 +47,7 @@ function createMarkdownTable(data) {
   const md = ['| API | Stability |', '| --- | --------- |'];
 
   for (const mod of data) {
-    md.push(`| [${mod.displayName}](${mod.link}) | ${mod.stabilityText} |`);
+    md.push(`| [${mod.api}](${mod.link}) | ${mod.stabilityText} |`);
   }
 
   return md.join('\n');
@@ -69,7 +63,7 @@ function createHTML(md) {
     .use(processStability)
     .processSync(md);
 
-  return file.value.trim();
+  return file.contents.trim();
 }
 
 function processStability() {

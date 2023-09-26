@@ -86,11 +86,12 @@ async function runReplTests(socket, prompt, tests) {
 
       console.error('in:', JSON.stringify(actualLine));
 
-      // Match a string directly, or a RegExp.
+      // Match a string directly, or a RegExp through .test().
       if (typeof expectedLine === 'string') {
         assert.strictEqual(actualLine, expectedLine);
       } else {
-        assert.match(actualLine, expectedLine);
+        assert(expectedLine.test(actualLine),
+               `${actualLine} match ${expectedLine}`);
       }
     }
   }
@@ -226,12 +227,7 @@ const errorTests = [
   // should throw
   {
     send: '/(/;',
-    expect: [
-      kSource,
-      kArrow,
-      '',
-      /^Uncaught SyntaxError: /,
-    ]
+    expect: [/^Uncaught SyntaxError: /]
   },
   // invalid RegExp modifiers are a special case of syntax error,
   // should throw (GH-4012)
@@ -571,10 +567,10 @@ const errorTests = [
       /^Uncaught Error: Cannot find module 'internal\/repl'/,
       /^Require stack:/,
       /^- <repl>/,
-      /^ {4}at .*/,
-      /^ {4}at .*/,
-      /^ {4}at .*/,
-      /^ {4}at .*/,
+      /^    at .*/,
+      /^    at .*/,
+      /^    at .*/,
+      /^    at .*/,
       "  code: 'MODULE_NOT_FOUND',",
       "  requireStack: [ '<repl>' ]",
       '}',
@@ -776,12 +772,12 @@ const errorTests = [
       '  group: [Function: group],',
       '  groupEnd: [Function: groupEnd],',
       '  table: [Function: table],',
-      / {2}debug: \[Function: (debug|log)],/,
-      / {2}info: \[Function: (info|log)],/,
-      / {2}dirxml: \[Function: (dirxml|log)],/,
-      / {2}error: \[Function: (error|warn)],/,
-      / {2}groupCollapsed: \[Function: (groupCollapsed|group)],/,
-      / {2}Console: \[Function: Console],?/,
+      /  debug: \[Function: (debug|log)],/,
+      /  info: \[Function: (info|log)],/,
+      /  dirxml: \[Function: (dirxml|log)],/,
+      /  error: \[Function: (error|warn)],/,
+      /  groupCollapsed: \[Function: (groupCollapsed|group)],/,
+      /  Console: \[Function: Console],?/,
       ...process.features.inspector ? [
         '  profile: [Function: profile],',
         '  profileEnd: [Function: profileEnd],',
@@ -840,8 +836,7 @@ const tcpTests = [
 
     socket.end();
   }
-  common.allowGlobals(global.invoke_me, global.message, global.a, global.blah,
-                      global.I, global.f, global.path, global.x, global.name, global.foo);
+  common.allowGlobals(...Object.values(global));
 })().then(common.mustCall());
 
 function startTCPRepl() {

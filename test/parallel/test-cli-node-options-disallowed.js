@@ -28,7 +28,6 @@ disallow('--v8-options');
 disallow('--expose_internals');
 disallow('--expose-internals');
 disallow('--');
-disallow('--test');
 
 function disallow(opt) {
   const env = { ...process.env, NODE_OPTIONS: opt };

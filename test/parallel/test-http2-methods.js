@@ -8,7 +8,7 @@ const h2 = require('http2');
 
 const server = h2.createServer();
 
-const methods = ['GET', 'POST', 'PATCH', 'FOO', 'A_B_C'];
+const methods = [undefined, 'GET', 'POST', 'PATCH', 'FOO', 'A B C'];
 let expected = methods.length;
 
 // We use the lower-level API here

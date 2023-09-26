@@ -5,26 +5,14 @@
 #ifndef V8_COMPILER_ALLOCATION_BUILDER_INL_H_
 #define V8_COMPILER_ALLOCATION_BUILDER_INL_H_
 
-#include "src/compiler/access-builder.h"
 #include "src/compiler/allocation-builder.h"
-#include "src/heap/heap-inl.h"
-#include "src/objects/arguments-inl.h"
+
+#include "src/compiler/access-builder.h"
 #include "src/objects/map-inl.h"
 
 namespace v8 {
 namespace internal {
 namespace compiler {
-
-void AllocationBuilder::Allocate(int size, AllocationType allocation,
-                                 Type type) {
-  CHECK_GT(size, 0);
-  DCHECK_LE(size, isolate()->heap()->MaxRegularHeapObjectSize(allocation));
-  effect_ = graph()->NewNode(
-      common()->BeginRegion(RegionObservability::kNotObservable), effect_);
-  allocation_ = graph()->NewNode(simplified()->Allocate(type, allocation),
-                                 jsgraph()->Constant(size), effect_, control_);
-  effect_ = allocation_;
-}
 
 void AllocationBuilder::AllocateContext(int variadic_part_length, MapRef map) {
   DCHECK(base::IsInRange(map.instance_type(), FIRST_CONTEXT_TYPE,
@@ -39,38 +27,14 @@ void AllocationBuilder::AllocateContext(int variadic_part_length, MapRef map) {
         jsgraph()->Constant(variadic_part_length));
 }
 
-bool AllocationBuilder::CanAllocateArray(int length, MapRef map,
-                                         AllocationType allocation) {
-  DCHECK(map.instance_type() == FIXED_ARRAY_TYPE ||
-         map.instance_type() == FIXED_DOUBLE_ARRAY_TYPE);
-  int const size = (map.instance_type() == FIXED_ARRAY_TYPE)
-                       ? FixedArray::SizeFor(length)
-                       : FixedDoubleArray::SizeFor(length);
-  return size <= isolate()->heap()->MaxRegularHeapObjectSize(allocation);
-}
-
 // Compound allocation of a FixedArray.
 void AllocationBuilder::AllocateArray(int length, MapRef map,
                                       AllocationType allocation) {
-  DCHECK(CanAllocateArray(length, map, allocation));
+  DCHECK(map.instance_type() == FIXED_ARRAY_TYPE ||
+         map.instance_type() == FIXED_DOUBLE_ARRAY_TYPE);
   int size = (map.instance_type() == FIXED_ARRAY_TYPE)
                  ? FixedArray::SizeFor(length)
                  : FixedDoubleArray::SizeFor(length);
-  Allocate(size, allocation, Type::OtherInternal());
-  Store(AccessBuilder::ForMap(), map);
-  Store(AccessBuilder::ForFixedArrayLength(), jsgraph()->Constant(length));
-}
-
-bool AllocationBuilder::CanAllocateSloppyArgumentElements(
-    int length, MapRef map, AllocationType allocation) {
-  int const size = SloppyArgumentsElements::SizeFor(length);
-  return size <= isolate()->heap()->MaxRegularHeapObjectSize(allocation);
-}
-
-void AllocationBuilder::AllocateSloppyArgumentElements(
-    int length, MapRef map, AllocationType allocation) {
-  DCHECK(CanAllocateSloppyArgumentElements(length, map, allocation));
-  int size = SloppyArgumentsElements::SizeFor(length);
   Allocate(size, allocation, Type::OtherInternal());
   Store(AccessBuilder::ForMap(), map);
   Store(AccessBuilder::ForFixedArrayLength(), jsgraph()->Constant(length));

@@ -20,12 +20,6 @@ const { requireImport, importImport } = importer;
     ['#external', { default: 'asdf' }],
     // External subpath imports
     ['#external/subpath/asdf.js', { default: 'asdf' }],
-    // Trailing pattern imports
-    ['#subpath/asdf.asdf', { default: 'test' }],
-    // Leading slash
-    ['#subpath//asdf.asdf', { default: 'test' }],
-    // Double slash
-    ['#subpath/as//df.asdf', { default: 'test' }],
   ]);
 
   for (const [validSpecifier, expected] of internalImports) {
@@ -38,6 +32,8 @@ const { requireImport, importImport } = importer;
   }
 
   const invalidImportTargets = new Set([
+    // External subpath import without trailing slash
+    ['#external/invalidsubpath/x', '#external/invalidsubpath/'],
     // Target steps below the package base
     ['#belowbase', '#belowbase'],
     // Target is a URL
@@ -55,17 +51,15 @@ const { requireImport, importImport } = importer;
 
   const invalidImportSpecifiers = new Map([
     // Backtracking below the package base
-    ['#subpath/sub/../../../belowbase', 'request is not a valid match in pattern'],
+    ['#subpath/sub/../../../belowbase', 'request is not a valid subpath'],
     // Percent-encoded slash errors
-    ['#external/subpath/x%2Fy', 'must not include encoded "/" or "\\"'],
-    ['#external/subpath/x%5Cy', 'must not include encoded "/" or "\\"'],
+    ['#external/subpath/x%2Fy', 'must not include encoded "/"'],
     // Target must have a name
     ['#', '#'],
     // Initial slash target must have a leading name
     ['#/initialslash', '#/initialslash'],
     // Percent-encoded target paths
-    ['#encodedslash', 'must not include encoded "/" or "\\"'],
-    ['#encodedbackslash', 'must not include encoded "/" or "\\"'],
+    ['#percent', 'must not include encoded "/"'],
   ]);
 
   for (const [specifier, expected] of invalidImportSpecifiers) {
@@ -77,20 +71,14 @@ const { requireImport, importImport } = importer;
   }
 
   const undefinedImports = new Set([
-    // EOL subpaths
-    '#external/invalidsubpath/x',
     // Missing import
     '#missing',
     // Explicit null import
     '#null',
-    '#subpath/null',
     // No condition match import
     '#nullcondition',
     // Null subpath shadowing
     '#subpath/nullshadow/x',
-    // Null pattern
-    '#subpath/internal/test',
-    '#subpath/internal//test',
   ]);
 
   for (const specifier of undefinedImports) {
@@ -102,20 +90,10 @@ const { requireImport, importImport } = importer;
   }
 
   // Handle not found for the defined imports target not existing
-  const nonDefinedImports = new Set([
-    '#notfound',
-    '#subpath//null',
-    '#subpath/////null',
-    '#subpath//internal/test',
-    '#subpath//internal//test',
-    '#subpath/////internal/////test',
-  ]);
-  for (const specifier of nonDefinedImports) {
-    loadFixture(specifier).catch(mustCall((err) => {
-      strictEqual(err.code,
-                  isRequire ? 'MODULE_NOT_FOUND' : 'ERR_MODULE_NOT_FOUND');
-    }));
-  }
+  loadFixture('#notfound').catch(mustCall((err) => {
+    strictEqual(err.code,
+                isRequire ? 'MODULE_NOT_FOUND' : 'ERR_MODULE_NOT_FOUND');
+  }));
 });
 
 // CJS resolver must still support #package packages in node_modules

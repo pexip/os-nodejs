@@ -46,11 +46,7 @@ function main({ encodingType, duration, concurrent, size }) {
     benchEnded = true;
     bench.end(writes);
     for (let i = 0; i < filesWritten; i++) {
-      try {
-        fs.unlinkSync(`${filename}-${i}`);
-      } catch {
-        // Continue regardless of error.
-      }
+      try { fs.unlinkSync(`${filename}-${i}`); } catch { }
     }
     process.exit(0);
   }, duration * 1000);

@@ -8,7 +8,6 @@
 #include <cinttypes>
 
 #include "src/common/globals.h"
-#include "src/objects/code.h"
 
 namespace v8 {
 namespace internal {
@@ -68,25 +67,10 @@ void PlatformEmbeddedFileWriterGeneric::DeclarePointerToSymbol(
 
 void PlatformEmbeddedFileWriterGeneric::DeclareSymbolGlobal(const char* name) {
   fprintf(fp_, ".global %s%s\n", SYMBOL_PREFIX, name);
-  // These symbols are not visible outside of the final binary, this allows for
-  // reduced binary size, and less work for the dynamic linker.
-  fprintf(fp_, ".hidden %s\n", name);
 }
 
 void PlatformEmbeddedFileWriterGeneric::AlignToCodeAlignment() {
-#if V8_TARGET_ARCH_X64
-  // On x64 use 64-bytes code alignment to allow 64-bytes loop header alignment.
-  STATIC_ASSERT(64 >= kCodeAlignment);
-  fprintf(fp_, ".balign 64\n");
-#elif V8_TARGET_ARCH_PPC64
-  // 64 byte alignment is needed on ppc64 to make sure p10 prefixed instructions
-  // don't cross 64-byte boundaries.
-  STATIC_ASSERT(64 >= kCodeAlignment);
-  fprintf(fp_, ".balign 64\n");
-#else
-  STATIC_ASSERT(32 >= kCodeAlignment);
   fprintf(fp_, ".balign 32\n");
-#endif
 }
 
 void PlatformEmbeddedFileWriterGeneric::AlignToDataAlignment() {
@@ -94,7 +78,6 @@ void PlatformEmbeddedFileWriterGeneric::AlignToDataAlignment() {
   // instructions are used to retrieve v8_Default_embedded_blob_ and/or
   // v8_Default_embedded_blob_size_. The generated instructions require the
   // load target to be aligned at 8 bytes (2^3).
-  STATIC_ASSERT(8 >= Code::kMetadataAlignment);
   fprintf(fp_, ".balign 8\n");
 }
 
@@ -114,10 +97,6 @@ void PlatformEmbeddedFileWriterGeneric::SourceInfo(int fileid,
 
 void PlatformEmbeddedFileWriterGeneric::DeclareFunctionBegin(const char* name,
                                                              uint32_t size) {
-  if (ENABLE_CONTROL_FLOW_INTEGRITY_BOOL) {
-    DeclareSymbolGlobal(name);
-  }
-
   DeclareLabel(name);
 
   if (target_arch_ == EmbeddedTargetArch::kArm ||
@@ -135,7 +114,9 @@ void PlatformEmbeddedFileWriterGeneric::DeclareFunctionBegin(const char* name,
 
 void PlatformEmbeddedFileWriterGeneric::DeclareFunctionEnd(const char* name) {}
 
-void PlatformEmbeddedFileWriterGeneric::FilePrologue() {}
+void PlatformEmbeddedFileWriterGeneric::FilePrologue() {
+  // TODO(v8:10026): Add ELF note required for BTI.
+}
 
 void PlatformEmbeddedFileWriterGeneric::DeclareExternalFilename(
     int fileid, const char* filename) {
@@ -163,9 +144,8 @@ int PlatformEmbeddedFileWriterGeneric::IndentedDataDirective(
 
 DataDirective PlatformEmbeddedFileWriterGeneric::ByteChunkDataDirective()
     const {
-#if defined(V8_TARGET_ARCH_MIPS) || defined(V8_TARGET_ARCH_MIPS64) || \
-    defined(V8_TARGET_ARCH_LOONG64)
-  // MIPS and LOONG64 uses a fixed 4 byte instruction set, using .long
+#if defined(V8_TARGET_ARCH_MIPS) || defined(V8_TARGET_ARCH_MIPS64)
+  // MIPS uses a fixed 4 byte instruction set, using .long
   // to prevent any unnecessary padding.
   return kLong;
 #else

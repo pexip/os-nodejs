@@ -59,7 +59,8 @@ function unauthorized() {
     }));
     socket.on('end', () => rejectUnauthorized());
   }));
-  socket.once('session', common.mustCall());
+  socket.once('session', common.mustCall(() => {
+  }));
   socket.on('error', common.mustNotCall());
   socket.end('ok');
 }

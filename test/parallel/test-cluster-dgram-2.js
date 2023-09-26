@@ -31,13 +31,13 @@ const cluster = require('cluster');
 const dgram = require('dgram');
 const assert = require('assert');
 
-if (cluster.isPrimary)
-  primary();
+if (cluster.isMaster)
+  master();
 else
   worker();
 
 
-function primary() {
+function master() {
   let received = 0;
 
   // Start listening on a socket.
@@ -69,7 +69,7 @@ function primary() {
 
 
 function worker() {
-  // Create udp socket and send packets to primary.
+  // Create udp socket and send packets to master.
   const socket = dgram.createSocket('udp4');
   const buf = Buffer.from('hello world');
 

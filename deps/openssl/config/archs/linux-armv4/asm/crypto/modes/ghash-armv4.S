@@ -1,5 +1,6 @@
 #include "arm_arch.h"
 
+.text
 #if defined(__thumb2__) || defined(__clang__)
 .syntax	unified
 #define ldrplb  ldrbpl
@@ -10,8 +11,6 @@
 #else
 .code	32
 #endif
-
-.text
 
 .type	rem_4bit,%object
 .align	5

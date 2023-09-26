@@ -13,7 +13,7 @@ const net = require('net');
 const host = '::';
 const WORKER_COUNT = 3;
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   const workers = [];
   let address;
 

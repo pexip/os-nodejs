@@ -2,8 +2,6 @@
 
 'use strict';
 require('../common');
-Error.stackTraceLimit = 2;
-
 try {
   require('../fixtures/source-map/typescript-throw');
 } catch (err) {

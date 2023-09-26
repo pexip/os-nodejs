@@ -113,7 +113,7 @@ if (common.hasIntl) {
       '  fatal: false,\n' +
       '  ignoreBOM: true,\n' +
       '  [Symbol(flags)]: 4,\n' +
-      '  [Symbol(handle)]: undefined\n' +
+      '  [Symbol(handle)]: Converter {}\n' +
       '}'
     );
   } else {
@@ -190,31 +190,4 @@ if (common.hasIntl) {
       name: 'TypeError'
     }
   );
-}
-
-// Test TextDecoder for incomplete UTF-8 byte sequence.
-{
-  const decoder = new TextDecoder();
-  const chunk = new Uint8Array([0x66, 0x6f, 0x6f, 0xed]);
-  const str = decoder.decode(chunk);
-  assert.strictEqual(str, 'foo\ufffd');
-}
-
-if (common.hasIntl) {
-  try {
-    const decoder = new TextDecoder('Shift_JIS');
-    const chunk = new Uint8Array([-1]);
-    const str = decoder.decode(chunk);
-    assert.strictEqual(str, '\ufffd');
-  } catch (e) {
-    // Encoding may not be available, e.g. small-icu builds
-    assert.strictEqual(e.code, 'ERR_ENCODING_NOT_SUPPORTED');
-  }
-}
-
-{
-  const buffer = new ArrayBuffer(1);
-  new MessageChannel().port1.postMessage(buffer, [buffer]); // buffer is detached
-  const decoder = new TextDecoder();
-  assert.strictEqual(decoder.decode(buffer), '');
 }

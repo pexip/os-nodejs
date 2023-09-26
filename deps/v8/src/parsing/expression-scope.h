@@ -43,9 +43,6 @@ class VariableProxy;
 template <typename Types>
 class ExpressionScope {
  public:
-  ExpressionScope(const ExpressionScope&) = delete;
-  ExpressionScope& operator=(const ExpressionScope&) = delete;
-
   using ParserT = typename Types::Impl;
   using ExpressionT = typename Types::Expression;
 
@@ -63,16 +60,16 @@ class ExpressionScope {
           if (scope->is_with_scope()) {
             passed_through_with = true;
           } else if (scope->is_catch_scope()) {
-            Variable* masking_var = scope->LookupLocal(name);
+            Variable* var = scope->LookupLocal(name);
             // If a variable is declared in a catch scope with a masking
             // catch-declared variable, the initializing assignment is an
             // assignment to the catch-declared variable instead.
             // https://tc39.es/ecma262/#sec-variablestatements-in-catch-blocks
-            if (masking_var != nullptr) {
+            if (var != nullptr) {
               result->set_is_assigned();
               if (passed_through_with) break;
-              result->BindTo(masking_var);
-              masking_var->SetMaybeAssigned();
+              result->BindTo(var);
+              var->SetMaybeAssigned();
               return result;
             }
           }
@@ -345,6 +342,8 @@ class ExpressionScope {
   ScopeType type_;
   bool has_possible_parameter_in_scope_chain_;
   bool has_possible_arrow_parameter_in_scope_chain_;
+
+  DISALLOW_COPY_AND_ASSIGN(ExpressionScope);
 };
 
 // Used to unambiguously parse var, let, const declarations.
@@ -362,11 +361,6 @@ class VariableDeclarationParsingScope : public ExpressionScope<Types> {
                                      : ExpressionScopeT::kVarDeclaration),
         mode_(mode),
         names_(names) {}
-
-  VariableDeclarationParsingScope(const VariableDeclarationParsingScope&) =
-      delete;
-  VariableDeclarationParsingScope& operator=(
-      const VariableDeclarationParsingScope&) = delete;
 
   Variable* Declare(const AstRawString* name, int pos) {
     VariableKind kind = NORMAL_VARIABLE;
@@ -419,6 +413,8 @@ class VariableDeclarationParsingScope : public ExpressionScope<Types> {
 
   VariableMode mode_;
   ZonePtrList<const AstRawString>* names_;
+
+  DISALLOW_COPY_AND_ASSIGN(VariableDeclarationParsingScope);
 };
 
 template <typename Types>
@@ -430,11 +426,6 @@ class ParameterDeclarationParsingScope : public ExpressionScope<Types> {
 
   explicit ParameterDeclarationParsingScope(ParserT* parser)
       : ExpressionScopeT(parser, ExpressionScopeT::kParameterDeclaration) {}
-
-  ParameterDeclarationParsingScope(const ParameterDeclarationParsingScope&) =
-      delete;
-  ParameterDeclarationParsingScope& operator=(
-      const ParameterDeclarationParsingScope&) = delete;
 
   Variable* Declare(const AstRawString* name, int pos) {
     VariableKind kind = PARAMETER_VARIABLE;
@@ -455,6 +446,7 @@ class ParameterDeclarationParsingScope : public ExpressionScope<Types> {
 
  private:
   Scanner::Location duplicate_loc_ = Scanner::Location::invalid();
+  DISALLOW_COPY_AND_ASSIGN(ParameterDeclarationParsingScope);
 };
 
 // Parsing expressions is always ambiguous between at least left-hand-side and
@@ -488,9 +480,6 @@ class ExpressionParsingScope : public ExpressionScope<Types> {
     clear(kPatternIndex);
   }
 
-  ExpressionParsingScope(const ExpressionParsingScope&) = delete;
-  ExpressionParsingScope& operator=(const ExpressionParsingScope&) = delete;
-
   void RecordAsyncArrowParametersError(const Scanner::Location& loc,
                                        MessageTemplate message) {
     for (ExpressionScopeT* scope = this; scope != nullptr;
@@ -516,10 +505,8 @@ class ExpressionParsingScope : public ExpressionScope<Types> {
       return expression;
     }
     this->mark_verified();
-    const bool early_error = false;
     return this->parser()->RewriteInvalidReferenceExpression(
-        expression, beg_pos, end_pos, MessageTemplate::kInvalidLhsInFor,
-        early_error);
+        expression, beg_pos, end_pos, MessageTemplate::kInvalidLhsInFor);
   }
 
   void RecordExpressionError(const Scanner::Location& loc,
@@ -654,6 +641,8 @@ class ExpressionParsingScope : public ExpressionScope<Types> {
   MessageTemplate messages_[kNumberOfErrors];
   Scanner::Location locations_[kNumberOfErrors];
   bool has_async_arrow_in_scope_chain_;
+
+  DISALLOW_COPY_AND_ASSIGN(ExpressionParsingScope);
 };
 
 // This class is used to parse multiple ambiguous expressions and declarations
@@ -680,9 +669,6 @@ class AccumulationScope {
       scope_->clear(i);
     }
   }
-
-  AccumulationScope(const AccumulationScope&) = delete;
-  AccumulationScope& operator=(const AccumulationScope&) = delete;
 
   // Merge errors from the underlying ExpressionParsingScope into this scope.
   // Only keeps the first error across all accumulate calls, and removes the
@@ -735,6 +721,8 @@ class AccumulationScope {
   ExpressionParsingScope<Types>* scope_;
   MessageTemplate messages_[2];
   Scanner::Location locations_[2];
+
+  DISALLOW_COPY_AND_ASSIGN(AccumulationScope);
 };
 
 // The head of an arrow function is ambiguous between expression, assignment
@@ -758,12 +746,7 @@ class ArrowHeadParsingScope : public ExpressionParsingScope<Types> {
            kind == FunctionKind::kArrowFunction);
     DCHECK(this->CanBeDeclaration());
     DCHECK(!this->IsCertainlyDeclaration());
-    // clear last next_arrow_function_info tracked strict parameters error.
-    parser->next_arrow_function_info_.ClearStrictParameterError();
   }
-
-  ArrowHeadParsingScope(const ArrowHeadParsingScope&) = delete;
-  ArrowHeadParsingScope& operator=(const ArrowHeadParsingScope&) = delete;
 
   void ValidateExpression() {
     // Turns out this is not an arrow head. Clear any possible tracked strict
@@ -837,6 +820,8 @@ class ArrowHeadParsingScope : public ExpressionParsingScope<Types> {
   MessageTemplate declaration_error_message = MessageTemplate::kNone;
   bool has_simple_parameter_list_ = true;
   bool uses_this_ = false;
+
+  DISALLOW_COPY_AND_ASSIGN(ArrowHeadParsingScope);
 };
 
 }  // namespace internal

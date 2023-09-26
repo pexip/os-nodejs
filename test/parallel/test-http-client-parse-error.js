@@ -23,7 +23,6 @@
 const common = require('../common');
 const http = require('http');
 const net = require('net');
-const assert = require('assert');
 const Countdown = require('../common/countdown');
 
 const countdown = new Countdown(2, () => server.close());
@@ -39,12 +38,10 @@ const server =
 
 server.listen(0, common.mustCall(() => {
   for (let i = 0; i < 2; i++) {
-    const req = http.get({
+    http.get({
       port: server.address().port,
       path: '/'
     }).on('error', common.mustCall((e) => {
-      assert.strictEqual(req.socket.listenerCount('data'), 0);
-      assert.strictEqual(req.socket.listenerCount('end'), 1);
       common.expectsError({
         code: 'HPE_INVALID_CONSTANT',
         message: 'Parse Error: Expected HTTP/'

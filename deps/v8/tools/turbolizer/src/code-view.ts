@@ -27,7 +27,7 @@ export class CodeView extends View {
   source: Source;
   sourceResolver: SourceResolver;
   codeMode: CodeMode;
-  sourcePositionToHtmlElements: Map<string, Array<HTMLElement>>;
+  sourcePositionToHtmlElement: Map<string, HTMLElement>;
   showAdditionalInliningPosition: boolean;
   selectionHandler: SelectionHandler;
   selection: MySelection;
@@ -45,7 +45,7 @@ export class CodeView extends View {
     view.sourceResolver = sourceResolver;
     view.source = sourceFunction;
     view.codeMode = codeMode;
-    this.sourcePositionToHtmlElements = new Map();
+    this.sourcePositionToHtmlElement = new Map();
     this.showAdditionalInliningPosition = false;
 
     const selectionHandler = {
@@ -87,25 +87,23 @@ export class CodeView extends View {
 
   addHtmlElementToSourcePosition(sourcePosition, element) {
     const key = sourcePositionToStringKey(sourcePosition);
-    if (!this.sourcePositionToHtmlElements.has(key)) {
-      this.sourcePositionToHtmlElements.set(key, []);
+    if (this.sourcePositionToHtmlElement.has(key)) {
+      console.log("Warning: duplicate source position", sourcePosition);
     }
-    this.sourcePositionToHtmlElements.get(key).push(element);
+    this.sourcePositionToHtmlElement.set(key, element);
   }
 
   getHtmlElementForSourcePosition(sourcePosition) {
     const key = sourcePositionToStringKey(sourcePosition);
-    return this.sourcePositionToHtmlElements.get(key);
+    return this.sourcePositionToHtmlElement.get(key);
   }
 
   updateSelection(scrollIntoView: boolean = false): void {
     const mkVisible = new ViewElements(this.divNode.parentNode as HTMLElement);
-    for (const [sp, els] of this.sourcePositionToHtmlElements.entries()) {
+    for (const [sp, el] of this.sourcePositionToHtmlElement.entries()) {
       const isSelected = this.selection.isKeySelected(sp);
-      for (const el of els) {
-        mkVisible.consider(el, isSelected);
-        el.classList.toggle("selected", isSelected);
-      }
+      mkVisible.consider(el, isSelected);
+      el.classList.toggle("selected", isSelected);
     }
     mkVisible.apply(scrollIntoView);
   }
@@ -127,7 +125,7 @@ export class CodeView extends View {
     if (doClear) {
       this.selectionHandler.clear();
     }
-    const positions = this.sourceResolver.lineToSourcePositions(lineNumber - 1);
+    const positions = this.sourceResolver.linetoSourcePositions(lineNumber - 1);
     if (positions !== undefined) {
       this.selectionHandler.select(positions, undefined);
     }
@@ -237,9 +235,7 @@ export class CodeView extends View {
     const sps = this.sourceResolver.sourcePositionsInRange(this.source.sourceId, pos - adjust, end);
     let offset = 0;
     for (const sourcePosition of sps) {
-      // Internally, line numbers are 0-based so we have to substract 1 from the line number. This
-      // path in only taken by non-Wasm code. Wasm code relies on setSourceLineToBytecodePosition.
-      this.sourceResolver.addAnyPositionToLine(lineNumber - 1, sourcePosition);
+      this.sourceResolver.addAnyPositionToLine(lineNumber, sourcePosition);
       const textnode = currentSpan.tagName == 'SPAN' ? currentSpan.lastChild : currentSpan;
       if (!(textnode instanceof Text)) continue;
       const splitLength = Math.max(0, sourcePosition.scriptOffset - pos - offset);
@@ -275,8 +271,11 @@ export class CodeView extends View {
     lineNumberElement.dataset.lineNumber = `${lineNumber}`;
     lineNumberElement.innerText = `${lineNumber}`;
     lineElement.insertBefore(lineNumberElement, lineElement.firstChild);
-    for (const sourcePosition of this.sourceResolver.lineToSourcePositions(lineNumber - 1)) {
-      view.addHtmlElementToSourcePosition(sourcePosition, lineElement);
+    // Don't add lines to source positions of not in backwardsCompatibility mode.
+    if (this.source.backwardsCompatibility === true) {
+      for (const sourcePosition of this.sourceResolver.linetoSourcePositions(lineNumber - 1)) {
+        view.addHtmlElementToSourcePosition(sourcePosition, lineElement);
+      }
     }
   }
 

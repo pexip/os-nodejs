@@ -36,18 +36,21 @@ macro HandleFastAliasedSloppyArgumentsSlice(
 
   const sloppyElements: SloppyArgumentsElements =
       Cast<SloppyArgumentsElements>(args.elements) otherwise Bailout;
-  const parameterMapLength: Smi = sloppyElements.length;
+  const sloppyElementsLength: Smi = sloppyElements.length;
+  const parameterMapLength: Smi =
+      sloppyElementsLength - kSloppyArgumentsParameterMapStart;
 
   // Check to make sure that the extraction will not access outside the
   // defined arguments
   const end: Smi = start + count;
   const unmappedElements: FixedArray =
-      Cast<FixedArray>(sloppyElements.arguments)
+      Cast<FixedArray>(sloppyElements.objects[kSloppyArgumentsArgumentsIndex])
       otherwise Bailout;
   const unmappedElementsLength: Smi = unmappedElements.length;
   if (SmiAbove(end, unmappedElementsLength)) goto Bailout;
 
-  const argumentsContext: Context = sloppyElements.context;
+  const argumentsContext: Context =
+      UnsafeCast<Context>(sloppyElements.objects[kSloppyArgumentsContextIndex]);
 
   const arrayMap: Map =
       LoadJSArrayElementsMap(ElementsKind::HOLEY_ELEMENTS, context);
@@ -60,13 +63,14 @@ macro HandleFastAliasedSloppyArgumentsSlice(
 
   // Fill in the part of the result that map to context-mapped parameters.
   for (let current: Smi = start; current < to; ++current) {
-    const e: Object = sloppyElements.mapped_entries[current];
+    const e: Object =
+        sloppyElements.objects[current + kSloppyArgumentsParameterMapStart];
     const newElement = UnsafeCast<(JSAny | TheHole)>(
-        e != TheHole ? argumentsContext.elements[UnsafeCast<Smi>(e)] :
+        e != TheHole ? argumentsContext[UnsafeCast<Smi>(e)] :
                        unmappedElements.objects[current]);
     // It is safe to skip the write barrier here because resultElements was
     // allocated together with result in a folded allocation.
-    // TODO(turbofan): The verification of this fails at the moment due to
+    // TODO(tebbi): The verification of this fails at the moment due to
     // missing load elimination.
     StoreFixedArrayElement(
         resultElements, indexOut++, newElement, UNSAFE_SKIP_WRITE_BARRIER);
@@ -89,7 +93,7 @@ macro HandleFastSlice(
     labels Bailout {
   const start: Smi = Cast<Smi>(startNumber) otherwise Bailout;
   const count: Smi = Cast<Smi>(countNumber) otherwise Bailout;
-  dcheck(start >= 0);
+  assert(start >= 0);
 
   try {
     typeswitch (o) {
@@ -130,6 +134,17 @@ macro HandleFastSlice(
 transitioning javascript builtin
 ArrayPrototypeSlice(
     js-implicit context: NativeContext, receiver: JSAny)(...arguments): JSAny {
+  // Handle array cloning case if the receiver is a fast array.
+  if (arguments.length == 0) {
+    typeswitch (receiver) {
+      case (a: FastJSArrayForCopy): {
+        return CloneFastJSArray(context, a);
+      }
+      case (JSAny): {
+      }
+    }
+  }
+
   // 1. Let O be ? ToObject(this value).
   const o: JSReceiver = ToObject_Inline(context, receiver);
 
@@ -150,30 +165,6 @@ ArrayPrototypeSlice(
   const end: JSAny = arguments[1];
   const relativeEnd: Number = end == Undefined ? len : ToInteger_Inline(end);
 
-  // Handle array cloning case if the receiver is a fast array. In the case
-  // where relativeStart is 0 but start is not the SMI zero (e.g., start is an
-  // object whose valueOf returns 0) we must not call CloneFastJSArray. This is
-  // because CloneFastArray reloads the array length, and the ToInteger above
-  // might have called user code which changed it. Thus, calling
-  // CloneFastJSArray here is safe only if we know ToInteger didn't call user
-  // code.
-
-  // This logic should be in sync with ArrayPrototypeSlice (to a reasonable
-  // degree). This is because CloneFastJSArray produces arrays which are
-  // potentially COW. If there's a discrepancy, TF generates code which produces
-  // a COW array and then expects it to be non-COW (or the other way around) ->
-  // immediate deopt.
-  if ((start == Undefined || TaggedEqual(start, SmiConstant(0))) &&
-      end == Undefined) {
-    typeswitch (receiver) {
-      case (a: FastJSArrayForCopy): {
-        return CloneFastJSArray(context, a);
-      }
-      case (JSAny): {
-      }
-    }
-  }
-
   // 6. If relativeEnd < 0, let final be max((len + relativeEnd), 0);
   //    else let final be min(relativeEnd, len).
   const final: Number =
@@ -182,12 +173,12 @@ ArrayPrototypeSlice(
   // 7. Let count be max(final - k, 0).
   const count: Number = Max(final - k, 0);
 
-  dcheck(0 <= k);
-  dcheck(k <= len);
-  dcheck(0 <= final);
-  dcheck(final <= len);
-  dcheck(0 <= count);
-  dcheck(count <= len);
+  assert(0 <= k);
+  assert(k <= len);
+  assert(0 <= final);
+  assert(final <= len);
+  assert(0 <= count);
+  assert(count <= len);
 
   try {
     return HandleFastSlice(context, o, k, count)

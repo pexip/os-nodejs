@@ -5,12 +5,9 @@
 #ifndef V8_CODEGEN_SAFEPOINT_TABLE_H_
 #define V8_CODEGEN_SAFEPOINT_TABLE_H_
 
-#include "src/base/bit-field.h"
-#include "src/base/iterator.h"
 #include "src/base/memory.h"
 #include "src/common/assert-scope.h"
 #include "src/utils/allocation.h"
-#include "src/utils/bit-vector.h"
 #include "src/utils/utils.h"
 #include "src/zone/zone-chunk-list.h"
 #include "src/zone/zone.h"
@@ -18,245 +15,162 @@
 namespace v8 {
 namespace internal {
 
-namespace wasm {
-class WasmCode;
-}  // namespace wasm
-
 class SafepointEntry {
  public:
-  static constexpr int kNoDeoptIndex = -1;
-  static constexpr int kNoTrampolinePC = -1;
+  SafepointEntry() : deopt_index_(0), bits_(nullptr), trampoline_pc_(-1) {}
 
-  SafepointEntry() = default;
-
-  SafepointEntry(int pc, int deopt_index, uint32_t tagged_register_indexes,
-                 base::Vector<uint8_t> tagged_slots, int trampoline_pc)
-      : pc_(pc),
-        deopt_index_(deopt_index),
-        tagged_register_indexes_(tagged_register_indexes),
-        tagged_slots_(tagged_slots),
-        trampoline_pc_(trampoline_pc) {
-    DCHECK(is_initialized());
+  SafepointEntry(unsigned deopt_index, uint8_t* bits, int trampoline_pc)
+      : deopt_index_(deopt_index), bits_(bits), trampoline_pc_(trampoline_pc) {
+    DCHECK(is_valid());
   }
 
-  bool is_initialized() const { return tagged_slots_.begin() != nullptr; }
+  bool is_valid() const { return bits_ != nullptr; }
 
-  bool operator==(const SafepointEntry& other) const {
-    return pc_ == other.pc_ && deopt_index_ == other.deopt_index_ &&
-           tagged_register_indexes_ == other.tagged_register_indexes_ &&
-           tagged_slots_ == other.tagged_slots_ &&
-           trampoline_pc_ == other.trampoline_pc_;
+  bool Equals(const SafepointEntry& other) const {
+    return deopt_index_ == other.deopt_index_ && bits_ == other.bits_;
   }
 
   void Reset() {
-    *this = SafepointEntry{};
-    DCHECK(!is_initialized());
+    deopt_index_ = 0;
+    bits_ = nullptr;
   }
 
-  int pc() const { return pc_; }
+  int trampoline_pc() { return trampoline_pc_; }
 
-  int trampoline_pc() const { return trampoline_pc_; }
-
-  bool has_deoptimization_index() const {
-    DCHECK(is_initialized());
-    return deopt_index_ != kNoDeoptIndex;
-  }
+  static const unsigned kNoDeoptIndex = kMaxUInt32;
 
   int deoptimization_index() const {
-    DCHECK(is_initialized() && has_deoptimization_index());
+    DCHECK(is_valid() && has_deoptimization_index());
     return deopt_index_;
   }
 
-  uint32_t tagged_register_indexes() const {
-    DCHECK(is_initialized());
-    return tagged_register_indexes_;
+  bool has_deoptimization_index() const {
+    DCHECK(is_valid());
+    return deopt_index_ != kNoDeoptIndex;
   }
 
-  base::Vector<const uint8_t> tagged_slots() const {
-    DCHECK(is_initialized());
-    return tagged_slots_;
+  uint8_t* bits() {
+    DCHECK(is_valid());
+    return bits_;
   }
 
  private:
-  int pc_ = -1;
-  int deopt_index_ = kNoDeoptIndex;
-  uint32_t tagged_register_indexes_ = 0;
-  base::Vector<uint8_t> tagged_slots_;
-  int trampoline_pc_ = kNoTrampolinePC;
+  unsigned deopt_index_;
+  uint8_t* bits_;
+  // It needs to be an integer as it is -1 for eager deoptimizations.
+  int trampoline_pc_;
 };
 
-// A wrapper class for accessing the safepoint table embedded into the Code
-// object.
 class SafepointTable {
  public:
-  // The isolate and pc arguments are used for figuring out whether pc
-  // belongs to the embedded or un-embedded code blob.
-  explicit SafepointTable(Isolate* isolate, Address pc, Code code);
-#if V8_ENABLE_WEBASSEMBLY
-  explicit SafepointTable(const wasm::WasmCode* code);
-#endif  // V8_ENABLE_WEBASSEMBLY
+  explicit SafepointTable(Code code);
+  explicit SafepointTable(Address instruction_start,
+                          size_t safepoint_table_offset, uint32_t stack_slots,
+                          bool has_deopt = false);
 
-  SafepointTable(const SafepointTable&) = delete;
-  SafepointTable& operator=(const SafepointTable&) = delete;
+  int size() const {
+    return kHeaderSize + (length_ * (kFixedEntrySize + entry_size_));
+  }
+  unsigned length() const { return length_; }
+  unsigned entry_size() const { return entry_size_; }
 
-  int length() const { return length_; }
-
-  int byte_size() const {
-    return kHeaderSize + length_ * (entry_size() + tagged_slots_bytes());
+  unsigned GetPcOffset(unsigned index) const {
+    DCHECK(index < length_);
+    return base::Memory<uint32_t>(GetPcOffsetLocation(index));
   }
 
-  int find_return_pc(int pc_offset);
+  int GetTrampolinePcOffset(unsigned index) const {
+    DCHECK(index < length_);
+    return base::Memory<int>(GetTrampolineLocation(index));
+  }
 
-  SafepointEntry GetEntry(int index) const {
-    DCHECK_GT(length_, index);
-    Address entry_ptr =
-        safepoint_table_address_ + kHeaderSize + index * entry_size();
+  unsigned find_return_pc(unsigned pc_offset);
 
-    int pc = read_bytes(&entry_ptr, pc_size());
-    int deopt_index = SafepointEntry::kNoDeoptIndex;
-    int trampoline_pc = SafepointEntry::kNoTrampolinePC;
-    if (has_deopt_data()) {
-      STATIC_ASSERT(SafepointEntry::kNoDeoptIndex == -1);
-      STATIC_ASSERT(SafepointEntry::kNoTrampolinePC == -1);
-      // `-1` to restore the original value, see also
-      // SafepointTableBuilder::Emit.
-      deopt_index = read_bytes(&entry_ptr, deopt_index_size()) - 1;
-      trampoline_pc = read_bytes(&entry_ptr, pc_size()) - 1;
-      DCHECK(deopt_index >= 0 || deopt_index == SafepointEntry::kNoDeoptIndex);
-      DCHECK(trampoline_pc >= 0 ||
-             trampoline_pc == SafepointEntry::kNoTrampolinePC);
-    }
-    int tagged_register_indexes =
-        read_bytes(&entry_ptr, register_indexes_size());
-
-    // Entry bits start after the the vector of entries (thus the pc offset of
-    // the non-existing entry after the last one).
-    uint8_t* tagged_slots_start = reinterpret_cast<uint8_t*>(
-        safepoint_table_address_ + kHeaderSize + length_ * entry_size());
-    base::Vector<uint8_t> tagged_slots(
-        tagged_slots_start + index * tagged_slots_bytes(),
-        tagged_slots_bytes());
-
-    return SafepointEntry(pc, deopt_index, tagged_register_indexes,
-                          tagged_slots, trampoline_pc);
+  SafepointEntry GetEntry(unsigned index) const {
+    DCHECK(index < length_);
+    unsigned deopt_index =
+        base::Memory<uint32_t>(GetEncodedInfoLocation(index));
+    uint8_t* bits = &base::Memory<uint8_t>(entries_ + (index * entry_size_));
+    int trampoline_pc =
+        has_deopt_ ? base::Memory<int>(GetTrampolineLocation(index)) : -1;
+    return SafepointEntry(deopt_index, bits, trampoline_pc);
   }
 
   // Returns the entry for the given pc.
   SafepointEntry FindEntry(Address pc) const;
 
-  void Print(std::ostream&) const;
+  void PrintEntry(unsigned index, std::ostream& os) const;  // NOLINT
 
  private:
-  // Layout information.
-  static constexpr int kLengthOffset = 0;
-  static constexpr int kEntryConfigurationOffset = kLengthOffset + kIntSize;
-  static constexpr int kHeaderSize = kEntryConfigurationOffset + kUInt32Size;
+  static const uint8_t kNoRegisters = 0xFF;
 
-  using HasDeoptDataField = base::BitField<bool, 0, 1>;
-  using RegisterIndexesSizeField = HasDeoptDataField::Next<int, 3>;
-  using PcSizeField = RegisterIndexesSizeField::Next<int, 3>;
-  using DeoptIndexSizeField = PcSizeField::Next<int, 3>;
-  // In 22 bits, we can encode up to 4M bytes, corresponding to 32M frame slots,
-  // which is 128MB on 32-bit and 256MB on 64-bit systems. The stack size is
-  // limited to a bit below 1MB anyway (see FLAG_stack_size).
-  using TaggedSlotsBytesField = DeoptIndexSizeField::Next<int, 22>;
+  // Layout information
+  static const int kLengthOffset = 0;
+  static const int kEntrySizeOffset = kLengthOffset + kIntSize;
+  static const int kHeaderSize = kEntrySizeOffset + kIntSize;
+  static const int kPcOffset = 0;
+  static const int kEncodedInfoOffset = kPcOffset + kIntSize;
+  static const int kTrampolinePcOffset = kEncodedInfoOffset + kIntSize;
+  static const int kFixedEntrySize = kTrampolinePcOffset + kIntSize;
 
-  SafepointTable(Address instruction_start, Address safepoint_table_address);
-
-  int entry_size() const {
-    int deopt_data_size = has_deopt_data() ? pc_size() + deopt_index_size() : 0;
-    return pc_size() + deopt_data_size + register_indexes_size();
+  Address GetPcOffsetLocation(unsigned index) const {
+    return pc_and_deoptimization_indexes_ + (index * kFixedEntrySize);
   }
 
-  int tagged_slots_bytes() const {
-    return TaggedSlotsBytesField::decode(entry_configuration_);
-  }
-  bool has_deopt_data() const {
-    return HasDeoptDataField::decode(entry_configuration_);
-  }
-  int pc_size() const { return PcSizeField::decode(entry_configuration_); }
-  int deopt_index_size() const {
-    return DeoptIndexSizeField::decode(entry_configuration_);
-  }
-  int register_indexes_size() const {
-    return RegisterIndexesSizeField::decode(entry_configuration_);
+  Address GetEncodedInfoLocation(unsigned index) const {
+    return GetPcOffsetLocation(index) + kEncodedInfoOffset;
   }
 
-  static int read_bytes(Address* ptr, int bytes) {
-    uint32_t result = 0;
-    for (int b = 0; b < bytes; ++b, ++*ptr) {
-      result |= uint32_t{*reinterpret_cast<uint8_t*>(*ptr)} << (8 * b);
-    }
-    return static_cast<int>(result);
+  Address GetTrampolineLocation(unsigned index) const {
+    return GetPcOffsetLocation(index) + kTrampolinePcOffset;
   }
 
-  DISALLOW_GARBAGE_COLLECTION(no_gc_)
+  static void PrintBits(std::ostream& os,  // NOLINT
+                        uint8_t byte, int digits);
 
-  const Address instruction_start_;
+  DISALLOW_HEAP_ALLOCATION(no_allocation_)
+  Address instruction_start_;
+  uint32_t stack_slots_;
+  unsigned length_;
+  unsigned entry_size_;
 
-  // Safepoint table layout.
-  const Address safepoint_table_address_;
-  const int length_;
-  const uint32_t entry_configuration_;
+  Address pc_and_deoptimization_indexes_;
+  Address entries_;
+  bool has_deopt_;
 
   friend class SafepointTableBuilder;
   friend class SafepointEntry;
+
+  DISALLOW_COPY_AND_ASSIGN(SafepointTable);
+};
+
+class Safepoint {
+ public:
+  enum DeoptMode { kNoLazyDeopt, kLazyDeopt };
+
+  static const int kNoDeoptimizationIndex = SafepointEntry::kNoDeoptIndex;
+
+  void DefinePointerSlot(int index) { indexes_->push_back(index); }
+
+ private:
+  explicit Safepoint(ZoneChunkList<int>* indexes) : indexes_(indexes) {}
+  ZoneChunkList<int>* const indexes_;
+
+  friend class SafepointTableBuilder;
 };
 
 class SafepointTableBuilder {
- private:
-  struct EntryBuilder {
-    int pc;
-    int deopt_index = SafepointEntry::kNoDeoptIndex;
-    int trampoline = SafepointEntry::kNoTrampolinePC;
-    GrowableBitVector* stack_indexes;
-    uint32_t register_indexes = 0;
-    EntryBuilder(Zone* zone, int pc)
-        : pc(pc), stack_indexes(zone->New<GrowableBitVector>()) {}
-  };
-
  public:
-  explicit SafepointTableBuilder(Zone* zone) : entries_(zone), zone_(zone) {}
+  explicit SafepointTableBuilder(Zone* zone)
+      : deoptimization_info_(zone),
+        emitted_(false),
+        zone_(zone) {}
 
-  SafepointTableBuilder(const SafepointTableBuilder&) = delete;
-  SafepointTableBuilder& operator=(const SafepointTableBuilder&) = delete;
-
-  bool emitted() const {
-    return safepoint_table_offset_ != kNoSafepointTableOffset;
-  }
-
-  int safepoint_table_offset() const {
-    DCHECK(emitted());
-    return safepoint_table_offset_;
-  }
-
-  class Safepoint {
-   public:
-    void DefineTaggedStackSlot(int index) {
-      // Note it is only valid to specify stack slots here that are *not* in
-      // the fixed part of the frame (e.g. argc, target, context, stored rbp,
-      // return address). Frame iteration handles the fixed part of the frame
-      // with custom code, see CommonFrame::IterateCompiledFrame.
-      entry_->stack_indexes->Add(index, table_->zone_);
-      table_->UpdateMinMaxStackIndex(index);
-    }
-
-    void DefineTaggedRegister(int reg_code) {
-      DCHECK_LT(reg_code,
-                kBitsPerByte * sizeof(EntryBuilder::register_indexes));
-      entry_->register_indexes |= 1u << reg_code;
-    }
-
-   private:
-    friend class SafepointTableBuilder;
-    Safepoint(EntryBuilder* entry, SafepointTableBuilder* table)
-        : entry_(entry), table_(table) {}
-    EntryBuilder* const entry_;
-    SafepointTableBuilder* const table_;
-  };
+  // Get the offset of the emitted safepoint table in the code.
+  unsigned GetCodeOffset() const;
 
   // Define a new safepoint for the current position in the body.
-  Safepoint DefineSafepoint(Assembler* assembler);
+  Safepoint DefineSafepoint(Assembler* assembler, Safepoint::DeoptMode mode);
 
   // Emit the safepoint table after the body. The number of bits per
   // entry must be enough to hold all the pointer indexes.
@@ -267,39 +181,37 @@ class SafepointTableBuilder {
   // table contains the trampoline PC {trampoline} that replaced the
   // return PC {pc} on the stack.
   int UpdateDeoptimizationInfo(int pc, int trampoline, int start,
-                               int deopt_index);
+                               unsigned deopt_index);
 
  private:
-  // Remove consecutive identical entries.
+  struct DeoptimizationInfo {
+    unsigned pc;
+    unsigned deopt_index;
+    int trampoline;
+    ZoneChunkList<int>* indexes;
+    DeoptimizationInfo(Zone* zone, unsigned pc)
+        : pc(pc),
+          deopt_index(Safepoint::kNoDeoptimizationIndex),
+          trampoline(-1),
+          indexes(new (zone) ZoneChunkList<int>(
+              zone, ZoneChunkList<int>::StartMode::kSmall)) {}
+  };
+
+  // Compares all fields of a {DeoptimizationInfo} except {pc} and {trampoline}.
+  bool IsIdenticalExceptForPc(const DeoptimizationInfo&,
+                              const DeoptimizationInfo&) const;
+
+  // If all entries are identical, replace them by 1 entry with pc = kMaxUInt32.
   void RemoveDuplicates();
 
-  void UpdateMinMaxStackIndex(int index) {
-#ifdef DEBUG
-    max_stack_index_ = std::max(max_stack_index_, index);
-#endif  // DEBUG
-    min_stack_index_ = std::min(min_stack_index_, index);
-  }
+  ZoneChunkList<DeoptimizationInfo> deoptimization_info_;
 
-  int min_stack_index() const {
-    return min_stack_index_ == std::numeric_limits<int>::max()
-               ? 0
-               : min_stack_index_;
-  }
+  unsigned offset_;
+  bool emitted_;
 
-  static constexpr int kNoSafepointTableOffset = -1;
+  Zone* zone_;
 
-  // Tracks the min/max stack slot index over all entries. We need the minimum
-  // index when encoding the actual table since we shift all unused lower
-  // indices out of the encoding. Tracking the indices during safepoint
-  // construction means we don't have to iterate again later.
-#ifdef DEBUG
-  int max_stack_index_ = 0;
-#endif  // DEBUG
-  int min_stack_index_ = std::numeric_limits<int>::max();
-
-  ZoneChunkList<EntryBuilder> entries_;
-  int safepoint_table_offset_ = kNoSafepointTableOffset;
-  Zone* const zone_;
+  DISALLOW_COPY_AND_ASSIGN(SafepointTableBuilder);
 };
 
 }  // namespace internal

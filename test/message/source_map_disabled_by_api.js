@@ -2,7 +2,6 @@
 
 'use strict';
 require('../common');
-Error.stackTraceLimit = 5;
 
 process.setSourceMapsEnabled(false);
 
@@ -18,8 +17,4 @@ delete require.cache[require
 // Re-enable.
 process.setSourceMapsEnabled(true);
 
-try {
-  require('../fixtures/source-map/enclosing-call-site-min.js');
-} catch (e) {
-  console.log(e);
-}
+require('../fixtures/source-map/enclosing-call-site-min.js');

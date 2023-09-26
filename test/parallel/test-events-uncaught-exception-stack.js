@@ -9,7 +9,7 @@ process.on('uncaughtException', common.mustCall((err) => {
   const lines = err.stack.split('\n');
   assert.strictEqual(lines[0], 'Error');
   lines.slice(1).forEach((line) => {
-    assert.match(line, /^ {4}at/);
+    assert(/^    at/.test(line), `${line} has an unexpected format`);
   });
 }));
 

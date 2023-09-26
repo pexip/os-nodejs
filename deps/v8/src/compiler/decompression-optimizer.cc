@@ -15,9 +15,9 @@ namespace {
 
 bool IsMachineLoad(Node* const node) {
   const IrOpcode::Value opcode = node->opcode();
-  return opcode == IrOpcode::kLoad || opcode == IrOpcode::kProtectedLoad ||
-         opcode == IrOpcode::kUnalignedLoad ||
-         opcode == IrOpcode::kLoadImmutable;
+  return opcode == IrOpcode::kLoad || opcode == IrOpcode::kPoisonedLoad ||
+         opcode == IrOpcode::kProtectedLoad ||
+         opcode == IrOpcode::kUnalignedLoad;
 }
 
 bool IsTaggedMachineLoad(Node* const node) {
@@ -95,7 +95,7 @@ void DecompressionOptimizer::MarkNodeInputs(Node* node) {
     // SPECIAL CASES - Store.
     case IrOpcode::kStore:
     case IrOpcode::kProtectedStore:
-    case IrOpcode::kUnalignedStore: {
+    case IrOpcode::kUnalignedStore:
       DCHECK_EQ(node->op()->ValueInputCount(), 3);
       MaybeMarkAndQueueForRevisit(node->InputAt(0),
                                   State::kEverythingObserved);  // base pointer
@@ -104,15 +104,12 @@ void DecompressionOptimizer::MarkNodeInputs(Node* node) {
       // TODO(v8:7703): When the implementation is done, check if this ternary
       // operator is too restrictive, since we only mark Tagged stores as 32
       // bits.
-      MachineRepresentation representation =
-          node->opcode() == IrOpcode::kUnalignedStore
-              ? UnalignedStoreRepresentationOf(node->op())
-              : StoreRepresentationOf(node->op()).representation();
-      MaybeMarkAndQueueForRevisit(node->InputAt(2),
-                                  IsAnyTagged(representation)
-                                      ? State::kOnly32BitsObserved
-                                      : State::kEverythingObserved);  // value
-    } break;
+      MaybeMarkAndQueueForRevisit(
+          node->InputAt(2),
+          IsAnyTagged(StoreRepresentationOf(node->op()).representation())
+              ? State::kOnly32BitsObserved
+              : State::kEverythingObserved);  // value
+      break;
     // SPECIAL CASES - Variable inputs.
     // The deopt code knows how to handle Compressed inputs, both
     // MachineRepresentation kCompressed values and CompressedHeapConstants.
@@ -207,9 +204,9 @@ void DecompressionOptimizer::ChangeLoad(Node* const node) {
     case IrOpcode::kLoad:
       NodeProperties::ChangeOp(node, machine()->Load(compressed_load_rep));
       break;
-    case IrOpcode::kLoadImmutable:
+    case IrOpcode::kPoisonedLoad:
       NodeProperties::ChangeOp(node,
-                               machine()->LoadImmutable(compressed_load_rep));
+                               machine()->PoisonedLoad(compressed_load_rep));
       break;
     case IrOpcode::kProtectedLoad:
       NodeProperties::ChangeOp(node,

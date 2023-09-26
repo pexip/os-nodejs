@@ -39,7 +39,7 @@ const assert = require('assert');
 const cluster = require('cluster');
 const net = require('net');
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   cluster.fork().on('exit', common.mustCall((exitCode) => {
     assert.strictEqual(exitCode, 0);
   }));

@@ -22,7 +22,7 @@ tmpdir.refresh();
     const expectedLength = bufferArr.length * buffer.byteLength;
     let { bytesWritten, buffers } = await handle.writev([Buffer.from('')],
                                                         null);
-    assert.strictEqual(bytesWritten, 0);
+    assert.deepStrictEqual(bytesWritten, 0);
     assert.deepStrictEqual(buffers, [Buffer.from('')]);
     ({ bytesWritten, buffers } = await handle.writev(bufferArr, null));
     assert.deepStrictEqual(bytesWritten, expectedLength);
@@ -39,21 +39,12 @@ tmpdir.refresh();
     const bufferArr = [buffer, buffer, buffer];
     const expectedLength = bufferArr.length * buffer.byteLength;
     let { bytesWritten, buffers } = await handle.writev([Buffer.from('')]);
-    assert.strictEqual(bytesWritten, 0);
+    assert.deepStrictEqual(bytesWritten, 0);
     assert.deepStrictEqual(buffers, [Buffer.from('')]);
     ({ bytesWritten, buffers } = await handle.writev(bufferArr));
     assert.deepStrictEqual(bytesWritten, expectedLength);
     assert.deepStrictEqual(buffers, bufferArr);
     assert(Buffer.concat(bufferArr).equals(await fs.readFile(filename)));
-    handle.close();
-  }
-
-  {
-    // Writev with empty array behavior
-    const handle = await fs.open(getFileName(), 'w');
-    const result = await handle.writev([]);
-    assert.strictEqual(result.bytesWritten, 0);
-    assert.strictEqual(result.buffers.length, 0);
     handle.close();
   }
 })().then(common.mustCall());

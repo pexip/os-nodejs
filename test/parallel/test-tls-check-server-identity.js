@@ -30,6 +30,13 @@ const util = require('util');
 
 const tls = require('tls');
 
+common.expectWarning('DeprecationWarning', [
+  ['The URI http://[a.b.a.com]/ found in cert.subjectaltname ' +
+  'is not a valid URI, and is supported in the tls module ' +
+  'solely for compatibility.',
+   'DEP0109'],
+]);
+
 const tests = [
   // False-y values.
   {
@@ -134,7 +141,7 @@ const tests = [
   {
     host: 'a.com',
     cert: { },
-    error: 'Cert does not contain a DNS name'
+    error: 'Cert is empty'
   },
 
   // Empty Subject w/DNS name
@@ -148,8 +155,7 @@ const tests = [
   {
     host: 'a.b.a.com', cert: {
       subjectaltname: 'URI:http://a.b.a.com/',
-    },
-    error: 'Cert does not contain a DNS name'
+    }
   },
 
   // Multiple CN fields
@@ -266,15 +272,22 @@ const tests = [
     host: 'a.b.a.com', cert: {
       subjectaltname: 'URI:http://a.b.a.com/',
       subject: {}
-    },
-    error: 'Cert does not contain a DNS name'
+    }
   },
   {
     host: 'a.b.a.com', cert: {
       subjectaltname: 'URI:http://*.b.a.com/',
       subject: {}
     },
-    error: 'Cert does not contain a DNS name'
+    error: 'Host: a.b.a.com. is not in the cert\'s altnames: ' +
+           'URI:http://*.b.a.com/'
+  },
+  // Invalid URI
+  {
+    host: 'a.b.a.com', cert: {
+      subjectaltname: 'URI:http://[a.b.a.com]/',
+      subject: {}
+    }
   },
   // IP addresses
   {
@@ -282,7 +295,8 @@ const tests = [
       subjectaltname: 'IP Address:127.0.0.1',
       subject: {}
     },
-    error: 'Cert does not contain a DNS name'
+    error: 'Host: a.b.a.com. is not in the cert\'s altnames: ' +
+           'IP Address:127.0.0.1'
   },
   {
     host: '127.0.0.1', cert: {

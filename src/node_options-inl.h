@@ -466,7 +466,7 @@ void OptionsParser<Options>::Parse(
         UNREACHABLE();
     }
   }
-  options->CheckOptions(errors, orig_args);
+  options->CheckOptions(errors);
 }
 
 }  // namespace options_parser

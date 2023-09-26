@@ -32,15 +32,13 @@ oStream.on('end', common.mustCall(() => {
   const expect = 'process.stdout\r\n' +
                  'process.stdin\r\n' +
                  'process.stderr';
-  assert.match(output, new RegExp(expect));
+  assert(new RegExp(expect).test(output));
 }));
 
 iStream.write('process.s\t');
 
-// Completion works.
-assert.match(output, /process\.std\b/);
-// Completion doesn’t show all results yet.
-assert.doesNotMatch(output, /stdout/);
+assert(/process\.std\b/.test(output));  // Completion works.
+assert(!/stdout/.test(output));  // Completion doesn’t show all results yet.
 
 iStream.write('\t');
 oStream.end();

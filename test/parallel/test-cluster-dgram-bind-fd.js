@@ -11,13 +11,13 @@ const assert = require('assert');
 const cluster = require('cluster');
 const dgram = require('dgram');
 
-if (cluster.isPrimary)
-  primary();
+if (cluster.isMaster)
+  master();
 else
   worker();
 
 
-function primary() {
+function master() {
   const { internalBinding } = require('internal/test/binding');
   const { UDP } = internalBinding('udp_wrap');
 
@@ -63,7 +63,7 @@ function primary() {
   // Set up event handlers for every worker. Each worker sends a message when
   // it has received the expected number of packets. After that it disconnects.
   for (const key in cluster.workers) {
-    if (Object.hasOwn(cluster.workers, key))
+    if (cluster.workers.hasOwnProperty(key))
       setupWorker(cluster.workers[key]);
   }
 
@@ -97,7 +97,7 @@ function worker() {
     socket.on('message', common.mustCall((data, info) => {
       received++;
 
-      // Every 10 messages, notify the primary.
+      // Every 10 messages, notify the master.
       if (received === PACKETS_PER_WORKER) {
         process.send({ received });
         socket.close();

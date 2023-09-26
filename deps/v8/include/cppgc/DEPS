@@ -4,5 +4,4 @@ include_rules = [
   "+v8-platform.h",
   "+cppgc",
   "-src",
-  "+libplatform/libplatform.h",
 ]

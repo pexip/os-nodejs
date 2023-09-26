@@ -21,7 +21,8 @@
 
 'use strict';
 require('../common');
-const { Readable: R, Writable: W } = require('stream');
+const R = require('_stream_readable');
+const W = require('_stream_writable');
 const assert = require('assert');
 
 let ondataCalled = 0;

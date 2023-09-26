@@ -16,9 +16,6 @@ namespace internal {
 
 // Forward declarations.
 class JSPromise;
-class StructBodyDescriptor;
-
-#include "torque-generated/src/objects/js-generator-tq.inc"
 
 class JSGeneratorObject
     : public TorqueGeneratedJSGeneratorObject<JSGeneratorObject, JSObject> {
@@ -71,8 +68,6 @@ class AsyncGeneratorRequest
  public:
   DECL_PRINTER(AsyncGeneratorRequest)
   DECL_VERIFIER(AsyncGeneratorRequest)
-
-  using BodyDescriptor = StructBodyDescriptor;
 
   TQ_OBJECT_CONSTRUCTORS(AsyncGeneratorRequest)
 };

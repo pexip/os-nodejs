@@ -8,7 +8,7 @@ const assert = require('assert');
 const crypto = require('crypto');
 
 const { internalBinding } = require('internal/test/binding');
-if (typeof internalBinding('crypto').ScryptJob !== 'function')
+if (typeof internalBinding('crypto').scrypt !== 'function')
   common.skip('no scrypt support');
 
 const good = [
@@ -24,7 +24,7 @@ const good = [
   },
   // Test vectors from https://tools.ietf.org/html/rfc7914#page-13 that
   // should pass.  Note that the test vector with N=1048576 is omitted
-  // because it takes too long to complete and uses over 1 GiB of memory.
+  // because it takes too long to complete and uses over 1 GB of memory.
   {
     pass: '',
     salt: '',
@@ -143,10 +143,6 @@ const badargs = [
     args: ['', '', -42],
     expected: { code: 'ERR_OUT_OF_RANGE', message: /"keylen"/ },
   },
-  {
-    args: ['', '', 2147485780],
-    expected: { code: 'ERR_OUT_OF_RANGE', message: /"keylen"/ },
-  },
 ];
 
 for (const options of good) {
@@ -160,7 +156,9 @@ for (const options of good) {
 
 for (const options of bad) {
   const expected = {
-    message: /Invalid scrypt param/,
+    code: 'ERR_CRYPTO_SCRYPT_INVALID_PARAMETER',
+    message: 'Invalid scrypt parameter',
+    name: 'Error',
   };
   assert.throws(() => crypto.scrypt('pass', 'salt', 1, options, () => {}),
                 expected);
@@ -170,7 +168,9 @@ for (const options of bad) {
 
 for (const options of toobig) {
   const expected = {
-    message: /Invalid scrypt param/
+    message: new RegExp('error:[^:]+:digital envelope routines:' +
+                        '(?:EVP_PBE_scrypt|scrypt_alg):memory limit exceeded'),
+    name: 'Error',
   };
   assert.throws(() => crypto.scrypt('pass', 'salt', 1, options, () => {}),
                 expected);
@@ -211,7 +211,7 @@ for (const { args, expected } of badargs) {
 }
 
 {
-  const expected = { code: 'ERR_INVALID_ARG_TYPE' };
+  const expected = { code: 'ERR_INVALID_CALLBACK' };
   assert.throws(() => crypto.scrypt('', '', 42, null), expected);
   assert.throws(() => crypto.scrypt('', '', 42, {}, null), expected);
   assert.throws(() => crypto.scrypt('', '', 42, {}), expected);

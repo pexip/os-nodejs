@@ -2,7 +2,6 @@
 
 const common = require('../common');
 const assert = require('assert');
-const events = require('events');
 const { REPLServer } = require('repl');
 const { Stream } = require('stream');
 const { inspect } = require('util');
@@ -33,16 +32,26 @@ class REPLStream extends Stream {
     if (chunkLines.length > 1) {
       this.lines.push(...chunkLines.slice(1));
     }
-    this.emit('line', this.lines[this.lines.length - 1]);
+    this.emit('line');
     return true;
   }
-  async wait() {
+  wait() {
     this.lines = [''];
-    for await (const [line] of events.on(this, 'line')) {
-      if (line.includes(PROMPT)) {
-        return this.lines;
-      }
-    }
+    return new Promise((resolve, reject) => {
+      const onError = (err) => {
+        this.removeListener('line', onLine);
+        reject(err);
+      };
+      const onLine = () => {
+        if (this.lines[this.lines.length - 1].includes(PROMPT)) {
+          this.removeListener('error', onError);
+          this.removeListener('line', onLine);
+          resolve(this.lines);
+        }
+      };
+      this.once('error', onError);
+      this.on('line', onLine);
+    });
   }
   pause() {}
   resume() {}

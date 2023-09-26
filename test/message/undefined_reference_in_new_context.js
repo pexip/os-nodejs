@@ -26,6 +26,6 @@ const vm = require('vm');
 console.error('before');
 
 // undefined reference
-vm.runInNewContext('Error.stackTraceLimit = 5; foo.bar = 5;');
+vm.runInNewContext('foo.bar = 5;');
 
 console.error('after');

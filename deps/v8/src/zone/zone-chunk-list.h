@@ -60,9 +60,6 @@ class ZoneChunkList : public ZoneObject {
     }
   }
 
-  ZoneChunkList(const ZoneChunkList&) = delete;
-  ZoneChunkList& operator=(const ZoneChunkList&) = delete;
-
   size_t size() const { return size_; }
   bool is_empty() const { return size() == 0; }
 
@@ -122,8 +119,8 @@ class ZoneChunkList : public ZoneObject {
   };
 
   Chunk* NewChunk(const uint32_t capacity) {
-    void* memory = zone_->Allocate<Chunk>(sizeof(Chunk) + capacity * sizeof(T));
-    Chunk* chunk = new (memory) Chunk();
+    Chunk* chunk =
+        new (zone_->New(sizeof(Chunk) + capacity * sizeof(T))) Chunk();
     chunk->capacity_ = capacity;
     return chunk;
   }
@@ -142,6 +139,8 @@ class ZoneChunkList : public ZoneObject {
   size_t size_ = 0;
   Chunk* front_ = nullptr;
   Chunk* back_ = nullptr;
+
+  DISALLOW_COPY_AND_ASSIGN(ZoneChunkList);
 };
 
 template <typename T, bool backwards, bool modifiable>

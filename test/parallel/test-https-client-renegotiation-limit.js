@@ -58,7 +58,7 @@ function test(next) {
     const conn = req.connection;
     conn.on('error', (err) => {
       console.error(`Caught exception: ${err}`);
-      assert.match(err.message, /TLS session renegotiation attack/);
+      assert(/TLS session renegotiation attack/.test(err));
       conn.destroy();
     });
     res.end('ok');

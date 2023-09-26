@@ -3,7 +3,7 @@ const common = require('../common');
 const assert = require('assert');
 const cluster = require('cluster');
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   cluster.settings.serialization = 'advanced';
   const worker = cluster.fork();
   const circular = {};

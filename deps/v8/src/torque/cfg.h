@@ -63,7 +63,7 @@ class Block {
 
     DCHECK_EQ(input_definitions_->Size(), input_definitions.Size());
     bool changed = false;
-    for (BottomOffset i = {0}; i < input_definitions.AboveTop(); ++i) {
+    for (BottomOffset i = 0; i < input_definitions.AboveTop(); ++i) {
       auto& current = input_definitions_->Peek(i);
       auto& input = input_definitions.Peek(i);
       if (current == input) continue;
@@ -116,18 +116,13 @@ class ControlFlowGraph {
   Block* start() const { return start_; }
   base::Optional<Block*> end() const { return end_; }
   void set_end(Block* end) { end_ = end; }
-  void SetReturnType(TypeVector t) {
+  void SetReturnType(const Type* t) {
     if (!return_type_) {
       return_type_ = t;
       return;
     }
     if (t != *return_type_) {
-      std::stringstream message;
-      message << "expected return type ";
-      PrintCommaSeparatedList(message, *return_type_);
-      message << " instead of ";
-      PrintCommaSeparatedList(message, t);
-      ReportError(message.str());
+      ReportError("expected return type ", **return_type_, " instead of ", *t);
     }
   }
   const std::vector<Block*>& blocks() const { return placed_blocks_; }
@@ -141,7 +136,7 @@ class ControlFlowGraph {
   Block* start_;
   std::vector<Block*> placed_blocks_;
   base::Optional<Block*> end_;
-  base::Optional<TypeVector> return_type_;
+  base::Optional<const Type*> return_type_;
   size_t next_block_id_ = 0;
 };
 
@@ -217,7 +212,7 @@ class CfgAssembler {
   Block* current_block_ = cfg_.start();
 };
 
-class V8_NODISCARD CfgAssemblerScopedTemporaryBlock {
+class CfgAssemblerScopedTemporaryBlock {
  public:
   CfgAssemblerScopedTemporaryBlock(CfgAssembler* assembler, Block* block)
       : assembler_(assembler), saved_block_(block) {

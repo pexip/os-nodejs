@@ -1,127 +1,82 @@
-import { spawnPromisified } from '../common/index.mjs';
+import '../common/index.mjs';
+import assert from 'assert';
+import child_process from 'child_process';
 import fixtures from '../common/fixtures.js';
-import assert from 'node:assert';
-import { execPath } from 'node:process';
-import { describe, it } from 'node:test';
 
+{
+  // Unresolved TLA promise, --eval
+  const { status, stdout, stderr } = child_process.spawnSync(
+    process.execPath,
+    ['--input-type=module', '--eval', 'await new Promise(() => {})'],
+    { encoding: 'utf8' });
+  assert.deepStrictEqual([status, stdout, stderr], [13, '', '']);
+}
 
-const commonArgs = [
-  '--no-warnings',
-  '--input-type=module',
-  '--eval',
-];
+{
+  // Rejected TLA promise, --eval
+  const { status, stdout, stderr } = child_process.spawnSync(
+    process.execPath,
+    ['--input-type=module', '-e', 'await Promise.reject(new Error("Xyz"))'],
+    { encoding: 'utf8' });
+  assert.deepStrictEqual([status, stdout], [1, '']);
+  assert.match(stderr, /Error: Xyz/);
+}
 
-describe('ESM: unsettled and rejected promises', { concurrency: true }, () => {
-  it('should exit for an unsettled TLA promise via --eval', async () => {
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      ...commonArgs,
-      'await new Promise(() => {})',
-    ]);
+{
+  // Unresolved TLA promise with explicit exit code, --eval
+  const { status, stdout, stderr } = child_process.spawnSync(
+    process.execPath,
+    ['--input-type=module', '--eval',
+     'process.exitCode = 42;await new Promise(() => {})'],
+    { encoding: 'utf8' });
+  assert.deepStrictEqual([status, stdout, stderr], [42, '', '']);
+}
 
-    assert.strictEqual(stderr, '');
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 13);
-  });
+{
+  // Rejected TLA promise with explicit exit code, --eval
+  const { status, stdout, stderr } = child_process.spawnSync(
+    process.execPath,
+    ['--input-type=module', '-e',
+     'process.exitCode = 42;await Promise.reject(new Error("Xyz"))'],
+    { encoding: 'utf8' });
+  assert.deepStrictEqual([status, stdout], [1, '']);
+  assert.match(stderr, /Error: Xyz/);
+}
 
-  it('should throw for a rejected TLA promise via --eval', async () => {
-    // Rejected TLA promise, --eval
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      ...commonArgs,
-      'await Promise.reject(new Error("Xyz"))',
-    ]);
+{
+  // Unresolved TLA promise, module file
+  const { status, stdout, stderr } = child_process.spawnSync(
+    process.execPath,
+    [fixtures.path('es-modules/tla/unresolved.mjs')],
+    { encoding: 'utf8' });
+  assert.deepStrictEqual([status, stdout, stderr], [13, '', '']);
+}
 
-    assert.match(stderr, /Error: Xyz/);
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 1);
-  });
+{
+  // Rejected TLA promise, module file
+  const { status, stdout, stderr } = child_process.spawnSync(
+    process.execPath,
+    [fixtures.path('es-modules/tla/rejected.mjs')],
+    { encoding: 'utf8' });
+  assert.deepStrictEqual([status, stdout], [1, '']);
+  assert.match(stderr, /Error: Xyz/);
+}
 
-  it('should exit for an unsettled TLA promise and respect explicit exit code via --eval', async () => {
-    // Rejected TLA promise, --eval
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      ...commonArgs,
-      'process.exitCode = 42;await new Promise(() => {})',
-    ]);
+{
+  // Unresolved TLA promise, module file
+  const { status, stdout, stderr } = child_process.spawnSync(
+    process.execPath,
+    [fixtures.path('es-modules/tla/unresolved-withexitcode.mjs')],
+    { encoding: 'utf8' });
+  assert.deepStrictEqual([status, stdout, stderr], [42, '', '']);
+}
 
-    assert.strictEqual(stderr, '');
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 42);
-  });
-
-  it('should throw for a rejected TLA promise and ignore explicit exit code via --eval', async () => {
-    // Rejected TLA promise, --eval
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      ...commonArgs,
-      'process.exitCode = 42;await Promise.reject(new Error("Xyz"))',
-    ]);
-
-    assert.match(stderr, /Error: Xyz/);
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 1);
-  });
-
-  it('should exit for an unsettled TLA promise via stdin', async () => {
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      '--no-warnings',
-      fixtures.path('es-modules/tla/unresolved.mjs'),
-    ]);
-
-    assert.strictEqual(stderr, '');
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 13);
-  });
-
-  it('should throw for a rejected TLA promise via stdin', async () => {
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      '--no-warnings',
-      fixtures.path('es-modules/tla/rejected.mjs'),
-    ]);
-
-    assert.match(stderr, /Error: Xyz/);
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 1);
-  });
-
-  it('should exit for an unsettled TLA promise and respect explicit exit code via stdin', async () => {
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      '--no-warnings',
-      fixtures.path('es-modules/tla/unresolved-withexitcode.mjs'),
-    ]);
-
-    assert.strictEqual(stderr, '');
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 42);
-  });
-
-  it('should throw for a rejected TLA promise and ignore explicit exit code via stdin', async () => {
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      '--no-warnings',
-      fixtures.path('es-modules/tla/rejected-withexitcode.mjs'),
-    ]);
-
-    assert.match(stderr, /Error: Xyz/);
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 1);
-  });
-
-  it('should exit successfully when calling `process.exit()` in `.mjs` file', async () => {
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      '--no-warnings',
-      fixtures.path('es-modules/tla/process-exit.mjs'),
-    ]);
-
-    assert.strictEqual(stderr, '');
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 0);
-  });
-
-  it('should be unaffected by `process.exit()` in worker thread', async () => {
-    const { code, stderr, stdout } = await spawnPromisified(execPath, [
-      '--no-warnings',
-      fixtures.path('es-modules/tla/unresolved-with-worker-process-exit.mjs'),
-    ]);
-
-    assert.strictEqual(stderr, '');
-    assert.strictEqual(stdout, '');
-    assert.strictEqual(code, 13);
-  });
-});
+{
+  // Rejected TLA promise, module file
+  const { status, stdout, stderr } = child_process.spawnSync(
+    process.execPath,
+    [fixtures.path('es-modules/tla/rejected-withexitcode.mjs')],
+    { encoding: 'utf8' });
+  assert.deepStrictEqual([status, stdout], [1, '']);
+  assert.match(stderr, /Error: Xyz/);
+}

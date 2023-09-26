@@ -24,7 +24,7 @@ if (process.argv[2] === 'child') {
     assert.strictEqual(files.length, 2);
 
     for (let i = 0; i < files.length; i++) {
-      assert.match(files[i], /^Heap\..+\.heapsnapshot$/);
+      assert(/^Heap\..+\.heapsnapshot$/.test(files[i]));
       JSON.parse(fs.readFileSync(files[i]));
     }
   })();

@@ -18,7 +18,7 @@ function loop() {
   while (1) {
     const current = hrtime();
     const span = (current - start) / NS_PER_MS;
-    if (span >= 2000n) {
+    if (span >= 100n) {
       throw new Error(
         `escaped timeout at ${span} milliseconds!`);
     }

@@ -5,9 +5,7 @@
 #include "src/snapshot/context-deserializer.h"
 
 #include "src/api/api-inl.h"
-#include "src/common/assert-scope.h"
 #include "src/heap/heap-inl.h"
-#include "src/objects/js-array-buffer-inl.h"
 #include "src/objects/slots.h"
 #include "src/snapshot/snapshot.h"
 
@@ -18,7 +16,8 @@ MaybeHandle<Context> ContextDeserializer::DeserializeContext(
     Isolate* isolate, const SnapshotData* data, bool can_rehash,
     Handle<JSGlobalProxy> global_proxy,
     v8::DeserializeEmbedderFieldsCallback embedder_fields_deserializer) {
-  ContextDeserializer d(isolate, data, can_rehash);
+  ContextDeserializer d(data);
+  d.SetRehashability(can_rehash);
 
   MaybeHandle<Object> maybe_result =
       d.Deserialize(isolate, global_proxy, embedder_fields_deserializer);
@@ -31,6 +30,11 @@ MaybeHandle<Context> ContextDeserializer::DeserializeContext(
 MaybeHandle<Object> ContextDeserializer::Deserialize(
     Isolate* isolate, Handle<JSGlobalProxy> global_proxy,
     v8::DeserializeEmbedderFieldsCallback embedder_fields_deserializer) {
+  Initialize(isolate);
+  if (!allocator()->ReserveSpace()) {
+    V8::FatalProcessOutOfMemory(isolate, "ContextDeserializer");
+  }
+
   // Replace serialized references to the global proxy and its map with the
   // given global proxy and its map.
   AddAttachedObject(global_proxy);
@@ -38,20 +42,29 @@ MaybeHandle<Object> ContextDeserializer::Deserialize(
 
   Handle<Object> result;
   {
-    // There's no code deserialized here. If this assert fires then that's
-    // changed and logging should be added to notify the profiler et al. of
-    // the new code, which also has to be flushed from instruction cache.
-    DisallowCodeAllocation no_code_allocation;
-
-    result = ReadObject();
+    DisallowHeapAllocation no_gc;
+    // Keep track of the code space start and end pointers in case new
+    // code objects were unserialized
+    CodeSpace* code_space = isolate->heap()->code_space();
+    Address start_address = code_space->top();
+    Object root;
+    VisitRootPointer(Root::kStartupObjectCache, nullptr, FullObjectSlot(&root));
     DeserializeDeferredObjects();
     DeserializeEmbedderFields(embedder_fields_deserializer);
 
+    allocator()->RegisterDeserializedObjectsForBlackAllocation();
+
+    // There's no code deserialized here. If this assert fires then that's
+    // changed and logging should be added to notify the profiler et al of the
+    // new code, which also has to be flushed from instruction cache.
+    CHECK_EQ(start_address, code_space->top());
+
     LogNewMapEvents();
-    WeakenDescriptorArrays();
+
+    result = handle(root, isolate);
   }
 
-  if (should_rehash()) Rehash();
+  if (FLAG_rehash_snapshot && can_rehash()) Rehash();
   SetupOffHeapArrayBufferBackingStores();
 
   return result;
@@ -63,25 +76,26 @@ void ContextDeserializer::SetupOffHeapArrayBufferBackingStores() {
     auto bs = backing_store(store_index);
     SharedFlag shared =
         bs && bs->is_shared() ? SharedFlag::kShared : SharedFlag::kNotShared;
-    DCHECK_IMPLIES(bs, buffer->is_resizable() == bs->is_resizable());
-    ResizableFlag resizable = bs && bs->is_resizable()
-                                  ? ResizableFlag::kResizable
-                                  : ResizableFlag::kNotResizable;
-    buffer->Setup(shared, resizable, bs);
+    buffer->Setup(shared, bs);
   }
 }
 
 void ContextDeserializer::DeserializeEmbedderFields(
     v8::DeserializeEmbedderFieldsCallback embedder_fields_deserializer) {
   if (!source()->HasMore() || source()->Get() != kEmbedderFieldsData) return;
-  DisallowGarbageCollection no_gc;
+  DisallowHeapAllocation no_gc;
   DisallowJavascriptExecution no_js(isolate());
   DisallowCompilation no_compile(isolate());
   DCHECK_NOT_NULL(embedder_fields_deserializer.callback);
   for (int code = source()->Get(); code != kSynchronize;
        code = source()->Get()) {
     HandleScope scope(isolate());
-    Handle<JSObject> obj = Handle<JSObject>::cast(GetBackReferencedObject());
+    int space = code & kSpaceMask;
+    DCHECK_LE(space, kNumberOfSpaces);
+    DCHECK_EQ(code - space, kNewObject);
+    Handle<JSObject> obj(JSObject::cast(GetBackReferencedObject(
+                             static_cast<SnapshotSpace>(space))),
+                         isolate());
     int index = source()->GetInt();
     int size = source()->GetInt();
     // TODO(yangguo,jgruber): Turn this into a reusable shared buffer.

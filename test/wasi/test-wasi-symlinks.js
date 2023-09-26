@@ -5,7 +5,8 @@ const path = require('path');
 
 if (process.argv[2] === 'wasi-child') {
   common.expectWarning('ExperimentalWarning',
-                       'WASI is an experimental feature and might change at any time');
+                       'WASI is an experimental feature. This feature could ' +
+                       'change at any time');
 
   const { WASI } = require('wasi');
   const wasmDir = path.join(__dirname, 'wasm');
@@ -14,8 +15,8 @@ if (process.argv[2] === 'wasi-child') {
     env: process.env,
     preopens: {
       '/sandbox': process.argv[4],
-      '/tmp': process.argv[5],
-    },
+      '/tmp': process.argv[5]
+    }
   });
   const importObject = { wasi_snapshot_preview1: wasi.wasiImport };
   const modulePath = path.join(wasmDir, `${process.argv[3]}.wasm`);
@@ -64,6 +65,7 @@ if (process.argv[2] === 'wasi-child') {
     const opts = { env: { ...process.env, NODE_DEBUG_NATIVE: 'wasi' } };
     const child = cp.spawnSync(process.execPath, [
       '--experimental-wasi-unstable-preview1',
+      '--experimental-wasm-bigint',
       __filename,
       'wasi-child',
       options.test,

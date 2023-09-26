@@ -2,7 +2,6 @@
 #include "env-inl.h"
 #include "memory_tracker-inl.h"
 #include "node.h"
-#include "node_external_reference.h"
 #include "node_internals.h"
 #include "node_v8_platform-inl.h"
 #include "tracing/agent.h"
@@ -13,14 +12,11 @@
 
 namespace node {
 
-class ExternalReferenceRegistry;
-
 using v8::Array;
 using v8::Context;
 using v8::Function;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
-using v8::Isolate;
 using v8::Local;
 using v8::NewStringType;
 using v8::Object;
@@ -33,7 +29,7 @@ class NodeCategorySet : public BaseObject {
                   Local<Value> unused,
                   Local<Context> context,
                   void* priv);
-  static void RegisterExternalReferences(ExternalReferenceRegistry* registry);
+
   static void New(const FunctionCallbackInfo<Value>& args);
   static void Enable(const FunctionCallbackInfo<Value>& args);
   static void Disable(const FunctionCallbackInfo<Value>& args);
@@ -125,23 +121,21 @@ void NodeCategorySet::Initialize(Local<Object> target,
                 Local<Context> context,
                 void* priv) {
   Environment* env = Environment::GetCurrent(context);
-  Isolate* isolate = env->isolate();
 
-  SetMethod(context, target, "getEnabledCategories", GetEnabledCategories);
-  SetMethod(context,
-            target,
-            "setTraceCategoryStateUpdateHandler",
-            SetTraceCategoryStateUpdateHandler);
+  env->SetMethod(target, "getEnabledCategories", GetEnabledCategories);
+  env->SetMethod(
+      target, "setTraceCategoryStateUpdateHandler",
+      SetTraceCategoryStateUpdateHandler);
 
   Local<FunctionTemplate> category_set =
-      NewFunctionTemplate(isolate, NodeCategorySet::New);
+      env->NewFunctionTemplate(NodeCategorySet::New);
   category_set->InstanceTemplate()->SetInternalFieldCount(
       NodeCategorySet::kInternalFieldCount);
   category_set->Inherit(BaseObject::GetConstructorTemplate(env));
-  SetProtoMethod(isolate, category_set, "enable", NodeCategorySet::Enable);
-  SetProtoMethod(isolate, category_set, "disable", NodeCategorySet::Disable);
+  env->SetProtoMethod(category_set, "enable", NodeCategorySet::Enable);
+  env->SetProtoMethod(category_set, "disable", NodeCategorySet::Disable);
 
-  SetConstructorFunction(context, target, "CategorySet", category_set);
+  env->SetConstructorFunction(target, "CategorySet", category_set);
 
   Local<String> isTraceCategoryEnabled =
       FIXED_ONE_BYTE_STRING(env->isolate(), "isTraceCategoryEnabled");
@@ -157,18 +151,7 @@ void NodeCategorySet::Initialize(Local<Object> target,
               binding->Get(context, trace).ToLocalChecked()).Check();
 }
 
-void NodeCategorySet::RegisterExternalReferences(
-    ExternalReferenceRegistry* registry) {
-  registry->Register(GetEnabledCategories);
-  registry->Register(SetTraceCategoryStateUpdateHandler);
-  registry->Register(NodeCategorySet::New);
-  registry->Register(NodeCategorySet::Enable);
-  registry->Register(NodeCategorySet::Disable);
-}
-
 }  // namespace node
 
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(trace_events,
                                    node::NodeCategorySet::Initialize)
-NODE_MODULE_EXTERNAL_REFERENCE(
-    trace_events, node::NodeCategorySet::RegisterExternalReferences)

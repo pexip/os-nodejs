@@ -6,15 +6,13 @@
 #define V8_OBJECTS_PROPERTY_DESCRIPTOR_OBJECT_H_
 
 #include "src/objects/struct.h"
-#include "torque-generated/bit-fields.h"
+#include "torque-generated/bit-fields-tq.h"
 
 // Has to be the last include (doesn't have include guards):
 #include "src/objects/object-macros.h"
 
 namespace v8 {
 namespace internal {
-
-#include "torque-generated/src/objects/property-descriptor-object-tq.inc"
 
 class PropertyDescriptorObject
     : public TorqueGeneratedPropertyDescriptorObject<PropertyDescriptorObject,
@@ -34,8 +32,6 @@ class PropertyDescriptorObject
                               HasConfigurableBit::kMask |
                               HasWritableBit::kMask | HasValueBit::kMask |
                               HasGetBit::kMask | HasSetBit::kMask;
-
-  using BodyDescriptor = StructBodyDescriptor;
 
   TQ_OBJECT_CONSTRUCTORS(PropertyDescriptorObject)
 };

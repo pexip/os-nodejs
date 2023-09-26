@@ -26,7 +26,7 @@ child.stdout.on('data', (d) => {
 });
 
 child.stdout.on('end', () => {
-  assert.match(out, expectOut);
+  assert(expectOut.test(out));
   console.log('ok');
 });
 

@@ -1,6 +1,7 @@
 'use strict';
 const common = require('../common');
 const assert = require('assert');
+const util = require('util');
 const fs = require('fs');
 
 // This test ensures that input for fchmod is valid, testing for valid
@@ -19,16 +20,15 @@ const fs = require('fs');
 });
 
 
-[false, null, {}, []].forEach((input) => {
+[false, null, undefined, {}, [], '', '123x'].forEach((input) => {
   const errObj = {
-    code: 'ERR_INVALID_ARG_TYPE',
+    code: 'ERR_INVALID_ARG_VALUE',
+    name: 'TypeError',
+    message: 'The argument \'mode\' must be a 32-bit unsigned integer or an ' +
+             `octal string. Received ${util.inspect(input)}`
   };
   assert.throws(() => fs.fchmod(1, input), errObj);
   assert.throws(() => fs.fchmodSync(1, input), errObj);
-});
-
-assert.throws(() => fs.fchmod(1, '123x'), {
-  code: 'ERR_INVALID_ARG_VALUE'
 });
 
 [-1, 2 ** 32].forEach((input) => {

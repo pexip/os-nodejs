@@ -23,8 +23,8 @@ let stderr = '';
 child.stderr.setEncoding('utf8');
 child.stderr.on('data', (data) => stderr += data);
 child.on('close', common.mustCall(() => {
-  assert.match(stderr, /Received Record/);
-  assert.match(stderr, /ClientHello/);
+  assert(/Received Record/.test(stderr));
+  assert(/ClientHello/.test(stderr));
 }));
 
 // For debugging and observation of actual trace output.

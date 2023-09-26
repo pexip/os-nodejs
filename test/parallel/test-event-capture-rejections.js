@@ -9,21 +9,6 @@ const { inherits } = require('util');
 function NoConstructor() {
 }
 
-// captureRejections param validation
-{
-  [1, [], function() {}, {}, Infinity, Math.PI, 'meow'].forEach((arg) => {
-    assert.throws(
-      () => new EventEmitter({ captureRejections: arg }),
-      {
-        name: 'TypeError',
-        code: 'ERR_INVALID_ARG_TYPE',
-        message: 'The "options.captureRejections" property must be of type boolean.' +
-                 common.invalidArgTypeHelper(arg),
-      }
-    );
-  });
-}
-
 inherits(NoConstructor, EventEmitter);
 
 function captureRejections() {
@@ -107,7 +92,7 @@ function globalSetting() {
 }
 
 // We need to be able to configure this for streams, as we would
-// like to call destroy(err) there.
+// like to call destro(err) there.
 function configurable() {
   const ee = new EventEmitter({ captureRejections: true });
   const _err = new Error('kaboom');
@@ -160,7 +145,7 @@ function thenable() {
           assert.strictEqual(resolved, undefined);
           rejected(_err);
         });
-      }, 1), // Only 1 call for Promises/A+ compat.
+      }, 1) // Only 1 call for Promises/A+ compat.
     });
 
     return obj;
@@ -235,7 +220,7 @@ function thenableThatThrows() {
     Object.defineProperty(obj, 'then', {
       get: common.mustCall(() => {
         throw _err;
-      }, 1), // Only 1 call for Promises/A+ compat.
+      }, 1) // Only 1 call for Promises/A+ compat.
     });
 
     return obj;
@@ -301,14 +286,14 @@ function argValidation() {
       code: 'ERR_INVALID_ARG_TYPE',
       name: 'TypeError',
       message: 'The "options.captureRejections" property must be of type ' +
-               `boolean. Received ${received}`,
+               `boolean. Received ${received}`
     });
 
     assert.throws(() => EventEmitter.captureRejections = obj, {
       code: 'ERR_INVALID_ARG_TYPE',
       name: 'TypeError',
       message: 'The "EventEmitter.captureRejections" property must be of ' +
-               `type boolean. Received ${received}`,
+               `type boolean. Received ${received}`
     });
   }
 

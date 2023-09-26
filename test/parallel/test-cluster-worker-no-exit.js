@@ -40,7 +40,7 @@ let server;
 // 3 wait to confirm it did not exit
 // 4 destroy connection
 // 5 confirm it does exit
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   server = net.createServer(function(conn) {
     server.close();
     worker.disconnect();

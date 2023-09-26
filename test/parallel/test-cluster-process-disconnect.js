@@ -3,7 +3,7 @@ const common = require('../common');
 const assert = require('assert');
 const cluster = require('cluster');
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   const worker = cluster.fork();
   worker.on('exit', common.mustCall((code, signal) => {
     assert.strictEqual(

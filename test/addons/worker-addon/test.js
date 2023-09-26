@@ -11,19 +11,18 @@ switch (process.argv[2]) {
     require(binding);
     // fallthrough
   case 'worker-twice':
-  case 'worker': {
+  case 'worker':
     const worker = new Worker(`require(${JSON.stringify(binding)});`, {
-      eval: true,
+      eval: true
     });
     if (process.argv[2] === 'worker-twice') {
       worker.on('exit', common.mustCall(() => {
         new Worker(`require(${JSON.stringify(binding)});`, {
-          eval: true,
+          eval: true
         });
       }));
     }
     return;
-  }
   case 'main-thread':
     process.env.addExtraItemToEventLoop = 'yes';
     require(binding);
@@ -52,7 +51,7 @@ for (const { test, expected } of [
       'ctor cleanup dtor ctor cleanup dtor ',
     ].concat(libcMayBeMusl ? [
       'ctor cleanup cleanup dtor ',
-    ] : []),
+    ] : [])
   },
 ]) {
   console.log('spawning test', test);

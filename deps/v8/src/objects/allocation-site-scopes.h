@@ -27,7 +27,9 @@ class AllocationSiteContext {
   Isolate* isolate() { return isolate_; }
 
  protected:
-  void update_current_site(AllocationSite site) { current_.PatchValue(site); }
+  void update_current_site(AllocationSite site) {
+    *(current_.location()) = site.ptr();
+  }
 
   inline void InitializeTraversal(Handle<AllocationSite> site);
 

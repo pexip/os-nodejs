@@ -25,9 +25,6 @@ class Verifier {
   enum CheckInputs { kValuesOnly, kAll };
   enum CodeType { kDefault, kWasm };
 
-  Verifier(const Verifier&) = delete;
-  Verifier& operator=(const Verifier&) = delete;
-
   static void Run(Graph* graph, Typing typing = TYPED,
                   CheckInputs check_inputs = kAll,
                   CodeType code_type = kDefault);
@@ -56,6 +53,7 @@ class Verifier {
 
  private:
   class Visitor;
+  DISALLOW_COPY_AND_ASSIGN(Verifier);
 };
 
 // Verifies properties of a schedule, such as dominance, phi placement, etc.

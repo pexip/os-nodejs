@@ -5,7 +5,7 @@ const assert = require('assert');
 assert.throws(
   () => require('../fixtures/es-modules/test-esm-ok.mjs'),
   {
-    message: /dynamic import\(\) which is available in all CommonJS modules/,
+    message: /Must use import to load ES Module/,
     code: 'ERR_REQUIRE_ESM'
   }
 );

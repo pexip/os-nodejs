@@ -1,8 +1,7 @@
 'use strict';
 const common = require('../common');
-if ((!common.hasCrypto) || (!common.hasIntl)) {
-  common.skip('ESLint tests require crypto and Intl');
-}
+if (!common.hasCrypto)
+  common.skip('missing crypto');
 common.skipIfEslintMissing();
 
 const RuleTester = require('../../tools/node_modules/eslint').RuleTester;

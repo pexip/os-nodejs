@@ -45,8 +45,6 @@ extern "C" {
 # endif
 #elif __GNUC__ >= 4
 # define UV_EXTERN __attribute__((visibility("default")))
-#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550) /* Sun Studio >= 8 */
-# define UV_EXTERN __global
 #else
 # define UV_EXTERN /* nothing */
 #endif
@@ -1133,8 +1131,8 @@ struct uv_interface_address_s {
 
 struct uv_passwd_s {
   char* username;
-  unsigned long uid;
-  unsigned long gid;
+  long uid;
+  long gid;
   char* shell;
   char* homedir;
 };
@@ -1242,7 +1240,6 @@ UV_EXTERN uv_pid_t uv_os_getppid(void);
 UV_EXTERN int uv_os_getpriority(uv_pid_t pid, int* priority);
 UV_EXTERN int uv_os_setpriority(uv_pid_t pid, int priority);
 
-UV_EXTERN unsigned int uv_available_parallelism(void);
 UV_EXTERN int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count);
 UV_EXTERN void uv_free_cpu_info(uv_cpu_info_t* cpu_infos, int count);
 
@@ -1661,7 +1658,6 @@ UV_EXTERN int uv_ip6_addr(const char* ip, int port, struct sockaddr_in6* addr);
 
 UV_EXTERN int uv_ip4_name(const struct sockaddr_in* src, char* dst, size_t size);
 UV_EXTERN int uv_ip6_name(const struct sockaddr_in6* src, char* dst, size_t size);
-UV_EXTERN int uv_ip_name(const struct sockaddr* src, char* dst, size_t size);
 
 UV_EXTERN int uv_inet_ntop(int af, const void* src, char* dst, size_t size);
 UV_EXTERN int uv_inet_pton(int af, const char* src, void* dst);

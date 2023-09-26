@@ -11,7 +11,7 @@ let µtaskId;
 const events = [];
 
 async_hooks.createHook({
-  init(id, type, triggerId, resource) {
+  init(id, type, triggerId, resoure) {
     if (type === 'Microtask') {
       µtaskId = id;
       events.push('init');

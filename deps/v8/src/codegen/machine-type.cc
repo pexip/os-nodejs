@@ -55,10 +55,6 @@ const char* MachineReprToString(MachineRepresentation rep) {
       return "kRepCompressedPointer";
     case MachineRepresentation::kCompressed:
       return "kRepCompressed";
-    case MachineRepresentation::kMapWord:
-      return "kRepMapWord";
-    case MachineRepresentation::kSandboxedPointer:
-      return "kRepSandboxedPointer";
   }
   UNREACHABLE();
 }
@@ -95,6 +91,7 @@ std::ostream& operator<<(std::ostream& os, MachineType type) {
   } else {
     return os << type.representation() << "|" << type.semantic();
   }
+  return os;
 }
 
 }  // namespace internal

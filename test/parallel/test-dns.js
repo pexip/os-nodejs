@@ -216,9 +216,9 @@ assert.deepStrictEqual(dns.getServers(), []);
   // flags are either === 1 or even.
   const hints = (dns.V4MAPPED | dns.ADDRCONFIG | dns.ALL) + 1;
   const err = {
-    code: 'ERR_INVALID_ARG_VALUE',
+    code: 'ERR_INVALID_OPT_VALUE',
     name: 'TypeError',
-    message: /The argument 'hints' is invalid\. Received \d+/
+    message: /The value "\d+" is invalid for option "hints"/
   };
 
   assert.throws(() => {
@@ -230,12 +230,12 @@ assert.deepStrictEqual(dns.getServers(), []);
 }
 
 assert.throws(() => dns.lookup('nodejs.org'), {
-  code: 'ERR_INVALID_ARG_TYPE',
+  code: 'ERR_INVALID_CALLBACK',
   name: 'TypeError'
 });
 
 assert.throws(() => dns.lookup('nodejs.org', 4), {
-  code: 'ERR_INVALID_ARG_TYPE',
+  code: 'ERR_INVALID_CALLBACK',
   name: 'TypeError'
 });
 
@@ -274,7 +274,6 @@ dns.lookup('', {
   await dnsPromises.lookup('', {
     hints: dns.ADDRCONFIG | dns.V4MAPPED | dns.ALL
   });
-  await dnsPromises.lookup('', { verbatim: true });
 })().then(common.mustCall());
 
 {
@@ -293,9 +292,9 @@ dns.lookup('', {
 {
   const invalidAddress = 'fasdfdsaf';
   const err = {
-    code: 'ERR_INVALID_ARG_VALUE',
+    code: 'ERR_INVALID_OPT_VALUE',
     name: 'TypeError',
-    message: `The argument 'address' is invalid. Received '${invalidAddress}'`
+    message: `The value "${invalidAddress}" is invalid for option "address"`
   };
 
   assert.throws(() => {
@@ -310,6 +309,8 @@ dns.lookup('', {
 const portErr = (port) => {
   const err = {
     code: 'ERR_SOCKET_BAD_PORT',
+    message:
+      `Port should be >= 0 and < 65536. Received ${port}.`,
     name: 'RangeError'
   };
 
@@ -321,21 +322,24 @@ const portErr = (port) => {
     dns.lookupService('0.0.0.0', port, common.mustNotCall());
   }, err);
 };
-[null, undefined, 65538, 'test', NaN, Infinity, Symbol(), 0n, true, false, '', () => {}, {}].forEach(portErr);
+portErr(null);
+portErr(undefined);
+portErr(65538);
+portErr('test');
 
 assert.throws(() => {
   dns.lookupService('0.0.0.0', 80, null);
 }, {
-  code: 'ERR_INVALID_ARG_TYPE',
+  code: 'ERR_INVALID_CALLBACK',
   name: 'TypeError'
 });
 
 {
   dns.resolveMx('foo.onion', function(err) {
-    assert.strictEqual(err.code, 'ENOTFOUND');
-    assert.strictEqual(err.syscall, 'queryMx');
-    assert.strictEqual(err.hostname, 'foo.onion');
-    assert.strictEqual(err.message, 'queryMx ENOTFOUND foo.onion');
+    assert.deepStrictEqual(err.code, 'ENOTFOUND');
+    assert.deepStrictEqual(err.syscall, 'queryMx');
+    assert.deepStrictEqual(err.hostname, 'foo.onion');
+    assert.deepStrictEqual(err.message, 'queryMx ENOTFOUND foo.onion');
   });
 }
 

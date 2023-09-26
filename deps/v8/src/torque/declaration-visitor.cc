@@ -5,7 +5,6 @@
 #include "src/torque/declaration-visitor.h"
 
 #include "src/torque/ast.h"
-#include "src/torque/kythe-data.h"
 #include "src/torque/server-data.h"
 #include "src/torque/type-inference.h"
 #include "src/torque/type-visitor.h"
@@ -99,31 +98,25 @@ Builtin* DeclarationVisitor::CreateBuiltin(BuiltinDeclaration* decl,
     }
   }
 
-  if (signature.return_type->StructSupertype() && javascript) {
-    Error(
-        "Builtins with JS linkage cannot return structs, but the return type "
-        "is ",
-        *signature.return_type, ".");
+  if (signature.return_type->StructSupertype()) {
+    Error("Builtins cannot return structs, but the return type is ",
+          *signature.return_type, ".");
   }
 
   if (signature.return_type == TypeOracle::GetVoidType()) {
     Error("Builtins cannot have return type void.");
   }
 
-  Builtin* builtin = Declarations::CreateBuiltin(std::move(external_name),
-                                                 std::move(readable_name), kind,
-                                                 std::move(signature), body);
-  // TODO(v8:12261): Recheck this.
-  // builtin->SetIdentifierPosition(decl->name->pos);
-  return builtin;
+  return Declarations::CreateBuiltin(std::move(external_name),
+                                     std::move(readable_name), kind,
+                                     std::move(signature), body);
 }
 
 void DeclarationVisitor::Visit(ExternalBuiltinDeclaration* decl) {
-  Builtin* builtin =
+  Declarations::Declare(
+      decl->name->value,
       CreateBuiltin(decl, decl->name->value, decl->name->value,
-                    TypeVisitor::MakeSignature(decl), base::nullopt);
-  builtin->SetIdentifierPosition(decl->name->pos);
-  Declarations::Declare(decl->name->value, builtin);
+                    TypeVisitor::MakeSignature(decl), base::nullopt));
 }
 
 void DeclarationVisitor::Visit(ExternalRuntimeDeclaration* decl) {
@@ -140,60 +133,45 @@ void DeclarationVisitor::Visit(ExternalRuntimeDeclaration* decl) {
         "type Context or NoContext, but found type ",
         *signature.parameter_types.types[0]);
   }
-  if (!(signature.return_type->IsSubtypeOf(TypeOracle::GetStrongTaggedType()) ||
+  if (!(signature.return_type->IsSubtypeOf(TypeOracle::GetObjectType()) ||
         signature.return_type == TypeOracle::GetVoidType() ||
         signature.return_type == TypeOracle::GetNeverType())) {
     ReportError(
-        "runtime functions can only return strong tagged values, but "
-        "found type ",
-        *signature.return_type);
+        "runtime functions can only return tagged values, but found type ",
+        signature.return_type);
   }
   for (const Type* parameter_type : signature.parameter_types.types) {
-    if (!parameter_type->IsSubtypeOf(TypeOracle::GetStrongTaggedType())) {
+    if (!parameter_type->IsSubtypeOf(TypeOracle::GetObjectType())) {
       ReportError(
-          "runtime functions can only take strong tagged parameters, but "
+          "runtime functions can only take tagged values as parameters, but "
           "found type ",
           *parameter_type);
     }
   }
 
-  RuntimeFunction* function =
-      Declarations::DeclareRuntimeFunction(decl->name->value, signature);
-  function->SetIdentifierPosition(decl->name->pos);
-  function->SetPosition(decl->pos);
-  if (GlobalContext::collect_kythe_data()) {
-    KytheData::AddFunctionDefinition(function);
-  }
+  Declarations::DeclareRuntimeFunction(decl->name->value, signature);
 }
 
 void DeclarationVisitor::Visit(ExternalMacroDeclaration* decl) {
-  Macro* macro = Declarations::DeclareMacro(
+  Declarations::DeclareMacro(
       decl->name->value, true, decl->external_assembler_name,
       TypeVisitor::MakeSignature(decl), base::nullopt, decl->op);
-  macro->SetIdentifierPosition(decl->name->pos);
-  macro->SetPosition(decl->pos);
-  if (GlobalContext::collect_kythe_data()) {
-    KytheData::AddFunctionDefinition(macro);
-  }
 }
 
 void DeclarationVisitor::Visit(TorqueBuiltinDeclaration* decl) {
-  auto builtin = CreateBuiltin(decl, decl->name->value, decl->name->value,
-                               TypeVisitor::MakeSignature(decl), decl->body);
-  builtin->SetIdentifierPosition(decl->name->pos);
-  builtin->SetPosition(decl->pos);
-  Declarations::Declare(decl->name->value, builtin);
+  Declarations::Declare(
+      decl->name->value,
+      CreateBuiltin(decl, decl->name->value, decl->name->value,
+                    TypeVisitor::MakeSignature(decl), decl->body));
 }
 
 void DeclarationVisitor::Visit(TorqueMacroDeclaration* decl) {
   Macro* macro = Declarations::DeclareMacro(
       decl->name->value, decl->export_to_csa, base::nullopt,
       TypeVisitor::MakeSignature(decl), decl->body, decl->op);
-  macro->SetIdentifierPosition(decl->name->pos);
+  // TODO(szuend): Set identifier_position to decl->name->pos once all callable
+  // names are changed from std::string to Identifier*.
   macro->SetPosition(decl->pos);
-  if (GlobalContext::collect_kythe_data()) {
-    KytheData::AddFunctionDefinition(macro);
-  }
 }
 
 void DeclarationVisitor::Visit(IntrinsicDeclaration* decl) {
@@ -202,11 +180,8 @@ void DeclarationVisitor::Visit(IntrinsicDeclaration* decl) {
 }
 
 void DeclarationVisitor::Visit(ConstDeclaration* decl) {
-  auto constant = Declarations::DeclareNamespaceConstant(
+  Declarations::DeclareNamespaceConstant(
       decl->name, TypeVisitor::ComputeType(decl->type), decl->expression);
-  if (GlobalContext::collect_kythe_data()) {
-    KytheData::AddConstantDefinition(constant);
-  }
 }
 
 void DeclarationVisitor::Visit(SpecializationDeclaration* decl) {
@@ -220,10 +195,9 @@ void DeclarationVisitor::Visit(SpecializationDeclaration* decl) {
     // This argument inference is just to trigger constraint checking on the
     // generic arguments.
     TypeArgumentInference inference = generic->InferSpecializationTypes(
-        TypeVisitor::ComputeTypeVector(decl->generic_parameters), {});
-    if (inference.HasFailed()) {
-      continue;
-    }
+        TypeVisitor::ComputeTypeVector(decl->generic_parameters),
+        signature_with_types.GetExplicitTypes());
+    if (inference.HasFailed()) continue;
     Signature generic_signature_with_types =
         MakeSpecializedSignature(SpecializationKey<GenericCallable>{
             generic, TypeVisitor::ComputeTypeVector(decl->generic_parameters)});
@@ -282,11 +256,7 @@ void DeclarationVisitor::Visit(ExternConstDeclaration* decl) {
     ReportError(stream.str());
   }
 
-  ExternConstant* constant =
-      Declarations::DeclareExternConstant(decl->name, type, decl->literal);
-  if (GlobalContext::collect_kythe_data()) {
-    KytheData::AddConstantDefinition(constant);
-  }
+  Declarations::DeclareExternConstant(decl->name, type, decl->literal);
 }
 
 void DeclarationVisitor::Visit(CppIncludeDeclaration* decl) {
@@ -402,10 +372,8 @@ Callable* DeclarationVisitor::Specialize(
 }
 
 void PredeclarationVisitor::ResolvePredeclarations() {
-  const auto& all_declarables = GlobalContext::AllDeclarables();
-  for (size_t i = 0; i < all_declarables.size(); ++i) {
-    Declarable* declarable = all_declarables[i].get();
-    if (const TypeAlias* alias = TypeAlias::DynamicCast(declarable)) {
+  for (auto& p : GlobalContext::AllDeclarables()) {
+    if (const TypeAlias* alias = TypeAlias::DynamicCast(p.get())) {
       CurrentScope::Scope scope_activator(alias->ParentScope());
       CurrentSourcePosition::Scope position_activator(alias->Position());
       alias->Resolve();

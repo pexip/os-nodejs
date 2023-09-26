@@ -1,18 +1,14 @@
 'use strict';
 const common = require('../common');
 const assert = require('assert');
-const { isDisturbed, isErrored, Readable } = require('stream');
+const Readable = require('stream').Readable;
 
 function noop() {}
 
 function check(readable, data, fn) {
   assert.strictEqual(readable.readableDidRead, false);
-  assert.strictEqual(isDisturbed(readable), false);
-  assert.strictEqual(isErrored(readable), false);
   if (data === -1) {
-    readable.on('error', common.mustCall(() => {
-      assert.strictEqual(isErrored(readable), true);
-    }));
+    readable.on('error', common.mustCall());
     readable.on('data', common.mustNotCall());
     readable.on('end', common.mustNotCall());
   } else {
@@ -31,10 +27,7 @@ function check(readable, data, fn) {
   readable.on('close', common.mustCall());
   fn();
   setImmediate(() => {
-    assert.strictEqual(readable.readableDidRead, data > 0);
-    if (data > 0) {
-      assert.strictEqual(isDisturbed(readable), true);
-    }
+    assert.strictEqual(readable.readableDidRead, true);
   });
 }
 

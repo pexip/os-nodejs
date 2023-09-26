@@ -18,13 +18,13 @@ const clientConfigs = [
 
 const serverConfig = {
   secureProtocol: 'TLS_method',
-  ciphers: 'RSA@SECLEVEL=0',
   key: fixtures.readKey('agent2-key.pem'),
   cert: fixtures.readKey('agent2-cert.pem')
 };
 
-const server = tls.createServer(serverConfig, common.mustCall(clientConfigs.length))
-.listen(0, common.localhostIPv4, function() {
+const server = tls.createServer(serverConfig, common.mustCall(function() {
+
+}, clientConfigs.length)).listen(0, common.localhostIPv4, function() {
   let connected = 0;
   clientConfigs.forEach(function(v) {
     tls.connect({
@@ -34,8 +34,7 @@ const server = tls.createServer(serverConfig, common.mustCall(clientConfigs.leng
       secureProtocol: v.secureProtocol
     }, common.mustCall(function() {
       assert.strictEqual(this.getProtocol(), v.version);
-      this.on('end', common.mustCall());
-      this.on('close', common.mustCall(function() {
+      this.on('end', common.mustCall(function() {
         assert.strictEqual(this.getProtocol(), null);
       })).end();
       if (++connected === clientConfigs.length)

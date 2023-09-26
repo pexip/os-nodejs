@@ -42,8 +42,6 @@ class V8_EXPORT_PRIVATE DeadCodeElimination final
   DeadCodeElimination(Editor* editor, Graph* graph,
                       CommonOperatorBuilder* common, Zone* temp_zone);
   ~DeadCodeElimination() final = default;
-  DeadCodeElimination(const DeadCodeElimination&) = delete;
-  DeadCodeElimination& operator=(const DeadCodeElimination&) = delete;
 
   const char* reducer_name() const override { return "DeadCodeElimination"; }
 
@@ -78,6 +76,8 @@ class V8_EXPORT_PRIVATE DeadCodeElimination final
   CommonOperatorBuilder* const common_;
   Node* const dead_;
   Zone* zone_;
+
+  DISALLOW_COPY_AND_ASSIGN(DeadCodeElimination);
 };
 
 }  // namespace compiler

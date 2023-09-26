@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import { GNode, MINIMUM_EDGE_SEPARATION, DEFAULT_NODE_BUBBLE_RADIUS } from "../src/node";
+import { GNode, DEFAULT_NODE_BUBBLE_RADIUS } from "../src/node";
 import { Graph } from "./graph";
 
-const BEZIER_CONSTANT = 0.3;
+export const MINIMUM_EDGE_SEPARATION = 20;
 
 export class Edge {
   target: GNode;
@@ -64,31 +64,20 @@ export class Edge {
     const outputApproach = source.getOutputApproach(showTypes);
     const horizontalPos = this.getInputHorizontalPosition(graph, showTypes);
 
-    let result: string;
+    let result = "M" + outputX + "," + outputY +
+      "L" + outputX + "," + outputApproach +
+      "L" + horizontalPos + "," + outputApproach;
 
-    if (inputY < outputY) {
-      result = `M ${outputX} ${outputY}
-                L ${outputX} ${outputApproach}
-                L ${horizontalPos} ${outputApproach}`;
-
-      if (horizontalPos != inputX) {
-        result += `L ${horizontalPos} ${inputApproach}`;
-      } else {
-        if (inputApproach < outputApproach) {
-          inputApproach = outputApproach;
-        }
-      }
-
-      result += `L ${inputX} ${inputApproach}
-                 L ${inputX} ${inputY}`;
+    if (horizontalPos != inputX) {
+      result += "L" + horizontalPos + "," + inputApproach;
     } else {
-      const controlY = outputY + (inputY - outputY) * BEZIER_CONSTANT;
-      result = `M ${outputX} ${outputY}
-                C ${outputX} ${controlY},
-                  ${inputX} ${outputY},
-                  ${inputX} ${inputY}`;
+      if (inputApproach < outputApproach) {
+        inputApproach = outputApproach;
+      }
     }
 
+    result += "L" + inputX + "," + inputApproach +
+      "L" + inputX + "," + inputY;
     return result;
   }
 

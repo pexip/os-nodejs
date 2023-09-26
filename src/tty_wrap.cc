@@ -24,7 +24,6 @@
 #include "env-inl.h"
 #include "handle_wrap.h"
 #include "node_buffer.h"
-#include "node_external_reference.h"
 #include "stream_base-inl.h"
 #include "stream_wrap.h"
 #include "util-inl.h"
@@ -36,42 +35,32 @@ using v8::Context;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::Integer;
-using v8::Isolate;
 using v8::Local;
 using v8::Object;
 using v8::String;
 using v8::Value;
-
-void TTYWrap::RegisterExternalReferences(ExternalReferenceRegistry* registry) {
-  registry->Register(New);
-  registry->Register(GetWindowSize);
-  registry->Register(SetRawMode);
-  registry->Register(IsTTY);
-}
 
 void TTYWrap::Initialize(Local<Object> target,
                          Local<Value> unused,
                          Local<Context> context,
                          void* priv) {
   Environment* env = Environment::GetCurrent(context);
-  Isolate* isolate = env->isolate();
 
   Local<String> ttyString = FIXED_ONE_BYTE_STRING(env->isolate(), "TTY");
 
-  Local<FunctionTemplate> t = NewFunctionTemplate(isolate, New);
+  Local<FunctionTemplate> t = env->NewFunctionTemplate(New);
   t->SetClassName(ttyString);
   t->InstanceTemplate()->SetInternalFieldCount(StreamBase::kInternalFieldCount);
   t->Inherit(LibuvStreamWrap::GetConstructorTemplate(env));
 
-  SetProtoMethodNoSideEffect(
-      isolate, t, "getWindowSize", TTYWrap::GetWindowSize);
-  SetProtoMethod(isolate, t, "setRawMode", SetRawMode);
+  env->SetProtoMethodNoSideEffect(t, "getWindowSize", TTYWrap::GetWindowSize);
+  env->SetProtoMethod(t, "setRawMode", SetRawMode);
 
-  SetMethodNoSideEffect(context, target, "isTTY", IsTTY);
+  env->SetMethodNoSideEffect(target, "isTTY", IsTTY);
 
   Local<Value> func;
-  if (t->GetFunction(context).ToLocal(&func) &&
-      target->Set(context, ttyString, func).IsJust()) {
+  if (t->GetFunction(env->context()).ToLocal(&func) &&
+      target->Set(env->context(), ttyString, func).IsJust()) {
     env->set_tty_constructor_template(t);
   }
 }
@@ -132,9 +121,9 @@ void TTYWrap::New(const FunctionCallbackInfo<Value>& args) {
   CHECK_GE(fd, 0);
 
   int err = 0;
-  new TTYWrap(env, args.This(), fd, &err);
+  new TTYWrap(env, args.This(), fd, args[1]->IsTrue(), &err);
   if (err != 0) {
-    env->CollectUVExceptionInfo(args[1], err, "uv_tty_init");
+    env->CollectUVExceptionInfo(args[2], err, "uv_tty_init");
     args.GetReturnValue().SetUndefined();
   }
 }
@@ -143,12 +132,13 @@ void TTYWrap::New(const FunctionCallbackInfo<Value>& args) {
 TTYWrap::TTYWrap(Environment* env,
                  Local<Object> object,
                  int fd,
+                 bool readable,
                  int* init_err)
     : LibuvStreamWrap(env,
                       object,
                       reinterpret_cast<uv_stream_t*>(&handle_),
                       AsyncWrap::PROVIDER_TTYWRAP) {
-  *init_err = uv_tty_init(env->event_loop(), &handle_, fd, 0);
+  *init_err = uv_tty_init(env->event_loop(), &handle_, fd, readable);
   set_fd(fd);
   if (*init_err != 0)
     MarkAsUninitialized();
@@ -157,5 +147,3 @@ TTYWrap::TTYWrap(Environment* env,
 }  // namespace node
 
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(tty_wrap, node::TTYWrap::Initialize)
-NODE_MODULE_EXTERNAL_REFERENCE(tty_wrap,
-                               node::TTYWrap::RegisterExternalReferences)

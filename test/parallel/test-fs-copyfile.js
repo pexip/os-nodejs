@@ -103,7 +103,7 @@ fs.copyFile(src, dest, common.mustSucceed(() => {
 assert.throws(() => {
   fs.copyFile(src, dest, 0, 0);
 }, {
-  code: 'ERR_INVALID_ARG_TYPE',
+  code: 'ERR_INVALID_CALLBACK',
   name: 'TypeError'
 });
 

@@ -54,14 +54,14 @@ enum AssessmentKind { Final, Pending };
 
 class Assessment : public ZoneObject {
  public:
-  Assessment(const Assessment&) = delete;
-  Assessment& operator=(const Assessment&) = delete;
-
   AssessmentKind kind() const { return kind_; }
 
  protected:
   explicit Assessment(AssessmentKind kind) : kind_(kind) {}
   AssessmentKind kind_;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(Assessment);
 };
 
 // PendingAssessments are associated to operands coming from the multiple
@@ -79,9 +79,6 @@ class PendingAssessment final : public Assessment {
         origin_(origin),
         operand_(operand),
         aliases_(zone) {}
-
-  PendingAssessment(const PendingAssessment&) = delete;
-  PendingAssessment& operator=(const PendingAssessment&) = delete;
 
   static const PendingAssessment* cast(const Assessment* assessment) {
     CHECK(assessment->kind() == Pending);
@@ -102,6 +99,8 @@ class PendingAssessment final : public Assessment {
   const InstructionBlock* const origin_;
   InstructionOperand operand_;
   ZoneSet<int> aliases_;
+
+  DISALLOW_COPY_AND_ASSIGN(PendingAssessment);
 };
 
 // FinalAssessments are associated to operands that we know to be a certain
@@ -110,8 +109,6 @@ class FinalAssessment final : public Assessment {
  public:
   explicit FinalAssessment(int virtual_register)
       : Assessment(Final), virtual_register_(virtual_register) {}
-  FinalAssessment(const FinalAssessment&) = delete;
-  FinalAssessment& operator=(const FinalAssessment&) = delete;
 
   int virtual_register() const { return virtual_register_; }
   static const FinalAssessment* cast(const Assessment* assessment) {
@@ -121,6 +118,8 @@ class FinalAssessment final : public Assessment {
 
  private:
   int virtual_register_;
+
+  DISALLOW_COPY_AND_ASSIGN(FinalAssessment);
 };
 
 struct OperandAsKeyLess {
@@ -141,9 +140,6 @@ class BlockAssessments : public ZoneObject {
         stale_ref_stack_slots_(zone),
         spill_slot_delta_(spill_slot_delta),
         zone_(zone) {}
-  BlockAssessments(const BlockAssessments&) = delete;
-  BlockAssessments& operator=(const BlockAssessments&) = delete;
-
   void Drop(InstructionOperand operand) {
     map_.erase(operand);
     stale_ref_stack_slots_.erase(operand);
@@ -158,7 +154,7 @@ class BlockAssessments : public ZoneObject {
       stale_ref_stack_slots_.erase(operand);
     }
     map_.insert(
-        std::make_pair(operand, zone_->New<FinalAssessment>(virtual_register)));
+        std::make_pair(operand, new (zone_) FinalAssessment(virtual_register)));
   }
 
   void PerformMoves(const Instruction* instruction);
@@ -192,6 +188,8 @@ class BlockAssessments : public ZoneObject {
   OperandSet stale_ref_stack_slots_;
   int spill_slot_delta_;
   Zone* zone_;
+
+  DISALLOW_COPY_AND_ASSIGN(BlockAssessments);
 };
 
 class RegisterAllocatorVerifier final : public ZoneObject {
@@ -199,9 +197,6 @@ class RegisterAllocatorVerifier final : public ZoneObject {
   RegisterAllocatorVerifier(Zone* zone, const RegisterConfiguration* config,
                             const InstructionSequence* sequence,
                             const Frame* frame);
-  RegisterAllocatorVerifier(const RegisterAllocatorVerifier&) = delete;
-  RegisterAllocatorVerifier& operator=(const RegisterAllocatorVerifier&) =
-      delete;
 
   void VerifyAssignment(const char* caller_info);
   void VerifyGapMoves();
@@ -219,7 +214,7 @@ class RegisterAllocatorVerifier final : public ZoneObject {
     kRegisterOrSlot,
     kRegisterOrSlotFP,
     kRegisterOrSlotOrConstant,
-    kSameAsInput,
+    kSameAsFirst,
     kRegisterAndSlot
   };
 
@@ -295,6 +290,8 @@ class RegisterAllocatorVerifier final : public ZoneObject {
   int spill_slot_delta_;
   // TODO(chromium:725559): remove after we understand this bug's root cause.
   const char* caller_info_ = nullptr;
+
+  DISALLOW_COPY_AND_ASSIGN(RegisterAllocatorVerifier);
 };
 
 }  // namespace compiler

@@ -303,19 +303,19 @@ KeccakF1600:
 dword_le_load:
 .localentry	dword_le_load,0
 
-	lbz	0,1(3)
-	lbz	4,2(3)
-	lbz	5,3(3)
+	lbzu	0,1(3)
+	lbzu	4,1(3)
+	lbzu	5,1(3)
 	insrdi	0,4,8,48
-	lbz	4,4(3)
+	lbzu	4,1(3)
 	insrdi	0,5,8,40
-	lbz	5,5(3)
+	lbzu	5,1(3)
 	insrdi	0,4,8,32
-	lbz	4,6(3)
+	lbzu	4,1(3)
 	insrdi	0,5,8,24
-	lbz	5,7(3)
+	lbzu	5,1(3)
 	insrdi	0,4,8,16
-	lbzu	4,8(3)
+	lbzu	4,1(3)
 	insrdi	0,5,8,8
 	insrdi	0,4,8,0
 	blr	
@@ -578,21 +578,21 @@ SHA3_squeeze:
 	cmpldi	30,8
 	blt	.Lsqueeze_tail
 
-	stb	0,1(29)
+	stbu	0,1(29)
 	srdi	0,0,8
-	stb	0,2(29)
+	stbu	0,1(29)
 	srdi	0,0,8
-	stb	0,3(29)
+	stbu	0,1(29)
 	srdi	0,0,8
-	stb	0,4(29)
+	stbu	0,1(29)
 	srdi	0,0,8
-	stb	0,5(29)
+	stbu	0,1(29)
 	srdi	0,0,8
-	stb	0,6(29)
+	stbu	0,1(29)
 	srdi	0,0,8
-	stb	0,7(29)
+	stbu	0,1(29)
 	srdi	0,0,8
-	stbu	0,8(29)
+	stbu	0,1(29)
 
 	subic.	30,30,8
 	beq	.Lsqueeze_done

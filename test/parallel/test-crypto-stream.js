@@ -71,11 +71,7 @@ const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
 const decipher = crypto.createDecipheriv('aes-128-cbc', badkey, iv);
 
 cipher.pipe(decipher)
-  .on('error', common.expectsError(common.hasOpenSSL3 ? {
-    message: /bad decrypt/,
-    library: 'Provider routines',
-    reason: 'bad decrypt',
-  } : {
+  .on('error', common.expectsError({
     message: /bad decrypt/,
     function: 'EVP_DecryptFinal_ex',
     library: 'digital envelope routines',

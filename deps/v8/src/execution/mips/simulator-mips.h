@@ -36,7 +36,6 @@ T Nabs(T a) {
 // Running with a simulator.
 
 #include "src/base/hashmap.h"
-#include "src/base/strings.h"
 #include "src/codegen/assembler.h"
 #include "src/codegen/mips/constants-mips.h"
 #include "src/execution/simulator-base.h"
@@ -268,7 +267,6 @@ class Simulator : public SimulatorBase {
   void set_msa_register(int wreg, const T* value);
   void set_fcsr_bit(uint32_t cc, bool value);
   bool test_fcsr_bit(uint32_t cc);
-  void clear_fcsr_cause();
   void set_fcsr_rounding_mode(FPURoundingMode mode);
   void set_msacsr_rounding_mode(FPURoundingMode mode);
   unsigned int get_fcsr_rounding_mode();
@@ -405,7 +403,7 @@ class Simulator : public SimulatorBase {
   void TraceMemRd(int32_t addr, T value);
   template <typename T>
   void TraceMemWr(int32_t addr, T value);
-  base::EmbeddedVector<char, 128> trace_buf_;
+  EmbeddedVector<char, 128> trace_buf_;
 
   // Operations depending on endianness.
   // Get Double Higher / Lower word.
@@ -549,7 +547,7 @@ class Simulator : public SimulatorBase {
             instr->OpcodeValue());
     }
     InstructionDecode(instr);
-    base::SNPrintF(trace_buf_, " ");
+    SNPrintF(trace_buf_, " ");
   }
 
   // ICache.
@@ -592,7 +590,8 @@ class Simulator : public SimulatorBase {
   uint32_t MSACSR_;
 
   // Simulator support.
-  size_t stack_size_;
+  // Allocate 1MB for stack.
+  static const size_t stack_size_ = 1 * 1024 * 1024;
   char* stack_;
   bool pc_modified_;
   uint64_t icount_;

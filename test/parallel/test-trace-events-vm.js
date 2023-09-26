@@ -8,6 +8,7 @@ const tmpdir = require('../common/tmpdir');
 
 const names = [
   'ContextifyScript::New',
+  'RunInThisContext',
   'RunInContext',
 ];
 

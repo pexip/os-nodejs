@@ -35,11 +35,8 @@ assert.ok(channel instanceof Channel);
 channel.publish(input);
 
 // Should not publish after subscriber is unsubscribed
-assert.ok(channel.unsubscribe(subscriber));
+channel.unsubscribe(subscriber);
 assert.ok(!channel.hasSubscribers);
-
-// unsubscribe() should return false when subscriber is not found
-assert.ok(!channel.unsubscribe(subscriber));
 
 assert.throws(() => {
   channel.subscribe(null);

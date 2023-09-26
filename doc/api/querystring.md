@@ -2,25 +2,23 @@
 
 <!--introduced_in=v0.1.25-->
 
-> Stability: 2 - Stable
+> Stability: 3 - Legacy
 
 <!--name=querystring-->
 
 <!-- source_link=lib/querystring.js -->
 
-The `node:querystring` module provides utilities for parsing and formatting URL
+The `querystring` module provides utilities for parsing and formatting URL
 query strings. It can be accessed using:
 
 ```js
-const querystring = require('node:querystring');
+const querystring = require('querystring');
 ```
 
-`querystring` is more performant than {URLSearchParams} but is not a
-standardized API. Use {URLSearchParams} when performance is not critical or
-when compatibility with browser code is desirable.
+The `querystring` API is considered Legacy. While it is still maintained,
+new code should use the {URLSearchParams} API instead.
 
 ## `querystring.decode()`
-
 <!-- YAML
 added: v0.1.99
 -->
@@ -28,7 +26,6 @@ added: v0.1.99
 The `querystring.decode()` function is an alias for `querystring.parse()`.
 
 ## `querystring.encode()`
-
 <!-- YAML
 added: v0.1.99
 -->
@@ -36,7 +33,6 @@ added: v0.1.99
 The `querystring.encode()` function is an alias for `querystring.stringify()`.
 
 ## `querystring.escape(str)`
-
 <!-- YAML
 added: v0.1.25
 -->
@@ -53,7 +49,6 @@ application code to provide a replacement percent-encoding implementation if
 necessary by assigning `querystring.escape` to an alternative function.
 
 ## `querystring.parse(str[, sep[, eq[, options]]])`
-
 <!-- YAML
 added: v0.1.25
 changes:
@@ -88,7 +83,6 @@ collection of key and value pairs.
 For example, the query string `'foo=bar&abc=xyz&abc=123'` is parsed into:
 
 <!-- eslint-skip -->
-
 ```js
 {
   foo: 'bar',
@@ -99,7 +93,7 @@ For example, the query string `'foo=bar&abc=xyz&abc=123'` is parsed into:
 The object returned by the `querystring.parse()` method _does not_
 prototypically inherit from the JavaScript `Object`. This means that typical
 `Object` methods such as `obj.toString()`, `obj.hasOwnProperty()`, and others
-are not defined and _will not work_.
+are not defined and *will not work*.
 
 By default, percent-encoded characters within the query string will be assumed
 to use UTF-8 encoding. If an alternative character encoding is used, then an
@@ -113,7 +107,6 @@ querystring.parse('w=%D6%D0%CE%C4&foo=bar', null, null,
 ```
 
 ## `querystring.stringify(obj[, sep[, eq[, options]]])`
-
 <!-- YAML
 added: v0.1.25
 -->
@@ -132,7 +125,7 @@ The `querystring.stringify()` method produces a URL query string from a
 given `obj` by iterating through the object's "own properties".
 
 It serializes the following types of values passed in `obj`:
-{string|number|bigint|boolean|string\[]|number\[]|bigint\[]|boolean\[]}
+{string|number|bigint|boolean|string[]|number[]|bigint[]|boolean[]}
 The numeric values must be finite. Any other input values will be coerced to
 empty strings.
 
@@ -156,7 +149,6 @@ querystring.stringify({ w: '中文', foo: 'bar' }, null, null,
 ```
 
 ## `querystring.unescape(str)`
-
 <!-- YAML
 added: v0.1.25
 -->

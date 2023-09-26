@@ -7,20 +7,17 @@ import { anyToString, ViewElements, isIterable } from "../src/util";
 import { MySelection } from "../src/selection";
 import { SourceResolver } from "./source-resolver";
 import { SelectionBroker } from "./selection-broker";
-import { NodeSelectionHandler, BlockSelectionHandler, RegisterAllocationSelectionHandler } from "./selection-handler";
+import { NodeSelectionHandler, BlockSelectionHandler } from "./selection-handler";
 
 export abstract class TextView extends PhaseView {
   selectionHandler: NodeSelectionHandler;
   blockSelectionHandler: BlockSelectionHandler;
-  registerAllocationSelectionHandler: RegisterAllocationSelectionHandler;
   selection: MySelection;
   blockSelection: MySelection;
-  registerAllocationSelection: MySelection;
   textListNode: HTMLUListElement;
-  instructionIdToHtmlElementsMap: Map<string, Array<HTMLElement>>;
   nodeIdToHtmlElementsMap: Map<string, Array<HTMLElement>>;
   blockIdToHtmlElementsMap: Map<string, Array<HTMLElement>>;
-  blockIdToNodeIds: Map<string, Array<string>>;
+  blockIdtoNodeIds: Map<string, Array<string>>;
   nodeIdToBlockId: Array<string>;
   patterns: any;
   sourceResolver: SourceResolver;
@@ -31,10 +28,9 @@ export abstract class TextView extends PhaseView {
     const view = this;
     view.textListNode = view.divNode.getElementsByTagName('ul')[0];
     view.patterns = null;
-    view.instructionIdToHtmlElementsMap = new Map();
     view.nodeIdToHtmlElementsMap = new Map();
     view.blockIdToHtmlElementsMap = new Map();
-    view.blockIdToNodeIds = new Map();
+    view.blockIdtoNodeIds = new Map();
     view.nodeIdToBlockId = [];
     view.selection = new MySelection(anyToString);
     view.blockSelection = new MySelection(anyToString);
@@ -69,7 +65,6 @@ export abstract class TextView extends PhaseView {
       }
       e.stopPropagation();
     });
-
     const blockSelectionHandler = {
       clear: function () {
         view.blockSelection.clear();
@@ -93,40 +88,6 @@ export abstract class TextView extends PhaseView {
     };
     this.blockSelectionHandler = blockSelectionHandler;
     broker.addBlockHandler(blockSelectionHandler);
-
-    view.registerAllocationSelection = new MySelection(anyToString);
-    const registerAllocationSelectionHandler = {
-      clear: function () {
-        view.registerAllocationSelection.clear();
-        view.updateSelection();
-        broker.broadcastClear(registerAllocationSelectionHandler);
-      },
-      select: function (instructionIds, selected) {
-        view.registerAllocationSelection.select(instructionIds, selected);
-        view.updateSelection();
-        broker.broadcastInstructionSelect(null, [instructionIds], selected);
-      },
-      brokeredRegisterAllocationSelect: function (instructionIds, selected) {
-        const firstSelect = view.blockSelection.isEmpty();
-        view.registerAllocationSelection.select(instructionIds, selected);
-        view.updateSelection(firstSelect);
-      },
-      brokeredClear: function () {
-        view.registerAllocationSelection.clear();
-        view.updateSelection();
-      }
-    };
-    broker.addRegisterAllocatorHandler(registerAllocationSelectionHandler);
-    view.registerAllocationSelectionHandler = registerAllocationSelectionHandler;
-  }
-
-  // instruction-id are the divs for the register allocator phase
-  addHtmlElementForInstructionId(anyInstructionId: any, htmlElement: HTMLElement) {
-    const instructionId = anyToString(anyInstructionId);
-    if (!this.instructionIdToHtmlElementsMap.has(instructionId)) {
-      this.instructionIdToHtmlElementsMap.set(instructionId, []);
-    }
-    this.instructionIdToHtmlElementsMap.get(instructionId).push(htmlElement);
   }
 
   addHtmlElementForNodeId(anyNodeId: any, htmlElement: HTMLElement) {
@@ -147,10 +108,10 @@ export abstract class TextView extends PhaseView {
 
   addNodeIdToBlockId(anyNodeId, anyBlockId) {
     const blockId = anyToString(anyBlockId);
-    if (!this.blockIdToNodeIds.has(blockId)) {
-      this.blockIdToNodeIds.set(blockId, []);
+    if (!this.blockIdtoNodeIds.has(blockId)) {
+      this.blockIdtoNodeIds.set(blockId, []);
     }
-    this.blockIdToNodeIds.get(blockId).push(anyToString(anyNodeId));
+    this.blockIdtoNodeIds.get(blockId).push(anyToString(anyNodeId));
     this.nodeIdToBlockId[anyNodeId] = blockId;
   }
 
@@ -179,21 +140,6 @@ export abstract class TextView extends PhaseView {
         element.classList.toggle("selected", isSelected);
       }
     }
-
-    for (const key of this.instructionIdToHtmlElementsMap.keys()) {
-      for (const element of this.instructionIdToHtmlElementsMap.get(key)) {
-        element.classList.toggle("selected", false);
-      }
-    }
-    for (const instrId of view.registerAllocationSelection.selectedKeys()) {
-      const elements = this.instructionIdToHtmlElementsMap.get(instrId);
-      if (!elements) continue;
-      for (const element of elements) {
-        mkVisible.consider(element, true);
-        element.classList.toggle("selected", true);
-      }
-    }
-
     for (const key of this.nodeIdToHtmlElementsMap.keys()) {
       for (const element of this.nodeIdToHtmlElementsMap.get(key)) {
         element.classList.toggle("selected", false);

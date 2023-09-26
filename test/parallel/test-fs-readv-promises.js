@@ -29,16 +29,17 @@ const allocateEmptyBuffers = (combinedLength) => {
     const filename = getFileName();
     await fs.writeFile(filename, exptectedBuff);
     const handle = await fs.open(filename, 'r');
+    // const buffer = Buffer.from(expected);
     const bufferArr = allocateEmptyBuffers(exptectedBuff.length);
     const expectedLength = exptectedBuff.length;
 
     let { bytesRead, buffers } = await handle.readv([Buffer.from('')],
                                                     null);
-    assert.strictEqual(bytesRead, 0);
+    assert.deepStrictEqual(bytesRead, 0);
     assert.deepStrictEqual(buffers, [Buffer.from('')]);
 
     ({ bytesRead, buffers } = await handle.readv(bufferArr, null));
-    assert.strictEqual(bytesRead, expectedLength);
+    assert.deepStrictEqual(bytesRead, expectedLength);
     assert.deepStrictEqual(buffers, bufferArr);
     assert(Buffer.concat(bufferArr).equals(await fs.readFile(filename)));
     handle.close();
@@ -48,15 +49,16 @@ const allocateEmptyBuffers = (combinedLength) => {
     const filename = getFileName();
     await fs.writeFile(filename, exptectedBuff);
     const handle = await fs.open(filename, 'r');
+    // const buffer = Buffer.from(expected);
     const bufferArr = allocateEmptyBuffers(exptectedBuff.length);
     const expectedLength = exptectedBuff.length;
 
     let { bytesRead, buffers } = await handle.readv([Buffer.from('')]);
-    assert.strictEqual(bytesRead, 0);
+    assert.deepStrictEqual(bytesRead, 0);
     assert.deepStrictEqual(buffers, [Buffer.from('')]);
 
     ({ bytesRead, buffers } = await handle.readv(bufferArr));
-    assert.strictEqual(bytesRead, expectedLength);
+    assert.deepStrictEqual(bytesRead, expectedLength);
     assert.deepStrictEqual(buffers, bufferArr);
     assert(Buffer.concat(bufferArr).equals(await fs.readFile(filename)));
     handle.close();

@@ -6,176 +6,227 @@
 #include "src/builtins/builtins.h"
 #include "src/heap/heap-inl.h"  // For ToBoolean.
 #include "src/logging/counters.h"
-#include "src/objects/call-site-info-inl.h"
+#include "src/objects/frame-array-inl.h"
 #include "src/objects/objects-inl.h"
+#include "src/objects/stack-frame-info.h"
 
 namespace v8 {
 namespace internal {
 
-#define CHECK_CALLSITE(frame, method)                                         \
-  CHECK_RECEIVER(JSObject, receiver, method);                                 \
-  LookupIterator it(isolate, receiver,                                        \
-                    isolate->factory()->call_site_info_symbol(),              \
-                    LookupIterator::OWN_SKIP_INTERCEPTOR);                    \
-  if (it.state() != LookupIterator::DATA) {                                   \
+#define CHECK_CALLSITE(recv, method)                                          \
+  CHECK_RECEIVER(JSObject, recv, method);                                     \
+  if (!JSReceiver::HasOwnProperty(                                            \
+           recv, isolate->factory()->call_site_frame_array_symbol())          \
+           .FromMaybe(false)) {                                               \
     THROW_NEW_ERROR_RETURN_FAILURE(                                           \
         isolate,                                                              \
         NewTypeError(MessageTemplate::kCallSiteMethod,                        \
                      isolate->factory()->NewStringFromAsciiChecked(method))); \
-  }                                                                           \
-  Handle<CallSiteInfo> frame = Handle<CallSiteInfo>::cast(it.GetDataValue())
+  }
+
 namespace {
 
 Object PositiveNumberOrNull(int value, Isolate* isolate) {
-  if (value > 0) return *isolate->factory()->NewNumberFromInt(value);
+  if (value >= 0) return *isolate->factory()->NewNumberFromInt(value);
   return ReadOnlyRoots(isolate).null_value();
+}
+
+Handle<FrameArray> GetFrameArray(Isolate* isolate, Handle<JSObject> object) {
+  Handle<Object> frame_array_obj = JSObject::GetDataProperty(
+      object, isolate->factory()->call_site_frame_array_symbol());
+  return Handle<FrameArray>::cast(frame_array_obj);
+}
+
+int GetFrameIndex(Isolate* isolate, Handle<JSObject> object) {
+  Handle<Object> frame_index_obj = JSObject::GetDataProperty(
+      object, isolate->factory()->call_site_frame_index_symbol());
+  return Smi::ToInt(*frame_index_obj);
 }
 
 }  // namespace
 
 BUILTIN(CallSitePrototypeGetColumnNumber) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getColumnNumber");
-  return PositiveNumberOrNull(CallSiteInfo::GetColumnNumber(frame), isolate);
+  CHECK_CALLSITE(recv, "getColumnNumber");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return PositiveNumberOrNull(it.Frame()->GetColumnNumber(), isolate);
 }
 
 BUILTIN(CallSitePrototypeGetEnclosingColumnNumber) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getEnclosingColumnNumber");
-  return PositiveNumberOrNull(CallSiteInfo::GetEnclosingColumnNumber(frame),
-                              isolate);
+  CHECK_CALLSITE(recv, "getEnclosingColumnNumber");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return PositiveNumberOrNull(it.Frame()->GetEnclosingColumnNumber(), isolate);
 }
 
 BUILTIN(CallSitePrototypeGetEnclosingLineNumber) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getEnclosingLineNumber");
-  return PositiveNumberOrNull(CallSiteInfo::GetEnclosingLineNumber(frame),
-                              isolate);
+  CHECK_CALLSITE(recv, "getEnclosingLineNumber");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return PositiveNumberOrNull(it.Frame()->GetEnclosingLineNumber(), isolate);
 }
 
 BUILTIN(CallSitePrototypeGetEvalOrigin) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getEvalOrigin");
-  return *CallSiteInfo::GetEvalOrigin(frame);
+  CHECK_CALLSITE(recv, "getEvalOrigin");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return *it.Frame()->GetEvalOrigin();
 }
 
 BUILTIN(CallSitePrototypeGetFileName) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getFileName");
-  return frame->GetScriptName();
+  CHECK_CALLSITE(recv, "getFileName");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return *it.Frame()->GetFileName();
 }
 
 BUILTIN(CallSitePrototypeGetFunction) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getFunction");
+  CHECK_CALLSITE(recv, "getFunction");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+
+  StackFrameBase* frame = it.Frame();
   if (frame->IsStrict() ||
-      (frame->function().IsJSFunction() &&
-       JSFunction::cast(frame->function()).shared().is_toplevel())) {
+      (frame->GetFunction()->IsJSFunction() &&
+       JSFunction::cast(*frame->GetFunction()).shared().is_toplevel())) {
     return ReadOnlyRoots(isolate).undefined_value();
   }
+
   isolate->CountUsage(v8::Isolate::kCallSiteAPIGetFunctionSloppyCall);
-  return frame->function();
+
+  return *frame->GetFunction();
 }
 
 BUILTIN(CallSitePrototypeGetFunctionName) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getFunctionName");
-  return *CallSiteInfo::GetFunctionName(frame);
+  CHECK_CALLSITE(recv, "getFunctionName");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return *it.Frame()->GetFunctionName();
 }
 
 BUILTIN(CallSitePrototypeGetLineNumber) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getLineNumber");
-  return PositiveNumberOrNull(CallSiteInfo::GetLineNumber(frame), isolate);
+  CHECK_CALLSITE(recv, "getLineNumber");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return PositiveNumberOrNull(it.Frame()->GetLineNumber(), isolate);
 }
 
 BUILTIN(CallSitePrototypeGetMethodName) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getMethodName");
-  return *CallSiteInfo::GetMethodName(frame);
+  CHECK_CALLSITE(recv, "getMethodName");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return *it.Frame()->GetMethodName();
 }
 
 BUILTIN(CallSitePrototypeGetPosition) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getPosition");
-  return Smi::FromInt(CallSiteInfo::GetSourcePosition(frame));
+  CHECK_CALLSITE(recv, "getPosition");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return Smi::FromInt(it.Frame()->GetPosition());
 }
 
 BUILTIN(CallSitePrototypeGetPromiseIndex) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getPromiseIndex");
-  if (!frame->IsPromiseAll() && !frame->IsPromiseAny() &&
-      !frame->IsPromiseAllSettled()) {
-    return ReadOnlyRoots(isolate).null_value();
-  }
-  return Smi::FromInt(CallSiteInfo::GetSourcePosition(frame));
+  CHECK_CALLSITE(recv, "getPromiseIndex");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return PositiveNumberOrNull(it.Frame()->GetPromiseIndex(), isolate);
 }
 
 BUILTIN(CallSitePrototypeGetScriptNameOrSourceURL) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getScriptNameOrSourceUrl");
-  return frame->GetScriptNameOrSourceURL();
+  CHECK_CALLSITE(recv, "getScriptNameOrSourceUrl");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return *it.Frame()->GetScriptNameOrSourceUrl();
 }
 
 BUILTIN(CallSitePrototypeGetThis) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getThis");
+  CHECK_CALLSITE(recv, "getThis");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+
+  StackFrameBase* frame = it.Frame();
   if (frame->IsStrict()) return ReadOnlyRoots(isolate).undefined_value();
+
   isolate->CountUsage(v8::Isolate::kCallSiteAPIGetThisSloppyCall);
-#if V8_ENABLE_WEBASSEMBLY
-  if (frame->IsAsmJsWasm()) {
-    return frame->GetWasmInstance().native_context().global_proxy();
-  }
-#endif  // V8_ENABLE_WEBASSEMBLY
-  return frame->receiver_or_instance();
+
+  return *frame->GetReceiver();
 }
 
 BUILTIN(CallSitePrototypeGetTypeName) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "getTypeName");
-  return *CallSiteInfo::GetTypeName(frame);
+  CHECK_CALLSITE(recv, "getTypeName");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return *it.Frame()->GetTypeName();
 }
 
 BUILTIN(CallSitePrototypeIsAsync) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "isAsync");
-  return isolate->heap()->ToBoolean(frame->IsAsync());
+  CHECK_CALLSITE(recv, "isAsync");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return isolate->heap()->ToBoolean(it.Frame()->IsAsync());
 }
 
 BUILTIN(CallSitePrototypeIsConstructor) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "isConstructor");
-  return isolate->heap()->ToBoolean(frame->IsConstructor());
+  CHECK_CALLSITE(recv, "isConstructor");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return isolate->heap()->ToBoolean(it.Frame()->IsConstructor());
 }
 
 BUILTIN(CallSitePrototypeIsEval) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "isEval");
-  return isolate->heap()->ToBoolean(frame->IsEval());
+  CHECK_CALLSITE(recv, "isEval");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return isolate->heap()->ToBoolean(it.Frame()->IsEval());
 }
 
 BUILTIN(CallSitePrototypeIsNative) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "isNative");
-  return isolate->heap()->ToBoolean(frame->IsNative());
+  CHECK_CALLSITE(recv, "isNative");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return isolate->heap()->ToBoolean(it.Frame()->IsNative());
 }
 
 BUILTIN(CallSitePrototypeIsPromiseAll) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "isPromiseAll");
-  return isolate->heap()->ToBoolean(frame->IsPromiseAll());
+  CHECK_CALLSITE(recv, "isPromiseAll");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return isolate->heap()->ToBoolean(it.Frame()->IsPromiseAll());
 }
 
 BUILTIN(CallSitePrototypeIsToplevel) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "isToplevel");
-  return isolate->heap()->ToBoolean(frame->IsToplevel());
+  CHECK_CALLSITE(recv, "isToplevel");
+  FrameArrayIterator it(isolate, GetFrameArray(isolate, recv),
+                        GetFrameIndex(isolate, recv));
+  return isolate->heap()->ToBoolean(it.Frame()->IsToplevel());
 }
 
 BUILTIN(CallSitePrototypeToString) {
   HandleScope scope(isolate);
-  CHECK_CALLSITE(frame, "toString");
-  RETURN_RESULT_OR_FAILURE(isolate, SerializeCallSiteInfo(isolate, frame));
+  CHECK_CALLSITE(recv, "toString");
+  Handle<StackTraceFrame> frame = isolate->factory()->NewStackTraceFrame(
+      GetFrameArray(isolate, recv), GetFrameIndex(isolate, recv));
+  RETURN_RESULT_OR_FAILURE(isolate, SerializeStackTraceFrame(isolate, frame));
 }
 
 #undef CHECK_CALLSITE

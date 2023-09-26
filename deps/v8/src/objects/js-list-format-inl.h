@@ -18,8 +18,6 @@
 namespace v8 {
 namespace internal {
 
-#include "torque-generated/src/objects/js-list-format-tq-inl.inc"
-
 TQ_OBJECT_CONSTRUCTORS_IMPL(JSListFormat)
 
 // Base list format accessors.

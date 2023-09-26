@@ -7,15 +7,14 @@
 #include <iostream>
 #include <sstream>
 
-#include "src/base/strings.h"
 #include "src/regexp/special-case.h"
 
 namespace v8 {
 namespace internal {
 
-static const base::uc32 kSurrogateStart = 0xd800;
-static const base::uc32 kSurrogateEnd = 0xdfff;
-static const base::uc32 kNonBmpStart = 0x10000;
+static const uc32 kSurrogateStart = 0xd800;
+static const uc32 kSurrogateEnd = 0xdfff;
+static const uc32 kNonBmpStart = 0x10000;
 
 // The following code generates "src/regexp/special-case.cc".
 void PrintSet(std::ofstream& out, const char* name,
@@ -56,9 +55,8 @@ void PrintSpecial(std::ofstream& out) {
   CHECK(U_SUCCESS(status));
 
   // Iterate through all chars in BMP except surrogates.
-  for (UChar32 i = 0; i < static_cast<UChar32>(kNonBmpStart); i++) {
-    if (i >= static_cast<UChar32>(kSurrogateStart) &&
-        i <= static_cast<UChar32>(kSurrogateEnd)) {
+  for (UChar32 i = 0; i < kNonBmpStart; i++) {
+    if (i >= kSurrogateStart && i <= kSurrogateEnd) {
       continue;  // Ignore surrogate range
     }
     current.set(i, i);

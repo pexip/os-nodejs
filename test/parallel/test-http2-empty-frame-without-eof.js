@@ -10,9 +10,7 @@ const { once } = require('events');
 async function main() {
   const blobWithEmptyFrame = readSync('emptyframe.http2');
   const server = net.createServer((socket) => {
-    socket.once('data', () => {
-      socket.end(blobWithEmptyFrame);
-    });
+    socket.end(blobWithEmptyFrame);
   }).listen(0);
   await once(server, 'listening');
 
@@ -28,17 +26,11 @@ async function main() {
       stream.on('error', common.mustNotCall());
       client.on('error', common.mustNotCall());
     } else {
-      const expected = {
-        code: 'ERR_HTTP2_TOO_MANY_INVALID_FRAMES',
-        message: 'Too many invalid HTTP/2 frames'
-      };
-      stream.on('error', common.expectsError(expected));
-      client.on('error', common.expectsError(expected));
+      stream.on('error', common.mustCall());
+      client.on('error', common.mustCall());
     }
     stream.resume();
-    await new Promise((resolve) => {
-      stream.once('close', resolve);
-    });
+    await once(stream, 'end');
     client.close();
   }
   server.close();

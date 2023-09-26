@@ -9,8 +9,6 @@
 
 namespace node {
 
-typedef size_t AliasedBufferIndex;
-
 /**
  * Do not use this class directly when creating instances of it - use the
  * Aliased*Array defined at the end of this file instead.
@@ -34,15 +32,9 @@ template <class NativeT,
           typename = std::enable_if_t<std::is_scalar<NativeT>::value>>
 class AliasedBufferBase {
  public:
-  AliasedBufferBase(v8::Isolate* isolate,
-                    const size_t count,
-                    const AliasedBufferIndex* index = nullptr)
-      : isolate_(isolate), count_(count), byte_offset_(0), index_(index) {
+  AliasedBufferBase(v8::Isolate* isolate, const size_t count)
+      : isolate_(isolate), count_(count), byte_offset_(0) {
     CHECK_GT(count, 0);
-    if (index != nullptr) {
-      // Will be deserialized later.
-      return;
-    }
     const v8::HandleScope handle_scope(isolate_);
     const size_t size_in_bytes =
         MultiplyWithOverflowCheck(sizeof(NativeT), count);
@@ -50,7 +42,7 @@ class AliasedBufferBase {
     // allocate v8 ArrayBuffer
     v8::Local<v8::ArrayBuffer> ab = v8::ArrayBuffer::New(
         isolate_, size_in_bytes);
-    buffer_ = static_cast<NativeT*>(ab->Data());
+    buffer_ = static_cast<NativeT*>(ab->GetBackingStore()->Data());
 
     // allocate v8 TypedArray
     v8::Local<V8T> js_array = V8T::New(ab, byte_offset_, count);
@@ -70,17 +62,10 @@ class AliasedBufferBase {
       v8::Isolate* isolate,
       const size_t byte_offset,
       const size_t count,
-      const AliasedBufferBase<uint8_t, v8::Uint8Array>& backing_buffer,
-      const AliasedBufferIndex* index = nullptr)
-      : isolate_(isolate),
-        count_(count),
-        byte_offset_(byte_offset),
-        index_(index) {
-    if (index != nullptr) {
-      // Will be deserialized later.
-      return;
-    }
+      const AliasedBufferBase<uint8_t, v8::Uint8Array>& backing_buffer)
+      : isolate_(isolate), count_(count), byte_offset_(byte_offset) {
     const v8::HandleScope handle_scope(isolate_);
+
     v8::Local<v8::ArrayBuffer> ab = backing_buffer.GetArrayBuffer();
 
     // validate that the byte_offset is aligned with sizeof(NativeT)
@@ -101,32 +86,10 @@ class AliasedBufferBase {
         count_(that.count_),
         byte_offset_(that.byte_offset_),
         buffer_(that.buffer_) {
-    DCHECK_NULL(index_);
     js_array_ = v8::Global<V8T>(that.isolate_, that.GetJSArray());
   }
 
-  AliasedBufferIndex Serialize(v8::Local<v8::Context> context,
-                              v8::SnapshotCreator* creator) {
-    DCHECK_NULL(index_);
-    return creator->AddData(context, GetJSArray());
-  }
-
-  inline void Deserialize(v8::Local<v8::Context> context) {
-    DCHECK_NOT_NULL(index_);
-    v8::Local<V8T> arr =
-        context->GetDataFromSnapshotOnce<V8T>(*index_).ToLocalChecked();
-    // These may not hold true for AliasedBuffers that have grown, so should
-    // be removed when we expand the snapshot support.
-    DCHECK_EQ(count_, arr->Length());
-    DCHECK_EQ(byte_offset_, arr->ByteOffset());
-    uint8_t* raw = static_cast<uint8_t*>(arr->Buffer()->Data());
-    buffer_ = reinterpret_cast<NativeT*>(raw + byte_offset_);
-    js_array_.Reset(isolate_, arr);
-    index_ = nullptr;
-  }
-
   AliasedBufferBase& operator=(AliasedBufferBase&& that) noexcept {
-    DCHECK_NULL(index_);
     this->~AliasedBufferBase();
     isolate_ = that.isolate_;
     count_ = that.count_;
@@ -192,13 +155,7 @@ class AliasedBufferBase {
    *  Get the underlying v8 TypedArray overlayed on top of the native buffer
    */
   v8::Local<V8T> GetJSArray() const {
-    DCHECK_NULL(index_);
     return js_array_.Get(isolate_);
-  }
-
-  void Release() {
-    DCHECK_NULL(index_);
-    js_array_.Reset();
   }
 
   /**
@@ -214,7 +171,6 @@ class AliasedBufferBase {
    *  through the GetValue/SetValue/operator[] methods
    */
   inline const NativeT* GetNativeBuffer() const {
-    DCHECK_NULL(index_);
     return buffer_;
   }
 
@@ -230,7 +186,6 @@ class AliasedBufferBase {
    */
   inline void SetValue(const size_t index, NativeT value) {
     DCHECK_LT(index, count_);
-    DCHECK_NULL(index_);
     buffer_[index] = value;
   }
 
@@ -238,7 +193,6 @@ class AliasedBufferBase {
    *  Get value at position index
    */
   inline const NativeT GetValue(const size_t index) const {
-    DCHECK_NULL(index_);
     DCHECK_LT(index, count_);
     return buffer_[index];
   }
@@ -247,7 +201,6 @@ class AliasedBufferBase {
    *  Effectively, a synonym for GetValue/SetValue
    */
   Reference operator[](size_t index) {
-    DCHECK_NULL(index_);
     return Reference(this, index);
   }
 
@@ -263,7 +216,6 @@ class AliasedBufferBase {
   // Should only be used on an owning array, not one created as a sub array of
   // an owning `AliasedBufferBase`.
   void reserve(size_t new_capacity) {
-    DCHECK_NULL(index_);
     DCHECK_GE(new_capacity, count_);
     DCHECK_EQ(byte_offset_, 0);
     const v8::HandleScope handle_scope(isolate_);
@@ -277,7 +229,7 @@ class AliasedBufferBase {
         isolate_, new_size_in_bytes);
 
     // allocate new native buffer
-    NativeT* new_buffer = static_cast<NativeT*>(ab->Data());
+    NativeT* new_buffer = static_cast<NativeT*>(ab->GetBackingStore()->Data());
     // copy old content
     memcpy(new_buffer, buffer_, old_size_in_bytes);
 
@@ -292,21 +244,18 @@ class AliasedBufferBase {
   }
 
  private:
-  v8::Isolate* isolate_ = nullptr;
-  size_t count_ = 0;
-  size_t byte_offset_ = 0;
-  NativeT* buffer_ = nullptr;
+  v8::Isolate* isolate_;
+  size_t count_;
+  size_t byte_offset_;
+  NativeT* buffer_;
   v8::Global<V8T> js_array_;
-
-  // Deserialize data
-  const AliasedBufferIndex* index_ = nullptr;
 };
 
 typedef AliasedBufferBase<int32_t, v8::Int32Array> AliasedInt32Array;
 typedef AliasedBufferBase<uint8_t, v8::Uint8Array> AliasedUint8Array;
 typedef AliasedBufferBase<uint32_t, v8::Uint32Array> AliasedUint32Array;
 typedef AliasedBufferBase<double, v8::Float64Array> AliasedFloat64Array;
-typedef AliasedBufferBase<int64_t, v8::BigInt64Array> AliasedBigInt64Array;
+typedef AliasedBufferBase<uint64_t, v8::BigUint64Array> AliasedBigUint64Array;
 }  // namespace node
 
 #endif  // defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS

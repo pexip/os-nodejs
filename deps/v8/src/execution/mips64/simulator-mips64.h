@@ -36,7 +36,6 @@ T Nabs(T a) {
 // Running with a simulator.
 
 #include "src/base/hashmap.h"
-#include "src/base/strings.h"
 #include "src/codegen/assembler.h"
 #include "src/codegen/mips64/constants-mips64.h"
 #include "src/execution/simulator-base.h"
@@ -243,7 +242,7 @@ class Simulator : public SimulatorBase {
   void set_register(int reg, int64_t value);
   void set_register_word(int reg, int32_t value);
   void set_dw_register(int dreg, const int* dbl);
-  V8_EXPORT_PRIVATE int64_t get_register(int reg) const;
+  int64_t get_register(int reg) const;
   double get_double_from_register_pair(int reg);
   // Same for FPURegisters.
   void set_fpu_register(int fpureg, int64_t value);
@@ -284,14 +283,13 @@ class Simulator : public SimulatorBase {
   template <typename T_fp, typename T_int>
   void round_according_to_msacsr(T_fp toRound, T_fp* rounded,
                                  T_int* rounded_int);
-  void clear_fcsr_cause();
   void set_fcsr_rounding_mode(FPURoundingMode mode);
   void set_msacsr_rounding_mode(FPURoundingMode mode);
   unsigned int get_fcsr_rounding_mode();
   unsigned int get_msacsr_rounding_mode();
   // Special case of set_register and get_register to access the raw PC value.
   void set_pc(int64_t value);
-  V8_EXPORT_PRIVATE int64_t get_pc() const;
+  int64_t get_pc() const;
 
   Address get_sp() const { return static_cast<Address>(get_register(sp)); }
 
@@ -619,7 +617,7 @@ class Simulator : public SimulatorBase {
   bool pc_modified_;
   int64_t icount_;
   int break_count_;
-  base::EmbeddedVector<char, 128> trace_buf_;
+  EmbeddedVector<char, 128> trace_buf_;
 
   // Debugger input.
   char* last_debugger_input_;

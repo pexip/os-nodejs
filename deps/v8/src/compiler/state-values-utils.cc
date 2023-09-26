@@ -4,7 +4,6 @@
 
 #include "src/compiler/state-values-utils.h"
 
-#include "src/compiler/bytecode-liveness-map.h"
 #include "src/compiler/common-operator.h"
 #include "src/utils/bit-vector.h"
 
@@ -120,14 +119,15 @@ Node* StateValuesCache::GetValuesNodeFromCache(Node** nodes, size_t count,
                                                SparseInputMask mask) {
   StateValuesKey key(count, mask, nodes);
   int hash = StateValuesHashKey(nodes, count);
-  ZoneHashMap::Entry* lookup = hash_map_.LookupOrInsert(&key, hash);
+  ZoneHashMap::Entry* lookup =
+      hash_map_.LookupOrInsert(&key, hash, ZoneAllocationPolicy(zone()));
   DCHECK_NOT_NULL(lookup);
   Node* node;
   if (lookup->value == nullptr) {
     int node_count = static_cast<int>(count);
     node = graph()->NewNode(common()->StateValues(node_count, mask), node_count,
                             nodes);
-    NodeKey* new_key = zone()->New<NodeKey>(node);
+    NodeKey* new_key = new (zone()->New(sizeof(NodeKey))) NodeKey(node);
     lookup->key = new_key;
     lookup->value = node;
   } else {
@@ -138,7 +138,8 @@ Node* StateValuesCache::GetValuesNodeFromCache(Node** nodes, size_t count,
 
 SparseInputMask::BitMaskType StateValuesCache::FillBufferWithValues(
     WorkingBuffer* node_buffer, size_t* node_count, size_t* values_idx,
-    Node** values, size_t count, const BytecodeLivenessState* liveness) {
+    Node** values, size_t count, const BitVector* liveness,
+    int liveness_offset) {
   SparseInputMask::BitMaskType input_mask = 0;
 
   // Virtual nodes are the live nodes plus the implicit optimized out nodes,
@@ -150,7 +151,7 @@ SparseInputMask::BitMaskType StateValuesCache::FillBufferWithValues(
     DCHECK_LE(*values_idx, static_cast<size_t>(INT_MAX));
 
     if (liveness == nullptr ||
-        liveness->RegisterIsLive(static_cast<int>(*values_idx))) {
+        liveness->Contains(liveness_offset + static_cast<int>(*values_idx))) {
       input_mask |= 1 << (virtual_node_count);
       (*node_buffer)[(*node_count)++] = values[*values_idx];
     }
@@ -169,16 +170,15 @@ SparseInputMask::BitMaskType StateValuesCache::FillBufferWithValues(
 }
 
 Node* StateValuesCache::BuildTree(size_t* values_idx, Node** values,
-                                  size_t count,
-                                  const BytecodeLivenessState* liveness,
-                                  size_t level) {
+                                  size_t count, const BitVector* liveness,
+                                  int liveness_offset, size_t level) {
   WorkingBuffer* node_buffer = GetWorkingSpace(level);
   size_t node_count = 0;
   SparseInputMask::BitMaskType input_mask = SparseInputMask::kDenseBitMask;
 
   if (level == 0) {
     input_mask = FillBufferWithValues(node_buffer, &node_count, values_idx,
-                                      values, count, liveness);
+                                      values, count, liveness, liveness_offset);
     // Make sure we returned a sparse input mask.
     DCHECK_NE(input_mask, SparseInputMask::kDenseBitMask);
   } else {
@@ -190,8 +190,9 @@ Node* StateValuesCache::BuildTree(size_t* values_idx, Node** values,
         // remaining live nodes.
 
         size_t previous_input_count = node_count;
-        input_mask = FillBufferWithValues(node_buffer, &node_count, values_idx,
-                                          values, count, liveness);
+        input_mask =
+            FillBufferWithValues(node_buffer, &node_count, values_idx, values,
+                                 count, liveness, liveness_offset);
         // Make sure we have exhausted our values.
         DCHECK_EQ(*values_idx, count);
         // Make sure we returned a sparse input mask.
@@ -207,8 +208,8 @@ Node* StateValuesCache::BuildTree(size_t* values_idx, Node** values,
 
       } else {
         // Otherwise, add the values to a subtree and add that as an input.
-        Node* subtree =
-            BuildTree(values_idx, values, count, liveness, level - 1);
+        Node* subtree = BuildTree(values_idx, values, count, liveness,
+                                  liveness_offset, level - 1);
         (*node_buffer)[node_count++] = subtree;
         // Don't touch the bitmask, so that it stays dense.
       }
@@ -231,7 +232,7 @@ Node* StateValuesCache::BuildTree(size_t* values_idx, Node** values,
 namespace {
 
 void CheckTreeContainsValues(Node* tree, Node** values, size_t count,
-                             const BytecodeLivenessState* liveness) {
+                             const BitVector* liveness, int liveness_offset) {
   DCHECK_EQ(count, StateValuesAccess(tree).size());
 
   int i;
@@ -239,7 +240,7 @@ void CheckTreeContainsValues(Node* tree, Node** values, size_t count,
   auto it = access.begin();
   auto itend = access.end();
   for (i = 0; it != itend; ++it, ++i) {
-    if (liveness == nullptr || liveness->RegisterIsLive(i)) {
+    if (liveness == nullptr || liveness->Contains(liveness_offset + i)) {
       DCHECK_EQ(it.node(), values[i]);
     } else {
       DCHECK_NULL(it.node());
@@ -251,8 +252,9 @@ void CheckTreeContainsValues(Node* tree, Node** values, size_t count,
 }  // namespace
 #endif
 
-Node* StateValuesCache::GetNodeForValues(
-    Node** values, size_t count, const BytecodeLivenessState* liveness) {
+Node* StateValuesCache::GetNodeForValues(Node** values, size_t count,
+                                         const BitVector* liveness,
+                                         int liveness_offset) {
 #if DEBUG
   // Check that the values represent actual values, and not a tree of values.
   for (size_t i = 0; i < count; i++) {
@@ -262,10 +264,10 @@ Node* StateValuesCache::GetNodeForValues(
     }
   }
   if (liveness != nullptr) {
-    DCHECK_LE(count, static_cast<size_t>(liveness->register_count()));
+    DCHECK_LE(liveness_offset + count, static_cast<size_t>(liveness->length()));
 
     for (size_t i = 0; i < count; i++) {
-      if (liveness->RegisterIsLive(static_cast<int>(i))) {
+      if (liveness->Contains(liveness_offset + static_cast<int>(i))) {
         DCHECK_NOT_NULL(values[i]);
       }
     }
@@ -288,7 +290,8 @@ Node* StateValuesCache::GetNodeForValues(
   }
 
   size_t values_idx = 0;
-  Node* tree = BuildTree(&values_idx, values, count, liveness, height);
+  Node* tree =
+      BuildTree(&values_idx, values, count, liveness, liveness_offset, height);
   // The values should be exhausted by the end of BuildTree.
   DCHECK_EQ(values_idx, count);
 
@@ -296,7 +299,7 @@ Node* StateValuesCache::GetNodeForValues(
   DCHECK_EQ(tree->opcode(), IrOpcode::kStateValues);
 
 #if DEBUG
-  CheckTreeContainsValues(tree, values, count, liveness);
+  CheckTreeContainsValues(tree, values, count, liveness, liveness_offset);
 #endif
 
   return tree;
@@ -377,10 +380,7 @@ void StateValuesAccess::iterator::EnsureValid() {
   }
 }
 
-Node* StateValuesAccess::iterator::node() {
-  DCHECK(!done());
-  return Top()->Get(nullptr);
-}
+Node* StateValuesAccess::iterator::node() { return Top()->Get(nullptr); }
 
 MachineType StateValuesAccess::iterator::type() {
   Node* parent = Top()->parent();
@@ -402,7 +402,6 @@ bool StateValuesAccess::iterator::operator!=(iterator const& other) const {
 }
 
 StateValuesAccess::iterator& StateValuesAccess::iterator::operator++() {
-  DCHECK(!done());
   Advance();
   return *this;
 }

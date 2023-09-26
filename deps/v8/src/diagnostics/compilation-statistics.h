@@ -25,8 +25,6 @@ struct AsPrintableStatistics {
 class CompilationStatistics final : public Malloced {
  public:
   CompilationStatistics() = default;
-  CompilationStatistics(const CompilationStatistics&) = delete;
-  CompilationStatistics& operator=(const CompilationStatistics&) = delete;
 
   class BasicStats {
    public:
@@ -36,8 +34,6 @@ class CompilationStatistics final : public Malloced {
           absolute_max_allocated_bytes_(0) {}
 
     void Accumulate(const BasicStats& stats);
-
-    std::string AsJSON();
 
     base::TimeDelta delta_;
     size_t total_allocated_bytes_;
@@ -52,7 +48,7 @@ class CompilationStatistics final : public Malloced {
   void RecordPhaseKindStats(const char* phase_kind_name,
                             const BasicStats& stats);
 
-  void RecordTotalStats(const BasicStats& stats);
+  void RecordTotalStats(size_t source_size, const BasicStats& stats);
 
  private:
   class TotalStats : public BasicStats {
@@ -85,6 +81,8 @@ class CompilationStatistics final : public Malloced {
   PhaseKindMap phase_kind_map_;
   PhaseMap phase_map_;
   base::Mutex record_mutex_;
+
+  DISALLOW_COPY_AND_ASSIGN(CompilationStatistics);
 };
 
 std::ostream& operator<<(std::ostream& os, const AsPrintableStatistics& s);

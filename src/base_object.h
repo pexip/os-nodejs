@@ -31,8 +31,6 @@
 namespace node {
 
 class Environment;
-class IsolateData;
-class Realm;
 template <typename T, bool kIsWeak>
 class BaseObjectPtrImpl;
 
@@ -40,19 +38,14 @@ namespace worker {
 class TransferData;
 }
 
-extern uint16_t kNodeEmbedderId;
-
 class BaseObject : public MemoryRetainer {
  public:
-  enum InternalFields { kEmbedderType, kSlot, kInternalFieldCount };
+  enum InternalFields { kSlot, kInternalFieldCount };
 
-  // Associates this object with `object`. It uses the 1st internal field for
+  // Associates this object with `object`. It uses the 0th internal field for
   // that, and in particular aborts if there is no such field.
-  // This is the designated constructor.
-  BaseObject(Realm* realm, v8::Local<v8::Object> object);
-  // Convenient constructor for constructing BaseObject in the principal realm.
   inline BaseObject(Environment* env, v8::Local<v8::Object> object);
-  ~BaseObject() override;
+  inline ~BaseObject() override;
 
   BaseObject() = delete;
 
@@ -67,17 +60,11 @@ class BaseObject : public MemoryRetainer {
   inline v8::Global<v8::Object>& persistent();
 
   inline Environment* env() const;
-  inline Realm* realm() const;
 
   // Get a BaseObject* pointer, or subclass pointer, for the JS object that
   // was also passed to the `BaseObject()` constructor initially.
   // This may return `nullptr` if the C++ object has not been constructed yet,
   // e.g. when the JS object used `MakeLazilyInitializedJSTemplate`.
-  static inline void SetInternalFields(v8::Local<v8::Object> object,
-                                       void* slot);
-  static inline void TagNodeObject(v8::Local<v8::Object> object);
-  static void LazilyInitializedJSTemplateConstructor(
-      const v8::FunctionCallbackInfo<v8::Value>& args);
   static inline BaseObject* FromJSObject(v8::Local<v8::Value> object);
   template <typename T>
   static inline T* FromJSObject(v8::Local<v8::Value> object);
@@ -85,7 +72,7 @@ class BaseObject : public MemoryRetainer {
   // Make the `v8::Global` a weak reference and, `delete` this object once
   // the JS object has been garbage collected and there are no (strong)
   // BaseObjectPtr references to it.
-  void MakeWeak();
+  inline void MakeWeak();
 
   // Undo `MakeWeak()`, i.e. turn this into a strong reference that is a GC
   // root and will not be touched by the garbage collector.
@@ -96,14 +83,10 @@ class BaseObject : public MemoryRetainer {
   // to it anymore.
   inline bool IsWeakOrDetached() const;
 
-  inline v8::EmbedderGraph::Node::Detachedness GetDetachedness() const override;
-
   // Utility to create a FunctionTemplate with one internal field (used for
   // the `BaseObject*` pointer) and a constructor that initializes that field
   // to `nullptr`.
-  static v8::Local<v8::FunctionTemplate> MakeLazilyInitializedJSTemplate(
-      IsolateData* isolate);
-  static v8::Local<v8::FunctionTemplate> MakeLazilyInitializedJSTemplate(
+  static inline v8::Local<v8::FunctionTemplate> MakeLazilyInitializedJSTemplate(
       Environment* env);
 
   // Setter/Getter pair for internal fields that can be passed to SetAccessor.
@@ -118,16 +101,14 @@ class BaseObject : public MemoryRetainer {
   // This is a bit of a hack. See the override in async_wrap.cc for details.
   virtual bool IsDoneInitializing() const;
 
-  // Can be used to avoid this object keeping itself alive as a GC root
+  // Can be used to avoid this object keepling itself alive as a GC root
   // indefinitely, for example when this object is owned and deleted by another
   // BaseObject once that is torn down. This can only be called when there is
   // a BaseObjectPtr to this object.
   inline void Detach();
 
-  static inline v8::Local<v8::FunctionTemplate> GetConstructorTemplate(
-      Environment* env);
   static v8::Local<v8::FunctionTemplate> GetConstructorTemplate(
-      IsolateData* isolate_data);
+      Environment* env);
 
   // Interface for transferring BaseObject instances using the .postMessage()
   // method of MessagePorts (and, by extension, Workers).
@@ -177,8 +158,6 @@ class BaseObject : public MemoryRetainer {
 
   virtual inline void OnGCCollect();
 
-  virtual inline bool is_snapshotable() const { return false; }
-
  private:
   v8::Local<v8::Object> WrappedObject() const override;
   bool IsRootNode() const override;
@@ -188,9 +167,9 @@ class BaseObject : public MemoryRetainer {
   // class because it is used by src/node_postmortem_metadata.cc to calculate
   // offsets and generate debug symbols for BaseObject, which assumes that the
   // position of members in memory are predictable. For more information please
-  // refer to `doc/contributing/node-postmortem-support.md`
+  // refer to `doc/guides/node-postmortem-support.md`
   friend int GenDebugSymbols();
-  friend class CleanupQueue;
+  friend class CleanupHookCallback;
   template <typename T, bool kIsWeak>
   friend class BaseObjectPtrImpl;
 
@@ -219,13 +198,13 @@ class BaseObject : public MemoryRetainer {
   inline bool has_pointer_data() const;
   // This creates a PointerData struct if none was associated with this
   // BaseObject before.
-  PointerData* pointer_data();
+  inline PointerData* pointer_data();
 
   // Functions that adjust the strong pointer count.
-  void decrease_refcount();
-  void increase_refcount();
+  inline void decrease_refcount();
+  inline void increase_refcount();
 
-  Realm* realm_;
+  Environment* env_;
   PointerData* pointer_data_ = nullptr;
 };
 
@@ -247,9 +226,7 @@ inline T* Unwrap(v8::Local<v8::Value> obj) {
 // circumstances such as the GC or Environment cleanup.
 // If weak, destruction behaviour is not affected, but the pointer will be
 // reset to nullptr once the BaseObject is destroyed.
-// The API matches std::shared_ptr closely. However, this class is not thread
-// safe, that is, we can't have different BaseObjectPtrImpl instances in
-// different threads refering to the same BaseObject instance.
+// The API matches std::shared_ptr closely.
 template <typename T, bool kIsWeak>
 class BaseObjectPtrImpl final {
  public:

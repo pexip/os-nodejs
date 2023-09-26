@@ -10,7 +10,6 @@ const {
 } = require('stream');
 const assert = require('assert');
 const http = require('http');
-const fs = require('fs');
 
 async function tests() {
   {
@@ -63,7 +62,7 @@ async function tests() {
     });
 
     await (async () => {
-      for await (const d of readable) {
+      for await (const d of readable) { // eslint-disable-line no-unused-vars
         return;
       }
     })();
@@ -205,7 +204,7 @@ async function tests() {
     const iterator = readable[Symbol.asyncIterator]();
 
     const err = new Error('kaboom');
-    readable.destroy(err);
+    readable.destroy(new Error('kaboom'));
     await assert.rejects(iterator.next.bind(iterator), err);
   }
 
@@ -243,8 +242,8 @@ async function tests() {
 
     let err;
     try {
-      // eslint-disable-next-line no-unused-vars, no-empty
-      for await (const k of readable) { }
+      // eslint-disable-next-line no-unused-vars
+      for await (const k of readable) {}
     } catch (e) {
       err = e;
     }
@@ -339,17 +338,11 @@ async function tests() {
     process.nextTick(async () => {
       readable.on('close', common.mustNotCall());
       let received = 0;
-      let err = null;
-      try {
-        for await (const k of readable) {
-          // Just make linting pass. This should never run.
-          assert.strictEqual(k, 'hello');
-          received++;
-        }
-      } catch (_err) {
-        err = _err;
+      for await (const k of readable) {
+        // Just make linting pass. This should never run.
+        assert.strictEqual(k, 'hello');
+        received++;
       }
-      assert.strictEqual(err.code, 'ERR_STREAM_PREMATURE_CLOSE');
       assert.strictEqual(received, 0);
     });
   }
@@ -419,13 +412,8 @@ async function tests() {
 
     readable.destroy();
 
-    const it = await readable[Symbol.asyncIterator]();
-    const next = it.next();
-    next
-      .then(common.mustNotCall())
-      .catch(common.mustCall((err) => {
-        assert.strictEqual(err.code, 'ERR_STREAM_PREMATURE_CLOSE');
-      }));
+    const { done } = await readable[Symbol.asyncIterator]().next();
+    assert.strictEqual(done, true);
   }
 
   {
@@ -461,14 +449,16 @@ async function tests() {
         this.push(null);
       }
     });
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const a of r) { }
-    // eslint-disable-next-line no-unused-vars, no-empty
-    for await (const b of r) { }
+    // eslint-disable-next-line no-unused-vars
+    for await (const a of r) {
+    }
+    // eslint-disable-next-line no-unused-vars
+    for await (const b of r) {
+    }
   }
 
   {
-    console.log('destroy mid-stream errors');
+    console.log('destroy mid-stream does not error');
     const r = new Readable({
       objectMode: true,
       read() {
@@ -477,16 +467,10 @@ async function tests() {
       }
     });
 
-    let err = null;
-    try {
-      // eslint-disable-next-line no-unused-vars
-      for await (const a of r) {
-        r.destroy(null);
-      }
-    } catch (_err) {
-      err = _err;
+    // eslint-disable-next-line no-unused-vars
+    for await (const a of r) {
+      r.destroy(null);
     }
-    assert.strictEqual(err.code, 'ERR_STREAM_PREMATURE_CLOSE');
   }
 
   {
@@ -530,7 +514,7 @@ async function tests() {
   }
 
   {
-    console.log('all next promises must be rejected on destroy');
+    console.log('all next promises must be resolved on destroy');
     const r = new Readable({
       objectMode: true,
       read() {
@@ -541,11 +525,7 @@ async function tests() {
     const c = b.next();
     const d = b.next();
     r.destroy();
-    c
-      .then(common.mustNotCall())
-      .catch(common.mustCall((err) => {
-        assert.strictEqual(err.code, 'ERR_STREAM_PREMATURE_CLOSE');
-      }));
+    assert.deepStrictEqual(await c, { done: true, value: undefined });
     assert.deepStrictEqual(await d, { done: true, value: undefined });
   }
 
@@ -614,7 +594,7 @@ async function tests() {
       }
     });
 
-    for await (const chunk of r) { } // eslint-disable-line no-unused-vars, no-empty
+    for await (const chunk of r) {} // eslint-disable-line no-unused-vars
     assert.strictEqual(r.destroyed, false);
   }
 
@@ -647,7 +627,8 @@ async function tests() {
       assert.strictEqual(r.destroyed, false);
     });
 
-    for await (const chunk of r) { } // eslint-disable-line no-unused-vars, no-empty
+    for await (const chunk of r) {} // eslint-disable-line no-unused-vars
+
     assert.strictEqual(r.destroyed, true);
   }
 }
@@ -694,7 +675,7 @@ async function tests() {
 }
 
 {
-  // AsyncIterator should not finish correctly if destroyed.
+  // AsyncIterator should finish correctly if destroyed.
 
   const r = new Readable({
     objectMode: true,
@@ -707,102 +688,9 @@ async function tests() {
     const it = r[Symbol.asyncIterator]();
     const next = it.next();
     next
-      .then(common.mustNotCall())
-      .catch(common.mustCall((err) => {
-        assert.strictEqual(err.code, 'ERR_STREAM_PREMATURE_CLOSE');
-      }));
+      .then(common.mustCall(({ done }) => assert.strictEqual(done, true)))
+      .catch(common.mustNotCall());
   });
-}
-
-{
-  // AsyncIterator should throw if prematurely closed
-  // before end has been emitted.
-  (async function() {
-    const readable = fs.createReadStream(__filename);
-
-    try {
-      // eslint-disable-next-line no-unused-vars
-      for await (const chunk of readable) {
-        readable.close();
-      }
-
-      assert.fail('should have thrown');
-    } catch (err) {
-      assert.strictEqual(err.code, 'ERR_STREAM_PREMATURE_CLOSE');
-    }
-
-    assert.ok(readable.destroyed);
-  })().then(common.mustCall());
-}
-
-// AsyncIterator non-destroying iterator
-{
-  function createReadable() {
-    return Readable.from((async function* () {
-      await Promise.resolve();
-      yield 5;
-      await Promise.resolve();
-      yield 7;
-      await Promise.resolve();
-    })());
-  }
-
-  // Check explicit destroying on return
-  (async function() {
-    const readable = createReadable();
-    for await (const chunk of readable.iterator({ destroyOnReturn: true })) {
-      assert.strictEqual(chunk, 5);
-      break;
-    }
-
-    assert.ok(readable.destroyed);
-  })().then(common.mustCall());
-
-  // Check explicit non-destroy with return true
-  (async function() {
-    const readable = createReadable();
-    const opts = { destroyOnReturn: false };
-    for await (const chunk of readable.iterator(opts)) {
-      assert.strictEqual(chunk, 5);
-      break;
-    }
-
-    assert.ok(!readable.destroyed);
-
-    for await (const chunk of readable.iterator(opts)) {
-      assert.strictEqual(chunk, 7);
-    }
-
-    assert.ok(readable.destroyed);
-  })().then(common.mustCall());
-
-  // Check non-object options.
-  {
-    const readable = createReadable();
-    assert.throws(
-      () => readable.iterator(42),
-      {
-        code: 'ERR_INVALID_ARG_TYPE',
-        name: 'TypeError',
-        message: 'The "options" argument must be of type object. Received ' +
-                 'type number (42)',
-      }
-    );
-  }
-
-  // Check for dangling listeners
-  (async function() {
-    const readable = createReadable();
-    const opts = { destroyOnReturn: false };
-    while (readable.readable) {
-      // eslint-disable-next-line no-unused-vars
-      for await (const chunk of readable.iterator(opts)) {
-        break;
-      }
-    }
-
-    assert.deepStrictEqual(readable.eventNames(), []);
-  })().then(common.mustCall());
 }
 
 {
@@ -819,12 +707,18 @@ async function tests() {
           _req.destroy(new Error('something happened'));
         }, 100);
 
+        res.on('aborted', () => {
+          const err = new Error();
+          err.code = 'ECONNRESET';
+          res.emit('error', err);
+        });
+
         res.on('error', common.mustCall());
 
         let _err;
         try {
-          // eslint-disable-next-line no-unused-vars, no-empty
-          for await (const chunk of res) { }
+          // eslint-disable-next-line no-unused-vars
+          for await (const chunk of res) {}
         } catch (err) {
           _err = err;
         }

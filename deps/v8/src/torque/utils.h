@@ -5,7 +5,6 @@
 #ifndef V8_TORQUE_UTILS_H_
 #define V8_TORQUE_UTILS_H_
 
-#include <algorithm>
 #include <ostream>
 #include <queue>
 #include <streambuf>
@@ -48,7 +47,6 @@ std::string ToString(Args&&... args) {
 
 class V8_EXPORT_PRIVATE MessageBuilder {
  public:
-  MessageBuilder() = delete;
   MessageBuilder(const std::string& message, TorqueMessage::Kind kind);
 
   MessageBuilder& Position(SourcePosition position) {
@@ -64,6 +62,7 @@ class V8_EXPORT_PRIVATE MessageBuilder {
   }
 
  private:
+  MessageBuilder() = delete;
   void Report() const;
 
   TorqueMessage message_;
@@ -105,10 +104,10 @@ std::string SnakeifyString(const std::string& camel_string);
 std::string DashifyString(const std::string& underscore_string);
 std::string UnderlinifyPath(std::string path);
 
-bool StartsWithSingleUnderscore(const std::string& str);
-
 void ReplaceFileContentsIfDifferent(const std::string& file_path,
                                     const std::string& contents);
+
+std::string CurrentPositionAsString();
 
 template <class T>
 class Deduplicator {
@@ -173,9 +172,11 @@ void PrintCommaSeparatedList(std::ostream& os, const T& list) {
 
 struct BottomOffset {
   size_t offset;
-
-  BottomOffset& operator=(std::size_t other_offset) {
-    this->offset = other_offset;
+  BottomOffset(std::nullptr_t zero = 0)  // NOLINT(runtime/explicit)
+      : offset(0) {}
+  explicit BottomOffset(std::size_t offset) : offset(offset) {}
+  BottomOffset& operator=(std::size_t offset) {
+    this->offset = offset;
     return *this;
   }
   BottomOffset& operator++() {
@@ -365,51 +366,51 @@ inline bool StringEndsWith(const std::string& s, const std::string& suffix) {
   return s.substr(s.size() - suffix.size()) == suffix;
 }
 
-class V8_NODISCARD IfDefScope {
+class IfDefScope {
  public:
   IfDefScope(std::ostream& os, std::string d);
   ~IfDefScope();
-  IfDefScope(const IfDefScope&) = delete;
-  IfDefScope& operator=(const IfDefScope&) = delete;
 
  private:
+  IfDefScope(const IfDefScope&) = delete;
+  IfDefScope& operator=(const IfDefScope&) = delete;
   std::ostream& os_;
   std::string d_;
 };
 
-class V8_NODISCARD NamespaceScope {
+class NamespaceScope {
  public:
   NamespaceScope(std::ostream& os,
                  std::initializer_list<std::string> namespaces);
   ~NamespaceScope();
-  NamespaceScope(const NamespaceScope&) = delete;
-  NamespaceScope& operator=(const NamespaceScope&) = delete;
 
  private:
+  NamespaceScope(const NamespaceScope&) = delete;
+  NamespaceScope& operator=(const NamespaceScope&) = delete;
   std::ostream& os_;
   std::vector<std::string> d_;
 };
 
-class V8_NODISCARD IncludeGuardScope {
+class IncludeGuardScope {
  public:
   IncludeGuardScope(std::ostream& os, std::string file_name);
   ~IncludeGuardScope();
-  IncludeGuardScope(const IncludeGuardScope&) = delete;
-  IncludeGuardScope& operator=(const IncludeGuardScope&) = delete;
 
  private:
+  IncludeGuardScope(const IncludeGuardScope&) = delete;
+  IncludeGuardScope& operator=(const IncludeGuardScope&) = delete;
   std::ostream& os_;
   std::string d_;
 };
 
-class V8_NODISCARD IncludeObjectMacrosScope {
+class IncludeObjectMacrosScope {
  public:
   explicit IncludeObjectMacrosScope(std::ostream& os);
   ~IncludeObjectMacrosScope();
-  IncludeObjectMacrosScope(const IncludeObjectMacrosScope&) = delete;
-  IncludeObjectMacrosScope& operator=(const IncludeObjectMacrosScope&) = delete;
 
  private:
+  IncludeObjectMacrosScope(const IncludeObjectMacrosScope&) = delete;
+  IncludeObjectMacrosScope& operator=(const IncludeObjectMacrosScope&) = delete;
   std::ostream& os_;
 };
 
@@ -523,17 +524,6 @@ class Worklist {
   std::queue<T> queue_;
   std::unordered_set<T> contained_;
 };
-
-template <class T, class U, class F>
-std::vector<T> TransformVector(const std::vector<U>& v, F f) {
-  std::vector<T> result;
-  std::transform(v.begin(), v.end(), std::back_inserter(result), f);
-  return result;
-}
-template <class T, class U>
-std::vector<T> TransformVector(const std::vector<U>& v) {
-  return TransformVector<T>(v, [](const U& x) -> T { return x; });
-}
 
 }  // namespace torque
 }  // namespace internal

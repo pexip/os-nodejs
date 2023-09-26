@@ -12,21 +12,16 @@ namespace interpreter {
 
 namespace {
 
-const char* ImplicitRegisterUseToString(
-    ImplicitRegisterUse implicit_register_use) {
-  switch (implicit_register_use) {
-    case ImplicitRegisterUse::kNone:
+const char* AccumulatorUseToString(AccumulatorUse accumulator_use) {
+  switch (accumulator_use) {
+    case AccumulatorUse::kNone:
       return "None";
-    case ImplicitRegisterUse::kReadAccumulator:
-      return "ReadAccumulator";
-    case ImplicitRegisterUse::kWriteAccumulator:
-      return "WriteAccumulator";
-    case ImplicitRegisterUse::kWriteShortStar:
-      return "WriteShortStar";
-    case ImplicitRegisterUse::kReadWriteAccumulator:
-      return "ReadWriteAccumulator";
-    case ImplicitRegisterUse::kReadAccumulatorWriteShortStar:
-      return "ReadAccumulatorWriteShortStar";
+    case AccumulatorUse::kRead:
+      return "Read";
+    case AccumulatorUse::kWrite:
+      return "Write";
+    case AccumulatorUse::kReadWrite:
+      return "ReadWrite";
   }
   UNREACHABLE();
 }
@@ -69,8 +64,8 @@ const char* OperandSizeToString(OperandSize operand_size) {
 
 }  // namespace
 
-std::ostream& operator<<(std::ostream& os, const ImplicitRegisterUse& use) {
-  return os << ImplicitRegisterUseToString(use);
+std::ostream& operator<<(std::ostream& os, const AccumulatorUse& use) {
+  return os << AccumulatorUseToString(use);
 }
 
 std::ostream& operator<<(std::ostream& os, const OperandSize& operand_size) {

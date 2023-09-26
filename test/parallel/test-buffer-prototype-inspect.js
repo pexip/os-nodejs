@@ -19,5 +19,5 @@ const util = require('util');
 
 {
   const buf = Buffer.from('x'.repeat(51));
-  assert.match(util.inspect(buf), /^<Buffer (?:78 ){50}\.\.\. 1 more byte>$/);
+  assert.ok(/^<Buffer (?:78 ){50}\.\.\. 1 more byte>$/.test(util.inspect(buf)));
 }

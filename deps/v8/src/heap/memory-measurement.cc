@@ -4,17 +4,18 @@
 
 #include "src/heap/memory-measurement.h"
 
-#include "include/v8-local-handle.h"
+#include "include/v8.h"
 #include "src/api/api-inl.h"
+#include "src/api/api.h"
 #include "src/execution/isolate-inl.h"
-#include "src/handles/global-handles-inl.h"
+#include "src/execution/isolate.h"
 #include "src/heap/factory-inl.h"
+#include "src/heap/factory.h"
 #include "src/heap/incremental-marking.h"
 #include "src/heap/marking-worklist.h"
 #include "src/logging/counters.h"
-#include "src/objects/js-array-buffer-inl.h"
 #include "src/objects/js-promise-inl.h"
-#include "src/objects/smi.h"
+#include "src/objects/js-promise.h"
 #include "src/tasks/task-utils.h"
 
 namespace v8 {
@@ -94,7 +95,7 @@ class V8_EXPORT_PRIVATE MeasureMemoryDelegate
  public:
   MeasureMemoryDelegate(Isolate* isolate, Handle<NativeContext> context,
                         Handle<JSPromise> promise, v8::MeasureMemoryMode mode);
-  ~MeasureMemoryDelegate() override;
+  ~MeasureMemoryDelegate();
 
   // v8::MeasureMemoryDelegate overrides:
   bool ShouldMeasure(v8::Local<v8::Context> context) override;
@@ -164,12 +165,7 @@ void MeasureMemoryDelegate::MeasurementComplete(
   JSPromise::Resolve(promise_, result).ToHandleChecked();
 }
 
-MemoryMeasurement::MemoryMeasurement(Isolate* isolate)
-    : isolate_(isolate), random_number_generator_() {
-  if (FLAG_random_seed) {
-    random_number_generator_.SetSeed(FLAG_random_seed);
-  }
-}
+MemoryMeasurement::MemoryMeasurement(Isolate* isolate) : isolate_(isolate) {}
 
 bool MemoryMeasurement::EnqueueRequest(
     std::unique_ptr<v8::MeasureMemoryDelegate> delegate,
@@ -242,16 +238,12 @@ void MemoryMeasurement::ScheduleReportingTask() {
 }
 
 bool MemoryMeasurement::IsGCTaskPending(v8::MeasureMemoryExecution execution) {
-  DCHECK(execution == v8::MeasureMemoryExecution::kEager ||
-         execution == v8::MeasureMemoryExecution::kDefault);
   return execution == v8::MeasureMemoryExecution::kEager
              ? eager_gc_task_pending_
              : delayed_gc_task_pending_;
 }
 
 void MemoryMeasurement::SetGCTaskPending(v8::MeasureMemoryExecution execution) {
-  DCHECK(execution == v8::MeasureMemoryExecution::kEager ||
-         execution == v8::MeasureMemoryExecution::kDefault);
   if (execution == v8::MeasureMemoryExecution::kEager) {
     eager_gc_task_pending_ = true;
   } else {
@@ -260,8 +252,6 @@ void MemoryMeasurement::SetGCTaskPending(v8::MeasureMemoryExecution execution) {
 }
 
 void MemoryMeasurement::SetGCTaskDone(v8::MeasureMemoryExecution execution) {
-  DCHECK(execution == v8::MeasureMemoryExecution::kEager ||
-         execution == v8::MeasureMemoryExecution::kDefault);
   if (execution == v8::MeasureMemoryExecution::kEager) {
     eager_gc_task_pending_ = false;
   } else {
@@ -270,7 +260,6 @@ void MemoryMeasurement::SetGCTaskDone(v8::MeasureMemoryExecution execution) {
 }
 
 void MemoryMeasurement::ScheduleGCTask(v8::MeasureMemoryExecution execution) {
-  if (execution == v8::MeasureMemoryExecution::kLazy) return;
   if (IsGCTaskPending(execution)) return;
   SetGCTaskPending(execution);
   auto taskrunner = V8::GetCurrentPlatform()->GetForegroundTaskRunner(
@@ -297,13 +286,8 @@ void MemoryMeasurement::ScheduleGCTask(v8::MeasureMemoryExecution execution) {
   if (execution == v8::MeasureMemoryExecution::kEager) {
     taskrunner->PostTask(std::move(task));
   } else {
-    taskrunner->PostDelayedTask(std::move(task), NextGCTaskDelayInSeconds());
+    taskrunner->PostDelayedTask(std::move(task), kGCTaskDelayInSeconds);
   }
-}
-
-int MemoryMeasurement::NextGCTaskDelayInSeconds() {
-  return kGCTaskDelayInSeconds +
-         random_number_generator_.NextInt(kGCTaskDelayInSeconds);
 }
 
 void MemoryMeasurement::ReportResults() {
@@ -336,36 +320,13 @@ std::unique_ptr<v8::MeasureMemoryDelegate> MemoryMeasurement::DefaultDelegate(
                                                  mode);
 }
 
-bool NativeContextInferrer::InferForContext(Isolate* isolate, Context context,
-                                            Address* native_context) {
-  PtrComprCageBase cage_base(isolate);
-  Map context_map = context.map(cage_base, kAcquireLoad);
-  Object maybe_native_context =
-      TaggedField<Object, Map::kConstructorOrBackPointerOrNativeContextOffset>::
-          Acquire_Load(cage_base, context_map);
-  if (maybe_native_context.IsNativeContext(cage_base)) {
-    *native_context = maybe_native_context.ptr();
+bool NativeContextInferrer::InferForJSFunction(JSFunction function,
+                                               Address* native_context) {
+  if (function.has_context()) {
+    *native_context = function.context().native_context().ptr();
     return true;
   }
   return false;
-}
-
-bool NativeContextInferrer::InferForJSFunction(Isolate* isolate,
-                                               JSFunction function,
-                                               Address* native_context) {
-  Object maybe_context =
-      TaggedField<Object, JSFunction::kContextOffset>::Acquire_Load(isolate,
-                                                                    function);
-  // The context may be a smi during deserialization.
-  if (maybe_context.IsSmi()) {
-    DCHECK_EQ(maybe_context, Smi::uninitialized_deserialization_value());
-    return false;
-  }
-  if (!maybe_context.IsContext()) {
-    // The function does not have a context.
-    return false;
-  }
-  return InferForContext(isolate, Context::cast(maybe_context), native_context);
 }
 
 bool NativeContextInferrer::InferForJSObject(Isolate* isolate, Map map,
@@ -383,7 +344,7 @@ bool NativeContextInferrer::InferForJSObject(Isolate* isolate, Map map,
   const int kMaxSteps = 3;
   Object maybe_constructor = map.TryGetConstructor(isolate, kMaxSteps);
   if (maybe_constructor.IsJSFunction()) {
-    return InferForJSFunction(isolate, JSFunction::cast(maybe_constructor),
+    return InferForJSFunction(JSFunction::cast(maybe_constructor),
                               native_context);
   }
   return false;
@@ -402,7 +363,7 @@ void NativeContextStats::IncrementExternalSize(Address context, Map map,
   InstanceType instance_type = map.instance_type();
   size_t external_size = 0;
   if (instance_type == JS_ARRAY_BUFFER_TYPE) {
-    external_size = JSArrayBuffer::cast(object).GetByteLength();
+    external_size = JSArrayBuffer::cast(object).allocation_length();
   } else {
     DCHECK(InstanceTypeChecker::IsExternalString(instance_type));
     external_size = ExternalString::cast(object).ExternalPayloadSize();

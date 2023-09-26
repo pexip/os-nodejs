@@ -6,6 +6,7 @@
 #define V8_OBJECTS_CELL_H_
 
 #include "src/objects/heap-object.h"
+#include "torque-generated/class-definitions-tq.h"
 
 // Has to be the last include (doesn't have include guards):
 #include "src/objects/object-macros.h"
@@ -13,14 +14,11 @@
 namespace v8 {
 namespace internal {
 
-#include "torque-generated/src/objects/cell-tq.inc"
-
 class Cell : public TorqueGeneratedCell<Cell, HeapObject> {
  public:
-  inline Address ValueAddress() { return address() + kValueOffset; }
+  static inline Cell FromValueAddress(Address value);
 
-  using TorqueGeneratedCell::value;
-  DECL_RELAXED_GETTER(value, Object)
+  inline Address ValueAddress() { return address() + kValueOffset; }
 
   using BodyDescriptor = FixedBodyDescriptor<kValueOffset, kSize, kSize>;
 

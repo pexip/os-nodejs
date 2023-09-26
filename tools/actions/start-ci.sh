@@ -2,11 +2,31 @@
 
 set -xe
 
-REQUEST_CI_LABEL="request-ci"
-REQUEST_CI_FAILED_LABEL="request-ci-failed"
+GITHUB_TOKEN=$1
+OWNER=$2
+REPOSITORY=$3
+API_URL=https://api.github.com
+REQUEST_CI_LABEL='request-ci'
+REQUEST_CI_FAILED_LABEL='request-ci-failed'
+shift 3
+
+issueUrl() {
+  echo "$API_URL/repos/${OWNER}/${REPOSITORY}/issues/${1}"
+}
+
+labelsUrl() {
+  echo "$(issueUrl "${1}")/labels"
+}
+
+commentsUrl() {
+  echo "$(issueUrl "${1}")/comments"
+}
 
 for pr in "$@"; do
-  gh pr edit "$pr" --remove-label "$REQUEST_CI_LABEL"
+  curl -sL --request DELETE \
+       --url "$(labelsUrl "$pr")"/"$REQUEST_CI_LABEL" \
+       --header "authorization: Bearer ${GITHUB_TOKEN}" \
+       --header 'content-type: application/json'
 
   ci_started=yes
   rm -f output;
@@ -15,15 +35,20 @@ for pr in "$@"; do
 
   if [ "$ci_started" = "no" ]; then
     # Do we need to reset?
-    gh pr edit "$pr" --add-label "$REQUEST_CI_FAILED_LABEL"
+    curl -sL --request PUT \
+       --url "$(labelsUrl "$pr")" \
+       --header "authorization: Bearer ${GITHUB_TOKEN}" \
+       --header 'content-type: application/json' \
+       --data '{"labels": ["'"${REQUEST_CI_FAILED_LABEL}"'"]}'
 
-    # shellcheck disable=SC2154
-    cqurl="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-    body="<details><summary>Failed to start CI</summary><pre>$(cat output)</pre><a href='$cqurl'>$cqurl</a></details>"
-    echo "$body"
+    jq -n --arg content "<details><summary>Couldn't start CI</summary><pre>$(cat output)</pre></details>" '{body: $content}' > output.json
 
-    gh pr comment "$pr" --body "$body"
+    curl -sL --request POST \
+       --url "$(commentsUrl "$pr")" \
+       --header "authorization: Bearer ${GITHUB_TOKEN}" \
+       --header 'content-type: application/json' \
+       --data @output.json
 
-    rm output
+    rm output.json;
   fi
 done;

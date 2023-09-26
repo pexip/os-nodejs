@@ -13,49 +13,35 @@ void Histogram::Reset() {
   Mutex::ScopedLock lock(mutex_);
   hdr_reset(histogram_.get());
   exceeds_ = 0;
-  count_ = 0;
   prev_ = 0;
 }
 
-double Histogram::Add(const Histogram& other) {
-  Mutex::ScopedLock lock(mutex_);
-  count_ += other.count_;
-  exceeds_ += other.exceeds_;
-  if (other.prev_ > prev_)
-    prev_ = other.prev_;
-  return static_cast<double>(hdr_add(histogram_.get(), other.histogram_.get()));
-}
-
-size_t Histogram::Count() const {
-  Mutex::ScopedLock lock(mutex_);
-  return count_;
-}
-
-int64_t Histogram::Min() const {
+int64_t Histogram::Min() {
   Mutex::ScopedLock lock(mutex_);
   return hdr_min(histogram_.get());
 }
 
-int64_t Histogram::Max() const {
+int64_t Histogram::Max() {
   Mutex::ScopedLock lock(mutex_);
   return hdr_max(histogram_.get());
 }
 
-double Histogram::Mean() const {
+double Histogram::Mean() {
   Mutex::ScopedLock lock(mutex_);
   return hdr_mean(histogram_.get());
 }
 
-double Histogram::Stddev() const {
+double Histogram::Stddev() {
   Mutex::ScopedLock lock(mutex_);
   return hdr_stddev(histogram_.get());
 }
 
-int64_t Histogram::Percentile(double percentile) const {
+double Histogram::Percentile(double percentile) {
   Mutex::ScopedLock lock(mutex_);
   CHECK_GT(percentile, 0);
   CHECK_LE(percentile, 100);
-  return hdr_value_at_percentile(histogram_.get(), percentile);
+  return static_cast<double>(
+      hdr_value_at_percentile(histogram_.get(), percentile));
 }
 
 template <typename Iterator>
@@ -65,31 +51,26 @@ void Histogram::Percentiles(Iterator&& fn) {
   hdr_iter_percentile_init(&iter, histogram_.get(), 1);
   while (hdr_iter_next(&iter)) {
     double key = iter.specifics.percentiles.percentile;
-    fn(key, iter.value);
+    double value = static_cast<double>(iter.value);
+    fn(key, value);
   }
 }
 
 bool Histogram::Record(int64_t value) {
   Mutex::ScopedLock lock(mutex_);
-  bool recorded = hdr_record_value(histogram_.get(), value);
-  if (!recorded)
-    exceeds_++;
-  else
-    count_++;
-  return recorded;
+  return hdr_record_value(histogram_.get(), value);
 }
 
 uint64_t Histogram::RecordDelta() {
   Mutex::ScopedLock lock(mutex_);
   uint64_t time = uv_hrtime();
-  int64_t delta = 0;
+  uint64_t delta = 0;
   if (prev_ > 0) {
-    CHECK_GE(time, prev_);
     delta = time - prev_;
-    if (hdr_record_value(histogram_.get(), delta))
-      count_++;
-    else
-      exceeds_++;
+    if (delta > 0) {
+      if (!hdr_record_value(histogram_.get(), delta) && exceeds_ < 0xFFFFFFFF)
+        exceeds_++;
+    }
   }
   prev_ = time;
   return delta;

@@ -20,8 +20,6 @@ class V8_EXPORT_PRIVATE GraphTrimmer final {
  public:
   GraphTrimmer(Zone* zone, Graph* graph);
   ~GraphTrimmer();
-  GraphTrimmer(const GraphTrimmer&) = delete;
-  GraphTrimmer& operator=(const GraphTrimmer&) = delete;
 
   // Trim nodes in the {graph} that are not reachable from {graph->end()}.
   void TrimGraph();
@@ -52,6 +50,8 @@ class V8_EXPORT_PRIVATE GraphTrimmer final {
   Graph* const graph_;
   NodeMarker<bool> is_live_;
   NodeVector live_;
+
+  DISALLOW_COPY_AND_ASSIGN(GraphTrimmer);
 };
 
 }  // namespace compiler

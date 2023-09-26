@@ -1,4 +1,3 @@
-// Flags: --expose-internals
 'use strict';
 
 const common = require('../common');
@@ -10,15 +9,9 @@ const {
 const {
   SocketAddress,
 } = require('net');
-
 const {
-  InternalSocketAddress,
-} = require('internal/socketaddress');
-const { internalBinding } = require('internal/test/binding');
-const {
-  SocketAddress: _SocketAddress,
-  AF_INET
-} = internalBinding('block_list');
+  MessageChannel,
+} = require('worker_threads');
 
 {
   const sa = new SocketAddress();
@@ -118,20 +111,3 @@ const {
 throws(() => new SocketAddress({ flowlabel: -1 }), {
   code: 'ERR_OUT_OF_RANGE'
 });
-
-{
-  // Test that the internal helper class InternalSocketAddress correctly
-  // inherits from SocketAddress and that it does not throw when its properties
-  // are accessed.
-
-  const address = '127.0.0.1';
-  const port = 8080;
-  const flowlabel = 0;
-  const handle = new _SocketAddress(address, port, AF_INET, flowlabel);
-  const addr = new InternalSocketAddress(handle);
-  ok(addr instanceof SocketAddress);
-  strictEqual(addr.address, address);
-  strictEqual(addr.port, port);
-  strictEqual(addr.family, 'ipv4');
-  strictEqual(addr.flowlabel, flowlabel);
-}

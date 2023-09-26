@@ -16,11 +16,5 @@ const server = net.createServer(common.mustCall(function(conn) {
     client.end();
   }));
 
-  const address = server.address();
-  if (!common.hasIPv6 && address.family === 'IPv6') {
-    // Necessary to pass CI running inside containers.
-    client.connect(address.port);
-  } else {
-    client.connect(address);
-  }
+  client.connect(server.address());
 }));

@@ -109,14 +109,6 @@ for (let i = PRIORITY_HIGHEST; i <= PRIORITY_LOW; i++) {
   checkPriority(process.pid, i);
 }
 
-{
-  assert.throws(() => { os.getPriority(-1); }, {
-    code: 'ERR_SYSTEM_ERROR',
-    message: /A system error occurred: uv_os_getpriority returned /,
-    name: 'SystemError'
-  });
-}
-
 
 function checkPriority(pid, expected) {
   const priority = os.getPriority(pid);

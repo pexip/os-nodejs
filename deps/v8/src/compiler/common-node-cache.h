@@ -36,9 +36,6 @@ class CommonNodeCache final {
         relocatable_int64_constants_(zone) {}
   ~CommonNodeCache() = default;
 
-  CommonNodeCache(const CommonNodeCache&) = delete;
-  CommonNodeCache& operator=(const CommonNodeCache&) = delete;
-
   Node** FindInt32Constant(int32_t value) {
     return int32_constants_.Find(value);
   }
@@ -97,6 +94,8 @@ class CommonNodeCache final {
   IntPtrNodeCache heap_constants_;
   RelocInt32NodeCache relocatable_int32_constants_;
   RelocInt64NodeCache relocatable_int64_constants_;
+
+  DISALLOW_COPY_AND_ASSIGN(CommonNodeCache);
 };
 
 }  // namespace compiler

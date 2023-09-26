@@ -6,8 +6,7 @@
 #define V8_COMPILER_GRAPH_VISUALIZER_H_
 
 #include <stdio.h>
-
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
 #include <iosfwd>
 #include <memory>
 
@@ -23,19 +22,15 @@ class SourcePosition;
 namespace compiler {
 
 class Graph;
-class LiveRange;
-class TopLevelLiveRange;
 class Instruction;
 class InstructionBlock;
 class InstructionOperand;
 class InstructionSequence;
-class Node;
 class NodeOrigin;
 class NodeOriginTable;
 class RegisterAllocationData;
 class Schedule;
 class SourcePositionTable;
-class Type;
 
 struct TurboJsonFile : public std::ofstream {
   TurboJsonFile(OptimizedCompilationInfo* info, std::ios_base::openmode mode);
@@ -96,34 +91,6 @@ std::unique_ptr<char[]> GetVisualizerLogFileName(OptimizedCompilationInfo* info,
                                                  const char* optional_base_dir,
                                                  const char* phase,
                                                  const char* suffix);
-
-class JSONGraphWriter {
- public:
-  JSONGraphWriter(std::ostream& os, const Graph* graph,
-                  const SourcePositionTable* positions,
-                  const NodeOriginTable* origins);
-
-  JSONGraphWriter(const JSONGraphWriter&) = delete;
-  JSONGraphWriter& operator=(const JSONGraphWriter&) = delete;
-
-  void PrintPhase(const char* phase_name);
-  void Print();
-
- protected:
-  void PrintNode(Node* node, bool is_live);
-  void PrintEdges(Node* node);
-  void PrintEdge(Node* from, int index, Node* to);
-  virtual base::Optional<Type> GetType(Node* node);
-
- protected:
-  std::ostream& os_;
-  Zone* zone_;
-  const Graph* graph_;
-  const SourcePositionTable* positions_;
-  const NodeOriginTable* origins_;
-  bool first_node_;
-  bool first_edge_;
-};
 
 struct GraphAsJSON {
   GraphAsJSON(const Graph& g, SourcePositionTable* p, NodeOriginTable* o)
@@ -187,30 +154,6 @@ std::ostream& operator<<(std::ostream& os, const AsC1VCompilation& ac);
 std::ostream& operator<<(std::ostream& os, const AsC1V& ac);
 std::ostream& operator<<(std::ostream& os,
                          const AsC1VRegisterAllocationData& ac);
-
-struct LiveRangeAsJSON {
-  const LiveRange& range_;
-  const InstructionSequence& code_;
-};
-
-std::ostream& operator<<(std::ostream& os,
-                         const LiveRangeAsJSON& live_range_json);
-
-struct TopLevelLiveRangeAsJSON {
-  const TopLevelLiveRange& range_;
-  const InstructionSequence& code_;
-};
-
-std::ostream& operator<<(
-    std::ostream& os, const TopLevelLiveRangeAsJSON& top_level_live_range_json);
-
-struct RegisterAllocationDataAsJSON {
-  const RegisterAllocationData& data_;
-  const InstructionSequence& code_;
-};
-
-std::ostream& operator<<(std::ostream& os,
-                         const RegisterAllocationDataAsJSON& ac);
 
 struct InstructionOperandAsJSON {
   const InstructionOperand* op_;

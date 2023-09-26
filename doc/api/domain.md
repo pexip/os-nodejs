@@ -1,5 +1,4 @@
 # Domain
-
 <!-- YAML
 deprecated: v1.4.2
 changes:
@@ -21,7 +20,7 @@ changes:
 
 <!-- source_link=lib/domain.js -->
 
-**This module is pending deprecation.** Once a replacement API has been
+**This module is pending deprecation**. Once a replacement API has been
 finalized, this module will be fully deprecated. Most developers should
 **not** have cause to use this module. Users who absolutely must have
 the functionality that domains provide may rely on it for the time being
@@ -56,7 +55,7 @@ triggered the error, while letting the others finish in their normal
 time, and stop listening for new requests in that worker.
 
 In this way, `domain` usage goes hand-in-hand with the cluster module,
-since the primary process can fork a new worker when a worker
+since the master process can fork a new worker when a worker
 encounters an error. For Node.js programs that scale to multiple
 machines, the terminating proxy or service registry can take note of
 the failure, and react accordingly.
@@ -66,7 +65,7 @@ For example, this is not a good idea:
 ```js
 // XXX WARNING! BAD IDEA!
 
-const d = require('node:domain').create();
+const d = require('domain').create();
 d.on('error', (er) => {
   // The error won't crash the process, but what it does is worse!
   // Though we've prevented abrupt process restarting, we are leaking
@@ -75,7 +74,7 @@ d.on('error', (er) => {
   console.log(`error, but oh well ${er.message}`);
 });
 d.run(() => {
-  require('node:http').createServer((req, res) => {
+  require('http').createServer((req, res) => {
     handleRequest(req, res);
   }).listen(PORT);
 });
@@ -88,12 +87,12 @@ appropriately, and handle errors with much greater safety.
 ```js
 // Much better!
 
-const cluster = require('node:cluster');
+const cluster = require('cluster');
 const PORT = +process.env.PORT || 1337;
 
-if (cluster.isPrimary) {
+if (cluster.isMaster) {
   // A more realistic scenario would have more than 2 workers,
-  // and perhaps not put the primary and worker in the same file.
+  // and perhaps not put the master and worker in the same file.
   //
   // It is also possible to get a bit fancier about logging, and
   // implement whatever custom logic is needed to prevent DoS
@@ -101,7 +100,7 @@ if (cluster.isPrimary) {
   //
   // See the options in the cluster documentation.
   //
-  // The important thing is that the primary does very little,
+  // The important thing is that the master does very little,
   // increasing our resilience to unexpected errors.
 
   cluster.fork();
@@ -117,12 +116,12 @@ if (cluster.isPrimary) {
   //
   // This is where we put our bugs!
 
-  const domain = require('node:domain');
+  const domain = require('domain');
 
   // See the cluster documentation for more details about using
   // worker processes to serve requests. How it works, caveats, etc.
 
-  const server = require('node:http').createServer((req, res) => {
+  const server = require('http').createServer((req, res) => {
     const d = domain.create();
     d.on('error', (er) => {
       console.error(`error ${er.stack}`);
@@ -143,8 +142,8 @@ if (cluster.isPrimary) {
         // Stop taking new requests.
         server.close();
 
-        // Let the primary know we're dead. This will trigger a
-        // 'disconnect' in the cluster primary, and then it will fork
+        // Let the master know we're dead. This will trigger a
+        // 'disconnect' in the cluster master, and then it will fork
         // a new worker.
         cluster.worker.disconnect();
 
@@ -246,8 +245,8 @@ That is possible via explicit binding.
 
 ```js
 // Create a top-level domain for the server
-const domain = require('node:domain');
-const http = require('node:http');
+const domain = require('domain');
+const http = require('http');
 const serverDomain = domain.create();
 
 serverDomain.run(() => {
@@ -416,8 +415,8 @@ the function.
 This is the most basic way to use a domain.
 
 ```js
-const domain = require('node:domain');
-const fs = require('node:fs');
+const domain = require('domain');
+const fs = require('fs');
 const d = domain.create();
 d.on('error', (er) => {
   console.error('Caught error!', er);
@@ -480,10 +479,10 @@ Domains will not interfere with the error handling mechanisms for
 promises. In other words, no `'error'` event will be emitted for unhandled
 `Promise` rejections.
 
-[`Error`]: errors.md#class-error
-[`domain.add(emitter)`]: #domainaddemitter
-[`domain.bind(callback)`]: #domainbindcallback
-[`domain.exit()`]: #domainexit
-[`setInterval()`]: timers.md#setintervalcallback-delay-args
-[`setTimeout()`]: timers.md#settimeoutcallback-delay-args
+[`Error`]: errors.md#errors_class_error
+[`domain.add(emitter)`]: #domain_domain_add_emitter
+[`domain.bind(callback)`]: #domain_domain_bind_callback
+[`domain.exit()`]: #domain_domain_exit
+[`setInterval()`]: timers.md#timers_setinterval_callback_delay_args
+[`setTimeout()`]: timers.md#timers_settimeout_callback_delay_args
 [`throw`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/throw

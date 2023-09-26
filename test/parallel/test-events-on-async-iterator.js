@@ -1,11 +1,13 @@
-// Flags: --expose-internals --no-warnings
+// Flags: --expose-internals --no-warnings --experimental-abortcontroller
 'use strict';
 
 const common = require('../common');
 const assert = require('assert');
 const { on, EventEmitter } = require('events');
 const {
+  EventTarget,
   NodeEventTarget,
+  Event
 } = require('internal/event_target');
 
 async function basic() {
@@ -131,18 +133,18 @@ async function next() {
 
   assert.deepStrictEqual(results, [{
     value: ['bar'],
-    done: false,
+    done: false
   }, {
     value: [42],
-    done: false,
+    done: false
   }, {
     value: undefined,
-    done: true,
+    done: true
   }]);
 
   assert.deepStrictEqual(await iterable.next(), {
     value: undefined,
-    done: true,
+    done: true
   });
 }
 
@@ -160,19 +162,19 @@ async function nextError() {
   ]);
   assert.deepStrictEqual(results, [{
     status: 'rejected',
-    reason: _err,
+    reason: _err
   }, {
     status: 'fulfilled',
     value: {
       value: undefined,
-      done: true,
-    },
+      done: true
+    }
   }, {
     status: 'fulfilled',
     value: {
       value: undefined,
-      done: true,
-    },
+      done: true
+    }
   }]);
   assert.strictEqual(ee.listeners('error').length, 0);
 }
@@ -196,7 +198,7 @@ async function iterableThrow() {
   }, {
     message: 'The "EventEmitter.AsyncIterator" property must be' +
     ' an instance of Error. Received undefined',
-    name: 'TypeError',
+    name: 'TypeError'
   });
 
   const expected = [['bar'], [42]];
@@ -255,27 +257,29 @@ async function nodeEventTarget() {
 
 async function abortableOnBefore() {
   const ee = new EventEmitter();
-  const abortedSignal = AbortSignal.abort();
+  const ac = new AbortController();
+  ac.abort();
   [1, {}, null, false, 'hi'].forEach((signal) => {
     assert.throws(() => on(ee, 'foo', { signal }), {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_ARG_TYPE'
     });
   });
-  assert.throws(() => on(ee, 'foo', { signal: abortedSignal }), {
-    name: 'AbortError',
+  assert.throws(() => on(ee, 'foo', { signal: ac.signal }), {
+    name: 'AbortError'
   });
 }
 
 async function eventTargetAbortableOnBefore() {
   const et = new EventTarget();
-  const abortedSignal = AbortSignal.abort();
+  const ac = new AbortController();
+  ac.abort();
   [1, {}, null, false, 'hi'].forEach((signal) => {
     assert.throws(() => on(et, 'foo', { signal }), {
-      code: 'ERR_INVALID_ARG_TYPE',
+      code: 'ERR_INVALID_ARG_TYPE'
     });
   });
-  assert.throws(() => on(et, 'foo', { signal: abortedSignal }), {
-    name: 'AbortError',
+  assert.throws(() => on(et, 'foo', { signal: ac.signal }), {
+    name: 'AbortError'
   });
 }
 

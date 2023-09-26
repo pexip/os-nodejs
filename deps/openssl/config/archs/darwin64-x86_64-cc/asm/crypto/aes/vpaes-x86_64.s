@@ -623,7 +623,6 @@ L$schedule_mangle_both:
 .p2align	4
 _vpaes_set_encrypt_key:
 
-.byte	243,15,30,250
 	movl	%esi,%eax
 	shrl	$5,%eax
 	addl	$5,%eax
@@ -642,7 +641,6 @@ _vpaes_set_encrypt_key:
 .p2align	4
 _vpaes_set_decrypt_key:
 
-.byte	243,15,30,250
 	movl	%esi,%eax
 	shrl	$5,%eax
 	addl	$5,%eax
@@ -666,7 +664,6 @@ _vpaes_set_decrypt_key:
 .p2align	4
 _vpaes_encrypt:
 
-.byte	243,15,30,250
 	movdqu	(%rdi),%xmm0
 	call	_vpaes_preheat
 	call	_vpaes_encrypt_core
@@ -680,7 +677,6 @@ _vpaes_encrypt:
 .p2align	4
 _vpaes_decrypt:
 
-.byte	243,15,30,250
 	movdqu	(%rdi),%xmm0
 	call	_vpaes_preheat
 	call	_vpaes_decrypt_core
@@ -693,7 +689,6 @@ _vpaes_decrypt:
 .p2align	4
 _vpaes_cbc_encrypt:
 
-.byte	243,15,30,250
 	xchgq	%rcx,%rdx
 	subq	$16,%rcx
 	jc	L$cbc_abort

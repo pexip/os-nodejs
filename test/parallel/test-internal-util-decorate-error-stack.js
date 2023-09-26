@@ -5,13 +5,11 @@ const fixtures = require('../common/fixtures');
 const assert = require('assert');
 const internalUtil = require('internal/util');
 const { internalBinding } = require('internal/test/binding');
-const {
-  privateSymbols: {
-    arrow_message_private_symbol,
-    decorated_private_symbol,
-  }
-} = internalBinding('util');
+const binding = internalBinding('util');
 const spawnSync = require('child_process').spawnSync;
+
+const kArrowMessagePrivateSymbolIndex = binding.arrow_message_private_symbol;
+const kDecoratedPrivateSymbolIndex = binding.decorated_private_symbol;
 
 const decorateErrorStack = internalUtil.decorateErrorStack;
 
@@ -33,9 +31,9 @@ function checkStack(stack) {
   // displays the line of code (`var foo bar;`) that is causing a problem.
   // ChakraCore does not display the line of code but includes `;` in the phrase
   // `Expected ';' `.
-  assert.match(stack, /;/g);
+  assert.ok(/;/g.test(stack));
   // Test that it's a multiline string.
-  assert.match(stack, /\n/g);
+  assert.ok(/\n/g.test(stack));
 }
 let err;
 const badSyntaxPath =
@@ -75,8 +73,9 @@ const arrowMessage = 'arrow_message';
 err = new Error('foo');
 originalStack = err.stack;
 
-err[arrow_message_private_symbol] = arrowMessage;
+binding.setHiddenValue(err, kArrowMessagePrivateSymbolIndex, arrowMessage);
 decorateErrorStack(err);
 
 assert.strictEqual(err.stack, `${arrowMessage}${originalStack}`);
-assert.strictEqual(err[decorated_private_symbol], true);
+assert.strictEqual(
+  binding.getHiddenValue(err, kDecoratedPrivateSymbolIndex), true);

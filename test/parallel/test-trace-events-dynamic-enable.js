@@ -1,4 +1,3 @@
-// Flags: --expose-internals
 'use strict';
 
 const common = require('../common');
@@ -6,17 +5,8 @@ const common = require('../common');
 common.skipIfInspectorDisabled();
 common.skipIfWorker(); // https://github.com/nodejs/node/issues/22767
 
-const { internalBinding } = require('internal/test/binding');
-
-const {
-  trace: {
-    TRACE_EVENT_PHASE_NESTABLE_ASYNC_BEGIN: kBeforeEvent
-  }
-} = internalBinding('constants');
-
-const { trace } = internalBinding('trace_events');
-
 const assert = require('assert');
+const { performance } = require('perf_hooks');
 const { Session } = require('inspector');
 
 const session = new Session();
@@ -43,24 +33,27 @@ async function test() {
   });
   session.on('NodeTracing.tracingComplete', () => tracingComplete = true);
 
-  trace(kBeforeEvent, 'foo', 'test1', 0, 'test');
+  // Generate a node.perf event before tracing is enabled.
+  performance.mark('mark1');
 
-  const traceConfig = { includedCategories: ['foo'] };
+  const traceConfig = { includedCategories: ['node.perf'] };
   await post('NodeTracing.start', { traceConfig });
 
-  trace(kBeforeEvent, 'foo', 'test2', 0, 'test');
-  trace(kBeforeEvent, 'bar', 'test3', 0, 'test');
+  // Generate a node.perf event after tracing is enabled. This should be the
+  // mark event captured.
+  performance.mark('mark2');
 
   await post('NodeTracing.stop', { traceConfig });
 
-  trace(kBeforeEvent, 'foo', 'test4', 0, 'test');
+  performance.mark('mark3');
+
   session.disconnect();
 
   assert.ok(tracingComplete);
 
-  const marks = events.filter((t) => null !== /foo/.exec(t.cat));
+  const marks = events.filter((t) => null !== /node\.perf\.usertim/.exec(t.cat));
   assert.strictEqual(marks.length, 1);
-  assert.strictEqual(marks[0].name, 'test2');
+  assert.strictEqual(marks[0].name, 'mark2');
 }
 
 test();

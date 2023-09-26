@@ -3,13 +3,12 @@
 const common = require('../common');
 const ArrayStream = require('../common/arraystream');
 const assert = require('assert');
-const events = require('events');
 const { stripVTControlCharacters } = require('internal/util/inspect');
 const repl = require('repl');
 
 common.skipIfInspectorDisabled();
 
-// Flags: --expose-internals
+// Flags: --expose-internals --experimental-repl-await
 
 const PROMPT = 'await repl > ';
 
@@ -28,21 +27,31 @@ class REPLStream extends ArrayStream {
     if (chunkLines.length > 1) {
       this.lines.push(...chunkLines.slice(1));
     }
-    this.emit('line', this.lines[this.lines.length - 1]);
+    this.emit('line');
     if (callback) callback();
     return true;
   }
 
-  async wait() {
+  wait() {
     if (this.waitingForResponse) {
       throw new Error('Currently waiting for response to another command');
     }
     this.lines = [''];
-    for await (const [line] of events.on(this, 'line')) {
-      if (line.includes(PROMPT)) {
-        return this.lines;
-      }
-    }
+    return new Promise((resolve, reject) => {
+      const onError = (err) => {
+        this.removeListener('line', onLine);
+        reject(err);
+      };
+      const onLine = () => {
+        if (this.lines[this.lines.length - 1].includes(PROMPT)) {
+          this.removeListener('error', onError);
+          this.removeListener('line', onLine);
+          resolve(this.lines);
+        }
+      };
+      this.once('error', onError);
+      this.on('line', onLine);
+    });
   }
 }
 
@@ -173,10 +182,6 @@ async function ordinaryTests() {
       '3',
       'undefined',
     ]],
-    // Regression test for https://github.com/nodejs/node/issues/43777.
-    ['await Promise.resolve(123), Promise.resolve(456)', 'Promise {', { line: 0 }],
-    ['await Promise.resolve(123), await Promise.resolve(456)', '456'],
-    ['await (Promise.resolve(123), Promise.resolve(456))', '456'],
   ];
 
   for (const [input, expected = [`${input}\r`], options = {}] of testCases) {
@@ -200,17 +205,15 @@ async function ordinaryTests() {
 
 async function ctrlCTest() {
   console.log('Testing Ctrl+C');
-  const output = await runAndWait([
+  assert.deepStrictEqual(await runAndWait([
     'await new Promise(() => {})',
     { ctrl: true, name: 'c' },
-  ]);
-  assert.deepStrictEqual(output.slice(0, 3), [
+  ]), [
     'await new Promise(() => {})\r',
     'Uncaught:',
-    'Error [ERR_SCRIPT_EXECUTION_INTERRUPTED]: ' +
-      'Script execution was interrupted by `SIGINT`',
-  ]);
-  assert.deepStrictEqual(output.slice(-2), [
+    '[Error [ERR_SCRIPT_EXECUTION_INTERRUPTED]: ' +
+      'Script execution was interrupted by `SIGINT`] {',
+    "  code: 'ERR_SCRIPT_EXECUTION_INTERRUPTED'",
     '}',
     PROMPT,
   ]);

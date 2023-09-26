@@ -33,18 +33,15 @@ server.listen(0, common.mustCall(function() {
     path: 'example.com:443'
   }, common.mustNotCall());
 
-  assert.strictEqual(req.destroyed, false);
-  req.on('close', common.mustCall(() => {
-    assert.strictEqual(req.destroyed, true);
-  }));
+  req.on('close', common.mustCall());
 
   req.on('connect', common.mustCall(function(res, socket, firstBodyChunk) {
     console.error('Client got CONNECT request');
 
     // Make sure this request got removed from the pool.
     const name = `localhost:${server.address().port}`;
-    assert(!(name in http.globalAgent.sockets));
-    assert(!(name in http.globalAgent.requests));
+    assert(!http.globalAgent.sockets.hasOwnProperty(name));
+    assert(!http.globalAgent.requests.hasOwnProperty(name));
 
     // Make sure this socket has detached.
     assert(!socket.ondata);

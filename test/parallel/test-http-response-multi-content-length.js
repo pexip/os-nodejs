@@ -24,7 +24,7 @@ function test(server) {
 {
   const server = http.createServer((req, res) => {
     res.setHeader('content-length', [2, 1]);
-    res.end('k');
+    res.end('ok');
   });
 
   test(server);

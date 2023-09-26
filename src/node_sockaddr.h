@@ -98,7 +98,7 @@ class SocketAddress : public MemoryRetainer {
   // for this one. The addresses are a match if:
   // 1. They are the same family and match identically
   // 2. They are different family but match semantically (
-  //     for instance, an IPv4 address in IPv6 notation)
+  //     for instance, an IPv4 addres in IPv6 notation)
   bool is_match(const SocketAddress& other) const;
 
   // Compares this SocketAddress to the given other SocketAddress.
@@ -124,14 +124,13 @@ class SocketAddress : public MemoryRetainer {
   inline void set_flow_label(uint32_t label = 0);
 
   inline void Update(uint8_t* data, size_t len);
-  inline void Update(const sockaddr* data, size_t len);
 
   static SocketAddress FromSockName(const uv_udp_t& handle);
   static SocketAddress FromSockName(const uv_tcp_t& handle);
   static SocketAddress FromPeerName(const uv_udp_t& handle);
   static SocketAddress FromPeerName(const uv_tcp_t& handle);
 
-  inline v8::MaybeLocal<v8::Object> ToJS(
+  inline v8::Local<v8::Object> ToJS(
       Environment* env,
       v8::Local<v8::Object> obj = v8::Local<v8::Object>()) const;
 
@@ -400,6 +399,6 @@ class SocketAddressBlockListWrap : public BaseObject {
 
 }  // namespace node
 
-#endif  // defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
+#endif  // NOE_WANT_INTERNALS
 
 #endif  // SRC_NODE_SOCKADDR_H_

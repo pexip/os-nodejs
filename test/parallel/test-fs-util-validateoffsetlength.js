@@ -50,7 +50,7 @@ const {
   );
 }
 
-// Most platforms don't allow reads or writes >= 2 GiB.
+// Most platforms don't allow reads or writes >= 2 GB.
 // See https://github.com/libuv/libuv/pull/1501.
 const kIoMaxLength = 2 ** 31 - 1;
 

@@ -10,7 +10,7 @@ if (!process.env.HAS_STARTED_WORKER) {
   w.on('message', common.mustNotCall());
   w.on('error', common.mustCall((err) => {
     console.log(err.message);
-    assert.match(String(err), /^Error: foo$/);
+    assert(/^Error: foo$/.test(err));
   }));
   w.on('exit', common.mustCall((code) => {
     // uncaughtException is code 1

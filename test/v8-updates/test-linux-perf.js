@@ -96,20 +96,17 @@ for (const perfArgs of perfArgsList) {
   output += perfScript.stdout;
 }
 
-const interpretedFunctionOneRe = /~functionOne/;
-const compiledFunctionOneRe = /\*functionOne/;
-const interpretedFunctionTwoRe = /~functionTwo/;
-const compiledFunctionTwoRe = /\*functionTwo/;
+const interpretedFunctionOneRe = /InterpretedFunction:functionOne/;
+const compiledFunctionOneRe = /LazyCompile:\*functionOne/;
+const interpretedFunctionTwoRe = /InterpretedFunction:functionTwo/;
+const compiledFunctionTwoRe = /LazyCompile:\*functionTwo/;
 
-function makeAssertMessage(message) {
-  return message + '\nPerf output:\n\n' + output;
-}
 
 assert.ok(output.match(interpretedFunctionOneRe),
-          makeAssertMessage("Couldn't find interpreted functionOne()"));
+          "Couldn't find interpreted functionOne()");
 assert.ok(output.match(compiledFunctionOneRe),
-          makeAssertMessage("Couldn't find compiled functionOne()"));
+          "Couldn't find compiled functionOne()");
 assert.ok(output.match(interpretedFunctionTwoRe),
-          makeAssertMessage("Couldn't find interpreted functionTwo()"));
+          "Couldn't find interpreted functionTwo()");
 assert.ok(output.match(compiledFunctionTwoRe),
-          makeAssertMessage("Couldn't find compiled functionTwo"));
+          "Couldn't find compiled functionTwo");

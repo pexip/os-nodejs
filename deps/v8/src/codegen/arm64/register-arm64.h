@@ -6,7 +6,8 @@
 #define V8_CODEGEN_ARM64_REGISTER_ARM64_H_
 
 #include "src/codegen/arm64/utils-arm64.h"
-#include "src/codegen/register-base.h"
+#include "src/codegen/register.h"
+#include "src/codegen/reglist.h"
 #include "src/common/globals.h"
 
 namespace v8 {
@@ -29,21 +30,11 @@ namespace internal {
 
 // x18 is the platform register and is reserved for the use of platform ABIs.
 // It is known to be reserved by the OS at least on Windows and iOS.
-#define ALWAYS_ALLOCATABLE_GENERAL_REGISTERS(R)                  \
+#define ALLOCATABLE_GENERAL_REGISTERS(R)                  \
   R(x0)  R(x1)  R(x2)  R(x3)  R(x4)  R(x5)  R(x6)  R(x7)  \
   R(x8)  R(x9)  R(x10) R(x11) R(x12) R(x13) R(x14) R(x15) \
          R(x19) R(x20) R(x21) R(x22) R(x23) R(x24) R(x25) \
-  R(x27)
-
-#ifdef V8_COMPRESS_POINTERS_IN_SHARED_CAGE
-#define MAYBE_ALLOCATABLE_GENERAL_REGISTERS(R)
-#else
-#define MAYBE_ALLOCATABLE_GENERAL_REGISTERS(R) R(x28)
-#endif
-
-#define ALLOCATABLE_GENERAL_REGISTERS(V)  \
-  ALWAYS_ALLOCATABLE_GENERAL_REGISTERS(V) \
-  MAYBE_ALLOCATABLE_GENERAL_REGISTERS(V)
+  R(x27) R(x28)
 
 #define FLOAT_REGISTERS(V)                                \
   V(s0)  V(s1)  V(s2)  V(s3)  V(s4)  V(s5)  V(s6)  V(s7)  \
@@ -78,6 +69,8 @@ namespace internal {
   R(d25) R(d26) R(d27) R(d28)
 // clang-format on
 
+constexpr int kRegListSizeInBits = sizeof(RegList) * kBitsPerByte;
+
 // Some CPURegister methods can return Register and VRegister types, so we
 // need to declare them in advance.
 class Register;
@@ -92,14 +85,16 @@ enum RegisterCode {
 
 class CPURegister : public RegisterBase<CPURegister, kRegAfterLast> {
  public:
-  enum RegisterType : int8_t { kRegister, kVRegister, kNoRegister };
+  enum RegisterType { kRegister, kVRegister, kNoRegister };
 
   static constexpr CPURegister no_reg() {
     return CPURegister{kCode_no_reg, 0, kNoRegister};
   }
 
   static constexpr CPURegister Create(int code, int size, RegisterType type) {
+#if V8_HAS_CXX14_CONSTEXPR
     DCHECK(IsValid(code, size, type));
+#endif
     return CPURegister{code, size, type};
   }
 
@@ -185,7 +180,7 @@ class CPURegister : public RegisterBase<CPURegister, kRegAfterLast> {
   bool IsSameSizeAndType(const CPURegister& other) const;
 
  protected:
-  uint8_t reg_size_;
+  int reg_size_;
   RegisterType reg_type_;
 
 #if defined(V8_OS_WIN) && !defined(__clang__)
@@ -221,8 +216,6 @@ class CPURegister : public RegisterBase<CPURegister, kRegAfterLast> {
 };
 
 ASSERT_TRIVIALLY_COPYABLE(CPURegister);
-static_assert(sizeof(CPURegister) <= sizeof(int),
-              "CPURegister can efficiently be passed by value");
 
 class Register : public CPURegister {
  public:
@@ -249,18 +242,9 @@ class Register : public CPURegister {
 };
 
 ASSERT_TRIVIALLY_COPYABLE(Register);
-static_assert(sizeof(Register) <= sizeof(int),
-              "Register can efficiently be passed by value");
 
-// Stack frame alignment and padding.
-constexpr int ArgumentPaddingSlots(int argument_count) {
-  // Stack frames are aligned to 16 bytes.
-  constexpr int kStackFrameAlignment = 16;
-  constexpr int alignment_mask = kStackFrameAlignment / kSystemPointerSize - 1;
-  return argument_count & alignment_mask;
-}
-
-constexpr AliasingKind kFPAliasing = AliasingKind::kOverlap;
+constexpr bool kPadArguments = true;
+constexpr bool kSimpleFPAliasing = true;
 constexpr bool kSimdMaskRegisters = false;
 
 enum DoubleRegisterCode {
@@ -299,7 +283,6 @@ VectorFormat VectorFormatDoubleLanes(VectorFormat vform);
 VectorFormat VectorFormatHalfLanes(VectorFormat vform);
 VectorFormat ScalarFormatFromLaneSize(int lanesize);
 VectorFormat VectorFormatHalfWidthDoubleLanes(VectorFormat vform);
-VectorFormat VectorFormatFillQ(int laneSize);
 VectorFormat VectorFormatFillQ(VectorFormat vform);
 VectorFormat ScalarFormatFromFormat(VectorFormat vform);
 V8_EXPORT_PRIVATE unsigned RegisterSizeInBitsFromFormat(VectorFormat vform);
@@ -321,7 +304,9 @@ class VRegister : public CPURegister {
   }
 
   static constexpr VRegister Create(int code, int size, int lane_count = 1) {
+#if V8_HAS_CXX14_CONSTEXPR
     DCHECK(IsValidLaneCount(lane_count));
+#endif
     return VRegister(CPURegister::Create(code, size, CPURegister::kVRegister),
                      lane_count);
   }
@@ -362,10 +347,6 @@ class VRegister : public CPURegister {
   }
   VRegister V1D() const {
     return VRegister::Create(code(), kDRegSizeInBits, 1);
-  }
-
-  VRegister Format(VectorFormat f) const {
-    return VRegister::Create(code(), f);
   }
 
   bool Is8B() const { return (Is64Bits() && (lane_count_ == 8)); }
@@ -414,13 +395,13 @@ class VRegister : public CPURegister {
   static constexpr int kMaxNumRegisters = kNumberOfVRegisters;
   STATIC_ASSERT(kMaxNumRegisters == kDoubleAfterLast);
 
-  static constexpr VRegister from_code(int code) {
+  static VRegister from_code(int code) {
     // Always return a D register.
     return VRegister::Create(code, kDRegSizeInBits);
   }
 
  private:
-  int8_t lane_count_;
+  int lane_count_;
 
   constexpr explicit VRegister(const CPURegister& r, int lane_count)
       : CPURegister(r), lane_count_(lane_count) {}
@@ -431,8 +412,6 @@ class VRegister : public CPURegister {
 };
 
 ASSERT_TRIVIALLY_COPYABLE(VRegister);
-static_assert(sizeof(VRegister) <= sizeof(int),
-              "VRegister can efficiently be passed by value");
 
 // No*Reg is used to indicate an unused argument, or an error case. Note that
 // these all compare equal. The Register and VRegister variants are provided for
@@ -478,12 +457,6 @@ ALIAS_REGISTER(Register, wip1, w17);
 // Root register.
 ALIAS_REGISTER(Register, kRootRegister, x26);
 ALIAS_REGISTER(Register, rr, x26);
-// Pointer cage base register.
-#ifdef V8_COMPRESS_POINTERS_IN_SHARED_CAGE
-ALIAS_REGISTER(Register, kPtrComprCageBaseRegister, x28);
-#else
-ALIAS_REGISTER(Register, kPtrComprCageBaseRegister, kRootRegister);
-#endif
 // Context pointer register.
 ALIAS_REGISTER(Register, cp, x27);
 ALIAS_REGISTER(Register, fp, x29);
@@ -546,6 +519,152 @@ using FloatRegister = VRegister;
 using DoubleRegister = VRegister;
 using Simd128Register = VRegister;
 
+// -----------------------------------------------------------------------------
+// Lists of registers.
+class V8_EXPORT_PRIVATE CPURegList {
+ public:
+  CPURegList() = default;
+
+  template <typename... CPURegisters>
+  explicit CPURegList(CPURegister reg0, CPURegisters... regs)
+      : list_(CPURegister::ListOf(reg0, regs...)),
+        size_(reg0.SizeInBits()),
+        type_(reg0.type()) {
+    DCHECK(AreSameSizeAndType(reg0, regs...));
+    DCHECK(is_valid());
+  }
+
+  CPURegList(CPURegister::RegisterType type, int size, RegList list)
+      : list_(list), size_(size), type_(type) {
+    DCHECK(is_valid());
+  }
+
+  CPURegList(CPURegister::RegisterType type, int size, int first_reg,
+             int last_reg)
+      : size_(size), type_(type) {
+    DCHECK(
+        ((type == CPURegister::kRegister) && (last_reg < kNumberOfRegisters)) ||
+        ((type == CPURegister::kVRegister) &&
+         (last_reg < kNumberOfVRegisters)));
+    DCHECK(last_reg >= first_reg);
+    list_ = (1ULL << (last_reg + 1)) - 1;
+    list_ &= ~((1ULL << first_reg) - 1);
+    DCHECK(is_valid());
+  }
+
+  CPURegister::RegisterType type() const {
+    return type_;
+  }
+
+  RegList list() const {
+    return list_;
+  }
+
+  inline void set_list(RegList new_list) {
+    list_ = new_list;
+    DCHECK(is_valid());
+  }
+
+  // Combine another CPURegList into this one. Registers that already exist in
+  // this list are left unchanged. The type and size of the registers in the
+  // 'other' list must match those in this list.
+  void Combine(const CPURegList& other);
+
+  // Remove every register in the other CPURegList from this one. Registers that
+  // do not exist in this list are ignored. The type of the registers in the
+  // 'other' list must match those in this list.
+  void Remove(const CPURegList& other);
+
+  // Variants of Combine and Remove which take CPURegisters.
+  void Combine(const CPURegister& other);
+  void Remove(const CPURegister& other1, const CPURegister& other2 = NoCPUReg,
+              const CPURegister& other3 = NoCPUReg,
+              const CPURegister& other4 = NoCPUReg);
+
+  // Variants of Combine and Remove which take a single register by its code;
+  // the type and size of the register is inferred from this list.
+  void Combine(int code);
+  void Remove(int code);
+
+  // Align the list to 16 bytes.
+  void Align();
+
+  CPURegister PopLowestIndex();
+  CPURegister PopHighestIndex();
+
+  // AAPCS64 callee-saved registers.
+  static CPURegList GetCalleeSaved(int size = kXRegSizeInBits);
+  static CPURegList GetCalleeSavedV(int size = kDRegSizeInBits);
+
+  // AAPCS64 caller-saved registers. Note that this includes lr.
+  // TODO(all): Determine how we handle d8-d15 being callee-saved, but the top
+  // 64-bits being caller-saved.
+  static CPURegList GetCallerSaved(int size = kXRegSizeInBits);
+  static CPURegList GetCallerSavedV(int size = kDRegSizeInBits);
+
+  bool IsEmpty() const {
+    return list_ == 0;
+  }
+
+  bool IncludesAliasOf(const CPURegister& other1,
+                       const CPURegister& other2 = NoCPUReg,
+                       const CPURegister& other3 = NoCPUReg,
+                       const CPURegister& other4 = NoCPUReg) const {
+    RegList list = 0;
+    if (!other1.IsNone() && (other1.type() == type_)) list |= other1.bit();
+    if (!other2.IsNone() && (other2.type() == type_)) list |= other2.bit();
+    if (!other3.IsNone() && (other3.type() == type_)) list |= other3.bit();
+    if (!other4.IsNone() && (other4.type() == type_)) list |= other4.bit();
+    return (list_ & list) != 0;
+  }
+
+  int Count() const {
+    return CountSetBits(list_, kRegListSizeInBits);
+  }
+
+  int RegisterSizeInBits() const {
+    return size_;
+  }
+
+  int RegisterSizeInBytes() const {
+    int size_in_bits = RegisterSizeInBits();
+    DCHECK_EQ(size_in_bits % kBitsPerByte, 0);
+    return size_in_bits / kBitsPerByte;
+  }
+
+  int TotalSizeInBytes() const {
+    return RegisterSizeInBytes() * Count();
+  }
+
+ private:
+  RegList list_;
+  int size_;
+  CPURegister::RegisterType type_;
+
+  bool is_valid() const {
+    constexpr RegList kValidRegisters{0x8000000ffffffff};
+    constexpr RegList kValidVRegisters{0x0000000ffffffff};
+    switch (type_) {
+      case CPURegister::kRegister:
+        return (list_ & kValidRegisters) == list_;
+      case CPURegister::kVRegister:
+        return (list_ & kValidVRegisters) == list_;
+      case CPURegister::kNoRegister:
+        return list_ == 0;
+      default:
+        UNREACHABLE();
+    }
+  }
+};
+
+// AAPCS64 callee-saved registers.
+#define kCalleeSaved CPURegList::GetCalleeSaved()
+#define kCalleeSavedV CPURegList::GetCalleeSavedV()
+
+// AAPCS64 caller-saved registers. Note that this includes lr.
+#define kCallerSaved CPURegList::GetCallerSaved()
+#define kCallerSavedV CPURegList::GetCallerSavedV()
+
 // Define a {RegisterName} method for {Register} and {VRegister}.
 DEFINE_REGISTER_NAMES(Register, GENERAL_REGISTERS)
 DEFINE_REGISTER_NAMES(VRegister, VECTOR_REGISTERS)
@@ -557,6 +676,8 @@ constexpr Register kReturnRegister2 = x2;
 constexpr Register kJSFunctionRegister = x1;
 constexpr Register kContextRegister = cp;
 constexpr Register kAllocateSizeRegister = x1;
+
+constexpr Register kSpeculationPoisonRegister = x23;
 
 constexpr Register kInterpreterAccumulatorRegister = x0;
 constexpr Register kInterpreterBytecodeOffsetRegister = x19;

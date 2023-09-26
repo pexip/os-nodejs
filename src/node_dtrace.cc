@@ -44,7 +44,6 @@
 
 #include "env-inl.h"
 #include "node_errors.h"
-#include "node_external_reference.h"
 
 #include <cstring>
 
@@ -87,8 +86,8 @@ using v8::Value;
     return node::THROW_ERR_INVALID_ARG_TYPE(env,                           \
         "expected object for " #obj " to contain object member " #member); \
   }                                                                        \
-  *valp = obj->Get(env->context(),                                         \
-      OneByteString(env->isolate(), #member)).ToLocalChecked().As<Object>();
+  *valp = Local<Object>::Cast(obj->Get(env->context(),                     \
+      OneByteString(env->isolate(), #member)).ToLocalChecked());
 
 #define SLURP_CONNECTION(arg, conn)                                        \
   if (!(arg)->IsObject()) {                                                \
@@ -96,7 +95,7 @@ using v8::Value;
         "expected argument " #arg " to be a connection object");           \
   }                                                                        \
   node_dtrace_connection_t conn;                                           \
-  Local<Object> _##conn = arg.As<Object>();                                \
+  Local<Object> _##conn = Local<Object>::Cast(arg);                        \
   Local<Value> _handle =                                                   \
       (_##conn)->Get(env->context(),                                       \
                      FIXED_ONE_BYTE_STRING(env->isolate(), "_handle"))     \
@@ -116,7 +115,7 @@ using v8::Value;
         "expected argument " #arg " to be a connection object");           \
   }                                                                        \
   node_dtrace_connection_t conn;                                           \
-  Local<Object> _##conn = arg.As<Object>();                                \
+  Local<Object> _##conn = Local<Object>::Cast(arg);                        \
   SLURP_INT(_##conn, fd, &conn.fd);                                        \
   SLURP_STRING(_##conn, host, &conn.remote);                               \
   SLURP_INT(_##conn, port, &conn.port);                                    \
@@ -132,10 +131,10 @@ using v8::Value;
         "expected argument " #arg1 " to be a connection object");          \
   }                                                                        \
   node_dtrace_connection_t conn;                                           \
-  Local<Object> _##conn = arg0.As<Object>();                               \
+  Local<Object> _##conn = Local<Object>::Cast(arg0);                       \
   SLURP_INT(_##conn, fd, &conn.fd);                                        \
   SLURP_INT(_##conn, bufferSize, &conn.buffered);                          \
-  _##conn = arg1.As<Object>();                                             \
+  _##conn = Local<Object>::Cast(arg1);                                     \
   SLURP_STRING(_##conn, host, &conn.remote);                               \
   SLURP_INT(_##conn, port, &conn.port);
 
@@ -165,7 +164,7 @@ void DTRACE_HTTP_SERVER_REQUEST(const FunctionCallbackInfo<Value>& args) {
 
   Environment* env = Environment::GetCurrent(args);
   HandleScope scope(env->isolate());
-  Local<Object> arg0 = args[0].As<Object>();
+  Local<Object> arg0 = Local<Object>::Cast(args[0]);
   Local<Object> headers;
 
   memset(&req, 0, sizeof(req));
@@ -217,7 +216,7 @@ void DTRACE_HTTP_CLIENT_REQUEST(const FunctionCallbackInfo<Value>& args) {
    * caller here to retain their method and URL until the time at which
    * DTRACE_HTTP_CLIENT_REQUEST can be called.
    */
-  Local<Object> arg0 = args[0].As<Object>();
+  Local<Object> arg0 = Local<Object>::Cast(args[0]);
   SLURP_STRING(arg0, _header, &header);
 
   req.method = header;
@@ -289,33 +288,23 @@ void InitDTrace(Environment* env) {
   }, env);
 }
 
-#define NODE_PROBES(V)                                                         \
-  V(DTRACE_NET_SERVER_CONNECTION)                                              \
-  V(DTRACE_NET_STREAM_END)                                                     \
-  V(DTRACE_HTTP_SERVER_REQUEST)                                                \
-  V(DTRACE_HTTP_SERVER_RESPONSE)                                               \
-  V(DTRACE_HTTP_CLIENT_REQUEST)                                                \
-  V(DTRACE_HTTP_CLIENT_RESPONSE)
-
 void InitializeDTrace(Local<Object> target,
                       Local<Value> unused,
                       Local<Context> context,
                       void* priv) {
-#if defined HAVE_DTRACE || defined HAVE_ETW
-#define V(name) SetMethod(context, target, #name, name);
-  NODE_PROBES(V)
-#undef V
-#endif  // defined HAVE_DTRACE || defined HAVE_ETW
-}
+  Environment* env = Environment::GetCurrent(context);
 
-void RegisterDtraceExternalReferences(ExternalReferenceRegistry* registry) {
 #if defined HAVE_DTRACE || defined HAVE_ETW
-#define V(name) registry->Register(name);
-  NODE_PROBES(V)
-#undef V
-#endif  // defined HAVE_DTRACE || defined HAVE_ETW
+# define NODE_PROBE(name) env->SetMethod(target, #name, name);
+  NODE_PROBE(DTRACE_NET_SERVER_CONNECTION)
+  NODE_PROBE(DTRACE_NET_STREAM_END)
+  NODE_PROBE(DTRACE_HTTP_SERVER_REQUEST)
+  NODE_PROBE(DTRACE_HTTP_SERVER_RESPONSE)
+  NODE_PROBE(DTRACE_HTTP_CLIENT_REQUEST)
+  NODE_PROBE(DTRACE_HTTP_CLIENT_RESPONSE)
+# undef NODE_PROBE
+#endif
 }
 
 }  // namespace node
 NODE_MODULE_CONTEXT_AWARE_INTERNAL(dtrace, node::InitializeDTrace)
-NODE_MODULE_EXTERNAL_REFERENCE(dtrace, node::RegisterDtraceExternalReferences)

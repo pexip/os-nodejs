@@ -6,8 +6,6 @@
   'variables': {
     'V8_ROOT': '../../deps/v8',
     'v8_code': 1,
-    # Enable support for Intel VTune. Supported on ia32/x64 only
-    'v8_enable_vtunejit%': 0,
     'v8_enable_i18n_support%': 1,
   },
   'includes': ['toolchain.gypi', 'features.gypi'],
@@ -53,9 +51,15 @@
         [ 'OS=="win"', {
           'sources': [ '<(V8_ROOT)/src/d8/d8-windows.cc', ]
         }],
-        ['v8_enable_vtunejit==1', {
-          'dependencies': [
-            'v8vtune.gyp:v8_vtune',
+        [ 'component!="shared_library"', {
+          'conditions': [
+            [ 'v8_postmortem_support==1', {
+              'xcode_settings': {
+                'OTHER_LDFLAGS': [
+                   '-Wl,-force_load,<(PRODUCT_DIR)/libv8_base.a'
+                ],
+              },
+            }],
           ],
         }],
         ['v8_enable_i18n_support==1', {

@@ -108,13 +108,6 @@ assert.strictEqual(
   3
 );
 
-// Test base64url encoding
-assert.strictEqual(
-  Buffer.from(b.toString('base64url'), 'base64url')
-    .indexOf('ZA==', 0, 'base64url'),
-  3
-);
-
 // test ascii encoding
 assert.strictEqual(
   Buffer.from(b.toString('ascii'), 'ascii')

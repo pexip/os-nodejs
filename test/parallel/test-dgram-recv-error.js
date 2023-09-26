@@ -11,7 +11,7 @@ s.on('error', common.mustCall((err) => {
   s.close();
 
   // Don't check the full error message, as the errno is not important here.
-  assert.match(String(err), /^Error: recvmsg/);
+  assert(/^Error: recvmsg/.test(err));
   assert.strictEqual(err.syscall, 'recvmsg');
 }));
 

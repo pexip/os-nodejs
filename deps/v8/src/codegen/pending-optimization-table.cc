@@ -30,11 +30,6 @@ void PendingOptimizationTable::PreparedForOptimization(
   if (allow_heuristic_optimization) {
     status |= FunctionStatus::kAllowHeuristicOptimization;
   }
-  Handle<SharedFunctionInfo> shared_info(function->shared(), isolate);
-
-  IsCompiledScope is_compiled_scope;
-  SharedFunctionInfo::EnsureBytecodeArrayAvailable(isolate, shared_info,
-                                                   &is_compiled_scope);
 
   Handle<ObjectHashTable> table =
       isolate->heap()->pending_optimize_for_test_bytecode().IsUndefined()
@@ -43,7 +38,7 @@ void PendingOptimizationTable::PreparedForOptimization(
                        isolate->heap()->pending_optimize_for_test_bytecode()),
                    isolate);
   Handle<Tuple2> tuple = isolate->factory()->NewTuple2(
-      handle(shared_info->GetBytecodeArray(isolate), isolate),
+      handle(function->shared().GetBytecodeArray(), isolate),
       handle(Smi::FromInt(status), isolate), AllocationType::kYoung);
   table =
       ObjectHashTable::Put(table, handle(function->shared(), isolate), tuple);

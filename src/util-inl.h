@@ -64,14 +64,6 @@
   (((x) & 0x00000000000000FFull) << 56)
 #endif
 
-#define CHAR_TEST(bits, name, expr)                                           \
-  template <typename T>                                                       \
-  bool name(const T ch) {                                                     \
-    static_assert(sizeof(ch) >= (bits) / 8,                                   \
-                  "Character must be wider than " #bits " bits");             \
-    return (expr);                                                            \
-  }
-
 namespace node {
 
 template <typename T>
@@ -361,12 +353,14 @@ T* UncheckedRealloc(T* pointer, size_t n) {
 // As per spec realloc behaves like malloc if passed nullptr.
 template <typename T>
 inline T* UncheckedMalloc(size_t n) {
+  if (n == 0) n = 1;
   return UncheckedRealloc<T>(nullptr, n);
 }
 
 template <typename T>
 inline T* UncheckedCalloc(size_t n) {
-  if (MultiplyWithOverflowCheck(sizeof(T), n) == 0) return nullptr;
+  if (n == 0) n = 1;
+  MultiplyWithOverflowCheck(sizeof(T), n);
   return static_cast<T*>(calloc(n, sizeof(T)));
 }
 
@@ -402,7 +396,7 @@ inline char* UncheckedCalloc(size_t n) { return UncheckedCalloc<char>(n); }
 void ThrowErrStringTooLong(v8::Isolate* isolate);
 
 v8::MaybeLocal<v8::Value> ToV8Value(v8::Local<v8::Context> context,
-                                    std::string_view str,
+                                    const std::string& str,
                                     v8::Isolate* isolate) {
   if (isolate == nullptr) isolate = context->GetIsolate();
   if (UNLIKELY(str.size() >= static_cast<size_t>(v8::String::kMaxLength))) {
@@ -432,25 +426,6 @@ v8::MaybeLocal<v8::Value> ToV8Value(v8::Local<v8::Context> context,
   }
 
   return handle_scope.Escape(v8::Array::New(isolate, arr.out(), arr.length()));
-}
-
-template <typename T>
-v8::MaybeLocal<v8::Value> ToV8Value(v8::Local<v8::Context> context,
-                                    const std::set<T>& set,
-                                    v8::Isolate* isolate) {
-  if (isolate == nullptr) isolate = context->GetIsolate();
-  v8::Local<v8::Set> set_js = v8::Set::New(isolate);
-  v8::HandleScope handle_scope(isolate);
-
-  for (const T& entry : set) {
-    v8::Local<v8::Value> value;
-    if (!ToV8Value(context, entry, isolate).ToLocal(&value))
-      return {};
-    if (set_js->Add(context, value).IsEmpty())
-      return {};
-  }
-
-  return set_js;
 }
 
 template <typename T, typename U>
@@ -513,9 +488,8 @@ SlicedArguments::SlicedArguments(
 template <typename T, size_t S>
 ArrayBufferViewContents<T, S>::ArrayBufferViewContents(
     v8::Local<v8::Value> value) {
-  DCHECK(value->IsArrayBufferView() || value->IsSharedArrayBuffer() ||
-         value->IsArrayBuffer());
-  ReadValue(value);
+  CHECK(value->IsArrayBufferView());
+  Read(value.As<v8::ArrayBufferView>());
 }
 
 template <typename T, size_t S>
@@ -536,30 +510,11 @@ void ArrayBufferViewContents<T, S>::Read(v8::Local<v8::ArrayBufferView> abv) {
   static_assert(sizeof(T) == 1, "Only supports one-byte data at the moment");
   length_ = abv->ByteLength();
   if (length_ > sizeof(stack_storage_) || abv->HasBuffer()) {
-    data_ = static_cast<T*>(abv->Buffer()->Data()) + abv->ByteOffset();
+    data_ = static_cast<T*>(abv->Buffer()->GetBackingStore()->Data()) +
+        abv->ByteOffset();
   } else {
     abv->CopyContents(stack_storage_, sizeof(stack_storage_));
     data_ = stack_storage_;
-  }
-}
-
-template <typename T, size_t S>
-void ArrayBufferViewContents<T, S>::ReadValue(v8::Local<v8::Value> buf) {
-  static_assert(sizeof(T) == 1, "Only supports one-byte data at the moment");
-  DCHECK(buf->IsArrayBufferView() || buf->IsSharedArrayBuffer() ||
-         buf->IsArrayBuffer());
-
-  if (buf->IsArrayBufferView()) {
-    Read(buf.As<v8::ArrayBufferView>());
-  } else if (buf->IsArrayBuffer()) {
-    auto ab = buf.As<v8::ArrayBuffer>();
-    length_ = ab->ByteLength();
-    data_ = static_cast<T*>(ab->Data());
-  } else {
-    CHECK(buf->IsSharedArrayBuffer());
-    auto sab = buf.As<v8::SharedArrayBuffer>();
-    length_ = sab->ByteLength();
-    data_ = static_cast<T*>(sab->Data());
   }
 }
 

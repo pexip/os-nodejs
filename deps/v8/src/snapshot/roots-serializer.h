@@ -26,8 +26,6 @@ class RootsSerializer : public Serializer {
   // are already serialized.
   RootsSerializer(Isolate* isolate, Snapshot::SerializerFlags flags,
                   RootIndex first_root_to_be_serialized);
-  RootsSerializer(const RootsSerializer&) = delete;
-  RootsSerializer& operator=(const RootsSerializer&) = delete;
 
   bool can_be_rehashed() const { return can_be_rehashed_; }
   bool root_has_been_serialized(RootIndex root_index) const {
@@ -44,7 +42,7 @@ class RootsSerializer : public Serializer {
   void CheckRehashability(HeapObject obj);
 
   // Serializes |object| if not previously seen and returns its cache index.
-  int SerializeInObjectCache(Handle<HeapObject> object);
+  int SerializeInObjectCache(HeapObject object);
 
  private:
   void VisitRootPointers(Root root, const char* description,
@@ -57,6 +55,8 @@ class RootsSerializer : public Serializer {
   // Indicates whether we only serialized hash tables that we can rehash.
   // TODO(yangguo): generalize rehashing, and remove this flag.
   bool can_be_rehashed_;
+
+  DISALLOW_COPY_AND_ASSIGN(RootsSerializer);
 };
 
 }  // namespace internal

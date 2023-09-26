@@ -6,7 +6,7 @@
 #define V8_DEBUG_WASM_GDB_SERVER_TRANSPORT_H_
 
 #include <sstream>
-
+#include <vector>
 #include "src/base/macros.h"
 #include "src/debug/wasm/gdb-server/gdb-remote-util.h"
 
@@ -31,6 +31,7 @@ typedef int socklen_t;
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <string>
 
 typedef int SocketHandle;
 
@@ -145,8 +146,6 @@ class SocketTransport : public Transport {
  public:
   explicit SocketTransport(SocketHandle s);
   ~SocketTransport() override;
-  SocketTransport(const SocketTransport&) = delete;
-  SocketTransport& operator=(const SocketTransport&) = delete;
 
   // TransportBase
   bool AcceptConnection() override;
@@ -159,6 +158,8 @@ class SocketTransport : public Transport {
 
   HANDLE socket_event_;
   HANDLE faulted_thread_event_;
+
+  DISALLOW_COPY_AND_ASSIGN(SocketTransport);
 };
 
 #else  // _WIN32
@@ -167,8 +168,6 @@ class SocketTransport : public Transport {
  public:
   explicit SocketTransport(SocketHandle s);
   ~SocketTransport() override;
-  SocketTransport(const SocketTransport&) = delete;
-  SocketTransport& operator=(const SocketTransport&) = delete;
 
   // TransportBase
   bool AcceptConnection() override;
@@ -180,6 +179,8 @@ class SocketTransport : public Transport {
 
   int faulted_thread_fd_read_;
   int faulted_thread_fd_write_;
+
+  DISALLOW_COPY_AND_ASSIGN(SocketTransport);
 };
 
 #endif  // _WIN32

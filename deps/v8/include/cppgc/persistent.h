@@ -9,52 +9,20 @@
 
 #include "cppgc/internal/persistent-node.h"
 #include "cppgc/internal/pointer-policies.h"
-#include "cppgc/sentinel-pointer.h"
 #include "cppgc/source-location.h"
 #include "cppgc/type-traits.h"
 #include "cppgc/visitor.h"
 #include "v8config.h"  // NOLINT(build/include_directory)
 
 namespace cppgc {
-
-class Visitor;
-
 namespace internal {
-
-// PersistentBase always refers to the object as const object and defers to
-// BasicPersistent on casting to the right type as needed.
-class PersistentBase {
- protected:
-  PersistentBase() = default;
-  explicit PersistentBase(const void* raw) : raw_(raw) {}
-
-  const void* GetValue() const { return raw_; }
-  void SetValue(const void* value) { raw_ = value; }
-
-  PersistentNode* GetNode() const { return node_; }
-  void SetNode(PersistentNode* node) { node_ = node; }
-
-  // Performs a shallow clear which assumes that internal persistent nodes are
-  // destroyed elsewhere.
-  void ClearFromGC() const {
-    raw_ = nullptr;
-    node_ = nullptr;
-  }
-
- protected:
-  mutable const void* raw_ = nullptr;
-  mutable PersistentNode* node_ = nullptr;
-
-  friend class PersistentRegionBase;
-};
 
 // The basic class from which all Persistent classes are generated.
 template <typename T, typename WeaknessPolicy, typename LocationPolicy,
           typename CheckingPolicy>
-class BasicPersistent final : public PersistentBase,
-                              public LocationPolicy,
-                              private WeaknessPolicy,
-                              private CheckingPolicy {
+class BasicPersistent : public LocationPolicy,
+                        private WeaknessPolicy,
+                        private CheckingPolicy {
  public:
   using typename WeaknessPolicy::IsStrongPersistent;
   using PointeeType = T;
@@ -70,15 +38,15 @@ class BasicPersistent final : public PersistentBase,
 
   BasicPersistent(  // NOLINT
       SentinelPointer s, const SourceLocation& loc = SourceLocation::Current())
-      : PersistentBase(s), LocationPolicy(loc) {}
+      : LocationPolicy(loc), raw_(s) {}
 
-  // Raw value constructors.
+  // Raw value contstructors.
   BasicPersistent(T* raw,  // NOLINT
                   const SourceLocation& loc = SourceLocation::Current())
-      : PersistentBase(raw), LocationPolicy(loc) {
+      : LocationPolicy(loc), raw_(raw) {
     if (!IsValid()) return;
-    SetNode(WeaknessPolicy::GetPersistentRegion(GetValue())
-                .AllocateNode(this, &BasicPersistent::Trace));
+    node_ = WeaknessPolicy::GetPersistentRegion(raw_).AllocateNode(
+        this, &BasicPersistent::Trace);
     this->CheckPointer(Get());
   }
 
@@ -95,7 +63,7 @@ class BasicPersistent final : public PersistentBase,
   template <typename U, typename OtherWeaknessPolicy,
             typename OtherLocationPolicy, typename OtherCheckingPolicy,
             typename = std::enable_if_t<std::is_base_of<T, U>::value>>
-  BasicPersistent(
+  BasicPersistent(  // NOLINT
       const BasicPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy,
                             OtherCheckingPolicy>& other,
       const SourceLocation& loc = SourceLocation::Current())
@@ -106,11 +74,13 @@ class BasicPersistent final : public PersistentBase,
   BasicPersistent(
       BasicPersistent&& other,
       const SourceLocation& loc = SourceLocation::Current()) noexcept
-      : PersistentBase(std::move(other)), LocationPolicy(std::move(other)) {
+      : LocationPolicy(std::move(other)),
+        raw_(std::move(other.raw_)),
+        node_(std::move(other.node_)) {
     if (!IsValid()) return;
-    GetNode()->UpdateOwner(this);
-    other.SetValue(nullptr);
-    other.SetNode(nullptr);
+    node_->UpdateOwner(this);
+    other.raw_ = nullptr;
+    other.node_ = nullptr;
     this->CheckPointer(Get());
   }
 
@@ -118,10 +88,10 @@ class BasicPersistent final : public PersistentBase,
   template <typename U, typename MemberBarrierPolicy,
             typename MemberWeaknessTag, typename MemberCheckingPolicy,
             typename = std::enable_if_t<std::is_base_of<T, U>::value>>
-  BasicPersistent(
-      const internal::BasicMember<U, MemberBarrierPolicy, MemberWeaknessTag,
-                                  MemberCheckingPolicy>& member,
-      const SourceLocation& loc = SourceLocation::Current())
+  BasicPersistent(internal::BasicMember<U, MemberBarrierPolicy,  // NOLINT
+                                        MemberWeaknessTag, MemberCheckingPolicy>
+                      member,
+                  const SourceLocation& loc = SourceLocation::Current())
       : BasicPersistent(member.Get(), loc) {}
 
   ~BasicPersistent() { Clear(); }
@@ -141,15 +111,16 @@ class BasicPersistent final : public PersistentBase,
   }
 
   // Move assignment.
-  BasicPersistent& operator=(BasicPersistent&& other) noexcept {
+  BasicPersistent& operator=(BasicPersistent&& other) {
     if (this == &other) return *this;
     Clear();
-    PersistentBase::operator=(std::move(other));
     LocationPolicy::operator=(std::move(other));
+    raw_ = std::move(other.raw_);
+    node_ = std::move(other.node_);
     if (!IsValid()) return *this;
-    GetNode()->UpdateOwner(this);
-    other.SetValue(nullptr);
-    other.SetNode(nullptr);
+    node_->UpdateOwner(this);
+    other.raw_ = nullptr;
+    other.node_ = nullptr;
     this->CheckPointer(Get());
     return *this;
   }
@@ -159,8 +130,9 @@ class BasicPersistent final : public PersistentBase,
             typename MemberWeaknessTag, typename MemberCheckingPolicy,
             typename = std::enable_if_t<std::is_base_of<T, U>::value>>
   BasicPersistent& operator=(
-      const internal::BasicMember<U, MemberBarrierPolicy, MemberWeaknessTag,
-                                  MemberCheckingPolicy>& member) {
+      internal::BasicMember<U, MemberBarrierPolicy, MemberWeaknessTag,
+                            MemberCheckingPolicy>
+          member) {
     return operator=(member.Get());
   }
 
@@ -184,40 +156,14 @@ class BasicPersistent final : public PersistentBase,
   T* operator->() const { return Get(); }
   T& operator*() const { return *Get(); }
 
-  // CFI cast exemption to allow passing SentinelPointer through T* and support
-  // heterogeneous assignments between different Member and Persistent handles
-  // based on their actual types.
-  V8_CLANG_NO_SANITIZE("cfi-unrelated-cast") T* Get() const {
-    // The const_cast below removes the constness from PersistentBase storage.
-    // The following static_cast re-adds any constness if specified through the
-    // user-visible template parameter T.
-    return static_cast<T*>(const_cast<void*>(GetValue()));
-  }
+  T* Get() const { return raw_; }
 
-  void Clear() {
-    // Simplified version of `Assign()` to allow calling without a complete type
-    // `T`.
-    if (IsValid()) {
-      WeaknessPolicy::GetPersistentRegion(GetValue()).FreeNode(GetNode());
-      SetNode(nullptr);
-    }
-    SetValue(nullptr);
-  }
+  void Clear() { Assign(nullptr); }
 
   T* Release() {
     T* result = Get();
     Clear();
     return result;
-  }
-
-  template <typename U, typename OtherWeaknessPolicy = WeaknessPolicy,
-            typename OtherLocationPolicy = LocationPolicy,
-            typename OtherCheckingPolicy = CheckingPolicy>
-  BasicPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy,
-                  OtherCheckingPolicy>
-  To() const {
-    return BasicPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy,
-                           OtherCheckingPolicy>(static_cast<U*>(Get()));
   }
 
  private:
@@ -230,41 +176,29 @@ class BasicPersistent final : public PersistentBase,
     // Ideally, handling kSentinelPointer would be done by the embedder. On the
     // other hand, having Persistent aware of it is beneficial since no node
     // gets wasted.
-    return GetValue() != nullptr && GetValue() != kSentinelPointer;
+    return raw_ != nullptr && raw_ != kSentinelPointer;
   }
 
   void Assign(T* ptr) {
     if (IsValid()) {
       if (ptr && ptr != kSentinelPointer) {
         // Simply assign the pointer reusing the existing node.
-        SetValue(ptr);
+        raw_ = ptr;
         this->CheckPointer(ptr);
         return;
       }
-      WeaknessPolicy::GetPersistentRegion(GetValue()).FreeNode(GetNode());
-      SetNode(nullptr);
+      WeaknessPolicy::GetPersistentRegion(raw_).FreeNode(node_);
+      node_ = nullptr;
     }
-    SetValue(ptr);
+    raw_ = ptr;
     if (!IsValid()) return;
-    SetNode(WeaknessPolicy::GetPersistentRegion(GetValue())
-                .AllocateNode(this, &BasicPersistent::Trace));
+    node_ = WeaknessPolicy::GetPersistentRegion(raw_).AllocateNode(
+        this, &BasicPersistent::Trace);
     this->CheckPointer(Get());
   }
 
-  void ClearFromGC() const {
-    if (IsValid()) {
-      WeaknessPolicy::GetPersistentRegion(GetValue()).FreeNode(GetNode());
-      PersistentBase::ClearFromGC();
-    }
-  }
-
-  // Set Get() for details.
-  V8_CLANG_NO_SANITIZE("cfi-unrelated-cast")
-  T* GetFromGC() const {
-    return static_cast<T*>(const_cast<void*>(GetValue()));
-  }
-
-  friend class cppgc::Visitor;
+  T* raw_ = nullptr;
+  PersistentNode* node_ = nullptr;
 };
 
 template <typename T1, typename WeaknessPolicy1, typename LocationPolicy1,
@@ -291,12 +225,12 @@ template <typename T1, typename PersistentWeaknessPolicy,
           typename PersistentLocationPolicy, typename PersistentCheckingPolicy,
           typename T2, typename MemberWriteBarrierPolicy,
           typename MemberWeaknessTag, typename MemberCheckingPolicy>
-bool operator==(
-    const BasicPersistent<T1, PersistentWeaknessPolicy,
-                          PersistentLocationPolicy, PersistentCheckingPolicy>&
-        p,
-    const BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy,
-                      MemberCheckingPolicy>& m) {
+bool operator==(const BasicPersistent<T1, PersistentWeaknessPolicy,
+                                      PersistentLocationPolicy,
+                                      PersistentCheckingPolicy>& p,
+                BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy,
+                            MemberCheckingPolicy>
+                    m) {
   return p.Get() == m.Get();
 }
 
@@ -304,12 +238,12 @@ template <typename T1, typename PersistentWeaknessPolicy,
           typename PersistentLocationPolicy, typename PersistentCheckingPolicy,
           typename T2, typename MemberWriteBarrierPolicy,
           typename MemberWeaknessTag, typename MemberCheckingPolicy>
-bool operator!=(
-    const BasicPersistent<T1, PersistentWeaknessPolicy,
-                          PersistentLocationPolicy, PersistentCheckingPolicy>&
-        p,
-    const BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy,
-                      MemberCheckingPolicy>& m) {
+bool operator!=(const BasicPersistent<T1, PersistentWeaknessPolicy,
+                                      PersistentLocationPolicy,
+                                      PersistentCheckingPolicy>& p,
+                BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy,
+                            MemberCheckingPolicy>
+                    m) {
   return !(p == m);
 }
 
@@ -317,12 +251,12 @@ template <typename T1, typename MemberWriteBarrierPolicy,
           typename MemberWeaknessTag, typename MemberCheckingPolicy,
           typename T2, typename PersistentWeaknessPolicy,
           typename PersistentLocationPolicy, typename PersistentCheckingPolicy>
-bool operator==(
-    const BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy,
-                      MemberCheckingPolicy>& m,
-    const BasicPersistent<T1, PersistentWeaknessPolicy,
-                          PersistentLocationPolicy, PersistentCheckingPolicy>&
-        p) {
+bool operator==(BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy,
+                            MemberCheckingPolicy>
+                    m,
+                const BasicPersistent<T1, PersistentWeaknessPolicy,
+                                      PersistentLocationPolicy,
+                                      PersistentCheckingPolicy>& p) {
   return m.Get() == p.Get();
 }
 
@@ -330,12 +264,12 @@ template <typename T1, typename MemberWriteBarrierPolicy,
           typename MemberWeaknessTag, typename MemberCheckingPolicy,
           typename T2, typename PersistentWeaknessPolicy,
           typename PersistentLocationPolicy, typename PersistentCheckingPolicy>
-bool operator!=(
-    const BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy,
-                      MemberCheckingPolicy>& m,
-    const BasicPersistent<T1, PersistentWeaknessPolicy,
-                          PersistentLocationPolicy, PersistentCheckingPolicy>&
-        p) {
+bool operator!=(BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy,
+                            MemberCheckingPolicy>
+                    m,
+                const BasicPersistent<T1, PersistentWeaknessPolicy,
+                                      PersistentLocationPolicy,
+                                      PersistentCheckingPolicy>& p) {
   return !(m == p);
 }
 

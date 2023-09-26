@@ -7,7 +7,7 @@ const assert = require('assert');
 // basic
 {
   // Find it on Duplex.prototype
-  assert(Object.hasOwn(Duplex.prototype, 'writableFinished'));
+  assert(Duplex.prototype.hasOwnProperty('writableFinished'));
 }
 
 // event

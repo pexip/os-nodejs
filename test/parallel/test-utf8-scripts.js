@@ -27,4 +27,4 @@ const assert = require('assert');
 
 console.log('Σὲ γνωρίζω ἀπὸ τὴν κόψη');
 
-assert.match('Hellö Wörld', /Hellö Wörld/);
+assert.strictEqual(/Hellö Wörld/.test('Hellö Wörld'), true);

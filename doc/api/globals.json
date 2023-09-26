@@ -9,49 +9,27 @@
       "name": "AbortController",
       "meta": {
         "added": [
-          "v15.0.0",
           "v14.17.0"
         ],
-        "changes": [
-          {
-            "version": "v15.4.0",
-            "pr-url": "https://github.com/nodejs/node/pull/35949",
-            "description": "No longer experimental."
-          }
-        ]
+        "changes": []
       },
-      "desc": "<p>A utility class used to signal cancelation in selected <code>Promise</code>-based APIs.\nThe API is based on the Web API <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/AbortController\"><code>AbortController</code></a>.</p>\n<pre><code class=\"language-js\">const ac = new AbortController();\n\nac.signal.addEventListener('abort', () => console.log('Aborted!'),\n                           { once: true });\n\nac.abort();\n\nconsole.log(ac.signal.aborted);  // Prints True\n</code></pre>",
+      "stability": 1,
+      "stabilityText": "Experimental",
+      "desc": "<p>A utility class used to signal cancelation in selected <code>Promise</code>-based APIs.\nThe API is based on the Web API <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/AbortController\"><code>AbortController</code></a>.</p>\n<p>To use, launch Node.js using the <code>--experimental-abortcontroller</code> flag.</p>\n<pre><code class=\"language-js\">const ac = new AbortController();\n\nac.signal.addEventListener('abort', () => console.log('Aborted!'),\n                           { once: true });\n\nac.abort();\n\nconsole.log(ac.signal.aborted);  // Prints True\n</code></pre>",
       "methods": [
         {
-          "textRaw": "`abortController.abort([reason])`",
+          "textRaw": "`abortController.abort()`",
           "type": "method",
           "name": "abort",
           "meta": {
             "added": [
-              "v15.0.0",
               "v14.17.0"
             ],
-            "changes": [
-              {
-                "version": [
-                  "v17.2.0",
-                  "v16.14.0"
-                ],
-                "pr-url": "https://github.com/nodejs/node/pull/40807",
-                "description": "Added the new optional reason argument."
-              }
-            ]
+            "changes": []
           },
           "signatures": [
             {
-              "params": [
-                {
-                  "textRaw": "`reason` {any} An optional reason, retrievable on the `AbortSignal`'s `reason` property.",
-                  "name": "reason",
-                  "type": "any",
-                  "desc": "An optional reason, retrievable on the `AbortSignal`'s `reason` property."
-                }
-              ]
+              "params": []
             }
           ],
           "desc": "<p>Triggers the abort signal, causing the <code>abortController.signal</code> to emit\nthe <code>'abort'</code> event.</p>"
@@ -64,7 +42,6 @@
           "name": "Type",
           "meta": {
             "added": [
-              "v15.0.0",
               "v14.17.0"
             ],
             "changes": []
@@ -78,32 +55,21 @@
           "name": "AbortSignal",
           "meta": {
             "added": [
-              "v15.0.0",
               "v14.17.0"
             ],
             "changes": []
           },
-          "desc": "<ul>\n<li>Extends: <a href=\"events.html#class-eventtarget\" class=\"type\">&lt;EventTarget&gt;</a></li>\n</ul>\n<p>The <code>AbortSignal</code> is used to notify observers when the\n<code>abortController.abort()</code> method is called.</p>",
+          "desc": "<ul>\n<li>Extends: <a href=\"events.html#events_class_eventtarget\" class=\"type\">&lt;EventTarget&gt;</a></li>\n</ul>\n<p>The <code>AbortSignal</code> is used to notify observers when the\n<code>abortController.abort()</code> method is called.</p>",
           "classMethods": [
             {
-              "textRaw": "Static method: `AbortSignal.abort([reason])`",
+              "textRaw": "Static method: `AbortSignal.abort()`",
               "type": "classMethod",
               "name": "abort",
               "meta": {
                 "added": [
-                  "v15.12.0",
                   "v14.17.0"
                 ],
-                "changes": [
-                  {
-                    "version": [
-                      "v17.2.0",
-                      "v16.14.0"
-                    ],
-                    "pr-url": "https://github.com/nodejs/node/pull/40807",
-                    "description": "Added the new optional reason argument."
-                  }
-                ]
+                "changes": []
               },
               "signatures": [
                 {
@@ -112,41 +78,10 @@
                     "name": "return",
                     "type": "AbortSignal"
                   },
-                  "params": [
-                    {
-                      "textRaw": "`reason`: {any}",
-                      "name": "reason",
-                      "type": "any"
-                    }
-                  ]
+                  "params": []
                 }
               ],
               "desc": "<p>Returns a new already aborted <code>AbortSignal</code>.</p>"
-            },
-            {
-              "textRaw": "Static method: `AbortSignal.timeout(delay)`",
-              "type": "classMethod",
-              "name": "timeout",
-              "meta": {
-                "added": [
-                  "v17.3.0",
-                  "v16.14.0"
-                ],
-                "changes": []
-              },
-              "signatures": [
-                {
-                  "params": [
-                    {
-                      "textRaw": "`delay` {number} The number of milliseconds to wait before triggering the AbortSignal.",
-                      "name": "delay",
-                      "type": "number",
-                      "desc": "The number of milliseconds to wait before triggering the AbortSignal."
-                    }
-                  ]
-                }
-              ],
-              "desc": "<p>Returns a new <code>AbortSignal</code> which will be aborted in <code>delay</code> milliseconds.</p>"
             }
           ],
           "events": [
@@ -156,7 +91,6 @@
               "name": "abort",
               "meta": {
                 "added": [
-                  "v15.0.0",
                   "v14.17.0"
                 ],
                 "changes": []
@@ -172,7 +106,6 @@
               "name": "Type",
               "meta": {
                 "added": [
-                  "v15.0.0",
                   "v14.17.0"
                 ],
                 "changes": []
@@ -185,60 +118,15 @@
               "name": "Type",
               "meta": {
                 "added": [
-                  "v15.0.0",
                   "v14.17.0"
                 ],
                 "changes": []
               },
               "desc": "<p>An optional callback function that may be set by user code to be notified\nwhen the <code>abortController.abort()</code> function has been called.</p>"
-            },
-            {
-              "textRaw": "`reason` Type: {any}",
-              "type": "any",
-              "name": "Type",
-              "meta": {
-                "added": [
-                  "v17.2.0",
-                  "v16.14.0"
-                ],
-                "changes": []
-              },
-              "desc": "<p>An optional reason specified when the <code>AbortSignal</code> was triggered.</p>\n<pre><code class=\"language-js\">const ac = new AbortController();\nac.abort(new Error('boom!'));\nconsole.log(ac.signal.reason);  // Error('boom!');\n</code></pre>"
-            }
-          ],
-          "methods": [
-            {
-              "textRaw": "`abortSignal.throwIfAborted()`",
-              "type": "method",
-              "name": "throwIfAborted",
-              "meta": {
-                "added": [
-                  "v17.3.0"
-                ],
-                "changes": []
-              },
-              "signatures": [
-                {
-                  "params": []
-                }
-              ],
-              "desc": "<p>If <code>abortSignal.aborted</code> is <code>true</code>, throws <code>abortSignal.reason</code>.</p>"
             }
           ]
         }
       ]
-    },
-    {
-      "textRaw": "Class: `Blob`",
-      "type": "global",
-      "name": "Blob",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "desc": "<p>See <a href=\"buffer.html#class-blob\" class=\"type\">&lt;Blob&gt;</a>.</p>"
     },
     {
       "textRaw": "Class: `Buffer`",
@@ -262,7 +150,7 @@
         ],
         "changes": []
       },
-      "desc": "<p><a href=\"timers.html#clearimmediateimmediate\"><code>clearImmediate</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+      "desc": "<p><a href=\"timers.html#timers_clearimmediate_immediate\"><code>clearImmediate</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
     },
     {
       "textRaw": "`clearInterval(intervalObject)`",
@@ -274,7 +162,7 @@
         ],
         "changes": []
       },
-      "desc": "<p><a href=\"timers.html#clearintervaltimeout\"><code>clearInterval</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+      "desc": "<p><a href=\"timers.html#timers_clearinterval_timeout\"><code>clearInterval</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
     },
     {
       "textRaw": "`clearTimeout(timeoutObject)`",
@@ -286,7 +174,7 @@
         ],
         "changes": []
       },
-      "desc": "<p><a href=\"timers.html#cleartimeouttimeout\"><code>clearTimeout</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+      "desc": "<p><a href=\"timers.html#timers_cleartimeout_timeout\"><code>clearTimeout</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
     },
     {
       "textRaw": "`console`",
@@ -301,56 +189,6 @@
       "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></li>\n</ul>\n<p>Used to print to stdout and stderr. See the <a href=\"console.html\"><code>console</code></a> section.</p>"
     },
     {
-      "textRaw": "`CustomEvent`",
-      "name": "`CustomEvent`",
-      "meta": {
-        "added": [
-          "v18.7.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental. Enable this API with the [`--experimental-global-customevent`][] CLI flag.",
-      "type": "global",
-      "desc": "<p>A browser-compatible implementation of the <a href=\"https://dom.spec.whatwg.org/#customevent\"><code>CustomEvent</code> Web API</a>.</p>"
-    },
-    {
-      "textRaw": "`Event`",
-      "name": "`Event`",
-      "meta": {
-        "added": [
-          "v15.0.0"
-        ],
-        "changes": [
-          {
-            "version": "v15.4.0",
-            "pr-url": "https://github.com/nodejs/node/pull/35949",
-            "description": "No longer experimental."
-          }
-        ]
-      },
-      "type": "global",
-      "desc": "<p>A browser-compatible implementation of the <code>Event</code> class. See\n<a href=\"events.html#eventtarget-and-event-api\"><code>EventTarget</code> and <code>Event</code> API</a> for more details.</p>"
-    },
-    {
-      "textRaw": "`EventTarget`",
-      "name": "`EventTarget`",
-      "meta": {
-        "added": [
-          "v15.0.0"
-        ],
-        "changes": [
-          {
-            "version": "v15.4.0",
-            "pr-url": "https://github.com/nodejs/node/pull/35949",
-            "description": "No longer experimental."
-          }
-        ]
-      },
-      "type": "global",
-      "desc": "<p>A browser-compatible implementation of the <code>EventTarget</code> class. See\n<a href=\"events.html#eventtarget-and-event-api\"><code>EventTarget</code> and <code>Event</code> API</a> for more details.</p>"
-    },
-    {
       "textRaw": "`global`",
       "name": "`global`",
       "meta": {
@@ -363,42 +201,6 @@
       "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a> The global namespace object.</li>\n</ul>\n<p>In browsers, the top-level scope is the global scope. This means that\nwithin the browser <code>var something</code> will define a new global variable. In\nNode.js this is different. The top-level scope is not the global scope;\n<code>var something</code> inside a Node.js module will be local to that module.</p>"
     },
     {
-      "textRaw": "`MessageChannel`",
-      "name": "`MessageChannel`",
-      "meta": {
-        "added": [
-          "v15.0.0"
-        ],
-        "changes": []
-      },
-      "type": "global",
-      "desc": "<p>The <code>MessageChannel</code> class. See <a href=\"worker_threads.html#class-messagechannel\"><code>MessageChannel</code></a> for more details.</p>"
-    },
-    {
-      "textRaw": "`MessageEvent`",
-      "name": "`MessageEvent`",
-      "meta": {
-        "added": [
-          "v15.0.0"
-        ],
-        "changes": []
-      },
-      "type": "global",
-      "desc": "<p>The <code>MessageEvent</code> class. See <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/MessageEvent\"><code>MessageEvent</code></a> for more details.</p>"
-    },
-    {
-      "textRaw": "`MessagePort`",
-      "name": "`MessagePort`",
-      "meta": {
-        "added": [
-          "v15.0.0"
-        ],
-        "changes": []
-      },
-      "type": "global",
-      "desc": "<p>The <code>MessagePort</code> class. See <a href=\"worker_threads.html#class-messageport\"><code>MessagePort</code></a> for more details.</p>"
-    },
-    {
       "textRaw": "`process`",
       "name": "`process`",
       "meta": {
@@ -408,7 +210,7 @@
         "changes": []
       },
       "type": "global",
-      "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></li>\n</ul>\n<p>The process object. See the <a href=\"process.html#process\"><code>process</code> object</a> section.</p>"
+      "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></li>\n</ul>\n<p>The process object. See the <a href=\"process.html#process_process\"><code>process</code> object</a> section.</p>"
     },
     {
       "textRaw": "`queueMicrotask(callback)`",
@@ -420,7 +222,7 @@
         ],
         "changes": []
       },
-      "desc": "<ul>\n<li><code>callback</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function\" class=\"type\">&lt;Function&gt;</a> Function to be queued.</li>\n</ul>\n<p>The <code>queueMicrotask()</code> method queues a microtask to invoke <code>callback</code>. If\n<code>callback</code> throws an exception, the <a href=\"process.html#process\"><code>process</code> object</a> <code>'uncaughtException'</code>\nevent will be emitted.</p>\n<p>The microtask queue is managed by V8 and may be used in a similar manner to\nthe <a href=\"process.html#processnexttickcallback-args\"><code>process.nextTick()</code></a> queue, which is managed by Node.js. The\n<code>process.nextTick()</code> queue is always processed before the microtask queue\nwithin each turn of the Node.js event loop.</p>\n<pre><code class=\"language-js\">// Here, `queueMicrotask()` is used to ensure the 'load' event is always\n// emitted asynchronously, and therefore consistently. Using\n// `process.nextTick()` here would result in the 'load' event always emitting\n// before any other promise jobs.\n\nDataHandler.prototype.load = async function load(key) {\n  const hit = this._cache.get(key);\n  if (hit !== undefined) {\n    queueMicrotask(() => {\n      this.emit('load', hit);\n    });\n    return;\n  }\n\n  const data = await fetchData(key);\n  this._cache.set(key, data);\n  this.emit('load', data);\n};\n</code></pre>"
+      "desc": "<ul>\n<li><code>callback</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function\" class=\"type\">&lt;Function&gt;</a> Function to be queued.</li>\n</ul>\n<p>The <code>queueMicrotask()</code> method queues a microtask to invoke <code>callback</code>. If\n<code>callback</code> throws an exception, the <a href=\"process.html#process_process\"><code>process</code> object</a> <code>'uncaughtException'</code>\nevent will be emitted.</p>\n<p>The microtask queue is managed by V8 and may be used in a similar manner to\nthe <a href=\"process.html#process_process_nexttick_callback_args\"><code>process.nextTick()</code></a> queue, which is managed by Node.js. The\n<code>process.nextTick()</code> queue is always processed before the microtask queue\nwithin each turn of the Node.js event loop.</p>\n<pre><code class=\"language-js\">// Here, `queueMicrotask()` is used to ensure the 'load' event is always\n// emitted asynchronously, and therefore consistently. Using\n// `process.nextTick()` here would result in the 'load' event always emitting\n// before any other promise jobs.\n\nDataHandler.prototype.load = async function load(key) {\n  const hit = this._cache.get(key);\n  if (hit !== undefined) {\n    queueMicrotask(() => {\n      this.emit('load', hit);\n    });\n    return;\n  }\n\n  const data = await fetchData(key);\n  this._cache.set(key, data);\n  this.emit('load', data);\n};\n</code></pre>"
     },
     {
       "textRaw": "`setImmediate(callback[, ...args])`",
@@ -432,7 +234,7 @@
         ],
         "changes": []
       },
-      "desc": "<p><a href=\"timers.html#setimmediatecallback-args\"><code>setImmediate</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+      "desc": "<p><a href=\"timers.html#timers_setimmediate_callback_args\"><code>setImmediate</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
     },
     {
       "textRaw": "`setInterval(callback, delay[, ...args])`",
@@ -444,7 +246,7 @@
         ],
         "changes": []
       },
-      "desc": "<p><a href=\"timers.html#setintervalcallback-delay-args\"><code>setInterval</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+      "desc": "<p><a href=\"timers.html#timers_setinterval_callback_delay_args\"><code>setInterval</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
     },
     {
       "textRaw": "`setTimeout(callback, delay[, ...args])`",
@@ -456,31 +258,7 @@
         ],
         "changes": []
       },
-      "desc": "<p><a href=\"timers.html#settimeoutcallback-delay-args\"><code>setTimeout</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
-    },
-    {
-      "textRaw": "`structuredClone(value[, options])`",
-      "type": "global",
-      "name": "structuredClone",
-      "meta": {
-        "added": [
-          "v17.0.0"
-        ],
-        "changes": []
-      },
-      "desc": "<p>The WHATWG <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/structuredClone\"><code>structuredClone</code></a> method.</p>"
-    },
-    {
-      "textRaw": "`DOMException`",
-      "name": "`DOMException`",
-      "meta": {
-        "added": [
-          "v17.0.0"
-        ],
-        "changes": []
-      },
-      "type": "global",
-      "desc": "<p>The WHATWG <code>DOMException</code> class. See <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/DOMException\"><code>DOMException</code></a> for more details.</p>"
+      "desc": "<p><a href=\"timers.html#timers_settimeout_callback_delay_args\"><code>setTimeout</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
     },
     {
       "textRaw": "`TextDecoder`",
@@ -492,7 +270,7 @@
         "changes": []
       },
       "type": "global",
-      "desc": "<p>The WHATWG <code>TextDecoder</code> class. See the <a href=\"util.html#class-utiltextdecoder\"><code>TextDecoder</code></a> section.</p>"
+      "desc": "<p>The WHATWG <code>TextDecoder</code> class. See the <a href=\"util.html#util_class_util_textdecoder\"><code>TextDecoder</code></a> section.</p>"
     },
     {
       "textRaw": "`TextEncoder`",
@@ -504,7 +282,7 @@
         "changes": []
       },
       "type": "global",
-      "desc": "<p>The WHATWG <code>TextEncoder</code> class. See the <a href=\"util.html#class-utiltextencoder\"><code>TextEncoder</code></a> section.</p>"
+      "desc": "<p>The WHATWG <code>TextEncoder</code> class. See the <a href=\"util.html#util_class_util_textencoder\"><code>TextEncoder</code></a> section.</p>"
     },
     {
       "textRaw": "`URL`",
@@ -516,7 +294,7 @@
         "changes": []
       },
       "type": "global",
-      "desc": "<p>The WHATWG <code>URL</code> class. See the <a href=\"url.html#class-url\"><code>URL</code></a> section.</p>"
+      "desc": "<p>The WHATWG <code>URL</code> class. See the <a href=\"url.html#url_class_url\"><code>URL</code></a> section.</p>"
     },
     {
       "textRaw": "`URLSearchParams`",
@@ -528,7 +306,7 @@
         "changes": []
       },
       "type": "global",
-      "desc": "<p>The WHATWG <code>URLSearchParams</code> class. See the <a href=\"url.html#class-urlsearchparams\"><code>URLSearchParams</code></a> section.</p>"
+      "desc": "<p>The WHATWG <code>URLSearchParams</code> class. See the <a href=\"url.html#url_class_urlsearchparams\"><code>URLSearchParams</code></a> section.</p>"
     },
     {
       "textRaw": "`WebAssembly`",
@@ -543,285 +321,7 @@
       "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></li>\n</ul>\n<p>The object that acts as the namespace for all W3C\n<a href=\"https://webassembly.org\">WebAssembly</a> related functionality. See the\n<a href=\"https://developer.mozilla.org/en-US/docs/WebAssembly\">Mozilla Developer Network</a> for usage and compatibility.</p>"
     }
   ],
-  "classes": [
-    {
-      "textRaw": "Class: `ByteLengthQueuingStrategy`",
-      "type": "class",
-      "name": "ByteLengthQueuingStrategy",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-bytelengthqueuingstrategy\"><code>ByteLengthQueuingStrategy</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `CompressionStream`",
-      "type": "class",
-      "name": "CompressionStream",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-compressionstream\"><code>CompressionStream</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `CountQueuingStrategy`",
-      "type": "class",
-      "name": "CountQueuingStrategy",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-countqueuingstrategy\"><code>CountQueuingStrategy</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `DecompressionStream`",
-      "type": "class",
-      "name": "DecompressionStream",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-decompressionstream\"><code>DecompressionStream</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `ReadableByteStreamController`",
-      "type": "class",
-      "name": "ReadableByteStreamController",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablebytestreamcontroller\"><code>ReadableByteStreamController</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `ReadableStream`",
-      "type": "class",
-      "name": "ReadableStream",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestream\"><code>ReadableStream</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `ReadableStreamBYOBReader`",
-      "type": "class",
-      "name": "ReadableStreamBYOBReader",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestreambyobreader\"><code>ReadableStreamBYOBReader</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `ReadableStreamBYOBRequest`",
-      "type": "class",
-      "name": "ReadableStreamBYOBRequest",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestreambyobrequest\"><code>ReadableStreamBYOBRequest</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `ReadableStreamDefaultController`",
-      "type": "class",
-      "name": "ReadableStreamDefaultController",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestreamdefaultcontroller\"><code>ReadableStreamDefaultController</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `ReadableStreamDefaultReader`",
-      "type": "class",
-      "name": "ReadableStreamDefaultReader",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestreamdefaultreader\"><code>ReadableStreamDefaultReader</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `TextDecoderStream`",
-      "type": "class",
-      "name": "TextDecoderStream",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-textdecoderstream\"><code>TextDecoderStream</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `TextEncoderStream`",
-      "type": "class",
-      "name": "TextEncoderStream",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-textencoderstream\"><code>TextEncoderStream</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `TransformStream`",
-      "type": "class",
-      "name": "TransformStream",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-transformstream\"><code>TransformStream</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `TransformStreamDefaultController`",
-      "type": "class",
-      "name": "TransformStreamDefaultController",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-transformstreamdefaultcontroller\"><code>TransformStreamDefaultController</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `WritableStream`",
-      "type": "class",
-      "name": "WritableStream",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-writablestream\"><code>WritableStream</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `WritableStreamDefaultController`",
-      "type": "class",
-      "name": "WritableStreamDefaultController",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-writablestreamdefaultcontroller\"><code>WritableStreamDefaultController</code></a>.</p>"
-    },
-    {
-      "textRaw": "Class: `WritableStreamDefaultWriter`",
-      "type": "class",
-      "name": "WritableStreamDefaultWriter",
-      "meta": {
-        "added": [
-          "v18.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 1,
-      "stabilityText": "Experimental.",
-      "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-writablestreamdefaultwriter\"><code>WritableStreamDefaultWriter</code></a>.</p>"
-    }
-  ],
   "methods": [
-    {
-      "textRaw": "`atob(data)`",
-      "type": "method",
-      "name": "atob",
-      "meta": {
-        "added": [
-          "v16.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 3,
-      "stabilityText": "Legacy. Use `Buffer.from(data, 'base64')` instead.",
-      "signatures": [
-        {
-          "params": []
-        }
-      ],
-      "desc": "<p>Global alias for <a href=\"buffer.html#bufferatobdata\"><code>buffer.atob()</code></a>.</p>"
-    },
-    {
-      "textRaw": "`btoa(data)`",
-      "type": "method",
-      "name": "btoa",
-      "meta": {
-        "added": [
-          "v16.0.0"
-        ],
-        "changes": []
-      },
-      "stability": 3,
-      "stabilityText": "Legacy. Use `buf.toString('base64')` instead.",
-      "signatures": [
-        {
-          "params": []
-        }
-      ],
-      "desc": "<p>Global alias for <a href=\"buffer.html#bufferbtoadata\"><code>buffer.btoa()</code></a>.</p>"
-    },
     {
       "textRaw": "`require()`",
       "type": "method",
@@ -831,7 +331,7 @@
           "params": []
         }
       ],
-      "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#requireid\"><code>require()</code></a>.</p>"
+      "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#modules_require_id\"><code>require()</code></a>.</p>"
     }
   ],
   "miscs": [
@@ -840,7 +340,7 @@
       "name": "Global objects",
       "introduced_in": "v0.10.0",
       "type": "misc",
-      "desc": "<p>These objects are available in all modules. The following variables may appear\nto be global but are not. They exist only in the scope of modules, see the\n<a href=\"modules.html\">module system documentation</a>:</p>\n<ul>\n<li><a href=\"modules.html#__dirname\"><code>__dirname</code></a></li>\n<li><a href=\"modules.html#__filename\"><code>__filename</code></a></li>\n<li><a href=\"modules.html#exports\"><code>exports</code></a></li>\n<li><a href=\"modules.html#module\"><code>module</code></a></li>\n<li><a href=\"modules.html#requireid\"><code>require()</code></a></li>\n</ul>\n<p>The objects listed here are specific to Node.js. There are <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects\">built-in objects</a>\nthat are part of the JavaScript language itself, which are also globally\naccessible.</p>",
+      "desc": "<p>These objects are available in all modules. The following variables may appear\nto be global but are not. They exist only in the scope of modules, see the\n<a href=\"modules.html\">module system documentation</a>:</p>\n<ul>\n<li><a href=\"modules.html#modules_dirname\"><code>__dirname</code></a></li>\n<li><a href=\"modules.html#modules_filename\"><code>__filename</code></a></li>\n<li><a href=\"modules.html#modules_exports\"><code>exports</code></a></li>\n<li><a href=\"modules.html#modules_module\"><code>module</code></a></li>\n<li><a href=\"modules.html#modules_require_id\"><code>require()</code></a></li>\n</ul>\n<p>The objects listed here are specific to Node.js. There are <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects\">built-in objects</a>\nthat are part of the JavaScript language itself, which are also globally\naccessible.</p>",
       "globals": [
         {
           "textRaw": "Class: `AbortController`",
@@ -848,49 +348,27 @@
           "name": "AbortController",
           "meta": {
             "added": [
-              "v15.0.0",
               "v14.17.0"
             ],
-            "changes": [
-              {
-                "version": "v15.4.0",
-                "pr-url": "https://github.com/nodejs/node/pull/35949",
-                "description": "No longer experimental."
-              }
-            ]
+            "changes": []
           },
-          "desc": "<p>A utility class used to signal cancelation in selected <code>Promise</code>-based APIs.\nThe API is based on the Web API <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/AbortController\"><code>AbortController</code></a>.</p>\n<pre><code class=\"language-js\">const ac = new AbortController();\n\nac.signal.addEventListener('abort', () => console.log('Aborted!'),\n                           { once: true });\n\nac.abort();\n\nconsole.log(ac.signal.aborted);  // Prints True\n</code></pre>",
+          "stability": 1,
+          "stabilityText": "Experimental",
+          "desc": "<p>A utility class used to signal cancelation in selected <code>Promise</code>-based APIs.\nThe API is based on the Web API <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/AbortController\"><code>AbortController</code></a>.</p>\n<p>To use, launch Node.js using the <code>--experimental-abortcontroller</code> flag.</p>\n<pre><code class=\"language-js\">const ac = new AbortController();\n\nac.signal.addEventListener('abort', () => console.log('Aborted!'),\n                           { once: true });\n\nac.abort();\n\nconsole.log(ac.signal.aborted);  // Prints True\n</code></pre>",
           "methods": [
             {
-              "textRaw": "`abortController.abort([reason])`",
+              "textRaw": "`abortController.abort()`",
               "type": "method",
               "name": "abort",
               "meta": {
                 "added": [
-                  "v15.0.0",
                   "v14.17.0"
                 ],
-                "changes": [
-                  {
-                    "version": [
-                      "v17.2.0",
-                      "v16.14.0"
-                    ],
-                    "pr-url": "https://github.com/nodejs/node/pull/40807",
-                    "description": "Added the new optional reason argument."
-                  }
-                ]
+                "changes": []
               },
               "signatures": [
                 {
-                  "params": [
-                    {
-                      "textRaw": "`reason` {any} An optional reason, retrievable on the `AbortSignal`'s `reason` property.",
-                      "name": "reason",
-                      "type": "any",
-                      "desc": "An optional reason, retrievable on the `AbortSignal`'s `reason` property."
-                    }
-                  ]
+                  "params": []
                 }
               ],
               "desc": "<p>Triggers the abort signal, causing the <code>abortController.signal</code> to emit\nthe <code>'abort'</code> event.</p>"
@@ -903,7 +381,6 @@
               "name": "Type",
               "meta": {
                 "added": [
-                  "v15.0.0",
                   "v14.17.0"
                 ],
                 "changes": []
@@ -917,32 +394,21 @@
               "name": "AbortSignal",
               "meta": {
                 "added": [
-                  "v15.0.0",
                   "v14.17.0"
                 ],
                 "changes": []
               },
-              "desc": "<ul>\n<li>Extends: <a href=\"events.html#class-eventtarget\" class=\"type\">&lt;EventTarget&gt;</a></li>\n</ul>\n<p>The <code>AbortSignal</code> is used to notify observers when the\n<code>abortController.abort()</code> method is called.</p>",
+              "desc": "<ul>\n<li>Extends: <a href=\"events.html#events_class_eventtarget\" class=\"type\">&lt;EventTarget&gt;</a></li>\n</ul>\n<p>The <code>AbortSignal</code> is used to notify observers when the\n<code>abortController.abort()</code> method is called.</p>",
               "classMethods": [
                 {
-                  "textRaw": "Static method: `AbortSignal.abort([reason])`",
+                  "textRaw": "Static method: `AbortSignal.abort()`",
                   "type": "classMethod",
                   "name": "abort",
                   "meta": {
                     "added": [
-                      "v15.12.0",
                       "v14.17.0"
                     ],
-                    "changes": [
-                      {
-                        "version": [
-                          "v17.2.0",
-                          "v16.14.0"
-                        ],
-                        "pr-url": "https://github.com/nodejs/node/pull/40807",
-                        "description": "Added the new optional reason argument."
-                      }
-                    ]
+                    "changes": []
                   },
                   "signatures": [
                     {
@@ -951,41 +417,10 @@
                         "name": "return",
                         "type": "AbortSignal"
                       },
-                      "params": [
-                        {
-                          "textRaw": "`reason`: {any}",
-                          "name": "reason",
-                          "type": "any"
-                        }
-                      ]
+                      "params": []
                     }
                   ],
                   "desc": "<p>Returns a new already aborted <code>AbortSignal</code>.</p>"
-                },
-                {
-                  "textRaw": "Static method: `AbortSignal.timeout(delay)`",
-                  "type": "classMethod",
-                  "name": "timeout",
-                  "meta": {
-                    "added": [
-                      "v17.3.0",
-                      "v16.14.0"
-                    ],
-                    "changes": []
-                  },
-                  "signatures": [
-                    {
-                      "params": [
-                        {
-                          "textRaw": "`delay` {number} The number of milliseconds to wait before triggering the AbortSignal.",
-                          "name": "delay",
-                          "type": "number",
-                          "desc": "The number of milliseconds to wait before triggering the AbortSignal."
-                        }
-                      ]
-                    }
-                  ],
-                  "desc": "<p>Returns a new <code>AbortSignal</code> which will be aborted in <code>delay</code> milliseconds.</p>"
                 }
               ],
               "events": [
@@ -995,7 +430,6 @@
                   "name": "abort",
                   "meta": {
                     "added": [
-                      "v15.0.0",
                       "v14.17.0"
                     ],
                     "changes": []
@@ -1011,7 +445,6 @@
                   "name": "Type",
                   "meta": {
                     "added": [
-                      "v15.0.0",
                       "v14.17.0"
                     ],
                     "changes": []
@@ -1024,60 +457,15 @@
                   "name": "Type",
                   "meta": {
                     "added": [
-                      "v15.0.0",
                       "v14.17.0"
                     ],
                     "changes": []
                   },
                   "desc": "<p>An optional callback function that may be set by user code to be notified\nwhen the <code>abortController.abort()</code> function has been called.</p>"
-                },
-                {
-                  "textRaw": "`reason` Type: {any}",
-                  "type": "any",
-                  "name": "Type",
-                  "meta": {
-                    "added": [
-                      "v17.2.0",
-                      "v16.14.0"
-                    ],
-                    "changes": []
-                  },
-                  "desc": "<p>An optional reason specified when the <code>AbortSignal</code> was triggered.</p>\n<pre><code class=\"language-js\">const ac = new AbortController();\nac.abort(new Error('boom!'));\nconsole.log(ac.signal.reason);  // Error('boom!');\n</code></pre>"
-                }
-              ],
-              "methods": [
-                {
-                  "textRaw": "`abortSignal.throwIfAborted()`",
-                  "type": "method",
-                  "name": "throwIfAborted",
-                  "meta": {
-                    "added": [
-                      "v17.3.0"
-                    ],
-                    "changes": []
-                  },
-                  "signatures": [
-                    {
-                      "params": []
-                    }
-                  ],
-                  "desc": "<p>If <code>abortSignal.aborted</code> is <code>true</code>, throws <code>abortSignal.reason</code>.</p>"
                 }
               ]
             }
           ]
-        },
-        {
-          "textRaw": "Class: `Blob`",
-          "type": "global",
-          "name": "Blob",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "desc": "<p>See <a href=\"buffer.html#class-blob\" class=\"type\">&lt;Blob&gt;</a>.</p>"
         },
         {
           "textRaw": "Class: `Buffer`",
@@ -1101,7 +489,7 @@
             ],
             "changes": []
           },
-          "desc": "<p><a href=\"timers.html#clearimmediateimmediate\"><code>clearImmediate</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+          "desc": "<p><a href=\"timers.html#timers_clearimmediate_immediate\"><code>clearImmediate</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
         },
         {
           "textRaw": "`clearInterval(intervalObject)`",
@@ -1113,7 +501,7 @@
             ],
             "changes": []
           },
-          "desc": "<p><a href=\"timers.html#clearintervaltimeout\"><code>clearInterval</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+          "desc": "<p><a href=\"timers.html#timers_clearinterval_timeout\"><code>clearInterval</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
         },
         {
           "textRaw": "`clearTimeout(timeoutObject)`",
@@ -1125,7 +513,7 @@
             ],
             "changes": []
           },
-          "desc": "<p><a href=\"timers.html#cleartimeouttimeout\"><code>clearTimeout</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+          "desc": "<p><a href=\"timers.html#timers_cleartimeout_timeout\"><code>clearTimeout</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
         },
         {
           "textRaw": "`console`",
@@ -1140,56 +528,6 @@
           "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></li>\n</ul>\n<p>Used to print to stdout and stderr. See the <a href=\"console.html\"><code>console</code></a> section.</p>"
         },
         {
-          "textRaw": "`CustomEvent`",
-          "name": "`CustomEvent`",
-          "meta": {
-            "added": [
-              "v18.7.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Enable this API with the [`--experimental-global-customevent`][] CLI flag.",
-          "type": "global",
-          "desc": "<p>A browser-compatible implementation of the <a href=\"https://dom.spec.whatwg.org/#customevent\"><code>CustomEvent</code> Web API</a>.</p>"
-        },
-        {
-          "textRaw": "`Event`",
-          "name": "`Event`",
-          "meta": {
-            "added": [
-              "v15.0.0"
-            ],
-            "changes": [
-              {
-                "version": "v15.4.0",
-                "pr-url": "https://github.com/nodejs/node/pull/35949",
-                "description": "No longer experimental."
-              }
-            ]
-          },
-          "type": "global",
-          "desc": "<p>A browser-compatible implementation of the <code>Event</code> class. See\n<a href=\"events.html#eventtarget-and-event-api\"><code>EventTarget</code> and <code>Event</code> API</a> for more details.</p>"
-        },
-        {
-          "textRaw": "`EventTarget`",
-          "name": "`EventTarget`",
-          "meta": {
-            "added": [
-              "v15.0.0"
-            ],
-            "changes": [
-              {
-                "version": "v15.4.0",
-                "pr-url": "https://github.com/nodejs/node/pull/35949",
-                "description": "No longer experimental."
-              }
-            ]
-          },
-          "type": "global",
-          "desc": "<p>A browser-compatible implementation of the <code>EventTarget</code> class. See\n<a href=\"events.html#eventtarget-and-event-api\"><code>EventTarget</code> and <code>Event</code> API</a> for more details.</p>"
-        },
-        {
           "textRaw": "`global`",
           "name": "`global`",
           "meta": {
@@ -1202,42 +540,6 @@
           "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a> The global namespace object.</li>\n</ul>\n<p>In browsers, the top-level scope is the global scope. This means that\nwithin the browser <code>var something</code> will define a new global variable. In\nNode.js this is different. The top-level scope is not the global scope;\n<code>var something</code> inside a Node.js module will be local to that module.</p>"
         },
         {
-          "textRaw": "`MessageChannel`",
-          "name": "`MessageChannel`",
-          "meta": {
-            "added": [
-              "v15.0.0"
-            ],
-            "changes": []
-          },
-          "type": "global",
-          "desc": "<p>The <code>MessageChannel</code> class. See <a href=\"worker_threads.html#class-messagechannel\"><code>MessageChannel</code></a> for more details.</p>"
-        },
-        {
-          "textRaw": "`MessageEvent`",
-          "name": "`MessageEvent`",
-          "meta": {
-            "added": [
-              "v15.0.0"
-            ],
-            "changes": []
-          },
-          "type": "global",
-          "desc": "<p>The <code>MessageEvent</code> class. See <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/MessageEvent\"><code>MessageEvent</code></a> for more details.</p>"
-        },
-        {
-          "textRaw": "`MessagePort`",
-          "name": "`MessagePort`",
-          "meta": {
-            "added": [
-              "v15.0.0"
-            ],
-            "changes": []
-          },
-          "type": "global",
-          "desc": "<p>The <code>MessagePort</code> class. See <a href=\"worker_threads.html#class-messageport\"><code>MessagePort</code></a> for more details.</p>"
-        },
-        {
           "textRaw": "`process`",
           "name": "`process`",
           "meta": {
@@ -1247,7 +549,7 @@
             "changes": []
           },
           "type": "global",
-          "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></li>\n</ul>\n<p>The process object. See the <a href=\"process.html#process\"><code>process</code> object</a> section.</p>"
+          "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></li>\n</ul>\n<p>The process object. See the <a href=\"process.html#process_process\"><code>process</code> object</a> section.</p>"
         },
         {
           "textRaw": "`queueMicrotask(callback)`",
@@ -1259,7 +561,7 @@
             ],
             "changes": []
           },
-          "desc": "<ul>\n<li><code>callback</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function\" class=\"type\">&lt;Function&gt;</a> Function to be queued.</li>\n</ul>\n<p>The <code>queueMicrotask()</code> method queues a microtask to invoke <code>callback</code>. If\n<code>callback</code> throws an exception, the <a href=\"process.html#process\"><code>process</code> object</a> <code>'uncaughtException'</code>\nevent will be emitted.</p>\n<p>The microtask queue is managed by V8 and may be used in a similar manner to\nthe <a href=\"process.html#processnexttickcallback-args\"><code>process.nextTick()</code></a> queue, which is managed by Node.js. The\n<code>process.nextTick()</code> queue is always processed before the microtask queue\nwithin each turn of the Node.js event loop.</p>\n<pre><code class=\"language-js\">// Here, `queueMicrotask()` is used to ensure the 'load' event is always\n// emitted asynchronously, and therefore consistently. Using\n// `process.nextTick()` here would result in the 'load' event always emitting\n// before any other promise jobs.\n\nDataHandler.prototype.load = async function load(key) {\n  const hit = this._cache.get(key);\n  if (hit !== undefined) {\n    queueMicrotask(() => {\n      this.emit('load', hit);\n    });\n    return;\n  }\n\n  const data = await fetchData(key);\n  this._cache.set(key, data);\n  this.emit('load', data);\n};\n</code></pre>"
+          "desc": "<ul>\n<li><code>callback</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function\" class=\"type\">&lt;Function&gt;</a> Function to be queued.</li>\n</ul>\n<p>The <code>queueMicrotask()</code> method queues a microtask to invoke <code>callback</code>. If\n<code>callback</code> throws an exception, the <a href=\"process.html#process_process\"><code>process</code> object</a> <code>'uncaughtException'</code>\nevent will be emitted.</p>\n<p>The microtask queue is managed by V8 and may be used in a similar manner to\nthe <a href=\"process.html#process_process_nexttick_callback_args\"><code>process.nextTick()</code></a> queue, which is managed by Node.js. The\n<code>process.nextTick()</code> queue is always processed before the microtask queue\nwithin each turn of the Node.js event loop.</p>\n<pre><code class=\"language-js\">// Here, `queueMicrotask()` is used to ensure the 'load' event is always\n// emitted asynchronously, and therefore consistently. Using\n// `process.nextTick()` here would result in the 'load' event always emitting\n// before any other promise jobs.\n\nDataHandler.prototype.load = async function load(key) {\n  const hit = this._cache.get(key);\n  if (hit !== undefined) {\n    queueMicrotask(() => {\n      this.emit('load', hit);\n    });\n    return;\n  }\n\n  const data = await fetchData(key);\n  this._cache.set(key, data);\n  this.emit('load', data);\n};\n</code></pre>"
         },
         {
           "textRaw": "`setImmediate(callback[, ...args])`",
@@ -1271,7 +573,7 @@
             ],
             "changes": []
           },
-          "desc": "<p><a href=\"timers.html#setimmediatecallback-args\"><code>setImmediate</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+          "desc": "<p><a href=\"timers.html#timers_setimmediate_callback_args\"><code>setImmediate</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
         },
         {
           "textRaw": "`setInterval(callback, delay[, ...args])`",
@@ -1283,7 +585,7 @@
             ],
             "changes": []
           },
-          "desc": "<p><a href=\"timers.html#setintervalcallback-delay-args\"><code>setInterval</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
+          "desc": "<p><a href=\"timers.html#timers_setinterval_callback_delay_args\"><code>setInterval</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
         },
         {
           "textRaw": "`setTimeout(callback, delay[, ...args])`",
@@ -1295,31 +597,7 @@
             ],
             "changes": []
           },
-          "desc": "<p><a href=\"timers.html#settimeoutcallback-delay-args\"><code>setTimeout</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
-        },
-        {
-          "textRaw": "`structuredClone(value[, options])`",
-          "type": "global",
-          "name": "structuredClone",
-          "meta": {
-            "added": [
-              "v17.0.0"
-            ],
-            "changes": []
-          },
-          "desc": "<p>The WHATWG <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/structuredClone\"><code>structuredClone</code></a> method.</p>"
-        },
-        {
-          "textRaw": "`DOMException`",
-          "name": "`DOMException`",
-          "meta": {
-            "added": [
-              "v17.0.0"
-            ],
-            "changes": []
-          },
-          "type": "global",
-          "desc": "<p>The WHATWG <code>DOMException</code> class. See <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/DOMException\"><code>DOMException</code></a> for more details.</p>"
+          "desc": "<p><a href=\"timers.html#timers_settimeout_callback_delay_args\"><code>setTimeout</code></a> is described in the <a href=\"timers.html\">timers</a> section.</p>"
         },
         {
           "textRaw": "`TextDecoder`",
@@ -1331,7 +609,7 @@
             "changes": []
           },
           "type": "global",
-          "desc": "<p>The WHATWG <code>TextDecoder</code> class. See the <a href=\"util.html#class-utiltextdecoder\"><code>TextDecoder</code></a> section.</p>"
+          "desc": "<p>The WHATWG <code>TextDecoder</code> class. See the <a href=\"util.html#util_class_util_textdecoder\"><code>TextDecoder</code></a> section.</p>"
         },
         {
           "textRaw": "`TextEncoder`",
@@ -1343,7 +621,7 @@
             "changes": []
           },
           "type": "global",
-          "desc": "<p>The WHATWG <code>TextEncoder</code> class. See the <a href=\"util.html#class-utiltextencoder\"><code>TextEncoder</code></a> section.</p>"
+          "desc": "<p>The WHATWG <code>TextEncoder</code> class. See the <a href=\"util.html#util_class_util_textencoder\"><code>TextEncoder</code></a> section.</p>"
         },
         {
           "textRaw": "`URL`",
@@ -1355,7 +633,7 @@
             "changes": []
           },
           "type": "global",
-          "desc": "<p>The WHATWG <code>URL</code> class. See the <a href=\"url.html#class-url\"><code>URL</code></a> section.</p>"
+          "desc": "<p>The WHATWG <code>URL</code> class. See the <a href=\"url.html#url_class_url\"><code>URL</code></a> section.</p>"
         },
         {
           "textRaw": "`URLSearchParams`",
@@ -1367,7 +645,7 @@
             "changes": []
           },
           "type": "global",
-          "desc": "<p>The WHATWG <code>URLSearchParams</code> class. See the <a href=\"url.html#class-urlsearchparams\"><code>URLSearchParams</code></a> section.</p>"
+          "desc": "<p>The WHATWG <code>URLSearchParams</code> class. See the <a href=\"url.html#url_class_urlsearchparams\"><code>URLSearchParams</code></a> section.</p>"
         },
         {
           "textRaw": "`WebAssembly`",
@@ -1382,506 +660,37 @@
           "desc": "<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a></li>\n</ul>\n<p>The object that acts as the namespace for all W3C\n<a href=\"https://webassembly.org\">WebAssembly</a> related functionality. See the\n<a href=\"https://developer.mozilla.org/en-US/docs/WebAssembly\">Mozilla Developer Network</a> for usage and compatibility.</p>"
         }
       ],
-      "classes": [
-        {
-          "textRaw": "Class: `ByteLengthQueuingStrategy`",
-          "type": "class",
-          "name": "ByteLengthQueuingStrategy",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-bytelengthqueuingstrategy\"><code>ByteLengthQueuingStrategy</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `CompressionStream`",
-          "type": "class",
-          "name": "CompressionStream",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-compressionstream\"><code>CompressionStream</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `CountQueuingStrategy`",
-          "type": "class",
-          "name": "CountQueuingStrategy",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-countqueuingstrategy\"><code>CountQueuingStrategy</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `DecompressionStream`",
-          "type": "class",
-          "name": "DecompressionStream",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-decompressionstream\"><code>DecompressionStream</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `ReadableByteStreamController`",
-          "type": "class",
-          "name": "ReadableByteStreamController",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablebytestreamcontroller\"><code>ReadableByteStreamController</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `ReadableStream`",
-          "type": "class",
-          "name": "ReadableStream",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestream\"><code>ReadableStream</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `ReadableStreamBYOBReader`",
-          "type": "class",
-          "name": "ReadableStreamBYOBReader",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestreambyobreader\"><code>ReadableStreamBYOBReader</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `ReadableStreamBYOBRequest`",
-          "type": "class",
-          "name": "ReadableStreamBYOBRequest",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestreambyobrequest\"><code>ReadableStreamBYOBRequest</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `ReadableStreamDefaultController`",
-          "type": "class",
-          "name": "ReadableStreamDefaultController",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestreamdefaultcontroller\"><code>ReadableStreamDefaultController</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `ReadableStreamDefaultReader`",
-          "type": "class",
-          "name": "ReadableStreamDefaultReader",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-readablestreamdefaultreader\"><code>ReadableStreamDefaultReader</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `TextDecoderStream`",
-          "type": "class",
-          "name": "TextDecoderStream",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-textdecoderstream\"><code>TextDecoderStream</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `TextEncoderStream`",
-          "type": "class",
-          "name": "TextEncoderStream",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-textencoderstream\"><code>TextEncoderStream</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `TransformStream`",
-          "type": "class",
-          "name": "TransformStream",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-transformstream\"><code>TransformStream</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `TransformStreamDefaultController`",
-          "type": "class",
-          "name": "TransformStreamDefaultController",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-transformstreamdefaultcontroller\"><code>TransformStreamDefaultController</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `WritableStream`",
-          "type": "class",
-          "name": "WritableStream",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-writablestream\"><code>WritableStream</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `WritableStreamDefaultController`",
-          "type": "class",
-          "name": "WritableStreamDefaultController",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-writablestreamdefaultcontroller\"><code>WritableStreamDefaultController</code></a>.</p>"
-        },
-        {
-          "textRaw": "Class: `WritableStreamDefaultWriter`",
-          "type": "class",
-          "name": "WritableStreamDefaultWriter",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webstreams.html#class-writablestreamdefaultwriter\"><code>WritableStreamDefaultWriter</code></a>.</p>"
-        }
-      ],
       "miscs": [
         {
           "textRaw": "`__dirname`",
           "name": "`__dirname`",
-          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#__dirname\"><code>__dirname</code></a>.</p>",
+          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#modules_dirname\"><code>__dirname</code></a>.</p>",
           "type": "misc",
           "displayName": "`__dirname`"
         },
         {
           "textRaw": "`__filename`",
           "name": "`__filename`",
-          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#__filename\"><code>__filename</code></a>.</p>",
+          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#modules_filename\"><code>__filename</code></a>.</p>",
           "type": "misc",
           "displayName": "`__filename`"
         },
         {
-          "textRaw": "`BroadcastChannel`",
-          "name": "`broadcastchannel`",
-          "meta": {
-            "added": [
-              "v18.0.0"
-            ],
-            "changes": []
-          },
-          "desc": "<p>See <a href=\"worker_threads.html#class-broadcastchannel-extends-eventtarget\" class=\"type\">&lt;BroadcastChannel&gt;</a>.</p>",
-          "type": "misc",
-          "displayName": "`BroadcastChannel`"
-        },
-        {
-          "textRaw": "`Crypto`",
-          "name": "`crypto`",
-          "meta": {
-            "added": [
-              "v17.6.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Enable this API with the [`--experimental-global-webcrypto`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webcrypto.html#class-crypto\" class=\"type\">&lt;Crypto&gt;</a>. This global is available\nonly if the Node.js binary was compiled with including support for the\n<code>node:crypto</code> module.</p>",
-          "type": "misc",
-          "displayName": "`Crypto`"
-        },
-        {
-          "textRaw": "`crypto`",
-          "name": "`crypto`",
-          "meta": {
-            "added": [
-              "v17.6.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Enable this API with the [`--experimental-global-webcrypto`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of the <a href=\"webcrypto.html\">Web Crypto API</a>.</p>",
-          "type": "misc",
-          "displayName": "`crypto`"
-        },
-        {
-          "textRaw": "`CryptoKey`",
-          "name": "`cryptokey`",
-          "meta": {
-            "added": [
-              "v17.6.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Enable this API with the [`--experimental-global-webcrypto`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webcrypto.html#class-cryptokey\" class=\"type\">&lt;CryptoKey&gt;</a>. This global is available\nonly if the Node.js binary was compiled with including support for the\n<code>node:crypto</code> module.</p>",
-          "type": "misc",
-          "displayName": "`CryptoKey`"
-        },
-        {
           "textRaw": "`exports`",
           "name": "`exports`",
-          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#exports\"><code>exports</code></a>.</p>",
+          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#modules_exports\"><code>exports</code></a>.</p>",
           "type": "misc",
           "displayName": "`exports`"
         },
         {
-          "textRaw": "`fetch`",
-          "name": "`fetch`",
-          "meta": {
-            "added": [
-              "v17.5.0"
-            ],
-            "changes": [
-              {
-                "version": "v18.0.0",
-                "pr-url": "https://github.com/nodejs/node/pull/41811",
-                "description": "No longer behind `--experimental-global-fetch` CLI flag."
-              }
-            ]
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Disable this API with the [`--no-experimental-fetch`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of the <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/fetch\"><code>fetch()</code></a> function.</p>",
-          "type": "misc",
-          "displayName": "`fetch`"
-        },
-        {
-          "textRaw": "Class `FormData`",
-          "name": "class_`formdata`",
-          "meta": {
-            "added": [
-              "v17.6.0"
-            ],
-            "changes": [
-              {
-                "version": "v18.0.0",
-                "pr-url": "https://github.com/nodejs/node/pull/41811",
-                "description": "No longer behind `--experimental-global-fetch` CLI flag."
-              }
-            ]
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Disable this API with the [`--no-experimental-fetch`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/FormData\" class=\"type\">&lt;FormData&gt;</a>.</p>",
-          "type": "misc",
-          "displayName": "Class `FormData`"
-        },
-        {
-          "textRaw": "Class `Headers`",
-          "name": "class_`headers`",
-          "meta": {
-            "added": [
-              "v17.5.0"
-            ],
-            "changes": [
-              {
-                "version": "v18.0.0",
-                "pr-url": "https://github.com/nodejs/node/pull/41811",
-                "description": "No longer behind `--experimental-global-fetch` CLI flag."
-              }
-            ]
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Disable this API with the [`--no-experimental-fetch`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/Headers\" class=\"type\">&lt;Headers&gt;</a>.</p>",
-          "type": "misc",
-          "displayName": "Class `Headers`"
-        },
-        {
           "textRaw": "`module`",
           "name": "`module`",
-          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#module\"><code>module</code></a>.</p>",
+          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#modules_module\"><code>module</code></a>.</p>",
           "type": "misc",
           "displayName": "`module`"
-        },
-        {
-          "textRaw": "`performance`",
-          "name": "`performance`",
-          "meta": {
-            "added": [
-              "v16.0.0"
-            ],
-            "changes": []
-          },
-          "desc": "<p>The <a href=\"perf_hooks.html#perf_hooksperformance\"><code>perf_hooks.performance</code></a> object.</p>",
-          "type": "misc",
-          "displayName": "`performance`"
-        },
-        {
-          "textRaw": "`Response`",
-          "name": "`response`",
-          "meta": {
-            "added": [
-              "v17.5.0"
-            ],
-            "changes": [
-              {
-                "version": "v18.0.0",
-                "pr-url": "https://github.com/nodejs/node/pull/41811",
-                "description": "No longer behind `--experimental-global-fetch` CLI flag."
-              }
-            ]
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Disable this API with the [`--no-experimental-fetch`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/Response\" class=\"type\">&lt;Response&gt;</a>.</p>",
-          "type": "misc",
-          "displayName": "`Response`"
-        },
-        {
-          "textRaw": "`Request`",
-          "name": "`request`",
-          "meta": {
-            "added": [
-              "v17.5.0"
-            ],
-            "changes": [
-              {
-                "version": "v18.0.0",
-                "pr-url": "https://github.com/nodejs/node/pull/41811",
-                "description": "No longer behind `--experimental-global-fetch` CLI flag."
-              }
-            ]
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Disable this API with the [`--no-experimental-fetch`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/Request\" class=\"type\">&lt;Request&gt;</a>.</p>",
-          "type": "misc",
-          "displayName": "`Request`"
-        },
-        {
-          "textRaw": "`SubtleCrypto`",
-          "name": "`subtlecrypto`",
-          "meta": {
-            "added": [
-              "v17.6.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental. Enable this API with the [`--experimental-global-webcrypto`][] CLI flag.",
-          "desc": "<p>A browser-compatible implementation of <a href=\"webcrypto.html#class-subtlecrypto\" class=\"type\">&lt;SubtleCrypto&gt;</a>. This global is available\nonly if the Node.js binary was compiled with including support for the\n<code>node:crypto</code> module.</p>",
-          "type": "misc",
-          "displayName": "`SubtleCrypto`"
         }
       ],
       "methods": [
-        {
-          "textRaw": "`atob(data)`",
-          "type": "method",
-          "name": "atob",
-          "meta": {
-            "added": [
-              "v16.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 3,
-          "stabilityText": "Legacy. Use `Buffer.from(data, 'base64')` instead.",
-          "signatures": [
-            {
-              "params": []
-            }
-          ],
-          "desc": "<p>Global alias for <a href=\"buffer.html#bufferatobdata\"><code>buffer.atob()</code></a>.</p>"
-        },
-        {
-          "textRaw": "`btoa(data)`",
-          "type": "method",
-          "name": "btoa",
-          "meta": {
-            "added": [
-              "v16.0.0"
-            ],
-            "changes": []
-          },
-          "stability": 3,
-          "stabilityText": "Legacy. Use `buf.toString('base64')` instead.",
-          "signatures": [
-            {
-              "params": []
-            }
-          ],
-          "desc": "<p>Global alias for <a href=\"buffer.html#bufferbtoadata\"><code>buffer.btoa()</code></a>.</p>"
-        },
         {
           "textRaw": "`require()`",
           "type": "method",
@@ -1891,7 +700,7 @@
               "params": []
             }
           ],
-          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#requireid\"><code>require()</code></a>.</p>"
+          "desc": "<p>This variable may appear to be global but is not. See <a href=\"modules.html#modules_require_id\"><code>require()</code></a>.</p>"
         }
       ]
     }

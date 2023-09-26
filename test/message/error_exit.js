@@ -21,8 +21,6 @@
 
 'use strict';
 require('../common');
-Error.stackTraceLimit = 1;
-
 const assert = require('assert');
 
 process.on('exit', function(code) {

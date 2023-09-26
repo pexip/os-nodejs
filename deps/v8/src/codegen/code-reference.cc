@@ -8,10 +8,7 @@
 #include "src/common/globals.h"
 #include "src/handles/handles-inl.h"
 #include "src/objects/objects-inl.h"
-
-#if V8_ENABLE_WEBASSEMBLY
 #include "src/wasm/wasm-code-manager.h"
-#endif  // V8_ENABLE_WEBASSEMBLY
 
 namespace v8 {
 namespace internal {
@@ -31,7 +28,6 @@ struct JSOps {
   int code_comments_size() const { return code->code_comments_size(); }
 };
 
-#if V8_ENABLE_WEBASSEMBLY
 struct WasmOps {
   const wasm::WasmCode* code;
 
@@ -52,7 +48,6 @@ struct WasmOps {
   Address code_comments() const { return code->code_comments(); }
   int code_comments_size() const { return code->code_comments_size(); }
 };
-#endif  // V8_ENABLE_WEBASSEMBLY
 
 struct CodeDescOps {
   const CodeDesc* code_desc;
@@ -81,33 +76,20 @@ struct CodeDescOps {
 };
 }  // namespace
 
-#if V8_ENABLE_WEBASSEMBLY
 #define DISPATCH(ret, method)                    \
   ret CodeReference::method() const {            \
     DCHECK(!is_null());                          \
     switch (kind_) {                             \
-      case Kind::JS:                             \
+      case JS:                                   \
         return JSOps{js_code_}.method();         \
-      case Kind::WASM:                           \
+      case WASM:                                 \
         return WasmOps{wasm_code_}.method();     \
-      case Kind::CODE_DESC:                      \
+      case CODE_DESC:                            \
         return CodeDescOps{code_desc_}.method(); \
       default:                                   \
         UNREACHABLE();                           \
     }                                            \
   }
-#else
-#define DISPATCH(ret, method)                              \
-  ret CodeReference::method() const {                      \
-    DCHECK(!is_null());                                    \
-    DCHECK(kind_ == Kind::JS || kind_ == Kind::CODE_DESC); \
-    if (kind_ == Kind::JS) {                               \
-      return JSOps{js_code_}.method();                     \
-    } else {                                               \
-      return CodeDescOps{code_desc_}.method();             \
-    }                                                      \
-  }
-#endif  // V8_ENABLE_WEBASSEMBLY
 
 DISPATCH(Address, constant_pool)
 DISPATCH(Address, instruction_start)
