@@ -16,7 +16,7 @@ namespace base {
 // BitField is a help template for encoding and decode bitfield with
 // unsigned content.
 // Instantiate them via 'using', which is cheaper than deriving a new class:
-// using MyBitField = base::BitField<int, 4, 2, MyEnum>;
+// using MyBitField = base::BitField<MyEnum, 4, 2>;
 // The BitField class is final to enforce this style over derivation.
 
 template <class T, int shift, int size, class U = uint32_t>
@@ -52,9 +52,7 @@ class BitField final {
 
   // Returns a type U with the bit field value encoded.
   static constexpr U encode(T value) {
-#if V8_HAS_CXX14_CONSTEXPR
     DCHECK(is_valid(value));
-#endif
     return static_cast<U>(value) << kShift;
   }
 

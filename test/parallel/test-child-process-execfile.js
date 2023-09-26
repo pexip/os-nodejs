@@ -1,12 +1,12 @@
-// Flags: --experimental-abortcontroller
 'use strict';
 
 const common = require('../common');
 const assert = require('assert');
-const execFile = require('child_process').execFile;
+const { execFile, execFileSync } = require('child_process');
 const { getEventListeners } = require('events');
 const { getSystemErrorName } = require('util');
 const fixtures = require('../common/fixtures');
+const os = require('os');
 
 const fixture = fixtures.path('exit.js');
 const echoFixture = fixtures.path('echo.js');
@@ -70,9 +70,7 @@ const execOpts = { encoding: 'utf8', shell: true };
 
 {
   // Verify that does not spawn a child if already aborted
-  const ac = new AbortController();
-  const { signal } = ac;
-  ac.abort();
+  const signal = AbortSignal.abort();
 
   const check = common.mustCall((err) => {
     assert.strictEqual(err.code, 'ABORT_ERR');
@@ -101,4 +99,24 @@ const execOpts = { encoding: 'utf8', shell: true };
     assert.strictEqual(err, null);
   });
   execFile(process.execPath, [fixture, 0], { signal }, callback);
+}
+
+// Verify the execFile() stdout is the same as execFileSync().
+{
+  const file = 'echo';
+  const args = ['foo', 'bar'];
+
+  // Test with and without `{ shell: true }`
+  [
+    // Skipping shell-less test on Windows because its echo command is a shell built-in command.
+    ...(common.isWindows ? [] : [{ encoding: 'utf8' }]),
+    { shell: true, encoding: 'utf8' },
+  ].forEach((options) => {
+    const execFileSyncStdout = execFileSync(file, args, options);
+    assert.strictEqual(execFileSyncStdout, `foo bar${os.EOL}`);
+
+    execFile(file, args, options, common.mustCall((_, stdout) => {
+      assert.strictEqual(stdout, execFileSyncStdout);
+    }));
+  });
 }

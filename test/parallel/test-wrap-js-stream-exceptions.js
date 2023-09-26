@@ -10,8 +10,8 @@ process.once('uncaughtException', common.mustCall((err) => {
 }));
 
 const socket = new JSStreamWrap(new Duplex({
-  read: common.mustNotCall(),
-  write: common.mustCall((buffer, data, cb) => {
+  read: common.mustCall(),
+  write: common.mustCall(() => {
     throw new Error('exception!');
   })
 }));

@@ -37,14 +37,15 @@ class IC {
 
   State state() const { return state_; }
 
-  // Compute the current IC state based on the target stub, receiver and name.
-  void UpdateState(Handle<Object> receiver, Handle<Object> name);
+  // Compute the current IC state based on the target stub, lookup_start_object
+  // and name.
+  void UpdateState(Handle<Object> lookup_start_object, Handle<Object> name);
 
   bool RecomputeHandlerForName(Handle<Object> name);
   void MarkRecomputeHandler(Handle<Object> name) {
     DCHECK(RecomputeHandlerForName(name));
     old_state_ = state_;
-    state_ = RECOMPUTE_HANDLER;
+    state_ = InlineCacheState::RECOMPUTE_HANDLER;
   }
 
   bool IsAnyHas() const { return IsKeyedHasIC(); }
@@ -52,8 +53,12 @@ class IC {
     return IsLoadIC() || IsLoadGlobalIC() || IsKeyedLoadIC();
   }
   bool IsAnyStore() const {
-    return IsStoreIC() || IsStoreOwnIC() || IsStoreGlobalIC() ||
-           IsKeyedStoreIC() || IsStoreInArrayLiteralICKind(kind());
+    return IsSetNamedIC() || IsDefineNamedOwnIC() || IsStoreGlobalIC() ||
+           IsKeyedStoreIC() || IsStoreInArrayLiteralICKind(kind()) ||
+           IsDefineKeyedOwnIC();
+  }
+  bool IsAnyDefineOwn() const {
+    return IsDefineNamedOwnIC() || IsDefineKeyedOwnIC();
   }
 
   static inline bool IsHandler(MaybeObject object);
@@ -66,11 +71,15 @@ class IC {
 
  protected:
   void set_slow_stub_reason(const char* reason) { slow_stub_reason_ = reason; }
+  void set_accessor(Handle<Object> accessor) { accessor_ = accessor; }
+  MaybeHandle<Object> accessor() const { return accessor_; }
 
   Isolate* isolate() const { return isolate_; }
 
   bool is_vector_set() { return vector_set_; }
   inline bool vector_needs_update();
+
+  inline Handle<Object> CodeHandler(Builtin builtin);
 
   // Configure for most states.
   bool ConfigureVectorState(IC::State new_state, Handle<Object> key);
@@ -95,6 +104,7 @@ class IC {
   MaybeHandle<Object> ReferenceError(Handle<Name> name);
 
   void UpdateMonomorphicIC(const MaybeObjectHandle& handler, Handle<Name> name);
+  bool UpdateMegaDOMIC(const MaybeObjectHandle& handler, Handle<Name> name);
   bool UpdatePolymorphicIC(Handle<Name> name, const MaybeObjectHandle& handler);
   void UpdateMegamorphicCache(Handle<Map> map, Handle<Name> name,
                               const MaybeObjectHandle& handler);
@@ -111,18 +121,22 @@ class IC {
   bool IsLoadGlobalIC() const { return IsLoadGlobalICKind(kind_); }
   bool IsKeyedLoadIC() const { return IsKeyedLoadICKind(kind_); }
   bool IsStoreGlobalIC() const { return IsStoreGlobalICKind(kind_); }
-  bool IsStoreIC() const { return IsStoreICKind(kind_); }
-  bool IsStoreOwnIC() const { return IsStoreOwnICKind(kind_); }
+  bool IsSetNamedIC() const { return IsSetNamedICKind(kind_); }
+  bool IsDefineNamedOwnIC() const { return IsDefineNamedOwnICKind(kind_); }
+  bool IsStoreInArrayLiteralIC() const {
+    return IsStoreInArrayLiteralICKind(kind_);
+  }
   bool IsKeyedStoreIC() const { return IsKeyedStoreICKind(kind_); }
   bool IsKeyedHasIC() const { return IsKeyedHasICKind(kind_); }
+  bool IsDefineKeyedOwnIC() const { return IsDefineKeyedOwnICKind(kind_); }
   bool is_keyed() const {
-    return IsKeyedLoadIC() || IsKeyedStoreIC() ||
-           IsStoreInArrayLiteralICKind(kind_) || IsKeyedHasIC();
+    return IsKeyedLoadIC() || IsKeyedStoreIC() || IsStoreInArrayLiteralIC() ||
+           IsKeyedHasIC() || IsDefineKeyedOwnIC();
   }
   bool ShouldRecomputeHandler(Handle<String> name);
 
-  Handle<Map> receiver_map() { return receiver_map_; }
-  inline void update_receiver_map(Handle<Object> receiver);
+  Handle<Map> lookup_start_object_map() { return lookup_start_object_map_; }
+  inline void update_lookup_start_object_map(Handle<Object> object);
 
   void TargetMaps(MapHandles* list) {
     FindTargetMaps();
@@ -134,10 +148,6 @@ class IC {
   Map FirstTargetMap() {
     FindTargetMaps();
     return !target_maps_.empty() ? *target_maps_[0] : Map();
-  }
-
-  State saved_state() const {
-    return state() == RECOMPUTE_HANDLER ? old_state_ : state();
   }
 
   const FeedbackNexus* nexus() const { return &nexus_; }
@@ -156,8 +166,8 @@ class IC {
   State old_state_;  // For saving if we marked as prototype failure.
   State state_;
   FeedbackSlotKind kind_;
-  Handle<Map> receiver_map_;
-
+  Handle<Map> lookup_start_object_map_;
+  MaybeHandle<Object> accessor_;
   MapHandles target_maps_;
   bool target_maps_set_;
 
@@ -184,9 +194,10 @@ class LoadIC : public IC {
     return ShouldThrowReferenceError(kind());
   }
 
-  V8_WARN_UNUSED_RESULT MaybeHandle<Object> Load(Handle<Object> object,
-                                                 Handle<Name> name,
-                                                 bool update_feedback = true);
+  // If receiver is empty, use object as the receiver.
+  V8_WARN_UNUSED_RESULT MaybeHandle<Object> Load(
+      Handle<Object> object, Handle<Name> name, bool update_feedback = true,
+      Handle<Object> receiver = Handle<Object>());
 
  protected:
   // Update the inline cache and the global stub cache based on the
@@ -334,7 +345,8 @@ class StoreInArrayLiteralIC : public KeyedStoreIC {
     DCHECK(IsStoreInArrayLiteralICKind(kind()));
   }
 
-  void Store(Handle<JSArray> array, Handle<Object> index, Handle<Object> value);
+  MaybeHandle<Object> Store(Handle<JSArray> array, Handle<Object> index,
+                            Handle<Object> value);
 };
 
 }  // namespace internal

@@ -1,5 +1,6 @@
 'use strict';
 const common = require('../common');
+
 const assert = require('assert');
 const vm = require('vm');
 
@@ -8,8 +9,8 @@ const SlowBuffer = require('buffer').SlowBuffer;
 // Verify the maximum Uint8Array size. There is no concrete limit by spec. The
 // internal limits should be updated if this fails.
 assert.throws(
-  () => new Uint8Array(2 ** 32),
-  { message: 'Invalid typed array length: 4294967296' }
+  () => new Uint8Array(2 ** 32 + 1),
+  { message: 'Invalid typed array length: 4294967297' }
 );
 
 const b = Buffer.allocUnsafe(1024);
@@ -40,7 +41,25 @@ assert.strictEqual(d.length, 0);
   assert.strictEqual(b.offset, 0);
 }
 
+// Test creating a Buffer from a Uint8Array
+{
+  const ui8 = new Uint8Array(4).fill(42);
+  const e = Buffer.from(ui8);
+  for (const [index, value] of e.entries()) {
+    assert.strictEqual(value, ui8[index]);
+  }
+}
+// Test creating a Buffer from a Uint8Array (old constructor)
+{
+  const ui8 = new Uint8Array(4).fill(42);
+  const e = Buffer(ui8);
+  for (const [key, value] of e.entries()) {
+    assert.strictEqual(value, ui8[key]);
+  }
+}
+
 // Test creating a Buffer from a Uint32Array
+// Note: it is implicitly interpreted as Array of integers modulo 256
 {
   const ui32 = new Uint32Array(4).fill(42);
   const e = Buffer.from(ui32);
@@ -49,11 +68,12 @@ assert.strictEqual(d.length, 0);
   }
 }
 // Test creating a Buffer from a Uint32Array (old constructor)
+// Note: it is implicitly interpreted as Array of integers modulo 256
 {
   const ui32 = new Uint32Array(4).fill(42);
   const e = Buffer(ui32);
   for (const [key, value] of e.entries()) {
-    assert.deepStrictEqual(value, ui32[key]);
+    assert.strictEqual(value, ui32[key]);
   }
 }
 
@@ -104,7 +124,7 @@ b.copy(Buffer.alloc(0), 1, 1, 1);
 b.copy(Buffer.alloc(1), 1, 1, 1);
 
 // Try to copy 0 bytes from past the end of the source buffer
-b.copy(Buffer.alloc(1), 0, 2048, 2048);
+b.copy(Buffer.alloc(1), 0, 1024, 1024);
 
 // Testing for smart defaults and ability to pass string values as offset
 {
@@ -345,7 +365,7 @@ const base64flavors = ['base64', 'base64url'];
   assert.strictEqual(Buffer.from(quote).toString('base64'), expected);
   assert.strictEqual(
     Buffer.from(quote).toString('base64url'),
-    expected.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+    expected.replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
   );
 
   base64flavors.forEach((encoding) => {

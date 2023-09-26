@@ -13,7 +13,7 @@ const filename = path.resolve(tmpdir.path,
 const bench = common.createBenchmark(main, {
   dur: [5],
   encodingType: ['buf', 'asc', 'utf'],
-  size: [2, 1024, 65535, 1024 * 1024]
+  size: [2, 1024, 65535, 1024 * 1024],
 });
 
 function main({ dur, encodingType, size }) {
@@ -36,7 +36,11 @@ function main({ dur, encodingType, size }) {
       throw new Error(`invalid encodingType: ${encodingType}`);
   }
 
-  try { fs.unlinkSync(filename); } catch {}
+  try {
+    fs.unlinkSync(filename);
+  } catch {
+    // Continue regardless of error.
+  }
 
   let started = false;
   let ended = false;
@@ -48,7 +52,11 @@ function main({ dur, encodingType, size }) {
   f.on('finish', () => {
     ended = true;
     const written = fs.statSync(filename).size / 1024;
-    try { fs.unlinkSync(filename); } catch {}
+    try {
+      fs.unlinkSync(filename);
+    } catch {
+      // Continue regardless of error.
+    }
     bench.end(written / 1024);
   });
 

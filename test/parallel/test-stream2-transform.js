@@ -22,8 +22,7 @@
 'use strict';
 const common = require('../common');
 const assert = require('assert');
-const PassThrough = require('_stream_passthrough');
-const Transform = require('_stream_transform');
+const { PassThrough, Transform } = require('stream');
 
 {
   // Verify writable side consumption
@@ -45,10 +44,9 @@ const Transform = require('_stream_transform');
 
   assert.strictEqual(tx.readableLength, 10);
   assert.strictEqual(transformed, 10);
-  assert.strictEqual(tx._transformState.writechunk.length, 5);
   assert.deepStrictEqual(tx.writableBuffer.map(function(c) {
     return c.chunk.length;
-  }), [6, 7, 8, 9, 10]);
+  }), [5, 6, 7, 8, 9, 10]);
 }
 
 {
@@ -469,4 +467,28 @@ const Transform = require('_stream_transform');
   process.nextTick(common.mustCall(function() {
     assert.strictEqual(ended, true);
   }));
+}
+
+{
+  const s = new Transform({
+    objectMode: true,
+    construct(callback) {
+      this.push('header from constructor');
+      callback();
+    },
+    transform: (row, encoding, callback) => {
+      callback(null, row);
+    },
+  });
+
+  const expected = [
+    'header from constructor',
+    'firstLine',
+    'secondLine',
+  ];
+  s.on('data', common.mustCall((data) => {
+    assert.strictEqual(data.toString(), expected.shift());
+  }, 3));
+  s.write('firstLine');
+  process.nextTick(() => s.write('secondLine'));
 }

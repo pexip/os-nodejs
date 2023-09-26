@@ -20,7 +20,8 @@ void AppendExceptionLine(Environment* env,
                          enum ErrorHandlingMode mode);
 
 [[noreturn]] void FatalError(const char* location, const char* message);
-void OnFatalError(const char* location, const char* message);
+[[noreturn]] void OnFatalError(const char* location, const char* message);
+[[noreturn]] void OOMErrorHandler(const char* location, bool is_heap_oom);
 
 // Helpers to construct errors similar to the ones provided by
 // lib/internal/errors.js.
@@ -35,22 +36,46 @@ void OnFatalError(const char* location, const char* message);
   V(ERR_CLOSED_MESSAGE_PORT, Error)                                            \
   V(ERR_CONSTRUCT_CALL_REQUIRED, TypeError)                                    \
   V(ERR_CONSTRUCT_CALL_INVALID, TypeError)                                     \
+  V(ERR_CRYPTO_INITIALIZATION_FAILED, Error)                                   \
+  V(ERR_CRYPTO_INVALID_AUTH_TAG, TypeError)                                    \
+  V(ERR_CRYPTO_INVALID_COUNTER, TypeError)                                     \
+  V(ERR_CRYPTO_INVALID_CURVE, TypeError)                                       \
+  V(ERR_CRYPTO_INVALID_DIGEST, TypeError)                                      \
+  V(ERR_CRYPTO_INVALID_IV, TypeError)                                          \
+  V(ERR_CRYPTO_INVALID_JWK, TypeError)                                         \
+  V(ERR_CRYPTO_INVALID_KEYLEN, RangeError)                                     \
+  V(ERR_CRYPTO_INVALID_KEYPAIR, RangeError)                                    \
+  V(ERR_CRYPTO_INVALID_KEYTYPE, RangeError)                                    \
+  V(ERR_CRYPTO_INVALID_MESSAGELEN, RangeError)                                 \
+  V(ERR_CRYPTO_INVALID_SCRYPT_PARAMS, RangeError)                              \
+  V(ERR_CRYPTO_INVALID_STATE, Error)                                           \
+  V(ERR_CRYPTO_INVALID_TAG_LENGTH, RangeError)                                 \
+  V(ERR_CRYPTO_JWK_UNSUPPORTED_CURVE, Error)                                   \
+  V(ERR_CRYPTO_JWK_UNSUPPORTED_KEY_TYPE, Error)                                \
+  V(ERR_CRYPTO_OPERATION_FAILED, Error)                                        \
   V(ERR_CRYPTO_TIMING_SAFE_EQUAL_LENGTH, RangeError)                           \
   V(ERR_CRYPTO_UNKNOWN_CIPHER, Error)                                          \
   V(ERR_CRYPTO_UNKNOWN_DH_GROUP, Error)                                        \
+  V(ERR_CRYPTO_UNSUPPORTED_OPERATION, Error)                                   \
+  V(ERR_CRYPTO_JOB_INIT_FAILED, Error)                                         \
+  V(ERR_DLOPEN_DISABLED, Error)                                                \
   V(ERR_DLOPEN_FAILED, Error)                                                  \
+  V(ERR_ENCODING_INVALID_ENCODED_DATA, TypeError)                              \
   V(ERR_EXECUTION_ENVIRONMENT_NOT_AVAILABLE, Error)                            \
+  V(ERR_ILLEGAL_CONSTRUCTOR, Error)                                            \
   V(ERR_INVALID_ADDRESS, Error)                                                \
   V(ERR_INVALID_ARG_VALUE, TypeError)                                          \
   V(ERR_OSSL_EVP_INVALID_DIGEST, Error)                                        \
   V(ERR_INVALID_ARG_TYPE, TypeError)                                           \
+  V(ERR_INVALID_OBJECT_DEFINE_PROPERTY, TypeError)                             \
   V(ERR_INVALID_MODULE, Error)                                                 \
+  V(ERR_INVALID_STATE, Error)                                                  \
   V(ERR_INVALID_THIS, TypeError)                                               \
   V(ERR_INVALID_TRANSFER_OBJECT, TypeError)                                    \
   V(ERR_MEMORY_ALLOCATION_FAILED, Error)                                       \
   V(ERR_MESSAGE_TARGET_CONTEXT_UNAVAILABLE, Error)                             \
   V(ERR_MISSING_ARGS, TypeError)                                               \
-  V(ERR_MISSING_MESSAGE_PORT_IN_TRANSFER_LIST, TypeError)                      \
+  V(ERR_MISSING_TRANSFERABLE_IN_TRANSFER_LIST, TypeError)                      \
   V(ERR_MISSING_PASSPHRASE, TypeError)                                         \
   V(ERR_MISSING_PLATFORM_FOR_WORKER, Error)                                    \
   V(ERR_NON_CONTEXT_AWARE_DISABLED, Error)                                     \
@@ -105,13 +130,32 @@ ERRORS_WITH_CODE(V)
   V(ERR_CLOSED_MESSAGE_PORT, "Cannot send data on closed MessagePort")         \
   V(ERR_CONSTRUCT_CALL_INVALID, "Constructor cannot be called")                \
   V(ERR_CONSTRUCT_CALL_REQUIRED, "Cannot call constructor without `new`")      \
+  V(ERR_CRYPTO_INITIALIZATION_FAILED, "Initialization failed")                 \
+  V(ERR_CRYPTO_INVALID_AUTH_TAG, "Invalid authentication tag")                 \
+  V(ERR_CRYPTO_INVALID_COUNTER, "Invalid counter")                             \
+  V(ERR_CRYPTO_INVALID_CURVE, "Invalid EC curve name")                         \
+  V(ERR_CRYPTO_INVALID_DIGEST, "Invalid digest")                               \
+  V(ERR_CRYPTO_INVALID_IV, "Invalid initialization vector")                    \
+  V(ERR_CRYPTO_INVALID_JWK, "Invalid JWK format")                              \
+  V(ERR_CRYPTO_INVALID_KEYLEN, "Invalid key length")                           \
+  V(ERR_CRYPTO_INVALID_KEYPAIR, "Invalid key pair")                            \
+  V(ERR_CRYPTO_INVALID_KEYTYPE, "Invalid key type")                            \
+  V(ERR_CRYPTO_INVALID_MESSAGELEN, "Invalid message length")                   \
+  V(ERR_CRYPTO_INVALID_SCRYPT_PARAMS, "Invalid scrypt params")                 \
+  V(ERR_CRYPTO_INVALID_STATE, "Invalid state")                                 \
+  V(ERR_CRYPTO_INVALID_TAG_LENGTH, "Invalid taglength")                        \
+  V(ERR_CRYPTO_JWK_UNSUPPORTED_KEY_TYPE, "Unsupported JWK Key Type.")          \
+  V(ERR_CRYPTO_OPERATION_FAILED, "Operation failed")                           \
   V(ERR_CRYPTO_TIMING_SAFE_EQUAL_LENGTH,                                       \
     "Input buffers must have the same byte length")                            \
   V(ERR_CRYPTO_UNKNOWN_CIPHER, "Unknown cipher")                               \
   V(ERR_CRYPTO_UNKNOWN_DH_GROUP, "Unknown DH group")                           \
+  V(ERR_CRYPTO_UNSUPPORTED_OPERATION, "Unsupported crypto operation")          \
+  V(ERR_CRYPTO_JOB_INIT_FAILED, "Failed to initialize crypto job config")      \
   V(ERR_DLOPEN_FAILED, "DLOpen failed")                                        \
   V(ERR_EXECUTION_ENVIRONMENT_NOT_AVAILABLE,                                   \
     "Context not associated with Node.js environment")                         \
+  V(ERR_ILLEGAL_CONSTRUCTOR, "Illegal constructor")                            \
   V(ERR_INVALID_ADDRESS, "Invalid socket address")                             \
   V(ERR_INVALID_MODULE, "No such module")                                      \
   V(ERR_INVALID_THIS, "Value of \"this\" is the wrong type")                   \
@@ -121,14 +165,14 @@ ERRORS_WITH_CODE(V)
   V(ERR_MESSAGE_TARGET_CONTEXT_UNAVAILABLE,                                    \
     "A message object could not be deserialized successfully in the target "   \
     "vm.Context")                                                              \
-  V(ERR_MISSING_MESSAGE_PORT_IN_TRANSFER_LIST,                                 \
+  V(ERR_MISSING_TRANSFERABLE_IN_TRANSFER_LIST,                                 \
     "Object that needs transfer was found in message but not listed "          \
     "in transferList")                                                         \
   V(ERR_MISSING_PLATFORM_FOR_WORKER,                                           \
     "The V8 platform used by this instance of Node does not support "          \
     "creating Workers")                                                        \
   V(ERR_NON_CONTEXT_AWARE_DISABLED,                                            \
-    "Loading non context-aware native modules has been disabled")              \
+    "Loading non context-aware native addons has been disabled")               \
   V(ERR_SCRIPT_EXECUTION_INTERRUPTED,                                          \
     "Script execution was interrupted by `SIGINT`")                            \
   V(ERR_TLS_PSK_SET_IDENTIY_HINT_FAILED, "Failed to set PSK identity hint")    \
@@ -231,6 +275,11 @@ void PerIsolateMessageListener(v8::Local<v8::Message> message,
 void DecorateErrorStack(Environment* env,
                         const errors::TryCatchScope& try_catch);
 }  // namespace errors
+
+v8::ModifyCodeGenerationFromStringsResult ModifyCodeGenerationFromStrings(
+    v8::Local<v8::Context> context,
+    v8::Local<v8::Value> source,
+    bool is_code_like);
 
 }  // namespace node
 

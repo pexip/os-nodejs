@@ -47,6 +47,16 @@
 #include <dlfcn.h>
 #endif
 
+#if defined(_WIN32)
+#include <io.h>  // _S_IREAD _S_IWRITE
+#ifndef S_IRUSR
+#define S_IRUSR _S_IREAD
+#endif  // S_IRUSR
+#ifndef S_IWUSR
+#define S_IWUSR _S_IWRITE
+#endif  // S_IWUSR
+#endif
+
 #include <cerrno>
 #include <csignal>
 #include <limits>
@@ -1022,10 +1032,8 @@ void DefineCryptoConstants(Local<Object> target) {
     NODE_DEFINE_CONSTANT(target, DH_NOT_SUITABLE_GENERATOR);
 #endif
 
-#ifdef TLSEXT_TYPE_application_layer_protocol_negotiation
 #define ALPN_ENABLED 1
     NODE_DEFINE_CONSTANT(target, ALPN_ENABLED);
-#endif
 
 #ifdef RSA_PKCS1_PADDING
     NODE_DEFINE_CONSTANT(target, RSA_PKCS1_PADDING);

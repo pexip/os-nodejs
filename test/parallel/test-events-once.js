@@ -1,5 +1,5 @@
 'use strict';
-// Flags: --expose-internals --no-warnings --experimental-abortcontroller
+// Flags: --expose-internals --no-warnings
 
 const common = require('../common');
 const { once, EventEmitter } = require('events');
@@ -9,7 +9,7 @@ const {
   fail,
   rejects,
 } = require('assert');
-const { EventTarget, Event } = require('internal/event_target');
+const { kEvents } = require('internal/event_target');
 
 async function onceAnEvent() {
   const ee = new EventEmitter();
@@ -23,6 +23,18 @@ async function onceAnEvent() {
   strictEqual(ee.listenerCount('error'), 0);
   strictEqual(ee.listenerCount('myevent'), 0);
 }
+
+async function onceAnEventWithNullOptions() {
+  const ee = new EventEmitter();
+
+  process.nextTick(() => {
+    ee.emit('myevent', 42);
+  });
+
+  const [value] = await once(ee, 'myevent', null);
+  strictEqual(value, 42);
+}
+
 
 async function onceAnEventWithTwoArgs() {
   const ee = new EventEmitter();
@@ -52,6 +64,32 @@ async function catchesErrors() {
   strictEqual(err, expected);
   strictEqual(ee.listenerCount('error'), 0);
   strictEqual(ee.listenerCount('myevent'), 0);
+}
+
+async function catchesErrorsWithAbortSignal() {
+  const ee = new EventEmitter();
+  const ac = new AbortController();
+  const signal = ac.signal;
+
+  const expected = new Error('boom');
+  let err;
+  process.nextTick(() => {
+    ee.emit('error', expected);
+  });
+
+  try {
+    const promise = once(ee, 'myevent', { signal });
+    strictEqual(ee.listenerCount('error'), 1);
+    strictEqual(signal[kEvents].size, 1);
+
+    await promise;
+  } catch (e) {
+    err = e;
+  }
+  strictEqual(err, expected);
+  strictEqual(ee.listenerCount('error'), 0);
+  strictEqual(ee.listenerCount('myevent'), 0);
+  strictEqual(signal[kEvents].size, 0);
 }
 
 async function stopListeningAfterCatchingError() {
@@ -112,6 +150,13 @@ async function onceWithEventTargetError() {
   strictEqual(err, error);
 }
 
+async function onceWithInvalidEventEmmiter() {
+  const ac = new AbortController();
+  return rejects(once(ac, 'myevent'), {
+    code: 'ERR_INVALID_ARG_TYPE',
+  });
+}
+
 async function prioritizesEventEmitter() {
   const ee = new EventEmitter();
   ee.addEventListener = fail;
@@ -122,18 +167,17 @@ async function prioritizesEventEmitter() {
 
 async function abortSignalBefore() {
   const ee = new EventEmitter();
-  const ac = new AbortController();
   ee.on('error', common.mustNotCall());
-  ac.abort();
+  const abortedSignal = AbortSignal.abort();
 
   await Promise.all([1, {}, 'hi', null, false].map((signal) => {
     return rejects(once(ee, 'foo', { signal }), {
-      code: 'ERR_INVALID_ARG_TYPE'
+      code: 'ERR_INVALID_ARG_TYPE',
     });
   }));
 
-  return rejects(once(ee, 'foo', { signal: ac.signal }), {
-    name: 'AbortError'
+  return rejects(once(ee, 'foo', { signal: abortedSignal }), {
+    name: 'AbortError',
   });
 }
 
@@ -142,7 +186,7 @@ async function abortSignalAfter() {
   const ac = new AbortController();
   ee.on('error', common.mustNotCall());
   const r = rejects(once(ee, 'foo', { signal: ac.signal }), {
-    name: 'AbortError'
+    name: 'AbortError',
   });
   process.nextTick(() => ac.abort());
   return r;
@@ -155,22 +199,37 @@ async function abortSignalAfterEvent() {
     ee.emit('foo');
     ac.abort();
   });
-  await once(ee, 'foo', { signal: ac.signal });
+  const promise = once(ee, 'foo', { signal: ac.signal });
+  strictEqual(ac.signal[kEvents].size, 1);
+  await promise;
+  strictEqual(ac.signal[kEvents].size, 0);
+}
+
+async function abortSignalRemoveListener() {
+  const ee = new EventEmitter();
+  const ac = new AbortController();
+
+  try {
+    process.nextTick(() => ac.abort());
+    await once(ee, 'test', { signal: ac.signal });
+  } catch {
+    strictEqual(ee.listeners('test').length, 0);
+    strictEqual(ee.listeners('error').length, 0);
+  }
 }
 
 async function eventTargetAbortSignalBefore() {
   const et = new EventTarget();
-  const ac = new AbortController();
-  ac.abort();
+  const abortedSignal = AbortSignal.abort();
 
   await Promise.all([1, {}, 'hi', null, false].map((signal) => {
     return rejects(once(et, 'foo', { signal }), {
-      code: 'ERR_INVALID_ARG_TYPE'
+      code: 'ERR_INVALID_ARG_TYPE',
     });
   }));
 
-  return rejects(once(et, 'foo', { signal: ac.signal }), {
-    name: 'AbortError'
+  return rejects(once(et, 'foo', { signal: abortedSignal }), {
+    name: 'AbortError',
   });
 }
 
@@ -178,7 +237,7 @@ async function eventTargetAbortSignalAfter() {
   const et = new EventTarget();
   const ac = new AbortController();
   const r = rejects(once(et, 'foo', { signal: ac.signal }), {
-    name: 'AbortError'
+    name: 'AbortError',
   });
   process.nextTick(() => ac.abort());
   return r;
@@ -196,16 +255,20 @@ async function eventTargetAbortSignalAfterEvent() {
 
 Promise.all([
   onceAnEvent(),
+  onceAnEventWithNullOptions(),
   onceAnEventWithTwoArgs(),
   catchesErrors(),
+  catchesErrorsWithAbortSignal(),
   stopListeningAfterCatchingError(),
   onceError(),
   onceWithEventTarget(),
   onceWithEventTargetError(),
+  onceWithInvalidEventEmmiter(),
   prioritizesEventEmitter(),
   abortSignalBefore(),
   abortSignalAfter(),
   abortSignalAfterEvent(),
+  abortSignalRemoveListener(),
   eventTargetAbortSignalBefore(),
   eventTargetAbortSignalAfter(),
   eventTargetAbortSignalAfterEvent(),

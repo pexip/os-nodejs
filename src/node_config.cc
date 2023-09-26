@@ -1,8 +1,8 @@
 #include "env-inl.h"
 #include "memory_tracker.h"
 #include "node.h"
+#include "node_builtins.h"
 #include "node_i18n.h"
-#include "node_native_module_env.h"
 #include "node_options.h"
 #include "util-inl.h"
 
@@ -42,9 +42,7 @@ static void Initialize(Local<Object> target,
   READONLY_FALSE_PROPERTY(target, "hasOpenSSL");
 #endif  // HAVE_OPENSSL
 
-#ifdef NODE_FIPS_MODE
   READONLY_TRUE_PROPERTY(target, "fipsMode");
-#endif
 
 #ifdef NODE_HAVE_I18N_SUPPORT
 
@@ -84,11 +82,8 @@ static void Initialize(Local<Object> target,
 #if defined HAVE_DTRACE || defined HAVE_ETW
   READONLY_TRUE_PROPERTY(target, "hasDtrace");
 #endif
-
-  READONLY_PROPERTY(target, "hasCachedBuiltins",
-     v8::Boolean::New(isolate, native_module::has_code_cache));
 }  // InitConfig
 
 }  // namespace node
 
-NODE_MODULE_CONTEXT_AWARE_INTERNAL(config, node::Initialize)
+NODE_BINDING_CONTEXT_AWARE_INTERNAL(config, node::Initialize)

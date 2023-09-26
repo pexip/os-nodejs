@@ -28,18 +28,18 @@
 #include <WinError.h>
 
 #define SKIP_CHECK_VAR "NODE_SKIP_PLATFORM_CHECK"
-#define SKIP_CHECK_SIZE 1
 #define SKIP_CHECK_VALUE "1"
+#define SKIP_CHECK_STRLEN (sizeof(SKIP_CHECK_VALUE) - 1)
 
 int wmain(int argc, wchar_t* wargv[]) {
   // Windows Server 2012 (not R2) is supported until 10/10/2023, so we allow it
   // to run in the experimental support tier.
-  char buf[SKIP_CHECK_SIZE + 1];
+  char buf[SKIP_CHECK_STRLEN + 1];
   if (!IsWindows8Point1OrGreater() &&
       !(IsWindowsServer() && IsWindows8OrGreater()) &&
       (GetEnvironmentVariableA(SKIP_CHECK_VAR, buf, sizeof(buf)) !=
-       SKIP_CHECK_SIZE ||
-       strncmp(buf, SKIP_CHECK_VALUE, SKIP_CHECK_SIZE + 1) != 0)) {
+           SKIP_CHECK_STRLEN ||
+       strncmp(buf, SKIP_CHECK_VALUE, SKIP_CHECK_STRLEN) != 0)) {
     fprintf(stderr, "Node.js is only supported on Windows 8.1, Windows "
                     "Server 2012 R2, or higher.\n"
                     "Setting the " SKIP_CHECK_VAR " environment variable "
@@ -88,56 +88,8 @@ int wmain(int argc, wchar_t* wargv[]) {
 }
 #else
 // UNIX
-#ifdef __linux__
-#include <elf.h>
-#ifdef __LP64__
-#define Elf_auxv_t Elf64_auxv_t
-#else
-#define Elf_auxv_t Elf32_auxv_t
-#endif  // __LP64__
-extern char** environ;
-#endif  // __linux__
-#if defined(__POSIX__) && defined(NODE_SHARED_MODE)
-#include <string.h>
-#include <signal.h>
-#endif
-
-namespace node {
-namespace per_process {
-extern bool linux_at_secure;
-}  // namespace per_process
-}  // namespace node
 
 int main(int argc, char* argv[]) {
-#if defined(__POSIX__) && defined(NODE_SHARED_MODE)
-  // In node::PlatformInit(), we squash all signal handlers for non-shared lib
-  // build. In order to run test cases against shared lib build, we also need
-  // to do the same thing for shared lib build here, but only for SIGPIPE for
-  // now. If node::PlatformInit() is moved to here, then this section could be
-  // removed.
-  {
-    struct sigaction act;
-    memset(&act, 0, sizeof(act));
-    act.sa_handler = SIG_IGN;
-    sigaction(SIGPIPE, &act, nullptr);
-  }
-#endif
-
-#if defined(__linux__)
-  char** envp = environ;
-  while (*envp++ != nullptr) {}
-  Elf_auxv_t* auxv = reinterpret_cast<Elf_auxv_t*>(envp);
-  for (; auxv->a_type != AT_NULL; auxv++) {
-    if (auxv->a_type == AT_SECURE) {
-      node::per_process::linux_at_secure = auxv->a_un.a_val;
-      break;
-    }
-  }
-#endif
-  // Disable stdio buffering, it interacts poorly with printf()
-  // calls elsewhere in the program (e.g., any logging from V8.)
-  setvbuf(stdout, nullptr, _IONBF, 0);
-  setvbuf(stderr, nullptr, _IONBF, 0);
   return node::Start(argc, argv);
 }
 #endif

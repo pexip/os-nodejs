@@ -4,18 +4,19 @@
 
 import("../../gni/v8.gni")
 
-group("v8_run_gcmole") {
+group("v8_gcmole_files") {
   testonly = true
-
+  data_deps = [
+    "../../:v8_dump_build_config",
+    "../../:v8_generated_cc_files",
+  ]
   data = [
-    "gccause.lua",
-    "GCMOLE.gn",
-    "gcmole.lua",
+    "gcmole.py",
     "gcmole-test.cc",
     "gcmole-tools/",
-    "parallel.py",
     "run-gcmole.py",
-    "suspects.whitelist",
+    "suspects.allowlist",
+    "ignored_files",
     "test-expectations.txt",
 
     # The following contains all relevant source and build files.
@@ -35,10 +36,6 @@ group("v8_run_gcmole") {
     "../../third_party/inspector_protocol/",
     "$target_gen_dir/../../",
     "$target_gen_dir/../../torque-generated/",
-  ]
-
-  deps = [
-    "../../:run_torque",
   ]
 
   if (v8_gcmole) {

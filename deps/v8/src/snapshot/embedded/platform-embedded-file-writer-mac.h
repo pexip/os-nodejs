@@ -26,11 +26,13 @@ class PlatformEmbeddedFileWriterMac : public PlatformEmbeddedFileWriterBase {
   void SectionRoData() override;
 
   void AlignToCodeAlignment() override;
+  void PaddingAfterCode() override;
   void AlignToDataAlignment() override;
 
   void DeclareUint32(const char* name, uint32_t value) override;
   void DeclarePointerToSymbol(const char* name, const char* target) override;
 
+  void DeclareSymbolGlobal(const char* name) override;
   void DeclareLabel(const char* name) override;
 
   void SourceInfo(int fileid, const char* filename, int line) override;
@@ -44,9 +46,6 @@ class PlatformEmbeddedFileWriterMac : public PlatformEmbeddedFileWriterBase {
   void FileEpilogue() override;
 
   int IndentedDataDirective(DataDirective directive) override;
-
- private:
-  void DeclareSymbolGlobal(const char* name);
 
  private:
   const EmbeddedTargetArch target_arch_;

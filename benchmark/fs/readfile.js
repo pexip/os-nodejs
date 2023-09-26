@@ -15,12 +15,17 @@ const filename = path.resolve(tmpdir.path,
 
 const bench = common.createBenchmark(main, {
   duration: [5],
+  encoding: ['', 'utf-8'],
   len: [1024, 16 * 1024 * 1024],
-  concurrent: [1, 10]
+  concurrent: [1, 10],
 });
 
-function main({ len, duration, concurrent }) {
-  try { fs.unlinkSync(filename); } catch {}
+function main({ len, duration, concurrent, encoding }) {
+  try {
+    fs.unlinkSync(filename);
+  } catch {
+    // Continue regardless of error.
+  }
   let data = Buffer.alloc(len, 'x');
   fs.writeFileSync(filename, data);
   data = null;
@@ -31,12 +36,16 @@ function main({ len, duration, concurrent }) {
   setTimeout(() => {
     benchEnded = true;
     bench.end(reads);
-    try { fs.unlinkSync(filename); } catch {}
+    try {
+      fs.unlinkSync(filename);
+    } catch {
+      // Continue regardless of error.
+    }
     process.exit(0);
   }, duration * 1000);
 
   function read() {
-    fs.readFile(filename, afterRead);
+    fs.readFile(filename, encoding, afterRead);
   }
 
   function afterRead(er, data) {

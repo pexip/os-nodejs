@@ -16,8 +16,20 @@ function runURLTests(urltests) {
   for(var i = 0, l = urltests.length; i < l; i++) {
     var expected = urltests[i]
     if (typeof expected === "string") continue // skip comments
+    // skip without base because you cannot unset the baseURL of a document
+    if (expected.base === null) continue;
 
-    test(function() {
+    function getKey(expected) {
+      if (expected.protocol) {
+        return expected.protocol.replace(":", "");
+      }
+      if (expected.failure) {
+        return expected.input.split(":")[0];
+      }
+      return "other";
+    }
+
+    subsetTestByKey(getKey(expected), test, function() {
       var url = bURL(expected.input, expected.base)
       if(expected.failure) {
         if(url.protocol !== ':') {

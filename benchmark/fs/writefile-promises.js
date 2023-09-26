@@ -17,7 +17,7 @@ const bench = common.createBenchmark(main, {
   duration: [5],
   encodingType: ['buf', 'asc', 'utf'],
   size: [2, 1024, 65535, 1024 * 1024],
-  concurrent: [1, 10]
+  concurrent: [1, 10],
 });
 
 function main({ encodingType, duration, concurrent, size }) {
@@ -46,7 +46,11 @@ function main({ encodingType, duration, concurrent, size }) {
     benchEnded = true;
     bench.end(writes);
     for (let i = 0; i < filesWritten; i++) {
-      try { fs.unlinkSync(`${filename}-${i}`); } catch { }
+      try {
+        fs.unlinkSync(`${filename}-${i}`);
+      } catch {
+        // Continue regardless of error.
+      }
     }
     process.exit(0);
   }, duration * 1000);

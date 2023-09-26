@@ -1,4 +1,3 @@
-// Flags: --experimental-wasi-unstable-preview1 --experimental-wasm-bigint
 'use strict';
 const common = require('../common');
 const tmpdir = require('../common/tmpdir');

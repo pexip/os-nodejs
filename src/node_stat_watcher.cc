@@ -19,10 +19,11 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include "memory_tracker-inl.h"
 #include "node_stat_watcher.h"
 #include "async_wrap-inl.h"
 #include "env-inl.h"
+#include "memory_tracker-inl.h"
+#include "node_external_reference.h"
 #include "node_file-inl.h"
 #include "util-inl.h"
 
@@ -36,25 +37,31 @@ using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::HandleScope;
 using v8::Integer;
+using v8::Isolate;
 using v8::Local;
 using v8::Object;
 using v8::Uint32;
 using v8::Value;
 
-
 void StatWatcher::Initialize(Environment* env, Local<Object> target) {
+  Isolate* isolate = env->isolate();
   HandleScope scope(env->isolate());
 
-  Local<FunctionTemplate> t = env->NewFunctionTemplate(StatWatcher::New);
+  Local<FunctionTemplate> t = NewFunctionTemplate(isolate, StatWatcher::New);
   t->InstanceTemplate()->SetInternalFieldCount(
       StatWatcher::kInternalFieldCount);
   t->Inherit(HandleWrap::GetConstructorTemplate(env));
 
-  env->SetProtoMethod(t, "start", StatWatcher::Start);
+  SetProtoMethod(isolate, t, "start", StatWatcher::Start);
 
-  env->SetConstructorFunction(target, "StatWatcher", t);
+  SetConstructorFunction(env->context(), target, "StatWatcher", t);
 }
 
+void StatWatcher::RegisterExternalReferences(
+    ExternalReferenceRegistry* registry) {
+  registry->Register(StatWatcher::New);
+  registry->Register(StatWatcher::Start);
+}
 
 StatWatcher::StatWatcher(fs::BindingData* binding_data,
                          Local<Object> wrap,
@@ -90,8 +97,7 @@ void StatWatcher::Callback(uv_fs_poll_t* handle,
 
 void StatWatcher::New(const FunctionCallbackInfo<Value>& args) {
   CHECK(args.IsConstructCall());
-  fs::BindingData* binding_data =
-      Environment::GetBindingData<fs::BindingData>(args);
+  fs::BindingData* binding_data = Realm::GetBindingData<fs::BindingData>(args);
   new StatWatcher(binding_data, args.This(), args[0]->IsTrue());
 }
 

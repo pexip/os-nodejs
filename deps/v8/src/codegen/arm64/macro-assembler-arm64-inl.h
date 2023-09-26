@@ -7,12 +7,12 @@
 
 #include <ctype.h>
 
-#include "src/common/globals.h"
-
 #include "src/base/bits.h"
 #include "src/codegen/arm64/assembler-arm64-inl.h"
 #include "src/codegen/arm64/assembler-arm64.h"
 #include "src/codegen/macro-assembler.h"
+#include "src/common/globals.h"
+#include "src/execution/isolate-data.h"
 
 namespace v8 {
 namespace internal {
@@ -318,23 +318,15 @@ void TurboAssembler::Bind(Label* label, BranchTargetIdentifier id) {
     // instructions between the bind and the target identifier instruction.
     InstructionAccurateScope scope(this, 1);
     bind(label);
-    if (id == BranchTargetIdentifier::kPaciasp) {
-      paciasp();
+    if (id == BranchTargetIdentifier::kPacibsp) {
+      pacibsp();
     } else {
       bti(id);
     }
   }
 }
 
-void TurboAssembler::CodeEntry() {
-  // Since `kJavaScriptCallCodeStartRegister` is the target register for tail
-  // calls, we have to allow for jumps too, with "BTI jc". We also allow the
-  // register allocator to pick the target register for calls made from
-  // WebAssembly.
-  // TODO(v8:10026): Consider changing this so that we can use CallTarget(),
-  // which maps to "BTI c", here instead.
-  JumpOrCallTarget();
-}
+void TurboAssembler::CodeEntry() { CallTarget(); }
 
 void TurboAssembler::ExceptionHandler() { JumpTarget(); }
 
@@ -556,7 +548,7 @@ void TurboAssembler::Fcmp(const VRegister& fn, double value) {
   }
 }
 
-void MacroAssembler::Fcsel(const VRegister& fd, const VRegister& fn,
+void TurboAssembler::Fcsel(const VRegister& fd, const VRegister& fn,
                            const VRegister& fm, Condition cond) {
   DCHECK(allow_macro_instructions());
   DCHECK((cond != al) && (cond != nv));
@@ -1044,15 +1036,18 @@ void TurboAssembler::Uxtw(const Register& rd, const Register& rn) {
 void TurboAssembler::InitializeRootRegister() {
   ExternalReference isolate_root = ExternalReference::isolate_root(isolate());
   Mov(kRootRegister, Operand(isolate_root));
+#ifdef V8_COMPRESS_POINTERS_IN_SHARED_CAGE
+  LoadRootRelative(kPtrComprCageBaseRegister, IsolateData::cage_base_offset());
+#endif
 }
 
-void MacroAssembler::SmiTag(Register dst, Register src) {
+void TurboAssembler::SmiTag(Register dst, Register src) {
   DCHECK(dst.Is64Bits() && src.Is64Bits());
   DCHECK(SmiValuesAre32Bits() || SmiValuesAre31Bits());
   Lsl(dst, src, kSmiShift);
 }
 
-void MacroAssembler::SmiTag(Register smi) { SmiTag(smi, smi); }
+void TurboAssembler::SmiTag(Register smi) { SmiTag(smi, smi); }
 
 void TurboAssembler::SmiUntag(Register dst, Register src) {
   DCHECK(dst.Is64Bits() && src.Is64Bits());
@@ -1096,6 +1091,19 @@ void TurboAssembler::SmiUntag(Register dst, const MemOperand& src) {
 
 void TurboAssembler::SmiUntag(Register smi) { SmiUntag(smi, smi); }
 
+void TurboAssembler::SmiToInt32(Register smi) {
+  DCHECK(smi.Is64Bits());
+  if (FLAG_enable_slow_asserts) {
+    AssertSmi(smi);
+  }
+  DCHECK(SmiValuesAre32Bits() || SmiValuesAre31Bits());
+  if (COMPRESS_POINTERS_BOOL) {
+    Asr(smi.W(), smi.W(), kSmiShift);
+  } else {
+    Lsr(smi, smi, kSmiShift);
+  }
+}
+
 void TurboAssembler::JumpIfSmi(Register value, Label* smi_label,
                                Label* not_smi_label) {
   STATIC_ASSERT((kSmiTagSize == 1) && (kSmiTag == 0));
@@ -1136,7 +1144,7 @@ void TurboAssembler::Push(const CPURegister& src0, const CPURegister& src1,
 
 #ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY
   if (lr_mode == kSignLR) {
-    Paciasp();
+    Pacibsp();
   }
 #endif
 
@@ -1153,7 +1161,7 @@ void TurboAssembler::Push(const Register& src0, const VRegister& src1) {
   DCHECK_IMPLIES((lr_mode == kDontStoreLR), ((src0 != lr) && (src1 != lr)));
 #ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY
   if (lr_mode == kSignLR) {
-    Paciasp();
+    Pacibsp();
   }
 #endif
 
@@ -1188,7 +1196,7 @@ void TurboAssembler::Pop(const CPURegister& dst0, const CPURegister& dst1,
 
 #ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY
   if (lr_mode == kAuthLR) {
-    Autiasp();
+    Autibsp();
   }
 #endif
 }
@@ -1199,13 +1207,13 @@ void TurboAssembler::Poke(const CPURegister& src, const Operand& offset) {
   DCHECK_IMPLIES((lr_mode == kDontStoreLR), (src != lr));
 #ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY
   if (lr_mode == kSignLR) {
-    Paciasp();
+    Pacibsp();
   }
 #endif
 
   if (offset.IsImmediate()) {
     DCHECK_GE(offset.ImmediateValue(), 0);
-  } else if (emit_debug_code()) {
+  } else if (FLAG_debug_code) {
     Cmp(xzr, offset);
     Check(le, AbortReason::kStackAccessBelowStackPointer);
   }
@@ -1217,7 +1225,7 @@ template <TurboAssembler::LoadLRMode lr_mode>
 void TurboAssembler::Peek(const CPURegister& dst, const Operand& offset) {
   if (offset.IsImmediate()) {
     DCHECK_GE(offset.ImmediateValue(), 0);
-  } else if (emit_debug_code()) {
+  } else if (FLAG_debug_code) {
     Cmp(xzr, offset);
     Check(le, AbortReason::kStackAccessBelowStackPointer);
   }
@@ -1228,78 +1236,9 @@ void TurboAssembler::Peek(const CPURegister& dst, const Operand& offset) {
   DCHECK_IMPLIES((lr_mode == kDontLoadLR), (dst != lr));
 #ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY
   if (lr_mode == kAuthLR) {
-    Autiasp();
+    Autibsp();
   }
 #endif
-}
-
-template <TurboAssembler::StoreLRMode lr_mode>
-void TurboAssembler::PushCPURegList(CPURegList registers) {
-  DCHECK_IMPLIES((lr_mode == kDontStoreLR), !registers.IncludesAliasOf(lr));
-#ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY
-  if (lr_mode == kSignLR && registers.IncludesAliasOf(lr)) {
-    Paciasp();
-  }
-#endif
-
-  int size = registers.RegisterSizeInBytes();
-  DCHECK_EQ(0, (size * registers.Count()) % 16);
-
-  // Push up to four registers at a time.
-  while (!registers.IsEmpty()) {
-    int count_before = registers.Count();
-    const CPURegister& src0 = registers.PopHighestIndex();
-    const CPURegister& src1 = registers.PopHighestIndex();
-    const CPURegister& src2 = registers.PopHighestIndex();
-    const CPURegister& src3 = registers.PopHighestIndex();
-    int count = count_before - registers.Count();
-    PushHelper(count, size, src0, src1, src2, src3);
-  }
-}
-
-template <TurboAssembler::LoadLRMode lr_mode>
-void TurboAssembler::PopCPURegList(CPURegList registers) {
-  int size = registers.RegisterSizeInBytes();
-  DCHECK_EQ(0, (size * registers.Count()) % 16);
-
-#ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY
-  bool contains_lr = registers.IncludesAliasOf(lr);
-  DCHECK_IMPLIES((lr_mode == kDontLoadLR), !contains_lr);
-#endif
-
-  // Pop up to four registers at a time.
-  while (!registers.IsEmpty()) {
-    int count_before = registers.Count();
-    const CPURegister& dst0 = registers.PopLowestIndex();
-    const CPURegister& dst1 = registers.PopLowestIndex();
-    const CPURegister& dst2 = registers.PopLowestIndex();
-    const CPURegister& dst3 = registers.PopLowestIndex();
-    int count = count_before - registers.Count();
-    PopHelper(count, size, dst0, dst1, dst2, dst3);
-  }
-
-#ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY
-  if (lr_mode == kAuthLR && contains_lr) {
-    Autiasp();
-  }
-#endif
-}
-
-void TurboAssembler::Push(Handle<HeapObject> handle) {
-  UseScratchRegisterScope temps(this);
-  Register tmp = temps.AcquireX();
-  Mov(tmp, Operand(handle));
-  // This is only used in test-heap.cc, for generating code that is not
-  // executed. Push a padding slot together with the handle here, to
-  // satisfy the alignment requirement.
-  Push(padreg, tmp);
-}
-
-void TurboAssembler::Push(Smi smi) {
-  UseScratchRegisterScope temps(this);
-  Register tmp = temps.AcquireX();
-  Mov(tmp, Operand(smi));
-  Push(tmp);
 }
 
 void TurboAssembler::Claim(int64_t count, uint64_t unit_size) {
@@ -1310,7 +1249,7 @@ void TurboAssembler::Claim(int64_t count, uint64_t unit_size) {
     return;
   }
   DCHECK_EQ(size % 16, 0);
-#if V8_OS_WIN
+#if V8_TARGET_OS_WIN
   while (size > kStackPageSize) {
     Sub(sp, sp, kStackPageSize);
     Str(xzr, MemOperand(sp));
@@ -1332,7 +1271,7 @@ void TurboAssembler::Claim(const Register& count, uint64_t unit_size) {
   }
   AssertPositiveOrZero(count);
 
-#if V8_OS_WIN
+#if V8_TARGET_OS_WIN
   // "Functions that allocate 4k or more worth of stack must ensure that each
   // page prior to the final page is touched in order." Source:
   // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=vs-2019#stack
