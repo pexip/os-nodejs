@@ -24,7 +24,8 @@
   V(napi_type_tag, "node:napi:type_tag")                                       \
   V(napi_wrapper, "node:napi:wrapper")                                         \
   V(untransferable_object_private_symbol, "node:untransferableObject")         \
-  V(exiting_aliased_Uint32Array, "node:exiting_aliased_Uint32Array")
+  V(exiting_aliased_Uint32Array, "node:exiting_aliased_Uint32Array")           \
+  V(require_private_symbol, "node:require_private_symbol")
 
 // Symbols are per-isolate primitives but Environment proxies them
 // for the sake of convenience.
@@ -135,6 +136,7 @@
   V(frames_received_string, "framesReceived")                                  \
   V(frames_sent_string, "framesSent")                                          \
   V(function_string, "function")                                               \
+  V(get_string, "get")                                                         \
   V(get_data_clone_error_string, "_getDataCloneError")                         \
   V(get_shared_array_buffer_id_string, "_getSharedArrayBufferId")              \
   V(gid_string, "gid")                                                         \
@@ -268,6 +270,7 @@
   V(servername_string, "servername")                                           \
   V(service_string, "service")                                                 \
   V(session_id_string, "sessionId")                                            \
+  V(set_string, "set")                                                         \
   V(shell_string, "shell")                                                     \
   V(signal_string, "signal")                                                   \
   V(sink_string, "sink")                                                       \
@@ -321,8 +324,7 @@
   V(writable_string, "writable")                                               \
   V(write_host_object_string, "_writeHostObject")                              \
   V(write_queue_size_string, "writeQueueSize")                                 \
-  V(x_forwarded_string, "x-forwarded-for")                                     \
-  V(zero_return_string, "ZERO_RETURN")
+  V(x_forwarded_string, "x-forwarded-for")
 
 #define PER_ISOLATE_TEMPLATE_PROPERTIES(V)                                     \
   V(async_wrap_ctor_template, v8::FunctionTemplate)                            \
@@ -334,6 +336,7 @@
   V(contextify_global_template, v8::ObjectTemplate)                            \
   V(contextify_wrapper_template, v8::ObjectTemplate)                           \
   V(compiled_fn_entry_template, v8::ObjectTemplate)                            \
+  V(crypto_key_object_handle_constructor, v8::FunctionTemplate)                \
   V(env_proxy_template, v8::ObjectTemplate)                                    \
   V(env_proxy_ctor_template, v8::FunctionTemplate)                             \
   V(dir_instance_template, v8::ObjectTemplate)                                 \
@@ -376,7 +379,6 @@
   V(async_hooks_promise_resolve_function, v8::Function)                        \
   V(buffer_prototype_object, v8::Object)                                       \
   V(crypto_key_object_constructor, v8::Function)                               \
-  V(crypto_key_object_handle_constructor, v8::Function)                        \
   V(crypto_key_object_private_constructor, v8::Function)                       \
   V(crypto_key_object_public_constructor, v8::Function)                        \
   V(crypto_key_object_secret_constructor, v8::Function)                        \

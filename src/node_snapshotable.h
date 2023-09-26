@@ -27,6 +27,7 @@ struct PropInfo {
   V(v8_binding_data, v8_utils::BindingData)                                    \
   V(blob_binding_data, BlobBindingData)                                        \
   V(process_binding_data, process::BindingData)                                \
+  V(url_binding_data, url::BindingData)                                        \
   V(util_weak_reference, util::WeakReference)
 
 enum class EmbedderObjectType : uint8_t {
@@ -98,10 +99,10 @@ struct InternalFieldInfoBase {
 //   in the object.
 class SnapshotableObject : public BaseObject {
  public:
-  SnapshotableObject(Environment* env,
+  SnapshotableObject(Realm* realm,
                      v8::Local<v8::Object> wrap,
                      EmbedderObjectType type);
-  const char* GetTypeNameChars() const;
+  std::string_view GetTypeName() const;
 
   // If returns false, the object will not be serialized.
   virtual bool PrepareForSerialization(v8::Local<v8::Context> context,

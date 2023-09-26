@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.13.0">
-  <title>Modules: node:module API | Node.js v18.13.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.17.1">
+  <title>Modules: node:module API | Node.js v18.17.1 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -68,6 +68,7 @@
 <li><a href="readline.html" class="nav-readline">Readline</a></li>
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
+<li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -95,7 +96,7 @@
     <div id="column1" data-id="module" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.13.0 documentation</h1>
+          <h1>Node.js v18.17.1 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -110,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.13.0</li>
+            <li class="pinned-header">Node.js v18.17.1</li>
             
     <li class="picker-header">
       <a href="#">
@@ -206,6 +207,7 @@
 <li><a href="readline.html" class="nav-readline">Readline</a></li>
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
+<li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -236,12 +238,13 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v19.x/api/module.html">19.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/module.html">20.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v19.x/api/module.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/module.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/module.html">17.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v16.x/api/module.html">16.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/module.html">15.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v14.x/api/module.html">14.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v14.x/api/module.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/module.html">13.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v12.x/api/module.html">12.x</a></li></ol></div>
     </li>
@@ -325,7 +328,7 @@ by the <a href="modules.html#the-module-wrapper">module wrapper</a>. To access i
 <span class="hljs-comment">// In an ECMAScript module</span>
 <span class="hljs-keyword">import</span> { builtinModules <span class="hljs-keyword">as</span> builtin } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:module'</span>;</code><code class="language-js cjs"><span class="hljs-comment">// module.cjs</span>
 <span class="hljs-comment">// In a CommonJS module</span>
-<span class="hljs-keyword">const</span> builtin = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:module'</span>).<span class="hljs-property">builtinModules</span>;</code></pre>
+<span class="hljs-keyword">const</span> builtin = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:module'</span>).<span class="hljs-property">builtinModules</span>;</code><button class="copy-button">copy</button></pre>
 <h4><code>module.createRequire(filename)</code><span><a class="mark" href="#modulecreaterequirefilename" id="modulecreaterequirefilename">#</a></span><a aria-hidden="true" class="legacy" id="module_module_createrequire_filename"></a></h4>
 <div class="api_metadata">
 <span>Added in: v12.2.0</span>
@@ -340,7 +343,7 @@ string.</li>
 <span class="hljs-keyword">const</span> <span class="hljs-built_in">require</span> = <span class="hljs-title function_">createRequire</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>);
 
 <span class="hljs-comment">// sibling-module.js is a CommonJS module.</span>
-<span class="hljs-keyword">const</span> siblingModule = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./sibling-module'</span>);</code></pre>
+<span class="hljs-keyword">const</span> siblingModule = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./sibling-module'</span>);</code> <button class="copy-button">copy</button></pre>
 <h4><code>module.isBuiltin(moduleName)</code><span><a class="mark" href="#moduleisbuiltinmodulename" id="moduleisbuiltinmodulename">#</a></span><a aria-hidden="true" class="legacy" id="module_module_isbuiltin_modulename"></a></h4>
 <div class="api_metadata">
 <span>Added in: v18.6.0</span>
@@ -352,7 +355,7 @@ string.</li>
 <pre><code class="language-js mjs"><span class="hljs-keyword">import</span> { isBuiltin } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:module'</span>;
 <span class="hljs-title function_">isBuiltin</span>(<span class="hljs-string">'node:fs'</span>); <span class="hljs-comment">// true</span>
 <span class="hljs-title function_">isBuiltin</span>(<span class="hljs-string">'fs'</span>); <span class="hljs-comment">// true</span>
-<span class="hljs-title function_">isBuiltin</span>(<span class="hljs-string">'wss'</span>); <span class="hljs-comment">// false</span></code></pre>
+<span class="hljs-title function_">isBuiltin</span>(<span class="hljs-string">'wss'</span>); <span class="hljs-comment">// false</span></code> <button class="copy-button">copy</button></pre>
 <h4><code>module.syncBuiltinESMExports()</code><span><a class="mark" href="#modulesyncbuiltinesmexports" id="modulesyncbuiltinesmexports">#</a></span><a aria-hidden="true" class="legacy" id="module_module_syncbuiltinesmexports"></a></h4>
 <div class="api_metadata">
 <span>Added in: v12.12.0</span>
@@ -385,7 +388,7 @@ fs.<span class="hljs-property">newAPI</span> = newAPI;
   assert.<span class="hljs-title function_">strictEqual</span>(<span class="hljs-string">'readFileSync'</span> <span class="hljs-keyword">in</span> esmFS, <span class="hljs-literal">true</span>);
   <span class="hljs-comment">// syncBuiltinESMExports() does not add names</span>
   assert.<span class="hljs-title function_">strictEqual</span>(esmFS.<span class="hljs-property">newAPI</span>, <span class="hljs-literal">undefined</span>);
-});</code></pre>
+});</code> <button class="copy-button">copy</button></pre>
 </section><section><h3>Source map v3 support<span><a class="mark" href="#source-map-v3-support" id="source-map-v3-support">#</a></span><a aria-hidden="true" class="legacy" id="module_source_map_v3_support"></a></h3>
 <div class="api_metadata">
 <span>Added in: v13.7.0, v12.17.0</span>
@@ -402,7 +405,7 @@ populated when source map parsing is enabled and
 <span class="hljs-comment">// In an ECMAScript module</span>
 <span class="hljs-keyword">import</span> { findSourceMap, <span class="hljs-title class_">SourceMap</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:module'</span>;</code><code class="language-js cjs"><span class="hljs-comment">// module.cjs</span>
 <span class="hljs-comment">// In a CommonJS module</span>
-<span class="hljs-keyword">const</span> { findSourceMap, <span class="hljs-title class_">SourceMap</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:module'</span>);</code></pre>
+<span class="hljs-keyword">const</span> { findSourceMap, <span class="hljs-title class_">SourceMap</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:module'</span>);</code><button class="copy-button">copy</button></pre>
 <!-- Anchors to make sure old links find a target -->
 <p><a id="module_module_findsourcemap_path_error"></a></p>
 <h4><code>module.findSourceMap(path)</code><span><a class="mark" href="#modulefindsourcemappath" id="modulefindsourcemappath">#</a></span><a aria-hidden="true" class="legacy" id="module_module_findsourcemap_path"></a></h4>
