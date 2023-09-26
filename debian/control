@@ -1,13 +1,11 @@
 Source: nodejs
 Section: javascript
 Priority: optional
-Maintainer: Pexip AS <packaging@pexip.com>
-XSBC-Pexip-Original-Maintainer: Debian Javascript Maintainers <pkg-javascript-devel@alioth-lists.debian.net>
-XSBC-Pexip-Original-Uploaders: Jérémy Lal <kapouer@melix.org>,
+Maintainer: Debian Javascript Maintainers <pkg-javascript-devel@alioth-lists.debian.net>
+Uploaders: Jérémy Lal <kapouer@melix.org>,
  Jonas Smedegaard <dr@jones.dk>
-XS-Pexip-Upstream: http://ftp.debian.org/debian/ bookworm
 Build-Depends:
- gcc-10, g++-10,
+ gcc-11, g++-11,
  sse2-support [i386] <!nocheck>,
  armv6k-support [armel] <!nocheck>, vfpv2-support [armel] <!nocheck>,
  debhelper-compat (= 13),
@@ -27,7 +25,13 @@ Build-Depends:
  libkvm-dev [kfreebsd-any],
  libnghttp2-dev (>= 1.41.0~),
  libnghttp2-dev:native,
- node-acorn (>= 6.2.1~),
+ libssl-dev (>= 1.1.1~),
+ libssl-dev:native,
+ libuv1-dev (>= 1.43.0~),
+ libuv1-dev:native,
+ node-acorn (>= 6.2.1~) <!pkg.nodejs.nobuiltin>,
+ node-cjs-module-lexer (>= 1.2.2~) <!pkg.nodejs.nobuiltin>,
+ node-undici (>= 5.0.0~) <!pkg.nodejs.nobuiltin>,
  openssl (>= 1.1.1~) <!nocheck>,
  pkg-config,
  pkg-js-tools (>= 0.8.2~) <!nocheck>,
@@ -36,6 +40,10 @@ Build-Depends:
  procps <!nocheck>,
  zlib1g-dev,
  zlib1g-dev:native,
+Build-Depends-Indep:
+ node-js-yaml (>= 4.1.0+dfsg+~4.0.5-6) <!nodoc>,
+ node-marked (>= 4~) <!nodoc>,
+ node-highlight.js <!nodoc>,
 Standards-Version: 4.6.1.0
 Homepage: https://nodejs.org/
 Vcs-Browser: https://salsa.debian.org/js-team/nodejs/tree/master-16.x
@@ -106,7 +114,9 @@ Depends: ${shlibs:Depends},
  ${misc:Depends},
  sse2-support [i386],
  armv6k-support [armel], vfpv2-support [armel],
- node-acorn,
+ node-acorn (>= 6.2.1~) <!pkg.nodejs.nobuiltin>,
+ node-cjs-module-lexer (>= 1.2.2~) <!pkg.nodejs.nobuiltin>,
+ node-undici (>= 5.0.0~) <!pkg.nodejs.nobuiltin>
 Breaks: node-modern-syslog (<< 1.1.4-2),
  libnode64 (<< 10.24.1~),
  libnode72 (<< 13)
@@ -126,3 +136,26 @@ Description: evented I/O for V8 javascript - runtime library
  HTTP, Multipart Parsing, TCP, DNS, Assert, Path, URL, Query Strings.
  .
  This package provides the dynamic library for Node.js.
+
+Package: nodejs-doc
+Section: doc
+Architecture: all
+Multi-Arch: foreign
+Recommends: nodejs
+Depends: ${misc:Depends}
+Replaces: nodejs (<< 6.11.2~dfsg-3)
+Conflicts: nodejs (<< 6.11.2~dfsg-3)
+Description: API documentation for Node.js, the javascript platform
+ Node.js is a platform built on Chrome's JavaScript runtime for easily
+ building fast, scalable network applications. Node.js uses an
+ event-driven, non-blocking I/O model that makes it lightweight and
+ efficient, perfect for data-intensive real-time applications that run
+ across distributed devices.
+ .
+ Node.js is bundled with several useful libraries to handle server
+ tasks:
+ .
+ System, Events, Standard I/O, Modules, Timers, Child Processes, POSIX,
+ HTTP, Multipart Parsing, TCP, DNS, Assert, Path, URL, Query Strings.
+ .
+ This package contains API documentation for Node.js.

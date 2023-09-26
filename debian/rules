@@ -4,8 +4,8 @@ include /usr/share/dpkg/architecture.mk
 include /usr/share/dpkg/pkg-info.mk
 include /usr/share/dpkg/buildtools.mk
 
-export CC = gcc-10
-export CXX = g++-10
+export CC = gcc-11
+export CXX = g++-11
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
@@ -32,12 +32,22 @@ DEB_CONFIGURE_EXTRA_FLAGS = \
 --shared-cares \
 --shared-nghttp2 \
 --shared-brotli \
+--shared-builtin-undici/undici-path=/usr/share/nodejs/undici/undici-fetch.js \
 --shared-builtin-acorn-path=/usr/share/nodejs/acorn/dist/acorn.js \
 --shared-builtin-acorn_walk-path=/usr/share/nodejs/acorn-walk/dist/walk.js \
+--shared-builtin-cjs_module_lexer/lexer-path=/usr/share/nodejs/cjs-module-lexer/lexer.js \
+--shared-builtin-cjs_module_lexer/dist/lexer-path=/usr/share/nodejs/cjs-module-lexer/dist/lexer.js \
 --with-intl=system-icu \
 --prefix=/usr \
+--shared-openssl \
 --openssl-use-def-ca-store \
 --arch-triplet=$(DEB_HOST_MULTIARCH) \
+--node-relative-path="lib/$(DEB_HOST_MULTIARCH)/nodejs:share/nodejs" \
+--shared-libuv
+
+ifneq ($(filter pkg.nodejs.nobuiltin,$(DEB_BUILD_PROFILES)),)
+	DEB_CONFIGURE_EXTRA_FLAGS += --node-builtin-modules-path=$(builtins)
+endif
 
 # map HOST ARCH AND OS, and if unknown let upstream guess
 
@@ -230,7 +240,7 @@ override_dh_auto_build-indep:
 	ln -sf /usr/share/nodejs/marked node_modules/
 	ln -sf /usr/share/nodejs/acorn node_modules/
 	ln -sf /usr/share/nodejs/js-yaml node_modules/
-	# $(MAKE) doc-only
+	$(MAKE) doc-only
 
 override_dh_auto_test-indep:
 	# skip tests
@@ -254,7 +264,14 @@ override_dh_install-arch:
 	sed 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' debian/libnode.install > debian/libnode$(ABI).install
 	sed -e 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' -e 's/@ABI@/$(ABI)/g' debian/libnode-dev.links.in > debian/libnode-dev.links
 	cp debian/nodejs.install.in debian/nodejs.install
+ifneq ($(filter pkg.nodejs.nobuiltin,$(DEB_BUILD_PROFILES)),)
 	echo "./lib $(builtins)/" >> debian/nodejs.install
+	deps_files="$(shell $(PYTHON) -c "import ast; d = ast.literal_eval(open('node.gyp').read()); print(' '.join(d['variables']['deps_files']));")"; \
+	for src in $$deps_files; do \
+		dst=`dirname $$src`; \
+		echo "./$$src $(builtins)/$$dst" >> debian/nodejs.install; \
+	done
+endif
 	dh_install
 
 override_dh_dwz:
