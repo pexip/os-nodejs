@@ -2,19 +2,14 @@ Source: nodejs
 Section: web
 Priority: extra
 Maintainer: Pexip AS <packaging@pexip.com>
-XSBC-Pexip-Original-Maintainer: Chris Lea <chl@nodesource.com>
-XSBC-Pexip-Original-Uploaders: Dave Beckett <dajobe@debian.org>
 Build-Depends: debhelper (>= 7),
- python,
+ python3,
  quilt (>= 0.46-7~),
  binutils,
  libssl-dev (>= 0.9.8),
  pkg-config
 Standards-Version: 4.3.0
 Homepage: http://nodejs.org/
-Vcs-Browser: http://git.debian.org/?p=collab-maint/nodejs.git
-Vcs-Git: git://git.debian.org/git/collab-maint/nodejs.git
-XS-Pexip-Upstream: http://ftp.debian.org/debian/ jessie
 
 Package: nodejs
 Architecture: any
