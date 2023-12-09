@@ -1,3 +1,9 @@
+nodejs (18.17.1-0pexip3) pexip-bookworm; urgency=medium
+
+  * Bookworm build for product distribution
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Sat, 09 Dec 2023 22:56:41 +0000
+
 nodejs (18.17.1-0pexip2) pexip-bookworm; urgency=medium
 
   * Initial bookworm build
