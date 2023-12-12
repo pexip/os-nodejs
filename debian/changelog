@@ -1,3 +1,9 @@
+nodejs (18.13.0+dfsg1-1pexip2) pexip-bookworm; urgency=medium
+
+  * Revert to Debian packaging.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Tue, 12 Dec 2023 11:33:07 +0000
+
 nodejs (18.13.0+dfsg1-1) unstable; urgency=medium
 
   [ Bo YU ]
