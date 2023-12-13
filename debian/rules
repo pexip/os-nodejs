@@ -39,7 +39,6 @@ DEB_CONFIGURE_EXTRA_FLAGS = \
 --shared-builtin-cjs_module_lexer/dist/lexer-path=/usr/share/nodejs/cjs-module-lexer/dist/lexer.js \
 --with-intl=system-icu \
 --prefix=/usr \
---shared-openssl \
 --openssl-use-def-ca-store \
 --arch-triplet=$(DEB_HOST_MULTIARCH) \
 --node-relative-path="lib/$(DEB_HOST_MULTIARCH)/nodejs:share/nodejs" \

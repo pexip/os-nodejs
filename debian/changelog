@@ -1,3 +1,10 @@
+nodejs (18.13.0+dfsg1-1pexip3) pexip-bookworm; urgency=medium
+
+  * Use vendored openssl to avoid openssl 3 deprecation warnings.
+  * This is acceptable as nodejs is only a B-D, not shipped on product.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Wed, 13 Dec 2023 09:50:17 +0000
+
 nodejs (18.13.0+dfsg1-1pexip2) pexip-bookworm; urgency=medium
 
   * Revert to Debian packaging.
