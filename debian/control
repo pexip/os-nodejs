@@ -1,12 +1,10 @@
 Source: nodejs
 Section: javascript
 Priority: optional
-Maintainer: Pexip AS <packaging@pexip.com>
-XSBC-Pexip-Original-Maintainer: Debian Javascript Maintainers <pkg-javascript-devel@alioth-lists.debian.net>
-XSBC-Pexip-Original-Uploaders: Jérémy Lal <kapouer@melix.org>,
+Maintainer: Debian Javascript Maintainers <pkg-javascript-devel@alioth-lists.debian.net>
+Uploaders: Jérémy Lal <kapouer@melix.org>,
  Jonas Smedegaard <dr@jones.dk>
 Build-Depends:
- gcc-11, g++-11,
  sse2-support [i386] <!nocheck>,
  armv6k-support [armel] <!nocheck>, vfpv2-support [armel] <!nocheck>,
  debhelper-compat (= 13),
@@ -45,12 +43,11 @@ Build-Depends-Indep:
  node-js-yaml (>= 4.1.0+dfsg+~4.0.5-6) <!nodoc>,
  node-marked (>= 4~) <!nodoc>,
  node-highlight.js <!nodoc>,
-Standards-Version: 4.6.1.0
+Standards-Version: 4.6.2
 Homepage: https://nodejs.org/
-Vcs-Browser: https://salsa.debian.org/js-team/nodejs/tree/master-16.x
-Vcs-Git: https://salsa.debian.org/js-team/nodejs.git -b master-16.x
+Vcs-Browser: https://salsa.debian.org/js-team/nodejs/tree/master-18.x
+Vcs-Git: https://salsa.debian.org/js-team/nodejs.git -b master-18.x
 Rules-Requires-Root: no
-XS-Pexip-Upstream: http://deb.debian.org/debian/ bookworm
 
 Package: libnode-dev
 Section: libdevel

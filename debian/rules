@@ -4,8 +4,6 @@ include /usr/share/dpkg/architecture.mk
 include /usr/share/dpkg/pkg-info.mk
 include /usr/share/dpkg/buildtools.mk
 
-export CC = gcc-11
-export CXX = g++-11
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
@@ -39,6 +37,7 @@ DEB_CONFIGURE_EXTRA_FLAGS = \
 --shared-builtin-cjs_module_lexer/dist/lexer-path=/usr/share/nodejs/cjs-module-lexer/dist/lexer.js \
 --with-intl=system-icu \
 --prefix=/usr \
+--shared-openssl \
 --openssl-use-def-ca-store \
 --arch-triplet=$(DEB_HOST_MULTIARCH) \
 --node-relative-path="lib/$(DEB_HOST_MULTIARCH)/nodejs:share/nodejs" \
@@ -192,8 +191,7 @@ export PYTHON = python3
 	dh $@ --with bash-completion $(DH_FLAGS)
 
 # properly clean files from build, test, python
-override_dh_auto_clean:
-	dh_auto_clean
+execute_after_dh_auto_clean:
 	rm -f node_trace.1.log
 	rm -f icu_config.gypi
 	rm -rf test/addons/doc-*
@@ -214,8 +212,7 @@ override_dh_auto_clean:
 	rm -f debian/nodejs.bash-completion
 
 # remove *.json files from documentation
-override_dh_installdocs:
-	dh_installdocs
+execute_after_dh_installdocs:
 	find debian/nodejs-doc/usr/share/doc/nodejs-doc -name *.json -delete || true
 
 override_dh_auto_configure:
@@ -230,8 +227,15 @@ else
 	./configure $(DEB_CONFIGURE_EXTRA_FLAGS)
 endif
 
-override_dh_auto_build-arch:
-	dh_auto_build
+execute_before_dh_auto_build-arch:
+	pkver=`dpkg-query --showformat='$${source:Upstream-Version}' --show node-acorn | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`; \
+	sed -i -e "s/[0-9]\+\.[0-9]\+\.[0-9]\+/$${pkver}/" src/acorn_version.h
+	pkver=`dpkg-query --showformat='$${source:Upstream-Version}' --show node-cjs-module-lexer | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`; \
+	sed -i -e "s/[0-9]\+\.[0-9]\+\.[0-9]\+/$${pkver}/" src/cjs_module_lexer_version.h
+	pkver=`dpkg-query --showformat='$${source:Upstream-Version}' --show node-undici | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`; \
+	sed -i -e "s/[0-9]\+\.[0-9]\+\.[0-9]\+/$${pkver}/" src/undici_version.h
+
+execute_after_dh_auto_build-arch:
 	./out/Release/node --completion-bash > ./debian/nodejs.bash-completion
 
 override_dh_auto_build-indep:
@@ -239,6 +243,7 @@ override_dh_auto_build-indep:
 	ln -sf /usr/share/nodejs/marked node_modules/
 	ln -sf /usr/share/nodejs/acorn node_modules/
 	ln -sf /usr/share/nodejs/js-yaml node_modules/
+	ln -sf /usr/share/nodejs/cjs-module-lexer node_modules/
 	$(MAKE) doc-only
 
 override_dh_auto_test-indep:
