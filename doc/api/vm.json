@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v18.17.1/lib/vm.js\">lib/vm.js</a></p>\n<p>The <code>node:vm</code> module enables compiling and running code within V8 Virtual\nMachine contexts.</p>\n<p><strong class=\"critical\">The <code>node:vm</code> module is not a security\nmechanism. Do not use it to run untrusted code.</strong></p>\n<p>JavaScript code can be compiled and run immediately or\ncompiled, saved, and run later.</p>\n<p>A common use case is to run the code in a different V8 Context. This means\ninvoked code has a different global object than the invoking code.</p>\n<p>One can provide the context by <a href=\"#what-does-it-mean-to-contextify-an-object\"><em>contextifying</em></a> an\nobject. The invoked code treats any property in the context like a\nglobal variable. Any changes to global variables caused by the invoked\ncode are reflected in the context object.</p>\n<pre><code class=\"language-js\">const vm = require('node:vm');\n\nconst x = 1;\n\nconst context = { x: 2 };\nvm.createContext(context); // Contextify the object.\n\nconst code = 'x += 40; var y = 17;';\n// `x` and `y` are global variables in the context.\n// Initially, x has the value 2 because that is the value of context.x.\nvm.runInContext(code, context);\n\nconsole.log(context.x); // 42\nconsole.log(context.y); // 17\n\nconsole.log(x); // 1; y is not defined.\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v18.19.0/lib/vm.js\">lib/vm.js</a></p>\n<p>The <code>node:vm</code> module enables compiling and running code within V8 Virtual\nMachine contexts.</p>\n<p><strong class=\"critical\">The <code>node:vm</code> module is not a security\nmechanism. Do not use it to run untrusted code.</strong></p>\n<p>JavaScript code can be compiled and run immediately or\ncompiled, saved, and run later.</p>\n<p>A common use case is to run the code in a different V8 Context. This means\ninvoked code has a different global object than the invoking code.</p>\n<p>One can provide the context by <a href=\"#what-does-it-mean-to-contextify-an-object\"><em>contextifying</em></a> an\nobject. The invoked code treats any property in the context like a\nglobal variable. Any changes to global variables caused by the invoked\ncode are reflected in the context object.</p>\n<pre><code class=\"language-js\">const vm = require('node:vm');\n\nconst x = 1;\n\nconst context = { x: 2 };\nvm.createContext(context); // Contextify the object.\n\nconst code = 'x += 40; var y = 17;';\n// `x` and `y` are global variables in the context.\n// Initially, x has the value 2 because that is the value of context.x.\nvm.runInContext(code, context);\n\nconsole.log(context.x); // 42\nconsole.log(context.y); // 17\n\nconsole.log(x); // 1; y is not defined.\n</code></pre>",
       "classes": [
         {
           "textRaw": "Class: `vm.Script`",
@@ -371,8 +371,8 @@
                           "type": "vm.Script"
                         },
                         {
-                          "textRaw": "`importAssertions` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
-                          "name": "importAssertions",
+                          "textRaw": "`importAttributes` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
+                          "name": "importAttributes",
                           "type": "Object",
                           "desc": "The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided."
                         },
@@ -480,6 +480,15 @@
               "textRaw": "`module.link(linker)`",
               "type": "method",
               "name": "link",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v18.19.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50141",
+                    "description": "The option `extra.assert` is renamed to `extra.attributes`. The former name is still provided for backward compatibility."
+                  }
+                ]
+              },
               "signatures": [
                 {
                   "return": {
@@ -511,10 +520,16 @@
                           "type": "Object",
                           "options": [
                             {
-                              "textRaw": "`assert` {Object} The data from the assertion:```js import foo from 'foo' assert { name: 'value' }; // ^^^^^^^^^^^^^^^^^ the assertion ```Per ECMA-262, hosts are expected to ignore assertions that they do not support, as opposed to, for example, triggering an error if an unsupported assertion is present.",
+                              "textRaw": "`attributes` {Object} The data from the attribute:```mjs import foo from 'foo' assert { name: 'value' }; // ^^^^^^^^^^^^^^^^^ the attribute ```Per ECMA-262, hosts are expected to trigger an error if an unsupported attribute is present.",
+                              "name": "attributes",
+                              "type": "Object",
+                              "desc": "The data from the attribute:```mjs import foo from 'foo' assert { name: 'value' }; // ^^^^^^^^^^^^^^^^^ the attribute ```Per ECMA-262, hosts are expected to trigger an error if an unsupported attribute is present."
+                            },
+                            {
+                              "textRaw": "`assert` {Object} Alias for `extra.attributes`.",
                               "name": "assert",
                               "type": "Object",
-                              "desc": "The data from the assertion:```js import foo from 'foo' assert { name: 'value' }; // ^^^^^^^^^^^^^^^^^ the assertion ```Per ECMA-262, hosts are expected to ignore assertions that they do not support, as opposed to, for example, triggering an error if an unsupported assertion is present."
+                              "desc": "Alias for `extra.attributes`."
                             }
                           ]
                         },
@@ -652,8 +667,8 @@
                           "type": "vm.Module"
                         },
                         {
-                          "textRaw": "`importAssertions` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
-                          "name": "importAssertions",
+                          "textRaw": "`importAttributes` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
+                          "name": "importAttributes",
                           "type": "Object",
                           "desc": "The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided."
                         },
@@ -782,7 +797,7 @@
                   "v16.12.0"
                 ],
                 "pr-url": "https://github.com/nodejs/node/pull/40249",
-                "description": "Added support for import assertions to the `importModuleDynamically` parameter."
+                "description": "Added support for import attributes to the `importModuleDynamically` parameter."
               },
               {
                 "version": "v15.9.0",
@@ -894,8 +909,8 @@
                           "type": "Function"
                         },
                         {
-                          "textRaw": "`importAssertions` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
-                          "name": "importAssertions",
+                          "textRaw": "`importAttributes` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
+                          "name": "importAttributes",
                           "type": "Object",
                           "desc": "The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided."
                         },
@@ -1069,7 +1084,7 @@
                   "v16.12.0"
                 ],
                 "pr-url": "https://github.com/nodejs/node/pull/40249",
-                "description": "Added support for import assertions to the `importModuleDynamically` parameter."
+                "description": "Added support for import attributes to the `importModuleDynamically` parameter."
               },
               {
                 "version": "v6.3.0",
@@ -1169,8 +1184,8 @@
                           "type": "vm.Script"
                         },
                         {
-                          "textRaw": "`importAssertions` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
-                          "name": "importAssertions",
+                          "textRaw": "`importAttributes` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
+                          "name": "importAttributes",
                           "type": "Object",
                           "desc": "The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided."
                         },
@@ -1204,7 +1219,7 @@
                   "v16.12.0"
                 ],
                 "pr-url": "https://github.com/nodejs/node/pull/40249",
-                "description": "Added support for import assertions to the `importModuleDynamically` parameter."
+                "description": "Added support for import attributes to the `importModuleDynamically` parameter."
               },
               {
                 "version": "v14.6.0",
@@ -1349,8 +1364,8 @@
                           "type": "vm.Script"
                         },
                         {
-                          "textRaw": "`importAssertions` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
-                          "name": "importAssertions",
+                          "textRaw": "`importAttributes` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
+                          "name": "importAttributes",
                           "type": "Object",
                           "desc": "The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided."
                         },
@@ -1390,7 +1405,7 @@
                   "v16.12.0"
                 ],
                 "pr-url": "https://github.com/nodejs/node/pull/40249",
-                "description": "Added support for import assertions to the `importModuleDynamically` parameter."
+                "description": "Added support for import attributes to the `importModuleDynamically` parameter."
               },
               {
                 "version": "v6.3.0",
@@ -1484,8 +1499,8 @@
                           "type": "vm.Script"
                         },
                         {
-                          "textRaw": "`importAssertions` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
-                          "name": "importAssertions",
+                          "textRaw": "`importAttributes` {Object} The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided.",
+                          "name": "importAttributes",
                           "type": "Object",
                           "desc": "The `\"assert\"` value passed to the [`optionsExpression`][] optional parameter, or an empty object if no value was provided."
                         },

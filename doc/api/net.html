@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>Net | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>Net | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="net" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -155,6 +155,7 @@
 <li><a href="#event-drop">Event: <code>'drop'</code></a></li>
 <li><a href="#serveraddress"><code>server.address()</code></a></li>
 <li><a href="#serverclosecallback"><code>server.close([callback])</code></a></li>
+<li><span class="stability_1"><a href="#serversymbolasyncdispose"><code>server[Symbol.asyncDispose]()</code></a></span></li>
 <li><a href="#servergetconnectionscallback"><code>server.getConnections(callback)</code></a></li>
 <li><a href="#serverlisten"><code>server.listen()</code></a>
 <ul>
@@ -183,6 +184,7 @@
 <li><a href="#event-ready">Event: <code>'ready'</code></a></li>
 <li><a href="#event-timeout">Event: <code>'timeout'</code></a></li>
 <li><a href="#socketaddress"><code>socket.address()</code></a></li>
+<li><a href="#socketautoselectfamilyattemptedaddresses"><code>socket.autoSelectFamilyAttemptedAddresses</code></a></li>
 <li><span class="stability_0"><a href="#socketbuffersize"><code>socket.bufferSize</code></a></span></li>
 <li><a href="#socketbytesread"><code>socket.bytesRead</code></a></li>
 <li><a href="#socketbyteswritten"><code>socket.bytesWritten</code></a></li>
@@ -234,6 +236,10 @@
 </ul>
 </li>
 <li><a href="#netcreateserveroptions-connectionlistener"><code>net.createServer([options][, connectionListener])</code></a></li>
+<li><a href="#netgetdefaultautoselectfamily"><code>net.getDefaultAutoSelectFamily()</code></a></li>
+<li><a href="#netsetdefaultautoselectfamilyvalue"><code>net.setDefaultAutoSelectFamily(value)</code></a></li>
+<li><a href="#netgetdefaultautoselectfamilyattempttimeout"><code>net.getDefaultAutoSelectFamilyAttemptTimeout()</code></a></li>
+<li><a href="#netsetdefaultautoselectfamilyattempttimeoutvalue"><code>net.setDefaultAutoSelectFamilyAttemptTimeout(value)</code></a></li>
 <li><a href="#netisipinput"><code>net.isIP(input)</code></a></li>
 <li><a href="#netisipv4input"><code>net.isIPv4(input)</code></a></li>
 <li><a href="#netisipv6input"><code>net.isIPv6(input)</code></a></li>
@@ -333,11 +339,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/net.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/net.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/net.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/net.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/net.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/net.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/net.html">16.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/net.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/net.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/net.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/net.html">13.x</a></li>
@@ -413,6 +420,7 @@
 <li><a href="#event-drop">Event: <code>'drop'</code></a></li>
 <li><a href="#serveraddress"><code>server.address()</code></a></li>
 <li><a href="#serverclosecallback"><code>server.close([callback])</code></a></li>
+<li><span class="stability_1"><a href="#serversymbolasyncdispose"><code>server[Symbol.asyncDispose]()</code></a></span></li>
 <li><a href="#servergetconnectionscallback"><code>server.getConnections(callback)</code></a></li>
 <li><a href="#serverlisten"><code>server.listen()</code></a>
 <ul>
@@ -441,6 +449,7 @@
 <li><a href="#event-ready">Event: <code>'ready'</code></a></li>
 <li><a href="#event-timeout">Event: <code>'timeout'</code></a></li>
 <li><a href="#socketaddress"><code>socket.address()</code></a></li>
+<li><a href="#socketautoselectfamilyattemptedaddresses"><code>socket.autoSelectFamilyAttemptedAddresses</code></a></li>
 <li><span class="stability_0"><a href="#socketbuffersize"><code>socket.bufferSize</code></a></span></li>
 <li><a href="#socketbytesread"><code>socket.bytesRead</code></a></li>
 <li><a href="#socketbyteswritten"><code>socket.bytesWritten</code></a></li>
@@ -492,6 +501,10 @@
 </ul>
 </li>
 <li><a href="#netcreateserveroptions-connectionlistener"><code>net.createServer([options][, connectionListener])</code></a></li>
+<li><a href="#netgetdefaultautoselectfamily"><code>net.getDefaultAutoSelectFamily()</code></a></li>
+<li><a href="#netsetdefaultautoselectfamilyvalue"><code>net.setDefaultAutoSelectFamily(value)</code></a></li>
+<li><a href="#netgetdefaultautoselectfamilyattempttimeout"><code>net.getDefaultAutoSelectFamilyAttemptTimeout()</code></a></li>
+<li><a href="#netsetdefaultautoselectfamilyattempttimeoutvalue"><code>net.setDefaultAutoSelectFamilyAttemptTimeout(value)</code></a></li>
 <li><a href="#netisipinput"><code>net.isIP(input)</code></a></li>
 <li><a href="#netisipv4input"><code>net.isIPv4(input)</code></a></li>
 <li><a href="#netisipv6input"><code>net.isIPv6(input)</code></a></li>
@@ -504,7 +517,7 @@
 
 <!--lint disable maximum-line-length-->
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.17.1/lib/net.js">lib/net.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/net.js">lib/net.js</a></p>
 <p>The <code>node:net</code> module provides an asynchronous network API for creating stream-based
 TCP or <a href="#ipc-support">IPC</a> servers (<a href="#netcreateserveroptions-connectionlistener"><code>net.createServer()</code></a>) and clients
 (<a href="#netcreateconnection"><code>net.createConnection()</code></a>).</p>
@@ -775,6 +788,13 @@ when all connections are ended and the server emits a <a href="#event-close"><co
 The optional <code>callback</code> will be called once the <code>'close'</code> event occurs. Unlike
 that event, it will be called with an <code>Error</code> as its only argument if the server
 was not open when it was closed.</p>
+<h4><code>server[Symbol.asyncDispose]()</code><span><a class="mark" href="#serversymbolasyncdispose" id="serversymbolasyncdispose">#</a></span><a aria-hidden="true" class="legacy" id="net_server_symbol_asyncdispose"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.18.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
+<p>Calls <a href="#serverclosecallback"><code>server.close()</code></a> and returns a promise that fulfills when the
+server has closed.</p>
 <h4><code>server.getConnections(callback)</code><span><a class="mark" href="#servergetconnectionscallback" id="servergetconnectionscallback">#</a></span><a aria-hidden="true" class="legacy" id="net_server_getconnections_callback"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.9.7</span>
@@ -1137,6 +1157,17 @@ the socket has been idle. The user must manually close the connection.</p>
 <p>Returns the bound <code>address</code>, the address <code>family</code> name and <code>port</code> of the
 socket as reported by the operating system:
 <code>{ port: 12346, family: 'IPv4', address: '127.0.0.1' }</code></p>
+<h4><code>socket.autoSelectFamilyAttemptedAddresses</code><span><a class="mark" href="#socketautoselectfamilyattemptedaddresses" id="socketautoselectfamilyattemptedaddresses">#</a></span><a aria-hidden="true" class="legacy" id="net_socket_autoselectfamilyattemptedaddresses"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.18.0</span>
+</div>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string[]></a></li>
+</ul>
+<p>This property is only present if the family autoselection algorithm is enabled in
+<a href="#socketconnectoptions-connectlistener"><code>socket.connect(options)</code></a> and it is an array of the addresses that have been attempted.</p>
+<p>Each address is a string in the form of <code>$IP:$PORT</code>. If the connection was successful,
+then the last address is the one that the socket is currently connected to.</p>
 <h4><code>socket.bufferSize</code><span><a class="mark" href="#socketbuffersize" id="socketbuffersize">#</a></span><a aria-hidden="true" class="legacy" id="net_socket_buffersize"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.3.8</span><span>Deprecated since: v14.6.0</span>
@@ -1198,6 +1229,8 @@ behavior.</p>
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v18.18.0</td>
+<td><p>The default value for autoSelectFamily option can be changed at runtime using <code>setDefaultAutoSelectFamily</code> or via the command line option <code>--enable-network-family-autoselection</code>.</p></td></tr>
 <tr><td>v18.13.0</td>
 <td><p>Added the <code>autoSelectFamily</code> option.</p></td></tr>
 <tr><td>v17.7.0</td>
@@ -1244,16 +1277,18 @@ the first keepalive probe is sent on an idle socket.<strong>Default:</strong> <c
 that loosely implements section 5 of <a href="https://www.rfc-editor.org/rfc/rfc8305.txt">RFC 8305</a>.
 The <code>all</code> option passed to lookup is set to <code>true</code> and the sockets attempts to connect to all
 obtained IPv6 and IPv4 addresses, in sequence, until a connection is established.
-The first returned AAAA address is tried first, then the first returned A address and so on.
+The first returned AAAA address is tried first, then the first returned A address,
+then the second returned AAAA address and so on.
 Each connection attempt is given the amount of time specified by the <code>autoSelectFamilyAttemptTimeout</code>
 option before timing out and trying the next address.
 Ignored if the <code>family</code> option is not <code>0</code> or if <code>localAddress</code> is set.
 Connection errors are not emitted if at least one connection succeeds.
-<strong>Default:</strong> <code>false</code>.</li>
+<strong>Default:</strong> initially <code>false</code>, but it can be changed at runtime using <a href="#netsetdefaultautoselectfamilyvalue"><code>net.setDefaultAutoSelectFamily(value)</code></a>
+or via the command line option <code>--enable-network-family-autoselection</code>.</li>
 <li><code>autoSelectFamilyAttemptTimeout</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a>: The amount of time in milliseconds to wait
 for a connection attempt to finish before trying the next address when using the <code>autoSelectFamily</code> option.
 If set to a positive integer less than <code>10</code>, then the value <code>10</code> will be used instead.
-<strong>Default:</strong> <code>250</code>.</li>
+<strong>Default:</strong> initially <code>250</code>, but it can be changed at runtime using <a href="#netsetdefaultautoselectfamilyattempttimeoutvalue"><code>net.setDefaultAutoSelectFamilyAttemptTimeout(value)</code></a></li>
 </ul>
 <p>For <a href="#ipc-support">IPC</a> connections, available <code>options</code> are:</p>
 <ul>
@@ -1831,6 +1866,39 @@ server.<span class="hljs-title function_">listen</span>(<span class="hljs-number
 });</code> <button class="copy-button">copy</button></pre>
 <p>Use <code>nc</code> to connect to a Unix domain socket server:</p>
 <pre><code class="language-console"><span class="hljs-meta prompt_">$ </span><span class="language-bash">nc -U /tmp/echo.sock</span></code> <button class="copy-button">copy</button></pre>
+</section><section><h3><code>net.getDefaultAutoSelectFamily()</code><span><a class="mark" href="#netgetdefaultautoselectfamily" id="netgetdefaultautoselectfamily">#</a></span><a aria-hidden="true" class="legacy" id="net_net_getdefaultautoselectfamily"></a></h3>
+<div class="api_metadata">
+<span>Added in: v19.4.0</span>
+</div>
+<p>Gets the current default value of the <code>autoSelectFamily</code> option of <a href="#socketconnectoptions-connectlistener"><code>socket.connect(options)</code></a>.</p>
+<ul>
+<li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a> The current default value of the <code>autoSelectFamily</code> option.</li>
+</ul>
+</section><section><h3><code>net.setDefaultAutoSelectFamily(value)</code><span><a class="mark" href="#netsetdefaultautoselectfamilyvalue" id="netsetdefaultautoselectfamilyvalue">#</a></span><a aria-hidden="true" class="legacy" id="net_net_setdefaultautoselectfamily_value"></a></h3>
+<div class="api_metadata">
+<span>Added in: v19.4.0</span>
+</div>
+<p>Sets the default value of the <code>autoSelectFamily</code> option of <a href="#socketconnectoptions-connectlistener"><code>socket.connect(options)</code></a>.</p>
+<ul>
+<li><code>value</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a> The new default value. The initial default value is <code>false</code>.</li>
+</ul>
+</section><section><h3><code>net.getDefaultAutoSelectFamilyAttemptTimeout()</code><span><a class="mark" href="#netgetdefaultautoselectfamilyattempttimeout" id="netgetdefaultautoselectfamilyattempttimeout">#</a></span><a aria-hidden="true" class="legacy" id="net_net_getdefaultautoselectfamilyattempttimeout"></a></h3>
+<div class="api_metadata">
+<span>Added in: v18.18.0</span>
+</div>
+<p>Gets the current default value of the <code>autoSelectFamilyAttemptTimeout</code> option of <a href="#socketconnectoptions-connectlistener"><code>socket.connect(options)</code></a>.</p>
+<ul>
+<li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a> The current default value of the <code>autoSelectFamilyAttemptTimeout</code> option.</li>
+</ul>
+</section><section><h3><code>net.setDefaultAutoSelectFamilyAttemptTimeout(value)</code><span><a class="mark" href="#netsetdefaultautoselectfamilyattempttimeoutvalue" id="netsetdefaultautoselectfamilyattempttimeoutvalue">#</a></span><a aria-hidden="true" class="legacy" id="net_net_setdefaultautoselectfamilyattempttimeout_value"></a></h3>
+<div class="api_metadata">
+<span>Added in: v18.18.0</span>
+</div>
+<p>Sets the default value of the <code>autoSelectFamilyAttemptTimeout</code> option of <a href="#socketconnectoptions-connectlistener"><code>socket.connect(options)</code></a>.</p>
+<ul>
+<li><code>value</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a> The new default value, which must be a positive number. If the number is less than <code>10</code>,
+the value <code>10</code> is used instead. The initial default value is <code>250</code>.</li>
+</ul>
 </section><section><h3><code>net.isIP(input)</code><span><a class="mark" href="#netisipinput" id="netisipinput">#</a></span><a aria-hidden="true" class="legacy" id="net_net_isip_input"></a></h3>
 <div class="api_metadata">
 <span>Added in: v0.3.0</span>

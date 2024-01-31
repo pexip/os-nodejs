@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>Command-line API | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>Command-line API | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="cli" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -145,9 +145,11 @@
 <li><a href="#--disallow-code-generation-from-strings"><code>--disallow-code-generation-from-strings</code></a></li>
 <li><a href="#--dns-result-orderorder"><code>--dns-result-order=order</code></a></li>
 <li><a href="#--enable-fips"><code>--enable-fips</code></a></li>
+<li><a href="#--enable-network-family-autoselection"><code>--enable-network-family-autoselection</code></a></li>
 <li><a href="#--enable-source-maps"><code>--enable-source-maps</code></a></li>
 <li><a href="#--experimental-global-customevent"><code>--experimental-global-customevent</code></a></li>
 <li><a href="#--experimental-global-webcrypto"><code>--experimental-global-webcrypto</code></a></li>
+<li><span class="stability_1"><a href="#--experimental-default-typetype"><code>--experimental-default-type=type</code></a></span></li>
 <li><a href="#--experimental-import-meta-resolve"><code>--experimental-import-meta-resolve</code></a></li>
 <li><a href="#--experimental-loadermodule"><code>--experimental-loader=module</code></a></li>
 <li><span class="stability_1"><a href="#--experimental-network-imports"><code>--experimental-network-imports</code></a></span></li>
@@ -171,6 +173,7 @@
 <li><span class="stability_1"><a href="#--heap-prof-interval"><code>--heap-prof-interval</code></a></span></li>
 <li><span class="stability_1"><a href="#--heap-prof-name"><code>--heap-prof-name</code></a></span></li>
 <li><a href="#--icu-data-dirfile"><code>--icu-data-dir=file</code></a></li>
+<li><span class="stability_1"><a href="#--importmodule"><code>--import=module</code></a></span></li>
 <li><a href="#--input-typetype"><code>--input-type=type</code></a></li>
 <li><a href="#--inspect-brkhostport"><code>--inspect-brk[=[host:]port]</code></a></li>
 <li><a href="#--inspect-porthostport"><code>--inspect-port=[host:]port</code></a></li>
@@ -212,10 +215,12 @@
 <li><a href="#--secure-heap-minn"><code>--secure-heap-min=n</code></a></li>
 <li><span class="stability_1"><a href="#--snapshot-blobpath"><code>--snapshot-blob=path</code></a></span></li>
 <li><a href="#--test"><code>--test</code></a></li>
+<li><a href="#--test-concurrency"><code>--test-concurrency</code></a></li>
 <li><a href="#--test-name-pattern"><code>--test-name-pattern</code></a></li>
 <li><a href="#--test-reporter"><code>--test-reporter</code></a></li>
 <li><a href="#--test-reporter-destination"><code>--test-reporter-destination</code></a></li>
 <li><a href="#--test-only"><code>--test-only</code></a></li>
+<li><a href="#--test-shard"><code>--test-shard</code></a></li>
 <li><a href="#--throw-deprecation"><code>--throw-deprecation</code></a></li>
 <li><a href="#--titletitle"><code>--title=title</code></a></li>
 <li><a href="#--tls-cipher-listlist"><code>--tls-cipher-list=list</code></a></li>
@@ -392,11 +397,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/cli.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/cli.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/cli.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/cli.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/cli.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/cli.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/cli.html">16.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/cli.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/cli.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/cli.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/cli.html">13.x</a></li>
@@ -459,9 +465,11 @@
 <li><a href="#--disallow-code-generation-from-strings"><code>--disallow-code-generation-from-strings</code></a></li>
 <li><a href="#--dns-result-orderorder"><code>--dns-result-order=order</code></a></li>
 <li><a href="#--enable-fips"><code>--enable-fips</code></a></li>
+<li><a href="#--enable-network-family-autoselection"><code>--enable-network-family-autoselection</code></a></li>
 <li><a href="#--enable-source-maps"><code>--enable-source-maps</code></a></li>
 <li><a href="#--experimental-global-customevent"><code>--experimental-global-customevent</code></a></li>
 <li><a href="#--experimental-global-webcrypto"><code>--experimental-global-webcrypto</code></a></li>
+<li><span class="stability_1"><a href="#--experimental-default-typetype"><code>--experimental-default-type=type</code></a></span></li>
 <li><a href="#--experimental-import-meta-resolve"><code>--experimental-import-meta-resolve</code></a></li>
 <li><a href="#--experimental-loadermodule"><code>--experimental-loader=module</code></a></li>
 <li><span class="stability_1"><a href="#--experimental-network-imports"><code>--experimental-network-imports</code></a></span></li>
@@ -485,6 +493,7 @@
 <li><span class="stability_1"><a href="#--heap-prof-interval"><code>--heap-prof-interval</code></a></span></li>
 <li><span class="stability_1"><a href="#--heap-prof-name"><code>--heap-prof-name</code></a></span></li>
 <li><a href="#--icu-data-dirfile"><code>--icu-data-dir=file</code></a></li>
+<li><span class="stability_1"><a href="#--importmodule"><code>--import=module</code></a></span></li>
 <li><a href="#--input-typetype"><code>--input-type=type</code></a></li>
 <li><a href="#--inspect-brkhostport"><code>--inspect-brk[=[host:]port]</code></a></li>
 <li><a href="#--inspect-porthostport"><code>--inspect-port=[host:]port</code></a></li>
@@ -526,10 +535,12 @@
 <li><a href="#--secure-heap-minn"><code>--secure-heap-min=n</code></a></li>
 <li><span class="stability_1"><a href="#--snapshot-blobpath"><code>--snapshot-blob=path</code></a></span></li>
 <li><a href="#--test"><code>--test</code></a></li>
+<li><a href="#--test-concurrency"><code>--test-concurrency</code></a></li>
 <li><a href="#--test-name-pattern"><code>--test-name-pattern</code></a></li>
 <li><a href="#--test-reporter"><code>--test-reporter</code></a></li>
 <li><a href="#--test-reporter-destination"><code>--test-reporter-destination</code></a></li>
 <li><a href="#--test-only"><code>--test-only</code></a></li>
+<li><a href="#--test-shard"><code>--test-shard</code></a></li>
 <li><a href="#--throw-deprecation"><code>--throw-deprecation</code></a></li>
 <li><a href="#--titletitle"><code>--title=title</code></a></li>
 <li><a href="#--tls-cipher-listlist"><code>--tls-cipher-list=list</code></a></li>
@@ -630,13 +641,15 @@ debugging, multiple ways to execute scripts, and other helpful runtime options.<
 </section><section><h3>Program entry point<span><a class="mark" href="#program-entry-point" id="program-entry-point">#</a></span><a aria-hidden="true" class="legacy" id="cli_program_entry_point"></a></h3>
 <p>The program entry point is a specifier-like string. If the string is not an
 absolute path, it's resolved as a relative path from the current working
-directory. That path is then resolved by <a href="modules.html">CommonJS</a> module loader. If no
-corresponding file is found, an error is thrown.</p>
-<p>If a file is found, its path will be passed to the <a href="esm.html#loaders">ECMAScript module loader</a>
-under any of the following conditions:</p>
+directory. That path is then resolved by <a href="modules.html">CommonJS</a> module loader, or by the
+<a href="packages.html#modules-loaders">ES module loader</a> if <a href="#--experimental-default-typetype"><code>--experimental-default-type=module</code></a>
+is passed. If no corresponding file is found, an error is thrown.</p>
+<p>If a file is found, its path will be passed to the
+<a href="packages.html#modules-loaders">ES module loader</a> under any of the following conditions:</p>
 <ul>
 <li>The program was started with a command-line flag that forces the entry
-point to be loaded with ECMAScript module loader.</li>
+point to be loaded with ECMAScript module loader, such as <code>--import</code> or
+<a href="#--experimental-default-typetype"><code>--experimental-default-type=module</code></a>.</li>
 <li>The file has an <code>.mjs</code> extension.</li>
 <li>The file does not have a <code>.cjs</code> extension, and the nearest parent
 <code>package.json</code> file contains a top-level <a href="packages.html#type"><code>"type"</code></a> field with a value of
@@ -645,10 +658,11 @@ point to be loaded with ECMAScript module loader.</li>
 <p>Otherwise, the file is loaded using the CommonJS module loader. See
 <a href="packages.html#modules-loaders">Modules loaders</a> for more details.</p>
 <h4>ECMAScript modules loader entry point caveat<span><a class="mark" href="#ecmascript-modules-loader-entry-point-caveat" id="ecmascript-modules-loader-entry-point-caveat">#</a></span><a aria-hidden="true" class="legacy" id="cli_ecmascript_modules_loader_entry_point_caveat"></a></h4>
-<p>When loading <a href="esm.html#loaders">ECMAScript module loader</a> loads the program entry point, the <code>node</code>
-command will only accept as input only files with <code>.js</code>, <code>.mjs</code>, or <code>.cjs</code>
-extensions; and with <code>.wasm</code> extensions when
-<a href="#--experimental-wasm-modules"><code>--experimental-wasm-modules</code></a> is enabled.</p>
+<p>When loading, the <a href="packages.html#modules-loaders">ES module loader</a> loads the program
+entry point, the <code>node</code> command will accept as input only files with <code>.js</code>,
+<code>.mjs</code>, or <code>.cjs</code> extensions; with <code>.wasm</code> extensions when
+<a href="#--experimental-wasm-modules"><code>--experimental-wasm-modules</code></a> is enabled; and with no extension when
+<a href="#--experimental-default-typetype"><code>--experimental-default-type=module</code></a> is passed.</p>
 </section><section><h3>Options<span><a class="mark" href="#options" id="options">#</a></span><a aria-hidden="true" class="legacy" id="cli_options"></a></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -836,6 +850,12 @@ priority than <code>--dns-result-order</code>.</p>
 </div>
 <p>Enable FIPS-compliant crypto at startup. (Requires Node.js to be built
 against FIPS-compatible OpenSSL.)</p>
+<h4><code>--enable-network-family-autoselection</code><span><a class="mark" href="#--enable-network-family-autoselection" id="--enable-network-family-autoselection">#</a></span><a aria-hidden="true" class="legacy" id="cli_enable_network_family_autoselection"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.18.0</span>
+</div>
+<p>Enables the family autoselection algorithm unless connection options explicitly
+disables it.</p>
 <h4><code>--enable-source-maps</code><span><a class="mark" href="#--enable-source-maps" id="--enable-source-maps">#</a></span><a aria-hidden="true" class="legacy" id="cli_enable_source_maps"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -869,11 +889,49 @@ of <code>--enable-source-maps</code>.</p>
 <span>Added in: v17.6.0</span>
 </div>
 <p>Expose the <a href="webcrypto.html">Web Crypto API</a> on the global scope.</p>
+<h4><code>--experimental-default-type=type</code><span><a class="mark" href="#--experimental-default-typetype" id="--experimental-default-typetype">#</a></span><a aria-hidden="true" class="legacy" id="cli_experimental_default_type_type"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.19.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a>.0 - Early development</div><p></p>
+<p>Define which module system, <code>module</code> or <code>commonjs</code>, to use for the following:</p>
+<ul>
+<li>
+<p>String input provided via <code>--eval</code> or STDIN, if <code>--input-type</code> is unspecified.</p>
+</li>
+<li>
+<p>Files ending in <code>.js</code> or with no extension, if there is no <code>package.json</code> file
+present in the same folder or any parent folder.</p>
+</li>
+<li>
+<p>Files ending in <code>.js</code> or with no extension, if the nearest parent
+<code>package.json</code> field lacks a <code>"type"</code> field; unless the <code>package.json</code> folder
+or any parent folder is inside a <code>node_modules</code> folder.</p>
+</li>
+</ul>
+<p>In other words, <code>--experimental-default-type=module</code> flips all the places where
+Node.js currently defaults to CommonJS to instead default to ECMAScript modules,
+with the exception of folders and subfolders below <code>node_modules</code>, for backward
+compatibility.</p>
+<p>Under <code>--experimental-default-type=module</code> and <code>--experimental-wasm-modules</code>,
+files with no extension will be treated as WebAssembly if they begin with the
+WebAssembly magic number (<code>\0asm</code>); otherwise they will be treated as ES module
+JavaScript.</p>
 <h4><code>--experimental-import-meta-resolve</code><span><a class="mark" href="#--experimental-import-meta-resolve" id="--experimental-import-meta-resolve">#</a></span><a aria-hidden="true" class="legacy" id="cli_experimental_import_meta_resolve"></a></h4>
 <div class="api_metadata">
-<span>Added in: v13.9.0, v12.16.2</span>
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v18.19.0</td>
+<td><p>synchronous import.meta.resolve made available by default, with the flag retained for enabling the experimental second argument as previously supported.</p></td></tr>
+<tr><td>v13.9.0, v12.16.2</td>
+<td><p><span>Added in: v13.9.0, v12.16.2</span></p></td></tr>
+</tbody></table>
+</details>
 </div>
-<p>Enable experimental <code>import.meta.resolve()</code> support.</p>
+<p>Enable experimental <code>import.meta.resolve()</code> parent URL support, which allows
+passing a second <code>parentURL</code> argument for contextual resolution.</p>
+<p>Previously gated the entire <code>import.meta.resolve</code> feature.</p>
 <h4><code>--experimental-loader=module</code><span><a class="mark" href="#--experimental-loadermodule" id="--experimental-loadermodule">#</a></span><a aria-hidden="true" class="legacy" id="cli_experimental_loader_module"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -886,7 +944,12 @@ of <code>--enable-source-maps</code>.</p>
 </tbody></table>
 </details>
 </div>
-<p>Specify the <code>module</code> of a custom experimental <a href="esm.html#loaders">ECMAScript module loader</a>.
+<blockquote>
+<p>This flag is discouraged and may be removed in a future version of Node.js.
+Please use
+<a href="module.html#enabling"><code>--import</code> with <code>register()</code></a> instead.</p>
+</blockquote>
+<p>Specify the <code>module</code> containing exported <a href="module.html#customization-hooks">module customization hooks</a>.
 <code>module</code> may be any string accepted as an <a href="esm.html#import-specifiers"><code>import</code> specifier</a>.</p>
 <h4><code>--experimental-network-imports</code><span><a class="mark" href="#--experimental-network-imports" id="--experimental-network-imports">#</a></span><a aria-hidden="true" class="legacy" id="cli_experimental_network_imports"></a></h4>
 <div class="api_metadata">
@@ -985,7 +1048,8 @@ report is not generated. See the documentation on
 <p>Only the root context is supported. There is no guarantee that
 <code>globalThis.Array</code> is indeed the default intrinsic reference. Code may break
 under this flag.</p>
-<p>To allow polyfills to be added, <code>--require</code> runs before freezing intrinsics.</p>
+<p>To allow polyfills to be added,
+<a href="#-r---require-module"><code>--require</code></a> and <a href="#--importmodule"><code>--import</code></a> both run before freezing intrinsics.</p>
 <h4><code>--force-node-api-uncaught-exceptions-policy</code><span><a class="mark" href="#--force-node-api-uncaught-exceptions-policy" id="--force-node-api-uncaught-exceptions-policy">#</a></span><a aria-hidden="true" class="legacy" id="cli_force_node_api_uncaught_exceptions_policy"></a></h4>
 <div class="api_metadata">
 <span>Added in: v18.3.0</span>
@@ -1087,6 +1151,15 @@ by <code>--heap-prof</code>. The default is 512 * 1024 bytes.</p>
 <span>Added in: v0.11.15</span>
 </div>
 <p>Specify ICU data load path. (Overrides <code>NODE_ICU_DATA</code>.)</p>
+<h4><code>--import=module</code><span><a class="mark" href="#--importmodule" id="--importmodule">#</a></span><a aria-hidden="true" class="legacy" id="cli_import_module"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.18.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
+<p>Preload the specified module at startup.</p>
+<p>Follows <a href="esm.html#modules-ecmascript-modules">ECMAScript module</a> resolution rules.
+Use <a href="#-r---require-module"><code>--require</code></a> to load a <a href="modules.html">CommonJS module</a>.
+Modules preloaded with <code>--require</code> will run before modules preloaded with <code>--import</code>.</p>
 <h4><code>--input-type=type</code><span><a class="mark" href="#--input-typetype" id="--input-typetype">#</a></span><a aria-hidden="true" class="legacy" id="cli_input_type_type"></a></h4>
 <div class="api_metadata">
 <span>Added in: v12.0.0</span>
@@ -1495,6 +1568,12 @@ status code 1.</p>
 <code>--watch-path</code>, <code>--check</code>, <code>--eval</code>, <code>--interactive</code>, or the inspector.
 See the documentation on <a href="test.html#running-tests-from-the-command-line">running tests from the command line</a>
 for more details.</p>
+<h4><code>--test-concurrency</code><span><a class="mark" href="#--test-concurrency" id="--test-concurrency">#</a></span><a aria-hidden="true" class="legacy" id="cli_test_concurrency"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.19.0</span>
+</div>
+<p>The maximum number of test files that the test runner CLI will execute
+concurrently. The default value is <code>os.availableParallelism() - 1</code>.</p>
 <h4><code>--test-name-pattern</code><span><a class="mark" href="#--test-name-pattern" id="--test-name-pattern">#</a></span><a aria-hidden="true" class="legacy" id="cli_test_name_pattern"></a></h4>
 <div class="api_metadata">
 <span>Added in: v18.11.0</span>
@@ -1520,6 +1599,19 @@ whose name matches the provided pattern. See the documentation on
 </div>
 <p>Configures the test runner to only execute top level tests that have the <code>only</code>
 option set.</p>
+<h4><code>--test-shard</code><span><a class="mark" href="#--test-shard" id="--test-shard">#</a></span><a aria-hidden="true" class="legacy" id="cli_test_shard"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.19.0</span>
+</div>
+<p>Test suite shard to execute in a format of <code>&#x3C;index>/&#x3C;total></code>, where</p>
+<p><code>index</code> is a positive integer, index of divided parts
+<code>total</code> is a positive integer, total of divided part
+This command will divide all tests files into <code>total</code> equal parts,
+and will run only those that happen to be in an <code>index</code> part.</p>
+<p>For example, to split your tests suite into three parts, use this:</p>
+<pre><code class="language-bash">node --<span class="hljs-built_in">test</span> --test-shard=1/3
+node --<span class="hljs-built_in">test</span> --test-shard=2/3
+node --<span class="hljs-built_in">test</span> --test-shard=3/3</code> <button class="copy-button">copy</button></pre>
 <h4><code>--throw-deprecation</code><span><a class="mark" href="#--throw-deprecation" id="--throw-deprecation">#</a></span><a aria-hidden="true" class="legacy" id="cli_throw_deprecation"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.11.14</span>
@@ -1847,8 +1939,9 @@ The output of this option is less detailed than this document.</p>
 <p>Preload the specified module at startup.</p>
 <p>Follows <code>require()</code>'s module resolution
 rules. <code>module</code> may be either a path to a file, or a node module name.</p>
-<p>Only CommonJS modules are supported. Attempting to preload a
-ES6 Module using <code>--require</code> will fail with an error.</p>
+<p>Only CommonJS modules are supported.
+Use <a href="#--importmodule"><code>--import</code></a> to preload an <a href="esm.html#modules-ecmascript-modules">ECMAScript module</a>.
+Modules preloaded with <code>--require</code> will run before modules preloaded with <code>--import</code>.</p>
 <h4><code>-v</code>, <code>--version</code><span><a class="mark" href="#-v---version" id="-v---version">#</a></span><a aria-hidden="true" class="legacy" id="cli_v_version"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.1.3</span>
@@ -1934,8 +2027,10 @@ node --require <span class="hljs-string">"./a.js"</span> --require <span class="
 <li><code>--disable-proto</code></li>
 <li><code>--dns-result-order</code></li>
 <li><code>--enable-fips</code></li>
+<li><code>--enable-network-family-autoselection</code></li>
 <li><code>--enable-source-maps</code></li>
 <li><code>--experimental-abortcontroller</code></li>
+<li><code>--experimental-default-type</code></li>
 <li><code>--experimental-global-customevent</code></li>
 <li><code>--experimental-global-webcrypto</code></li>
 <li><code>--experimental-import-meta-resolve</code></li>
@@ -1958,6 +2053,7 @@ node --require <span class="hljs-string">"./a.js"</span> --require <span class="
 <li><code>--heapsnapshot-signal</code></li>
 <li><code>--http-parser</code></li>
 <li><code>--icu-data-dir</code></li>
+<li><code>--import</code></li>
 <li><code>--input-type</code></li>
 <li><code>--insecure-http-parser</code></li>
 <li><code>--inspect-brk</code></li>
@@ -1998,6 +2094,7 @@ node --require <span class="hljs-string">"./a.js"</span> --require <span class="
 <li><code>--test-only</code></li>
 <li><code>--test-reporter-destination</code></li>
 <li><code>--test-reporter</code></li>
+<li><code>--test-shard</code></li>
 <li><code>--throw-deprecation</code></li>
 <li><code>--title</code></li>
 <li><code>--tls-cipher-list</code></li>

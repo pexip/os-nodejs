@@ -75,6 +75,7 @@ a command-line flag. Experimental features may also emit a [warning][].
 | [HTTP/2](http2.html) | (2) Stable |
 | [HTTPS](https.html) | (2) Stable |
 | [Inspector](inspector.html) | (2) Stable |
+| [Modules: `node:module` API](module.html) | (1) .1 - Active development |
 | [Modules: CommonJS modules](modules.html) | (2) Stable |
 | [OS](os.html) | (2) Stable |
 | [Path](path.html) | (2) Stable |

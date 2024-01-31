@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>Util | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>Util | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="util" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -153,8 +153,7 @@
 <li><a href="#utilisdeepstrictequalval1-val2"><code>util.isDeepStrictEqual(val1, val2)</code></a></li>
 <li><span class="stability_1"><a href="#class-utilmimetype">Class: <code>util.MIMEType</code></a></span>
 <ul>
-<li><a href="#constructor-new-mimetypeinput">Constructor: <code>new MIMEType(input)</code></a>
-<ul>
+<li><a href="#constructor-new-mimetypeinput">Constructor: <code>new MIMEType(input)</code></a></li>
 <li><a href="#mimetype"><code>mime.type</code></a></li>
 <li><a href="#mimesubtype"><code>mime.subtype</code></a></li>
 <li><a href="#mimeessence"><code>mime.essence</code></a></li>
@@ -174,8 +173,6 @@
 <li><a href="#mimeparamssetname-value"><code>mimeParams.set(name, value)</code></a></li>
 <li><a href="#mimeparamsvalues"><code>mimeParams.values()</code></a></li>
 <li><a href="#mimeparamsiterator"><code>mimeParams[@@iterator]()</code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li><span class="stability_1"><a href="#utilparseargsconfig"><code>util.parseArgs([config])</code></a></span>
@@ -380,11 +377,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/util.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/util.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/util.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/util.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/util.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/util.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/util.html">16.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/util.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/util.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/util.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/util.html">13.x</a></li>
@@ -458,8 +456,7 @@
 <li><a href="#utilisdeepstrictequalval1-val2"><code>util.isDeepStrictEqual(val1, val2)</code></a></li>
 <li><span class="stability_1"><a href="#class-utilmimetype">Class: <code>util.MIMEType</code></a></span>
 <ul>
-<li><a href="#constructor-new-mimetypeinput">Constructor: <code>new MIMEType(input)</code></a>
-<ul>
+<li><a href="#constructor-new-mimetypeinput">Constructor: <code>new MIMEType(input)</code></a></li>
 <li><a href="#mimetype"><code>mime.type</code></a></li>
 <li><a href="#mimesubtype"><code>mime.subtype</code></a></li>
 <li><a href="#mimeessence"><code>mime.essence</code></a></li>
@@ -479,8 +476,6 @@
 <li><a href="#mimeparamssetname-value"><code>mimeParams.set(name, value)</code></a></li>
 <li><a href="#mimeparamsvalues"><code>mimeParams.values()</code></a></li>
 <li><a href="#mimeparamsiterator"><code>mimeParams[@@iterator]()</code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li><span class="stability_1"><a href="#utilparseargsconfig"><code>util.parseArgs([config])</code></a></span>
@@ -597,7 +592,7 @@
         <h2>Util<span><a class="mark" href="#util" id="util">#</a></span><a aria-hidden="true" class="legacy" id="util_util"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.17.1/lib/util.js">lib/util.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/util.js">lib/util.js</a></p>
 <p>The <code>node:util</code> module supports the needs of Node.js internal APIs. Many of the
 utilities are useful for application and module developers as well. To access
 it:</p>
@@ -1440,7 +1435,7 @@ instance:</p>
 <span class="hljs-keyword">const</span> myMIME = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MIMEType</span>({ <span class="hljs-attr">toString</span>: <span class="hljs-function">() =></span> <span class="hljs-string">'text/plain'</span> });
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title class_">String</span>(myMIME));
 <span class="hljs-comment">// Prints: text/plain</span></code><button class="copy-button">copy</button></pre>
-<h5><code>mime.type</code><span><a class="mark" href="#mimetype" id="mimetype">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_type"></a></h5>
+<h4><code>mime.type</code><span><a class="mark" href="#mimetype" id="mimetype">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_type"></a></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
@@ -1465,7 +1460,7 @@ myMIME.<span class="hljs-property">type</span> = <span class="hljs-string">'appl
 <span class="hljs-comment">// Prints: application</span>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title class_">String</span>(myMIME));
 <span class="hljs-comment">// Prints: application/javascript</span></code><button class="copy-button">copy</button></pre>
-<h5><code>mime.subtype</code><span><a class="mark" href="#mimesubtype" id="mimesubtype">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_subtype"></a></h5>
+<h4><code>mime.subtype</code><span><a class="mark" href="#mimesubtype" id="mimesubtype">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_subtype"></a></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
@@ -1490,7 +1485,7 @@ myMIME.<span class="hljs-property">subtype</span> = <span class="hljs-string">'j
 <span class="hljs-comment">// Prints: javascript</span>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title class_">String</span>(myMIME));
 <span class="hljs-comment">// Prints: text/javascript</span></code><button class="copy-button">copy</button></pre>
-<h5><code>mime.essence</code><span><a class="mark" href="#mimeessence" id="mimeessence">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_essence"></a></h5>
+<h4><code>mime.essence</code><span><a class="mark" href="#mimeessence" id="mimeessence">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_essence"></a></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
@@ -1516,21 +1511,21 @@ myMIME.<span class="hljs-property">type</span> = <span class="hljs-string">'appl
 <span class="hljs-comment">// Prints: application/javascript</span>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title class_">String</span>(myMIME));
 <span class="hljs-comment">// Prints: application/javascript;key=value</span></code><button class="copy-button">copy</button></pre>
-<h5><code>mime.params</code><span><a class="mark" href="#mimeparams" id="mimeparams">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_params"></a></h5>
+<h4><code>mime.params</code><span><a class="mark" href="#mimeparams" id="mimeparams">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_params"></a></h4>
 <ul>
 <li><a href="util.html#class-utilmimeparams" class="type">&#x3C;MIMEParams></a></li>
 </ul>
 <p>Gets the <a href="#class-utilmimeparams"><code>MIMEParams</code></a> object representing the
 parameters of the MIME. This property is read-only. See
 <a href="#class-utilmimeparams"><code>MIMEParams</code></a> documentation for details.</p>
-<h5><code>mime.toString()</code><span><a class="mark" href="#mimetostring" id="mimetostring">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_tostring"></a></h5>
+<h4><code>mime.toString()</code><span><a class="mark" href="#mimetostring" id="mimetostring">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_tostring"></a></h4>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
 <p>The <code>toString()</code> method on the <code>MIMEType</code> object returns the serialized MIME.</p>
 <p>Because of the need for standard compliance, this method does not allow users
 to customize the serialization process of the MIME.</p>
-<h5><code>mime.toJSON()</code><span><a class="mark" href="#mimetojson" id="mimetojson">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_tojson"></a></h5>
+<h4><code>mime.toJSON()</code><span><a class="mark" href="#mimetojson" id="mimetojson">#</a></span><a aria-hidden="true" class="legacy" id="util_mime_tojson"></a></h4>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
@@ -1553,13 +1548,13 @@ with <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/
 ];
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title class_">JSON</span>.<span class="hljs-title function_">stringify</span>(myMIMES));
 <span class="hljs-comment">// Prints: ["image/png", "image/gif"]</span></code><button class="copy-button">copy</button></pre>
-<h4>Class: <code>util.MIMEParams</code><span><a class="mark" href="#class-utilmimeparams" id="class-utilmimeparams">#</a></span><a aria-hidden="true" class="legacy" id="util_class_util_mimeparams"></a></h4>
+</section><section><h3>Class: <code>util.MIMEParams</code><span><a class="mark" href="#class-utilmimeparams" id="class-utilmimeparams">#</a></span><a aria-hidden="true" class="legacy" id="util_class_util_mimeparams"></a></h3>
 <div class="api_metadata">
 <span>Added in: v18.13.0</span>
 </div>
 <p>The <code>MIMEParams</code> API provides read and write access to the parameters of a
 <code>MIMEType</code>.</p>
-<h5>Constructor: <code>new MIMEParams()</code><span><a class="mark" href="#constructor-new-mimeparams" id="constructor-new-mimeparams">#</a></span><a aria-hidden="true" class="legacy" id="util_constructor_new_mimeparams"></a></h5>
+<h4>Constructor: <code>new MIMEParams()</code><span><a class="mark" href="#constructor-new-mimeparams" id="constructor-new-mimeparams">#</a></span><a aria-hidden="true" class="legacy" id="util_constructor_new_mimeparams"></a></h4>
 <p>Creates a new <code>MIMEParams</code> object by with empty parameters</p>
 
 <pre class="with-44-chars"><input class="js-flavor-selector" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">MIMEParams</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:util'</span>;
@@ -1567,19 +1562,19 @@ with <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/
 <span class="hljs-keyword">const</span> myParams = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MIMEParams</span>();</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">MIMEParams</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:util'</span>);
 
 <span class="hljs-keyword">const</span> myParams = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MIMEParams</span>();</code><button class="copy-button">copy</button></pre>
-<h5><code>mimeParams.delete(name)</code><span><a class="mark" href="#mimeparamsdeletename" id="mimeparamsdeletename">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_delete_name"></a></h5>
+<h4><code>mimeParams.delete(name)</code><span><a class="mark" href="#mimeparamsdeletename" id="mimeparamsdeletename">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_delete_name"></a></h4>
 <ul>
 <li><code>name</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
 <p>Remove all name-value pairs whose name is <code>name</code>.</p>
-<h5><code>mimeParams.entries()</code><span><a class="mark" href="#mimeparamsentries" id="mimeparamsentries">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_entries"></a></h5>
+<h4><code>mimeParams.entries()</code><span><a class="mark" href="#mimeparamsentries" id="mimeparamsentries">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_entries"></a></h4>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol" class="type">&#x3C;Iterator></a></li>
 </ul>
 <p>Returns an iterator over each of the name-value pairs in the parameters.
 Each item of the iterator is a JavaScript <code>Array</code>. The first item of the array
 is the <code>name</code>, the second item of the array is the <code>value</code>.</p>
-<h5><code>mimeParams.get(name)</code><span><a class="mark" href="#mimeparamsgetname" id="mimeparamsgetname">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_get_name"></a></h5>
+<h4><code>mimeParams.get(name)</code><span><a class="mark" href="#mimeparamsgetname" id="mimeparamsgetname">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_get_name"></a></h4>
 <ul>
 <li><code>name</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> or <code>null</code> if there is no name-value pair with the given
@@ -1587,13 +1582,13 @@ is the <code>name</code>, the second item of the array is the <code>value</code>
 </ul>
 <p>Returns the value of the first name-value pair whose name is <code>name</code>. If there
 are no such pairs, <code>null</code> is returned.</p>
-<h5><code>mimeParams.has(name)</code><span><a class="mark" href="#mimeparamshasname" id="mimeparamshasname">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_has_name"></a></h5>
+<h4><code>mimeParams.has(name)</code><span><a class="mark" href="#mimeparamshasname" id="mimeparamshasname">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_has_name"></a></h4>
 <ul>
 <li><code>name</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>Returns <code>true</code> if there is at least one name-value pair whose name is <code>name</code>.</p>
-<h5><code>mimeParams.keys()</code><span><a class="mark" href="#mimeparamskeys" id="mimeparamskeys">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_keys"></a></h5>
+<h4><code>mimeParams.keys()</code><span><a class="mark" href="#mimeparamskeys" id="mimeparamskeys">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_keys"></a></h4>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol" class="type">&#x3C;Iterator></a></li>
 </ul>
@@ -1616,7 +1611,7 @@ are no such pairs, <code>null</code> is returned.</p>
 <span class="hljs-comment">// Prints:</span>
 <span class="hljs-comment">//   foo</span>
 <span class="hljs-comment">//   bar</span></code><button class="copy-button">copy</button></pre>
-<h5><code>mimeParams.set(name, value)</code><span><a class="mark" href="#mimeparamssetname-value" id="mimeparamssetname-value">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_set_name_value"></a></h5>
+<h4><code>mimeParams.set(name, value)</code><span><a class="mark" href="#mimeparamssetname-value" id="mimeparamssetname-value">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_set_name_value"></a></h4>
 <ul>
 <li><code>name</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 <li><code>value</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
@@ -1638,12 +1633,12 @@ params.<span class="hljs-title function_">set</span>(<span class="hljs-string">'
 params.<span class="hljs-title function_">set</span>(<span class="hljs-string">'baz'</span>, <span class="hljs-string">'xyz'</span>);
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(params.<span class="hljs-title function_">toString</span>());
 <span class="hljs-comment">// Prints: foo=def&#x26;bar=1&#x26;baz=xyz</span></code><button class="copy-button">copy</button></pre>
-<h5><code>mimeParams.values()</code><span><a class="mark" href="#mimeparamsvalues" id="mimeparamsvalues">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_values"></a></h5>
+<h4><code>mimeParams.values()</code><span><a class="mark" href="#mimeparamsvalues" id="mimeparamsvalues">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_values"></a></h4>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol" class="type">&#x3C;Iterator></a></li>
 </ul>
 <p>Returns an iterator over the values of each name-value pair.</p>
-<h5><code>mimeParams[@@iterator]()</code><span><a class="mark" href="#mimeparamsiterator" id="mimeparamsiterator">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_iterator"></a></h5>
+<h4><code>mimeParams[@@iterator]()</code><span><a class="mark" href="#mimeparamsiterator" id="mimeparamsiterator">#</a></span><a aria-hidden="true" class="legacy" id="util_mimeparams_iterator"></a></h4>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol" class="type">&#x3C;Iterator></a></li>
 </ul>

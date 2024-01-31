@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>Process | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>Process | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="process" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -224,6 +224,7 @@
 <li><a href="#processsetuidid"><code>process.setuid(id)</code></a></li>
 <li><span class="stability_1"><a href="#processsetsourcemapsenabledval"><code>process.setSourceMapsEnabled(val)</code></a></span></li>
 <li><a href="#processsetuncaughtexceptioncapturecallbackfn"><code>process.setUncaughtExceptionCaptureCallback(fn)</code></a></li>
+<li><span class="stability_1"><a href="#processsourcemapsenabled"><code>process.sourceMapsEnabled</code></a></span></li>
 <li><a href="#processstderr"><code>process.stderr</code></a>
 <ul>
 <li><a href="#processstderrfd"><code>process.stderr.fd</code></a></li>
@@ -345,11 +346,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/process.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/process.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/process.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/process.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/process.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/process.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/process.html">16.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/process.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/process.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/process.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/process.html">13.x</a></li>
@@ -494,6 +496,7 @@
 <li><a href="#processsetuidid"><code>process.setuid(id)</code></a></li>
 <li><span class="stability_1"><a href="#processsetsourcemapsenabledval"><code>process.setSourceMapsEnabled(val)</code></a></span></li>
 <li><a href="#processsetuncaughtexceptioncapturecallbackfn"><code>process.setUncaughtExceptionCaptureCallback(fn)</code></a></li>
+<li><span class="stability_1"><a href="#processsourcemapsenabled"><code>process.sourceMapsEnabled</code></a></span></li>
 <li><a href="#processstderr"><code>process.stderr</code></a>
 <ul>
 <li><a href="#processstderrfd"><code>process.stderr.fd</code></a></li>
@@ -527,7 +530,7 @@
         <h2>Process<span><a class="mark" href="#process" id="process">#</a></span><a aria-hidden="true" class="legacy" id="process_process"></a></h2>
 
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.17.1/lib/process.js">lib/process.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/process.js">lib/process.js</a></p>
 <p>The <code>process</code> object provides information about, and control over, the current
 Node.js process.</p>
 
@@ -1843,7 +1846,9 @@ each <a href="worker_threads.html#class-worker"><code>Worker</code></a> thread h
 parent thread's <code>process.env</code>, or whatever was specified as the <code>env</code> option
 to the <a href="worker_threads.html#class-worker"><code>Worker</code></a> constructor. Changes to <code>process.env</code> will not be visible
 across <a href="worker_threads.html#class-worker"><code>Worker</code></a> threads, and only the main thread can make changes that
-are visible to the operating system or to native add-ons.</p>
+are visible to the operating system or to native add-ons. On Windows, a copy of
+<code>process.env</code> on a <a href="worker_threads.html#class-worker"><code>Worker</code></a> instance operates in a case-sensitive manner
+unlike the main thread.</p>
 </section><section><h3><code>process.execArgv</code><span><a class="mark" href="#processexecargv" id="processexecargv">#</a></span><a aria-hidden="true" class="legacy" id="process_process_execargv"></a></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.7</span>
@@ -3255,6 +3260,16 @@ method with a non-<code>null</code> argument while another capture function is s
 throw an error.</p>
 <p>Using this function is mutually exclusive with using the deprecated
 <a href="domain.html"><code>domain</code></a> built-in module.</p>
+</section><section><h3><code>process.sourceMapsEnabled</code><span><a class="mark" href="#processsourcemapsenabled" id="processsourcemapsenabled">#</a></span><a aria-hidden="true" class="legacy" id="process_process_sourcemapsenabled"></a></h3>
+<div class="api_metadata">
+<span>Added in: v18.19.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
+</ul>
+<p>The <code>process.sourceMapsEnabled</code> property returns whether the
+<a href="https://sourcemaps.info/spec.html">Source Map v3</a> support for stack traces is enabled.</p>
 </section><section><h3><code>process.stderr</code><span><a class="mark" href="#processstderr" id="processstderr">#</a></span><a aria-hidden="true" class="legacy" id="process_process_stderr"></a></h3>
 <ul>
 <li><a href="stream.html#stream" class="type">&#x3C;Stream></a></li>

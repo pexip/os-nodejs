@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>Errors | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>Errors | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="errors" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -122,11 +122,7 @@
       <div class="picker"><div class="toc"><ul>
 <li><a href="#errors">Errors</a>
 <ul>
-<li><a href="#error-propagation-and-interception">Error propagation and interception</a>
-<ul>
-<li><a href="#error-first-callbacks">Error-first callbacks</a></li>
-</ul>
-</li>
+<li><a href="#error-propagation-and-interception">Error propagation and interception</a></li>
 <li><a href="#class-error">Class: <code>Error</code></a>
 <ul>
 <li><a href="#new-errormessage-options"><code>new Error(message[, options])</code></a></li>
@@ -313,6 +309,7 @@
 <li><a href="#err_import_assertion_type_failed"><code>ERR_IMPORT_ASSERTION_TYPE_FAILED</code></a></li>
 <li><a href="#err_import_assertion_type_missing"><code>ERR_IMPORT_ASSERTION_TYPE_MISSING</code></a></li>
 <li><a href="#err_import_assertion_type_unsupported"><code>ERR_IMPORT_ASSERTION_TYPE_UNSUPPORTED</code></a></li>
+<li><a href="#err_import_attribute_unsupported"><code>ERR_IMPORT_ATTRIBUTE_UNSUPPORTED</code></a></li>
 <li><a href="#err_incompatible_option_pair"><code>ERR_INCOMPATIBLE_OPTION_PAIR</code></a></li>
 <li><span class="stability_1"><a href="#err_input_type_not_allowed"><code>ERR_INPUT_TYPE_NOT_ALLOWED</code></a></span></li>
 <li><a href="#err_inspector_already_activated"><code>ERR_INSPECTOR_ALREADY_ACTIVATED</code></a></li>
@@ -435,6 +432,8 @@
 <li><a href="#err_tap_parser_error"><code>ERR_TAP_PARSER_ERROR</code></a></li>
 <li><a href="#err_tap_validation_error"><code>ERR_TAP_VALIDATION_ERROR</code></a></li>
 <li><a href="#err_test_failure"><code>ERR_TEST_FAILURE</code></a></li>
+<li><a href="#err_tls_alpn_callback_invalid_result"><code>ERR_TLS_ALPN_CALLBACK_INVALID_RESULT</code></a></li>
+<li><a href="#err_tls_alpn_callback_with_protocols"><code>ERR_TLS_ALPN_CALLBACK_WITH_PROTOCOLS</code></a></li>
 <li><a href="#err_tls_cert_altname_format"><code>ERR_TLS_CERT_ALTNAME_FORMAT</code></a></li>
 <li><a href="#err_tls_cert_altname_invalid"><code>ERR_TLS_CERT_ALTNAME_INVALID</code></a></li>
 <li><a href="#err_tls_dh_param_size"><code>ERR_TLS_DH_PARAM_SIZE</code></a></li>
@@ -626,11 +625,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/errors.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/errors.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/errors.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/errors.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/errors.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/errors.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/errors.html">16.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/errors.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/errors.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/errors.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/errors.html">13.x</a></li>
@@ -671,11 +671,7 @@
       <details id="toc" open><summary>Table of contents</summary><ul>
 <li><a href="#errors">Errors</a>
 <ul>
-<li><a href="#error-propagation-and-interception">Error propagation and interception</a>
-<ul>
-<li><a href="#error-first-callbacks">Error-first callbacks</a></li>
-</ul>
-</li>
+<li><a href="#error-propagation-and-interception">Error propagation and interception</a></li>
 <li><a href="#class-error">Class: <code>Error</code></a>
 <ul>
 <li><a href="#new-errormessage-options"><code>new Error(message[, options])</code></a></li>
@@ -862,6 +858,7 @@
 <li><a href="#err_import_assertion_type_failed"><code>ERR_IMPORT_ASSERTION_TYPE_FAILED</code></a></li>
 <li><a href="#err_import_assertion_type_missing"><code>ERR_IMPORT_ASSERTION_TYPE_MISSING</code></a></li>
 <li><a href="#err_import_assertion_type_unsupported"><code>ERR_IMPORT_ASSERTION_TYPE_UNSUPPORTED</code></a></li>
+<li><a href="#err_import_attribute_unsupported"><code>ERR_IMPORT_ATTRIBUTE_UNSUPPORTED</code></a></li>
 <li><a href="#err_incompatible_option_pair"><code>ERR_INCOMPATIBLE_OPTION_PAIR</code></a></li>
 <li><span class="stability_1"><a href="#err_input_type_not_allowed"><code>ERR_INPUT_TYPE_NOT_ALLOWED</code></a></span></li>
 <li><a href="#err_inspector_already_activated"><code>ERR_INSPECTOR_ALREADY_ACTIVATED</code></a></li>
@@ -984,6 +981,8 @@
 <li><a href="#err_tap_parser_error"><code>ERR_TAP_PARSER_ERROR</code></a></li>
 <li><a href="#err_tap_validation_error"><code>ERR_TAP_VALIDATION_ERROR</code></a></li>
 <li><a href="#err_test_failure"><code>ERR_TEST_FAILURE</code></a></li>
+<li><a href="#err_tls_alpn_callback_invalid_result"><code>ERR_TLS_ALPN_CALLBACK_INVALID_RESULT</code></a></li>
+<li><a href="#err_tls_alpn_callback_with_protocols"><code>ERR_TLS_ALPN_CALLBACK_WITH_PROTOCOLS</code></a></li>
 <li><a href="#err_tls_cert_altname_format"><code>ERR_TLS_CERT_ALTNAME_FORMAT</code></a></li>
 <li><a href="#err_tls_cert_altname_invalid"><code>ERR_TLS_CERT_ALTNAME_INVALID</code></a></li>
 <li><a href="#err_tls_dh_param_size"><code>ERR_TLS_DH_PARAM_SIZE</code></a></li>
@@ -1121,13 +1120,30 @@ JavaScript language.</p>
   <span class="hljs-comment">// Handle the error here.</span>
 }</code> <button class="copy-button">copy</button></pre>
 <p>Any use of the JavaScript <code>throw</code> mechanism will raise an exception that
-<em>must</em> be handled using <code>try…catch</code> or the Node.js process will exit
-immediately.</p>
+<em>must</em> be handled or the Node.js process will exit immediately.</p>
 <p>With few exceptions, <em>Synchronous</em> APIs (any blocking method that does not
-accept a <code>callback</code> function, such as <a href="fs.html#fsreadfilesyncpath-options"><code>fs.readFileSync</code></a>), will use <code>throw</code>
-to report errors.</p>
+return a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="type">&#x3C;Promise></a> nor accept a <code>callback</code> function, such as
+<a href="fs.html#fsreadfilesyncpath-options"><code>fs.readFileSync</code></a>), will use <code>throw</code> to report errors.</p>
 <p>Errors that occur within <em>Asynchronous APIs</em> may be reported in multiple ways:</p>
 <ul>
+<li>
+<p>Some asynchronous methods returns a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="type">&#x3C;Promise></a>, you should always take into
+account that it might be rejected. See <a href="cli.html#--unhandled-rejectionsmode"><code>--unhandled-rejections</code></a> flag for
+how the process will react to an unhandled promise rejection.</p>
+<!-- eslint-disable no-useless-return -->
+<pre><code class="language-js"><span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs/promises'</span>);
+
+(<span class="hljs-keyword">async</span> () => {
+  <span class="hljs-keyword">let</span> data;
+  <span class="hljs-keyword">try</span> {
+    data = <span class="hljs-keyword">await</span> fs.<span class="hljs-title function_">readFile</span>(<span class="hljs-string">'a file that does not exist'</span>);
+  } <span class="hljs-keyword">catch</span> (err) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">'There was an error reading the file!'</span>, err);
+    <span class="hljs-keyword">return</span>;
+  }
+  <span class="hljs-comment">// Otherwise handle the data</span>
+})();</code> <button class="copy-button">copy</button></pre>
+</li>
 <li>
 <p>Most asynchronous methods that accept a <code>callback</code> function will accept an
 <code>Error</code> object passed as the first argument to that function. If that first
@@ -1173,9 +1189,9 @@ asynchronous operations over time (as opposed to a single operation that may
 pass or fail).</p>
 <p>For <em>all</em> <a href="events.html#class-eventemitter"><code>EventEmitter</code></a> objects, if an <code>'error'</code> event handler is not
 provided, the error will be thrown, causing the Node.js process to report an
-uncaught exception and crash unless either: The <a href="domain.html"><code>domain</code></a> module is
-used appropriately or a handler has been registered for the
-<a href="process.html#event-uncaughtexception"><code>'uncaughtException'</code></a> event.</p>
+uncaught exception and crash unless either: a handler has been registered for
+the <a href="process.html#event-uncaughtexception"><code>'uncaughtException'</code></a> event, or the deprecated <a href="domain.html"><code>node:domain</code></a>
+module is used.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> <span class="hljs-title class_">EventEmitter</span> = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:events'</span>);
 <span class="hljs-keyword">const</span> ee = <span class="hljs-keyword">new</span> <span class="hljs-title class_">EventEmitter</span>();
 
@@ -1188,49 +1204,6 @@ used appropriately or a handler has been registered for the
 they are thrown <em>after</em> the calling code has already exited.</p>
 <p>Developers must refer to the documentation for each method to determine
 exactly how errors raised by those methods are propagated.</p>
-<h4>Error-first callbacks<span><a class="mark" href="#error-first-callbacks" id="error-first-callbacks">#</a></span><a aria-hidden="true" class="legacy" id="errors_error_first_callbacks"></a></h4>
-
-<p>Most asynchronous methods exposed by the Node.js core API follow an idiomatic
-pattern referred to as an <em>error-first callback</em>. With this pattern, a callback
-function is passed to the method as an argument. When the operation either
-completes or an error is raised, the callback function is called with the
-<code>Error</code> object (if any) passed as the first argument. If no error was raised,
-the first argument will be passed as <code>null</code>.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:fs'</span>);
-
-<span class="hljs-keyword">function</span> <span class="hljs-title function_">errorFirstCallback</span>(<span class="hljs-params">err, data</span>) {
-  <span class="hljs-keyword">if</span> (err) {
-    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">'There was an error'</span>, err);
-    <span class="hljs-keyword">return</span>;
-  }
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(data);
-}
-
-fs.<span class="hljs-title function_">readFile</span>(<span class="hljs-string">'/some/file/that/does-not-exist'</span>, errorFirstCallback);
-fs.<span class="hljs-title function_">readFile</span>(<span class="hljs-string">'/some/file/that/does-exist'</span>, errorFirstCallback);</code> <button class="copy-button">copy</button></pre>
-<p>The JavaScript <code>try…catch</code> mechanism <strong>cannot</strong> be used to intercept errors
-generated by asynchronous APIs. A common mistake for beginners is to try to
-use <code>throw</code> inside an error-first callback:</p>
-<pre><code class="language-js"><span class="hljs-comment">// THIS WILL NOT WORK:</span>
-<span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:fs'</span>);
-
-<span class="hljs-keyword">try</span> {
-  fs.<span class="hljs-title function_">readFile</span>(<span class="hljs-string">'/some/file/that/does-not-exist'</span>, <span class="hljs-function">(<span class="hljs-params">err, data</span>) =></span> {
-    <span class="hljs-comment">// Mistaken assumption: throwing here...</span>
-    <span class="hljs-keyword">if</span> (err) {
-      <span class="hljs-keyword">throw</span> err;
-    }
-  });
-} <span class="hljs-keyword">catch</span> (err) {
-  <span class="hljs-comment">// This will not catch the throw!</span>
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(err);
-}</code> <button class="copy-button">copy</button></pre>
-<p>This will not work because the callback function passed to <code>fs.readFile()</code> is
-called asynchronously. By the time the callback has been called, the
-surrounding code, including the <code>try…catch</code> block, will have already exited.
-Throwing an error inside the callback <strong>can crash the Node.js process</strong> in most
-cases. If <a href="domain.html">domains</a> are enabled, or a handler has been registered with
-<code>process.on('uncaughtException')</code>, such errors can be intercepted.</p>
 </section><section><h3>Class: <code>Error</code><span><a class="mark" href="#class-error" id="class-error">#</a></span><a aria-hidden="true" class="legacy" id="errors_class_error"></a></h3>
 
 <p>A generic JavaScript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error" class="type">&#x3C;Error></a> object that does not denote any specific
@@ -2300,19 +2273,26 @@ is set for the <code>Http2Stream</code>.</p>
 <div class="api_metadata">
 <span>Added in: v17.1.0, v16.14.0</span>
 </div>
-<p>An import assertion has failed, preventing the specified module to be imported.</p>
+<p>An import <code>type</code> attribute was provided, but the specified module is of a
+different type.</p>
 <p><a id="ERR_IMPORT_ASSERTION_TYPE_MISSING"></a></p>
 <h4><code>ERR_IMPORT_ASSERTION_TYPE_MISSING</code><span><a class="mark" href="#err_import_assertion_type_missing" id="err_import_assertion_type_missing">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_import_assertion_type_missing"></a></h4>
 <div class="api_metadata">
 <span>Added in: v17.1.0, v16.14.0</span>
 </div>
-<p>An import assertion is missing, preventing the specified module to be imported.</p>
+<p>An import attribute is missing, preventing the specified module to be imported.</p>
 <p><a id="ERR_IMPORT_ASSERTION_TYPE_UNSUPPORTED"></a></p>
 <h4><code>ERR_IMPORT_ASSERTION_TYPE_UNSUPPORTED</code><span><a class="mark" href="#err_import_assertion_type_unsupported" id="err_import_assertion_type_unsupported">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_import_assertion_type_unsupported"></a></h4>
 <div class="api_metadata">
 <span>Added in: v17.1.0, v16.14.0</span>
 </div>
-<p>An import assertion is not supported by this version of Node.js.</p>
+<p>An import attribute is not supported by this version of Node.js.</p>
+<p><a id="ERR_IMPORT_ATTRIBUTE_UNSUPPORTED"></a></p>
+<h4><code>ERR_IMPORT_ATTRIBUTE_UNSUPPORTED</code><span><a class="mark" href="#err_import_attribute_unsupported" id="err_import_attribute_unsupported">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_import_attribute_unsupported"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.19.0</span>
+</div>
+<p>An import attribute is not supported by this version of Node.js.</p>
 <p><a id="ERR_INCOMPATIBLE_OPTION_PAIR"></a></p>
 <h4><code>ERR_INCOMPATIBLE_OPTION_PAIR</code><span><a class="mark" href="#err_incompatible_option_pair" id="err_incompatible_option_pair">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_incompatible_option_pair"></a></h4>
 <p>An option pair is incompatible with each other and cannot be used at the same
@@ -2844,6 +2824,14 @@ the token causing the error is available via the <code>cause</code> property.</p
 <p>This error represents a failed test. Additional information about the failure
 is available via the <code>cause</code> property. The <code>failureType</code> property specifies
 what the test was doing when the failure occurred.</p>
+<p><a id="ERR_TLS_ALPN_CALLBACK_INVALID_RESULT"></a></p>
+<h4><code>ERR_TLS_ALPN_CALLBACK_INVALID_RESULT</code><span><a class="mark" href="#err_tls_alpn_callback_invalid_result" id="err_tls_alpn_callback_invalid_result">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_tls_alpn_callback_invalid_result"></a></h4>
+<p>This error is thrown when an <code>ALPNCallback</code> returns a value that is not in the
+list of ALPN protocols offered by the client.</p>
+<p><a id="ERR_TLS_ALPN_CALLBACK_WITH_PROTOCOLS"></a></p>
+<h4><code>ERR_TLS_ALPN_CALLBACK_WITH_PROTOCOLS</code><span><a class="mark" href="#err_tls_alpn_callback_with_protocols" id="err_tls_alpn_callback_with_protocols">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_tls_alpn_callback_with_protocols"></a></h4>
+<p>This error is thrown when creating a <code>TLSServer</code> if the TLS options include
+both <code>ALPNProtocols</code> and <code>ALPNCallback</code>. These options are mutually exclusive.</p>
 <p><a id="ERR_TLS_CERT_ALTNAME_FORMAT"></a></p>
 <h4><code>ERR_TLS_CERT_ALTNAME_FORMAT</code><span><a class="mark" href="#err_tls_cert_altname_format" id="err_tls_cert_altname_format">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_tls_cert_altname_format"></a></h4>
 <p>This error is thrown by <code>checkServerIdentity</code> if a user-supplied

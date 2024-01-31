@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>URL | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>URL | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="url" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -162,12 +162,12 @@
 <li><a href="#new-urlsearchparamsobj"><code>new URLSearchParams(obj)</code></a></li>
 <li><a href="#new-urlsearchparamsiterable"><code>new URLSearchParams(iterable)</code></a></li>
 <li><a href="#urlsearchparamsappendname-value"><code>urlSearchParams.append(name, value)</code></a></li>
-<li><a href="#urlsearchparamsdeletename"><code>urlSearchParams.delete(name)</code></a></li>
+<li><a href="#urlsearchparamsdeletename-value"><code>urlSearchParams.delete(name[, value])</code></a></li>
 <li><a href="#urlsearchparamsentries"><code>urlSearchParams.entries()</code></a></li>
 <li><a href="#urlsearchparamsforeachfn-thisarg"><code>urlSearchParams.forEach(fn[, thisArg])</code></a></li>
 <li><a href="#urlsearchparamsgetname"><code>urlSearchParams.get(name)</code></a></li>
 <li><a href="#urlsearchparamsgetallname"><code>urlSearchParams.getAll(name)</code></a></li>
-<li><a href="#urlsearchparamshasname"><code>urlSearchParams.has(name)</code></a></li>
+<li><a href="#urlsearchparamshasname-value"><code>urlSearchParams.has(name[, value])</code></a></li>
 <li><a href="#urlsearchparamskeys"><code>urlSearchParams.keys()</code></a></li>
 <li><a href="#urlsearchparamssetname-value"><code>urlSearchParams.set(name, value)</code></a></li>
 <li><a href="#urlsearchparamssize"><code>urlSearchParams.size</code></a></li>
@@ -310,11 +310,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/url.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/url.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/url.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/url.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/url.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/url.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/url.html">16.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/url.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/url.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/url.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/url.html">13.x</a></li>
@@ -397,12 +398,12 @@
 <li><a href="#new-urlsearchparamsobj"><code>new URLSearchParams(obj)</code></a></li>
 <li><a href="#new-urlsearchparamsiterable"><code>new URLSearchParams(iterable)</code></a></li>
 <li><a href="#urlsearchparamsappendname-value"><code>urlSearchParams.append(name, value)</code></a></li>
-<li><a href="#urlsearchparamsdeletename"><code>urlSearchParams.delete(name)</code></a></li>
+<li><a href="#urlsearchparamsdeletename-value"><code>urlSearchParams.delete(name[, value])</code></a></li>
 <li><a href="#urlsearchparamsentries"><code>urlSearchParams.entries()</code></a></li>
 <li><a href="#urlsearchparamsforeachfn-thisarg"><code>urlSearchParams.forEach(fn[, thisArg])</code></a></li>
 <li><a href="#urlsearchparamsgetname"><code>urlSearchParams.get(name)</code></a></li>
 <li><a href="#urlsearchparamsgetallname"><code>urlSearchParams.getAll(name)</code></a></li>
-<li><a href="#urlsearchparamshasname"><code>urlSearchParams.has(name)</code></a></li>
+<li><a href="#urlsearchparamshasname-value"><code>urlSearchParams.has(name[, value])</code></a></li>
 <li><a href="#urlsearchparamskeys"><code>urlSearchParams.keys()</code></a></li>
 <li><a href="#urlsearchparamssetname-value"><code>urlSearchParams.set(name, value)</code></a></li>
 <li><a href="#urlsearchparamssize"><code>urlSearchParams.size</code></a></li>
@@ -457,7 +458,7 @@
         <h2>URL<span><a class="mark" href="#url" id="url">#</a></span><a aria-hidden="true" class="legacy" id="url_url"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.17.1/lib/url.js">lib/url.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/url.js">lib/url.js</a></p>
 <p>The <code>node:url</code> module provides utilities for URL resolution and parsing. It can
 be accessed using:</p>
 
@@ -1139,11 +1140,23 @@ params = <span class="hljs-keyword">new</span> <span class="hljs-title class_">U
 <li><code>value</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
 <p>Append a new name-value pair to the query string.</p>
-<h5><code>urlSearchParams.delete(name)</code><span><a class="mark" href="#urlsearchparamsdeletename" id="urlsearchparamsdeletename">#</a></span><a aria-hidden="true" class="legacy" id="url_urlsearchparams_delete_name"></a></h5>
+<h5><code>urlSearchParams.delete(name[, value])</code><span><a class="mark" href="#urlsearchparamsdeletename-value" id="urlsearchparamsdeletename-value">#</a></span><a aria-hidden="true" class="legacy" id="url_urlsearchparams_delete_name_value"></a></h5>
+<div class="api_metadata">
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v18.18.0</td>
+<td><p>Add support for optional <code>value</code> argument.</p></td></tr>
+</tbody></table>
+</details>
+</div>
 <ul>
 <li><code>name</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
+<li><code>value</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
-<p>Remove all name-value pairs whose name is <code>name</code>.</p>
+<p>If <code>value</code> is provided, removes all name-value pairs
+where name is <code>name</code> and value is <code>value</code>..</p>
+<p>If <code>value</code> is not provided, removes all name-value pairs whose name is <code>name</code>.</p>
 <h5><code>urlSearchParams.entries()</code><span><a class="mark" href="#urlsearchparamsentries" id="urlsearchparamsentries">#</a></span><a aria-hidden="true" class="legacy" id="url_urlsearchparams_entries"></a></h5>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol" class="type">&#x3C;Iterator></a></li>
@@ -1189,12 +1202,27 @@ are no such pairs, <code>null</code> is returned.</p>
 </ul>
 <p>Returns the values of all name-value pairs whose name is <code>name</code>. If there are
 no such pairs, an empty array is returned.</p>
-<h5><code>urlSearchParams.has(name)</code><span><a class="mark" href="#urlsearchparamshasname" id="urlsearchparamshasname">#</a></span><a aria-hidden="true" class="legacy" id="url_urlsearchparams_has_name"></a></h5>
+<h5><code>urlSearchParams.has(name[, value])</code><span><a class="mark" href="#urlsearchparamshasname-value" id="urlsearchparamshasname-value">#</a></span><a aria-hidden="true" class="legacy" id="url_urlsearchparams_has_name_value"></a></h5>
+<div class="api_metadata">
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v18.18.0</td>
+<td><p>Add support for optional <code>value</code> argument.</p></td></tr>
+</tbody></table>
+</details>
+</div>
 <ul>
 <li><code>name</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
+<li><code>value</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
-<p>Returns <code>true</code> if there is at least one name-value pair whose name is <code>name</code>.</p>
+<p>Checks if the <code>URLSearchParams</code> object contains key-value pair(s) based on
+<code>name</code> and an optional <code>value</code> argument.</p>
+<p>If <code>value</code> is provided, returns <code>true</code> when name-value pair with
+same <code>name</code> and <code>value</code> exists.</p>
+<p>If <code>value</code> is not provided, returns <code>true</code> if there is at least one name-value
+pair whose name is <code>name</code>.</p>
 <h5><code>urlSearchParams.keys()</code><span><a class="mark" href="#urlsearchparamskeys" id="urlsearchparamskeys">#</a></span><a aria-hidden="true" class="legacy" id="url_urlsearchparams_keys"></a></h5>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol" class="type">&#x3C;Iterator></a></li>
@@ -1825,21 +1853,22 @@ of characters that must be percent-encoded:</p>
 <ul>
 <li>
 <p>The <em>C0 control percent-encode set</em> includes code points in range U+0000 to
-U+001F (inclusive) and all code points greater than U+007E.</p>
+U+001F (inclusive) and all code points greater than U+007E (~).</p>
 </li>
 <li>
 <p>The <em>fragment percent-encode set</em> includes the <em>C0 control percent-encode set</em>
-and code points U+0020, U+0022, U+003C, U+003E, and U+0060.</p>
+and code points U+0020 SPACE, U+0022 ("), U+003C (&#x3C;), U+003E (>),
+and U+0060 (`).</p>
 </li>
 <li>
 <p>The <em>path percent-encode set</em> includes the <em>C0 control percent-encode set</em>
-and code points U+0020, U+0022, U+0023, U+003C, U+003E, U+003F, U+0060,
-U+007B, and U+007D.</p>
+and code points U+0020 SPACE, U+0022 ("), U+0023 (#), U+003C (&#x3C;), U+003E (>),
+U+003F (?), U+0060 (`), U+007B ({), and U+007D (}).</p>
 </li>
 <li>
 <p>The <em>userinfo encode set</em> includes the <em>path percent-encode set</em> and code
-points U+002F, U+003A, U+003B, U+003D, U+0040, U+005B, U+005C, U+005D,
-U+005E, and U+007C.</p>
+points U+002F (/), U+003A (:), U+003B (;), U+003D (=), U+0040 (@),
+U+005B ([) to U+005E(^), and U+007C (|).</p>
 </li>
 </ul>
 <p>The <em>userinfo percent-encode set</em> is used exclusively for username and

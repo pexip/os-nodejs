@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>VM (executing JavaScript) | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>VM (executing JavaScript) | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="vm" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -262,11 +262,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/vm.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/vm.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/vm.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/vm.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/vm.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/vm.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/vm.html">16.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/vm.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/vm.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/vm.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/vm.html">13.x</a></li>
@@ -362,7 +363,7 @@
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#stability-index">Stability: 2</a> - Stable</div><p></p>
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.17.1/lib/vm.js">lib/vm.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/vm.js">lib/vm.js</a></p>
 <p>The <code>node:vm</code> module enables compiling and running code within V8 Virtual
 Machine contexts.</p>
 <p><strong class="critical">The <code>node:vm</code> module is not a security
@@ -403,7 +404,7 @@ executed in specific contexts.</p>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v17.0.0, v16.12.0</td>
-<td><p>Added support for import assertions to the <code>importModuleDynamically</code> parameter.</p></td></tr>
+<td><p>Added support for import attributes to the <code>importModuleDynamically</code> parameter.</p></td></tr>
 <tr><td>v10.6.0</td>
 <td><p>The <code>produceCachedData</code> is deprecated in favour of <code>script.createCachedData()</code>.</p></td></tr>
 <tr><td>v5.7.0</td>
@@ -443,7 +444,7 @@ using it in a production environment.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>script</code> <a href="vm.html#class-vmscript" class="type">&#x3C;vm.Script></a></li>
-<li><code>importAssertions</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="vm.html#class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -919,6 +920,15 @@ Record</a>s in the ECMAScript specification.</p>
 </ul>
 <p>The identifier of the current module, as set in the constructor.</p>
 <h4><code>module.link(linker)</code><span><a class="mark" href="#modulelinklinker" id="modulelinklinker">#</a></span><a aria-hidden="true" class="legacy" id="vm_module_link_linker"></a></h4>
+<div class="api_metadata">
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v18.19.0</td>
+<td><p>The option <code>extra.assert</code> is renamed to <code>extra.attributes</code>. The former name is still provided for backward compatibility.</p></td></tr>
+</tbody></table>
+</details>
+</div>
 <ul>
 <li><code>linker</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a>
 <ul>
@@ -933,13 +943,12 @@ Record</a>s in the ECMAScript specification.</p>
 <li>
 <p><code>extra</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a></p>
 <ul>
-<li><code>assert</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The data from the assertion:
-<!-- eslint-skip -->
-<pre><code class="language-js"><span class="hljs-keyword">import</span> foo <span class="hljs-keyword">from</span> <span class="hljs-string">'foo'</span> assert { <span class="hljs-attr">name</span>: <span class="hljs-string">'value'</span> };
-<span class="hljs-comment">//                           ^^^^^^^^^^^^^^^^^ the assertion</span></code> <button class="copy-button">copy</button></pre>
-Per ECMA-262, hosts are expected to ignore assertions that they do not
-support, as opposed to, for example, triggering an error if an
-unsupported assertion is present.</li>
+<li><code>attributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The data from the attribute:
+<pre><code class="language-js mjs"><span class="hljs-keyword">import</span> foo <span class="hljs-keyword">from</span> <span class="hljs-string">'foo'</span> assert { <span class="hljs-attr">name</span>: <span class="hljs-string">'value'</span> };
+<span class="hljs-comment">//                           ^^^^^^^^^^^^^^^^^ the attribute</span></code> <button class="copy-button">copy</button></pre>
+Per ECMA-262, hosts are expected to trigger an error if an
+unsupported attribute is present.</li>
+<li><code>assert</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> Alias for <code>extra.attributes</code>.</li>
 </ul>
 </li>
 <li>
@@ -1036,7 +1045,7 @@ defined in the ECMAScript specification.</p>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v17.0.0, v16.12.0</td>
-<td><p>Added support for import assertions to the <code>importModuleDynamically</code> parameter.</p></td></tr>
+<td><p>Added support for import attributes to the <code>importModuleDynamically</code> parameter.</p></td></tr>
 </tbody></table>
 </details>
 </div>
@@ -1072,7 +1081,7 @@ when <code>import()</code> is called. If this option is not specified, calls to
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>module</code> <a href="vm.html#class-vmmodule" class="type">&#x3C;vm.Module></a></li>
-<li><code>importAssertions</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="vm.html#class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -1245,7 +1254,7 @@ assert.<span class="hljs-title function_">strictEqual</span>(m.<span class="hljs
 <tr><td>v18.15.0</td>
 <td><p>The return value now includes <code>cachedDataRejected</code> with the same semantics as the <code>vm.Script</code> version if the <code>cachedData</code> option was passed.</p></td></tr>
 <tr><td>v17.0.0, v16.12.0</td>
-<td><p>Added support for import assertions to the <code>importModuleDynamically</code> parameter.</p></td></tr>
+<td><p>Added support for import attributes to the <code>importModuleDynamically</code> parameter.</p></td></tr>
 <tr><td>v15.9.0</td>
 <td><p>Added <code>importModuleDynamically</code> option again.</p></td></tr>
 <tr><td>v14.3.0</td>
@@ -1288,7 +1297,7 @@ considered stable.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>function</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a></li>
-<li><code>importAssertions</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="vm.html#class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -1467,7 +1476,7 @@ vm.<span class="hljs-title function_">measureMemory</span>({ <span class="hljs-a
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v17.0.0, v16.12.0</td>
-<td><p>Added support for import assertions to the <code>importModuleDynamically</code> parameter.</p></td></tr>
+<td><p>Added support for import attributes to the <code>importModuleDynamically</code> parameter.</p></td></tr>
 <tr><td>v6.3.0</td>
 <td><p>The <code>breakOnSigint</code> option is supported now.</p></td></tr>
 <tr><td>v0.3.1</td>
@@ -1509,7 +1518,7 @@ using it in a production environment.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>script</code> <a href="vm.html#class-vmscript" class="type">&#x3C;vm.Script></a></li>
-<li><code>importAssertions</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="vm.html#class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -1544,7 +1553,7 @@ vm.<span class="hljs-title function_">createContext</span>(contextObject);
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v17.0.0, v16.12.0</td>
-<td><p>Added support for import assertions to the <code>importModuleDynamically</code> parameter.</p></td></tr>
+<td><p>Added support for import attributes to the <code>importModuleDynamically</code> parameter.</p></td></tr>
 <tr><td>v14.6.0</td>
 <td><p>The <code>microtaskMode</code> option is supported now.</p></td></tr>
 <tr><td>v10.0.0</td>
@@ -1608,7 +1617,7 @@ using it in a production environment.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>script</code> <a href="vm.html#class-vmscript" class="type">&#x3C;vm.Script></a></li>
-<li><code>importAssertions</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="vm.html#class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -1647,7 +1656,7 @@ vm.<span class="hljs-title function_">runInNewContext</span>(<span class="hljs-s
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v17.0.0, v16.12.0</td>
-<td><p>Added support for import assertions to the <code>importModuleDynamically</code> parameter.</p></td></tr>
+<td><p>Added support for import attributes to the <code>importModuleDynamically</code> parameter.</p></td></tr>
 <tr><td>v6.3.0</td>
 <td><p>The <code>breakOnSigint</code> option is supported now.</p></td></tr>
 <tr><td>v0.3.1</td>
@@ -1687,7 +1696,7 @@ using it in a production environment.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>script</code> <a href="vm.html#class-vmscript" class="type">&#x3C;vm.Script></a></li>
-<li><code>importAssertions</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="vm.html#class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is

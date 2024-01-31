@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>Modules: Packages | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>Modules: Packages | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="packages" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -125,6 +125,7 @@
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#determining-module-system">Determining module system</a>
 <ul>
+<li><a href="#introduction_1">Introduction</a></li>
 <li><a href="#modules-loaders">Modules loaders</a></li>
 <li><a href="#packagejson-and-file-extensions"><code>package.json</code> and file extensions</a></li>
 <li><a href="#--input-type-flag"><code>--input-type</code> flag</a></li>
@@ -266,11 +267,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/packages.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/packages.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/packages.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/packages.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/packages.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/packages.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/packages.html">16.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/packages.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/packages.html">15.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v14.x/api/packages.html">14.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v13.x/api/packages.html">13.x</a></li>
@@ -306,6 +308,7 @@
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#determining-module-system">Determining module system</a>
 <ul>
+<li><a href="#introduction_1">Introduction</a></li>
 <li><a href="#modules-loaders">Modules loaders</a></li>
 <li><a href="#packagejson-and-file-extensions"><code>package.json</code> and file extensions</a></li>
 <li><a href="#--input-type-flag"><code>--input-type</code> flag</a></li>
@@ -388,6 +391,7 @@ named <code>node_modules</code>.</p>
 <p>This page provides guidance for package authors writing <code>package.json</code> files
 along with a reference for the <a href="#nodejs-packagejson-field-definitions"><code>package.json</code></a> fields defined by Node.js.</p>
 </section><section><h3>Determining module system<span><a class="mark" href="#determining-module-system" id="determining-module-system">#</a></span><a aria-hidden="true" class="legacy" id="packages_determining_module_system"></a></h3>
+<h4>Introduction<span><a class="mark" href="#introduction_1" id="introduction_1">#</a></span><a aria-hidden="true" class="legacy" id="packages_introduction_1"></a></h4>
 <p>Node.js will treat the following as <a href="esm.html">ES modules</a> when passed to <code>node</code> as the
 initial input, or when referenced by <code>import</code> statements or <code>import()</code>
 expressions:</p>
@@ -404,14 +408,9 @@ contains a top-level <a href="#type"><code>"type"</code></a> field with a value 
 with the flag <code>--input-type=module</code>.</p>
 </li>
 </ul>
-<p>Node.js will treat as <a href="modules.html">CommonJS</a> all other forms of input, such as <code>.js</code> files
-where the nearest parent <code>package.json</code> file contains no top-level <code>"type"</code>
-field, or string input without the flag <code>--input-type</code>. This behavior is to
-preserve backward compatibility. However, now that Node.js supports both
-CommonJS and ES modules, it is best to be explicit whenever possible. Node.js
-will treat the following as CommonJS when passed to <code>node</code> as the initial input,
-or when referenced by <code>import</code> statements, <code>import()</code> expressions, or
-<code>require()</code> expressions:</p>
+<p>Node.js will treat the following as <a href="modules.html">CommonJS</a> when passed to <code>node</code> as the
+initial input, or when referenced by <code>import</code> statements or <code>import()</code>
+expressions:</p>
 <ul>
 <li>
 <p>Files with a <code>.cjs</code> extension.</p>
@@ -425,11 +424,34 @@ contains a top-level field <a href="#type"><code>"type"</code></a> with a value 
 via <code>STDIN</code>, with the flag <code>--input-type=commonjs</code>.</p>
 </li>
 </ul>
-<p>Package authors should include the <a href="#type"><code>"type"</code></a> field, even in packages where
-all sources are CommonJS. Being explicit about the <code>type</code> of the package will
-future-proof the package in case the default type of Node.js ever changes, and
-it will also make things easier for build tools and loaders to determine how the
-files in the package should be interpreted.</p>
+<p>Aside from these explicit cases, there are other cases where Node.js defaults to
+one module system or the other based on the value of the
+<a href="cli.html#--experimental-default-typetype"><code>--experimental-default-type</code></a> flag:</p>
+<ul>
+<li>
+<p>Files ending in <code>.js</code> or with no extension, if there is no <code>package.json</code> file
+present in the same folder or any parent folder.</p>
+</li>
+<li>
+<p>Files ending in <code>.js</code> or with no extension, if the nearest parent
+<code>package.json</code> field lacks a <code>"type"</code> field; unless the folder is inside a
+<code>node_modules</code> folder. (Package scopes under <code>node_modules</code> are always treated
+as CommonJS when the <code>package.json</code> file lacks a <code>"type"</code> field, regardless
+of <code>--experimental-default-type</code>, for backward compatibility.)</p>
+</li>
+<li>
+<p>Strings passed in as an argument to <code>--eval</code> or piped to <code>node</code> via <code>STDIN</code>,
+when <code>--input-type</code> is unspecified.</p>
+</li>
+</ul>
+<p>This flag currently defaults to <code>"commonjs"</code>, but it may change in the future to
+default to <code>"module"</code>. For this reason it is best to be explicit wherever
+possible; in particular, package authors should always include the <a href="#type"><code>"type"</code></a>
+field in their <code>package.json</code> files, even in packages where all sources are
+CommonJS. Being explicit about the <code>type</code> of the package will future-proof the
+package in case the default type of Node.js ever changes, and it will also make
+things easier for build tools and loaders to determine how the files in the
+package should be interpreted.</p>
 <h4>Modules loaders<span><a class="mark" href="#modules-loaders" id="modules-loaders">#</a></span><a aria-hidden="true" class="legacy" id="packages_modules_loaders"></a></h4>
 <p>Node.js has two systems for resolving a specifier and loading modules.</p>
 <p>There is the CommonJS module loader:</p>
@@ -891,11 +913,7 @@ is provided below to assist with ecosystem coordination.</p>
 <ul>
 <li><code>"types"</code> - can be used by typing systems to resolve the typing file for
 the given export. <em>This condition should always be included first.</em></li>
-<li><code>"deno"</code> - indicates a variation for the Deno platform.</li>
 <li><code>"browser"</code> - any web browser environment.</li>
-<li><code>"react-native"</code> - will be matched by the React Native framework (all
-platforms). <em>To target React Native for Web, <code>"browser"</code> should be specified
-before this condition.</em></li>
 <li><code>"development"</code> - can be used to define a development-only environment
 entry point, for example to provide additional debugging context such as
 better error messages when running in a development mode. <em>Must always be
@@ -903,6 +921,8 @@ mutually exclusive with <code>"production"</code>.</em></li>
 <li><code>"production"</code> - can be used to define a production environment entry
 point. <em>Must always be mutually exclusive with <code>"development"</code>.</em></li>
 </ul>
+<p>For other runtimes, platform-specific condition key definitions are maintained
+by the <a href="https://wintercg.org/">WinterCG</a> in the <a href="https://runtime-keys.proposal.wintercg.org/">Runtime Keys</a> proposal specification.</p>
 <p>New conditions definitions may be added to this list by creating a pull request
 to the <a href="https://github.com/nodejs/node/blob/HEAD/doc/api/packages.md#conditions-definitions">Node.js documentation for this section</a>. The requirements for listing
 a new condition definition here are that:</p>
@@ -916,6 +936,10 @@ condition in wide usage.</li>
 benefit to the ecosystem that wouldn't otherwise be possible. For example,
 this would not necessarily be the case for company-specific or
 application-specific conditions.</li>
+<li>The condition should be such that a Node.js user would expect it to be in
+Node.js core documentation. The <code>"types"</code> condition is a good example: It
+doesn't really belong in the <a href="https://runtime-keys.proposal.wintercg.org/">Runtime Keys</a> proposal but is a good fit
+here in the Node.js docs.</li>
 </ul>
 <p>The above definitions may be moved to a dedicated conditions registry in due
 course.</p>

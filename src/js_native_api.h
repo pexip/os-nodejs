@@ -28,7 +28,7 @@
 #ifndef NAPI_EXTERN
 #ifdef _WIN32
 #define NAPI_EXTERN __declspec(dllexport)
-#elif defined(__wasm32__)
+#elif defined(__wasm__)
 #define NAPI_EXTERN                                                            \
   __attribute__((visibility("default")))                                       \
   __attribute__((__import_module__("napi")))
@@ -92,6 +92,24 @@ NAPI_EXTERN napi_status NAPI_CDECL napi_create_string_utf16(napi_env env,
                                                             const char16_t* str,
                                                             size_t length,
                                                             napi_value* result);
+#ifdef NAPI_EXPERIMENTAL
+NAPI_EXTERN napi_status NAPI_CDECL
+node_api_create_external_string_latin1(napi_env env,
+                                       char* str,
+                                       size_t length,
+                                       napi_finalize finalize_callback,
+                                       void* finalize_hint,
+                                       napi_value* result,
+                                       bool* copied);
+NAPI_EXTERN napi_status NAPI_CDECL
+node_api_create_external_string_utf16(napi_env env,
+                                      char16_t* str,
+                                      size_t length,
+                                      napi_finalize finalize_callback,
+                                      void* finalize_hint,
+                                      napi_value* result,
+                                      bool* copied);
+#endif  // NAPI_EXPERIMENTAL
 NAPI_EXTERN napi_status NAPI_CDECL napi_create_symbol(napi_env env,
                                                       napi_value description,
                                                       napi_value* result);
@@ -498,6 +516,16 @@ NAPI_EXTERN napi_status NAPI_CDECL napi_add_finalizer(napi_env env,
                                                       napi_ref* result);
 
 #endif  // NAPI_VERSION >= 5
+
+#ifdef NAPI_EXPERIMENTAL
+
+NAPI_EXTERN napi_status NAPI_CDECL
+node_api_post_finalizer(napi_env env,
+                        napi_finalize finalize_cb,
+                        void* finalize_data,
+                        void* finalize_hint);
+
+#endif  // NAPI_EXPERIMENTAL
 
 #if NAPI_VERSION >= 6
 

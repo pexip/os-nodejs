@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.17.1">
-  <title>Web Streams API | Node.js v18.17.1 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.19.0">
+  <title>Web Streams API | Node.js v18.19.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="webstreams" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.17.1 documentation</h1>
+          <h1>Node.js v18.19.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.17.1</li>
+            <li class="pinned-header">Node.js v18.19.0</li>
             
     <li class="picker-header">
       <a href="#">
@@ -231,14 +231,14 @@
 </li>
 <li><a href="#class-bytelengthqueuingstrategy">Class: <code>ByteLengthQueuingStrategy</code></a>
 <ul>
-<li><a href="#new-bytelengthqueuingstrategyoptions"><code>new ByteLengthQueuingStrategy(options)</code></a></li>
+<li><a href="#new-bytelengthqueuingstrategyinit"><code>new ByteLengthQueuingStrategy(init)</code></a></li>
 <li><a href="#bytelengthqueuingstrategyhighwatermark"><code>byteLengthQueuingStrategy.highWaterMark</code></a></li>
 <li><a href="#bytelengthqueuingstrategysize"><code>byteLengthQueuingStrategy.size</code></a></li>
 </ul>
 </li>
 <li><a href="#class-countqueuingstrategy">Class: <code>CountQueuingStrategy</code></a>
 <ul>
-<li><a href="#new-countqueuingstrategyoptions"><code>new CountQueuingStrategy(options)</code></a></li>
+<li><a href="#new-countqueuingstrategyinit"><code>new CountQueuingStrategy(init)</code></a></li>
 <li><a href="#countqueuingstrategyhighwatermark"><code>countQueuingStrategy.highWaterMark</code></a></li>
 <li><a href="#countqueuingstrategysize"><code>countQueuingStrategy.size</code></a></li>
 </ul>
@@ -382,11 +382,12 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v20.x/api/webstreams.html">20.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/webstreams.html">21.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v20.x/api/webstreams.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/webstreams.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/webstreams.html">18.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/webstreams.html">17.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v16.x/api/webstreams.html">16.x <b>LTS</b></a></li></ol></div>
+<li><a href="https://nodejs.org/docs/latest-v16.x/api/webstreams.html">16.x</a></li></ol></div>
     </li>
   
             <li class="picker-header">
@@ -524,14 +525,14 @@
 </li>
 <li><a href="#class-bytelengthqueuingstrategy">Class: <code>ByteLengthQueuingStrategy</code></a>
 <ul>
-<li><a href="#new-bytelengthqueuingstrategyoptions"><code>new ByteLengthQueuingStrategy(options)</code></a></li>
+<li><a href="#new-bytelengthqueuingstrategyinit"><code>new ByteLengthQueuingStrategy(init)</code></a></li>
 <li><a href="#bytelengthqueuingstrategyhighwatermark"><code>byteLengthQueuingStrategy.highWaterMark</code></a></li>
 <li><a href="#bytelengthqueuingstrategysize"><code>byteLengthQueuingStrategy.size</code></a></li>
 </ul>
 </li>
 <li><a href="#class-countqueuingstrategy">Class: <code>CountQueuingStrategy</code></a>
 <ul>
-<li><a href="#new-countqueuingstrategyoptions"><code>new CountQueuingStrategy(options)</code></a></li>
+<li><a href="#new-countqueuingstrategyinit"><code>new CountQueuingStrategy(init)</code></a></li>
 <li><a href="#countqueuingstrategyhighwatermark"><code>countQueuingStrategy.highWaterMark</code></a></li>
 <li><a href="#countqueuingstrategysize"><code>countQueuingStrategy.size</code></a></li>
 </ul>
@@ -708,7 +709,10 @@ returned promise is fulfilled.
 </li>
 <li><code>type</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> Must be <code>'bytes'</code> or <code>undefined</code>.</li>
 <li><code>autoAllocateChunkSize</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a> Used only when <code>type</code> is equal to
-<code>'bytes'</code>.</li>
+<code>'bytes'</code>. When set to a non-zero value a view buffer is automatically
+allocated to <code>ReadableByteStreamController.byobRequest</code>. When not set
+one must use stream's internal queues to transfer data via the default
+reader <code>ReadableStreamDefaultReader</code>.</li>
 </ul>
 </li>
 <li><code>strategy</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a>
@@ -1384,7 +1388,7 @@ canceled with their associated promises rejected.</p>
 <ul>
 <li>Returns: <a href="webstreams.html#class-writablestreamdefaultwriter" class="type">&#x3C;WritableStreamDefaultWriter></a></li>
 </ul>
-<p>Creates and creates a new writer instance that can be used to write
+<p>Creates and returns a new writer instance that can be used to write
 data into the <code>WritableStream</code>.</p>
 <h5><code>writableStream.locked</code><span><a class="mark" href="#writablestreamlocked" id="writablestreamlocked">#</a></span><a aria-hidden="true" class="legacy" id="webstreams_writablestream_locked"></a></h5>
 <div class="api_metadata">
@@ -1468,8 +1472,8 @@ lock is released before the stream finishes closing.</li>
 <span>Added in: v16.5.0</span>
 </div>
 <ul>
-<li>type: A promise that is fulfilled with <code>undefined</code> when the
-writer is ready to be used.</li>
+<li>Type: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="type">&#x3C;Promise></a> Fulfilled with <code>undefined</code> when the writer is ready
+to be used.</li>
 </ul>
 <h5><code>writableStreamDefaultWriter.releaseLock()</code><span><a class="mark" href="#writablestreamdefaultwriterreleaselock" id="writablestreamdefaultwriterreleaselock">#</a></span><a aria-hidden="true" class="legacy" id="webstreams_writablestreamdefaultwriter_releaselock"></a></h5>
 <div class="api_metadata">
@@ -1692,12 +1696,12 @@ to be abruptly closed with an error.</p>
 </tbody></table>
 </details>
 </div>
-<h5><code>new ByteLengthQueuingStrategy(options)</code><span><a class="mark" href="#new-bytelengthqueuingstrategyoptions" id="new-bytelengthqueuingstrategyoptions">#</a></span><a aria-hidden="true" class="legacy" id="webstreams_new_bytelengthqueuingstrategy_options"></a></h5>
+<h5><code>new ByteLengthQueuingStrategy(init)</code><span><a class="mark" href="#new-bytelengthqueuingstrategyinit" id="new-bytelengthqueuingstrategyinit">#</a></span><a aria-hidden="true" class="legacy" id="webstreams_new_bytelengthqueuingstrategy_init"></a></h5>
 <div class="api_metadata">
 <span>Added in: v16.5.0</span>
 </div>
 <ul>
-<li><code>options</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a>
+<li><code>init</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a>
 <ul>
 <li><code>highWaterMark</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
 </ul>
@@ -1734,12 +1738,12 @@ to be abruptly closed with an error.</p>
 </tbody></table>
 </details>
 </div>
-<h5><code>new CountQueuingStrategy(options)</code><span><a class="mark" href="#new-countqueuingstrategyoptions" id="new-countqueuingstrategyoptions">#</a></span><a aria-hidden="true" class="legacy" id="webstreams_new_countqueuingstrategy_options"></a></h5>
+<h5><code>new CountQueuingStrategy(init)</code><span><a class="mark" href="#new-countqueuingstrategyinit" id="new-countqueuingstrategyinit">#</a></span><a aria-hidden="true" class="legacy" id="webstreams_new_countqueuingstrategy_init"></a></h5>
 <div class="api_metadata">
 <span>Added in: v16.5.0</span>
 </div>
 <ul>
-<li><code>options</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a>
+<li><code>init</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a>
 <ul>
 <li><code>highWaterMark</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
 </ul>
