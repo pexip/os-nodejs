@@ -1,6 +1,7 @@
 nodejs (18.19.0+dfsg-6~deb12u1pexip1) pexip-bookworm; urgency=medium
 
   * New upstream release.
+  * Still use the vendored openssl3.
 
  -- Mark Hymers <mark.hymers@pexip.com>  Wed, 31 Jan 2024 12:23:55 +0000
 
