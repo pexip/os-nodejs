@@ -1,3 +1,9 @@
+nodejs (18.19.0+dfsg-6~deb12u1+pexip24u2) pexip-bookworm; urgency=medium
+
+  * New versioning scheme
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 01 Feb 2024 16:13:42 +0000
+
 nodejs (18.19.0+dfsg-6~deb12u1pexip1) pexip-bookworm; urgency=medium
 
   * New upstream release.
