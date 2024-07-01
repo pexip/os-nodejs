@@ -1,3 +1,10 @@
+nodejs (18.19.0+dfsg-6~deb12u2) bookworm; urgency=medium
+
+  * Non-maintainer upload.
+  * Skip failing tests on MIPS.
+
+ -- Adrian Bunk <bunk@debian.org>  Sat, 22 Jun 2024 15:21:29 +0300
+
 nodejs (18.19.0+dfsg-6~deb12u1+pexip24u2) pexip-bookworm; urgency=medium
 
   * New versioning scheme

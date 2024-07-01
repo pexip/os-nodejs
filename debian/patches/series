@@ -26,3 +26,4 @@ build/ada.patch
 build/disable_sea_dfsg_postject.patch
 build/test_runner_escape_path.patch
 build/test_dns_resolveany_bad_ancount.patch
+mips/flaky_tests.patch
