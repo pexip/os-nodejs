@@ -164,21 +164,3 @@ const {
 
   duplex.end();
 }
-
-{
-  const transform = { readable: {}, writable: {} };
-  assert.throws(() => newStreamDuplexFromReadableWritablePair(transform), {
-    code: 'ERR_INVALID_ARG_TYPE'
-  });
-}
-
-{
-  const transform = {
-    readable: new ReadableStream(),
-    writable: null
-  };
-
-  assert.throws(() => newStreamDuplexFromReadableWritablePair(transform), {
-    code: 'ERR_INVALID_ARG_TYPE',
-  });
-}

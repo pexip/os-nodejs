@@ -25,9 +25,10 @@ TypedOptimization::TypedOptimization(Editor* editor,
       dependencies_(dependencies),
       jsgraph_(jsgraph),
       broker_(broker),
-      true_type_(Type::Constant(broker, broker->true_value(), graph()->zone())),
+      true_type_(
+          Type::Constant(broker, factory()->true_value(), graph()->zone())),
       false_type_(
-          Type::Constant(broker, broker->false_value(), graph()->zone())),
+          Type::Constant(broker, factory()->false_value(), graph()->zone())),
       type_cache_(TypeCache::Get()) {}
 
 TypedOptimization::~TypedOptimization() = default;
@@ -106,11 +107,11 @@ Reduction TypedOptimization::Reduce(Node* node) {
 
 namespace {
 
-OptionalMapRef GetStableMapFromObjectType(JSHeapBroker* broker,
-                                          Type object_type) {
+base::Optional<MapRef> GetStableMapFromObjectType(JSHeapBroker* broker,
+                                                  Type object_type) {
   if (object_type.IsHeapConstant()) {
     HeapObjectRef object = object_type.AsHeapConstant()->Ref();
-    MapRef object_map = object.map(broker);
+    MapRef object_map = object.map();
     if (object_map.is_stable()) return object_map;
   }
   return {};
@@ -223,7 +224,8 @@ Reduction TypedOptimization::ReduceCheckMaps(Node* node) {
   Node* const object = NodeProperties::GetValueInput(node, 0);
   Type const object_type = NodeProperties::GetType(object);
   Node* const effect = NodeProperties::GetEffectInput(node);
-  OptionalMapRef object_map = GetStableMapFromObjectType(broker(), object_type);
+  base::Optional<MapRef> object_map =
+      GetStableMapFromObjectType(broker(), object_type);
   if (object_map.has_value()) {
     for (int i = 1; i < node->op()->ValueInputCount(); ++i) {
       Node* const map = NodeProperties::GetValueInput(node, i);
@@ -293,11 +295,11 @@ Reduction TypedOptimization::ReduceLoadField(Node* node) {
     //  (1) map cannot transition further, or
     //  (2) deoptimization is enabled and we can add a code dependency on the
     //      stability of map (to guard the Constant type information).
-    OptionalMapRef object_map =
+    base::Optional<MapRef> object_map =
         GetStableMapFromObjectType(broker(), object_type);
     if (object_map.has_value()) {
       dependencies()->DependOnStableMap(*object_map);
-      Node* const value = jsgraph()->Constant(*object_map, broker());
+      Node* const value = jsgraph()->Constant(*object_map);
       ReplaceWithValue(node, value);
       return Replace(value);
     }
@@ -326,14 +328,16 @@ Reduction TypedOptimization::ReduceNumberFloor(Node* node) {
       //
       // with
       //
-      //   Unsigned32Divide(lhs, rhs)
+      //   NumberToUint32(NumberDivide(lhs, rhs))
       //
-      // and have the new node typed to [0...lhs.Max],
+      // and just smash the type [0...lhs.Max] on the {node},
       // as the truncated result must be lower than {lhs}'s maximum
       // value (note that {rhs} cannot be less than 1 due to the
       // plain-number type constraint on the {node}).
-      node = graph()->NewNode(simplified()->Unsigned32Divide(), lhs, rhs);
-      return Replace(node);
+      NodeProperties::ChangeOp(node, simplified()->NumberToUint32());
+      NodeProperties::SetType(node,
+                              Type::Range(0, lhs_type.Max(), graph()->zone()));
+      return Changed(node);
     }
   }
   return NoChange();
@@ -406,20 +410,6 @@ Reduction TypedOptimization::ReduceReferenceEqual(Node* node) {
       return Replace(jsgraph()->FalseConstant());
     }
   }
-  if (rhs_type.Is(Type::Boolean()) && rhs_type.IsHeapConstant() &&
-      lhs_type.Is(Type::Boolean())) {
-    base::Optional<bool> maybe_result =
-        rhs_type.AsHeapConstant()->Ref().TryGetBooleanValue(broker());
-    if (maybe_result.has_value()) {
-      if (maybe_result.value()) {
-        return Replace(node->InputAt(0));
-      } else {
-        node->TrimInputCount(1);
-        NodeProperties::ChangeOp(node, simplified()->BooleanNot());
-        return Changed(node);
-      }
-    }
-  }
   return NoChange();
 }
 
@@ -442,7 +432,7 @@ Reduction TypedOptimization::
         Node* comparison, const StringRef& string, bool inverted) {
   switch (comparison->opcode()) {
     case IrOpcode::kStringEqual:
-      if (string.length() != 1) {
+      if (string.length().has_value() && string.length().value() != 1) {
         // String.fromCharCode(x) always has length 1.
         return Replace(jsgraph()->BooleanConstant(false));
       }
@@ -450,7 +440,7 @@ Reduction TypedOptimization::
     case IrOpcode::kStringLessThan:
       V8_FALLTHROUGH;
     case IrOpcode::kStringLessThanOrEqual:
-      if (string.length() == 0) {
+      if (string.length().has_value() && string.length().value() == 0) {
         // String.fromCharCode(x) <= "" is always false,
         // "" < String.fromCharCode(x) is always true.
         return Replace(jsgraph()->BooleanConstant(inverted));
@@ -492,14 +482,13 @@ TypedOptimization::TryReduceStringComparisonOfStringFromSingleCharCode(
         simplified()->NumberBitwiseAnd(), from_char_code_repl,
         jsgraph()->Constant(std::numeric_limits<uint16_t>::max()));
   }
-  if (!string.GetFirstChar(broker()).has_value()) return NoChange();
-  Node* constant_repl =
-      jsgraph()->Constant(string.GetFirstChar(broker()).value());
+  if (!string.GetFirstChar().has_value()) return NoChange();
+  Node* constant_repl = jsgraph()->Constant(string.GetFirstChar().value());
 
   Node* number_comparison = nullptr;
   if (inverted) {
     // "x..." <= String.fromCharCode(z) is true if x < z.
-    if (string.length() > 1 &&
+    if (string.length().has_value() && string.length().value() > 1 &&
         comparison->opcode() == IrOpcode::kStringLessThanOrEqual) {
       comparison_op = simplified()->NumberLessThan();
     }
@@ -507,7 +496,7 @@ TypedOptimization::TryReduceStringComparisonOfStringFromSingleCharCode(
         graph()->NewNode(comparison_op, constant_repl, from_char_code_repl);
   } else {
     // String.fromCharCode(z) < "x..." is true if z <= x.
-    if (string.length() > 1 &&
+    if (string.length().has_value() && string.length().value() > 1 &&
         comparison->opcode() == IrOpcode::kStringLessThan) {
       comparison_op = simplified()->NumberLessThanOrEqual();
     }
@@ -569,20 +558,17 @@ Reduction TypedOptimization::ReduceStringLength(Node* node) {
       // Constant-fold the String::length of the {input}.
       HeapObjectMatcher m(input);
       if (m.Ref(broker()).IsString()) {
-        uint32_t const length = m.Ref(broker()).AsString().length();
-        Node* value = jsgraph()->Constant(length);
-        return Replace(value);
+        if (m.Ref(broker()).AsString().length().has_value()) {
+          uint32_t const length = m.Ref(broker()).AsString().length().value();
+          Node* value = jsgraph()->Constant(length);
+          return Replace(value);
+        }
       }
       break;
     }
     case IrOpcode::kStringConcat: {
       // The first value input to the {input} is the resulting length.
       return Replace(input->InputAt(0));
-    }
-    case IrOpcode::kStringFromSingleCharCode: {
-      // Note that this isn't valid for StringFromCodePointAt, since it the
-      // string it returns can be 1 or 2 characters long.
-      return Replace(jsgraph()->Constant(1));
     }
     default:
       break;
@@ -692,22 +678,25 @@ Reduction TypedOptimization::ReduceSpeculativeToNumber(Node* node) {
 Reduction TypedOptimization::ReduceTypeOf(Node* node) {
   Node* const input = node->InputAt(0);
   Type const type = NodeProperties::GetType(input);
+  Factory* const f = factory();
   if (type.Is(Type::Boolean())) {
-    return Replace(jsgraph()->Constant(broker()->boolean_string(), broker()));
+    return Replace(jsgraph()->Constant(MakeRef(broker(), f->boolean_string())));
   } else if (type.Is(Type::Number())) {
-    return Replace(jsgraph()->Constant(broker()->number_string(), broker()));
+    return Replace(jsgraph()->Constant(MakeRef(broker(), f->number_string())));
   } else if (type.Is(Type::String())) {
-    return Replace(jsgraph()->Constant(broker()->string_string(), broker()));
+    return Replace(jsgraph()->Constant(MakeRef(broker(), f->string_string())));
   } else if (type.Is(Type::BigInt())) {
-    return Replace(jsgraph()->Constant(broker()->bigint_string(), broker()));
+    return Replace(jsgraph()->Constant(MakeRef(broker(), f->bigint_string())));
   } else if (type.Is(Type::Symbol())) {
-    return Replace(jsgraph()->Constant(broker()->symbol_string(), broker()));
+    return Replace(jsgraph()->Constant(MakeRef(broker(), f->symbol_string())));
   } else if (type.Is(Type::OtherUndetectableOrUndefined())) {
-    return Replace(jsgraph()->Constant(broker()->undefined_string(), broker()));
+    return Replace(
+        jsgraph()->Constant(MakeRef(broker(), f->undefined_string())));
   } else if (type.Is(Type::NonCallableOrNull())) {
-    return Replace(jsgraph()->Constant(broker()->object_string(), broker()));
+    return Replace(jsgraph()->Constant(MakeRef(broker(), f->object_string())));
   } else if (type.Is(Type::Function())) {
-    return Replace(jsgraph()->Constant(broker()->function_string(), broker()));
+    return Replace(
+        jsgraph()->Constant(MakeRef(broker(), f->function_string())));
   }
   return NoChange();
 }
@@ -825,7 +814,7 @@ Reduction TypedOptimization::ReduceJSToNumberInput(Node* input) {
     HeapObjectMatcher m(input);
     if (m.HasResolvedValue() && m.Ref(broker()).IsString()) {
       StringRef input_value = m.Ref(broker()).AsString();
-      base::Optional<double> number = input_value.ToNumber(broker());
+      base::Optional<double> number = input_value.ToNumber();
       if (!number.has_value()) return NoChange();
       return Replace(jsgraph()->Constant(number.value()));
     }
@@ -833,7 +822,7 @@ Reduction TypedOptimization::ReduceJSToNumberInput(Node* input) {
   if (input_type.IsHeapConstant()) {
     HeapObjectRef input_value = input_type.AsHeapConstant()->Ref();
     double value;
-    if (input_value.OddballToNumber(broker()).To(&value)) {
+    if (input_value.OddballToNumber().To(&value)) {
       return Replace(jsgraph()->Constant(value));
     }
   }

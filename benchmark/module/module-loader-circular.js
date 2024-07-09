@@ -4,7 +4,8 @@ const path = require('path');
 const common = require('../common.js');
 
 const tmpdir = require('../../test/common/tmpdir');
-const benchmarkDirectory = tmpdir.resolve('benchmark-module-circular');
+const benchmarkDirectory =
+  path.resolve(tmpdir.path, 'benchmark-module-circular');
 
 const bench = common.createBenchmark(main, {
   n: [1e4],

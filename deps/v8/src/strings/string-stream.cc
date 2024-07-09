@@ -400,15 +400,15 @@ void StringStream::PrintMentionedObjectCache(Isolate* isolate) {
 void StringStream::PrintSecurityTokenIfChanged(JSFunction fun) {
   Object token = fun.native_context().security_token();
   Isolate* isolate = fun.GetIsolate();
-  // Use SafeEquals because the cached token might be a stale pointer.
-  if (token.SafeEquals(isolate->string_stream_current_security_token())) {
+  if (token != isolate->string_stream_current_security_token()) {
     Add("Security context: %o\n", token);
     isolate->set_string_stream_current_security_token(token);
   }
 }
 
-void StringStream::PrintFunction(JSFunction fun, Object receiver) {
+void StringStream::PrintFunction(JSFunction fun, Object receiver, Code* code) {
   PrintPrototype(fun, receiver);
+  *code = FromCodeT(fun.code());
 }
 
 void StringStream::PrintPrototype(JSFunction fun, Object receiver) {

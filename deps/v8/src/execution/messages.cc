@@ -83,7 +83,7 @@ Handle<JSMessageObject> MessageHandler::MakeMessageObject(
   int bytecode_offset = -1;
   Handle<Script> script_handle = isolate->factory()->empty_script();
   Handle<SharedFunctionInfo> shared_info;
-  if (location != nullptr && !v8_flags.correctness_fuzzer_suppressions) {
+  if (location != nullptr && !FLAG_correctness_fuzzer_suppressions) {
     start = location->start_pos();
     end = location->end_pos();
     script_handle = location->script();
@@ -296,7 +296,7 @@ class V8_NODISCARD PrepareStackTraceScope {
 MaybeHandle<Object> ErrorUtils::FormatStackTrace(Isolate* isolate,
                                                  Handle<JSObject> error,
                                                  Handle<Object> raw_stack) {
-  if (v8_flags.correctness_fuzzer_suppressions) {
+  if (FLAG_correctness_fuzzer_suppressions) {
     return isolate->factory()->empty_string();
   }
   DCHECK(raw_stack->IsFixedArray());
@@ -346,13 +346,7 @@ MaybeHandle<Object> ErrorUtils::FormatStackTrace(Isolate* isolate,
 
         const int argc = 2;
         base::ScopedVector<Handle<Object>> argv(argc);
-        if (V8_UNLIKELY(error->IsJSGlobalObject())) {
-          // Pass global proxy instead of global object.
-          argv[0] =
-              handle(JSGlobalObject::cast(*error).global_proxy(), isolate);
-        } else {
-          argv[0] = error;
-        }
+        argv[0] = error;
         argv[1] = sites;
 
         Handle<Object> result;
@@ -425,7 +419,7 @@ Handle<String> MessageFormatter::Format(Isolate* isolate, MessageTemplate index,
   if (!arg2.is_null()) {
     arg2_string = Object::NoSideEffectsToString(isolate, arg2);
   }
-  MaybeHandle<String> maybe_result_string = MessageFormatter::TryFormat(
+  MaybeHandle<String> maybe_result_string = MessageFormatter::Format(
       isolate, index, arg0_string, arg1_string, arg2_string);
   Handle<String> result_string;
   if (!maybe_result_string.ToHandle(&result_string)) {
@@ -454,11 +448,11 @@ const char* MessageFormatter::TemplateString(MessageTemplate index) {
   }
 }
 
-MaybeHandle<String> MessageFormatter::TryFormat(Isolate* isolate,
-                                                MessageTemplate index,
-                                                Handle<String> arg0,
-                                                Handle<String> arg1,
-                                                Handle<String> arg2) {
+MaybeHandle<String> MessageFormatter::Format(Isolate* isolate,
+                                             MessageTemplate index,
+                                             Handle<String> arg0,
+                                             Handle<String> arg1,
+                                             Handle<String> arg2) {
   const char* template_string = TemplateString(index);
   if (template_string == nullptr) {
     isolate->ThrowIllegalOperation();
@@ -513,7 +507,7 @@ MaybeHandle<JSObject> ErrorUtils::Construct(
     Isolate* isolate, Handle<JSFunction> target, Handle<Object> new_target,
     Handle<Object> message, Handle<Object> options, FrameSkipMode mode,
     Handle<Object> caller, StackTraceCollection stack_trace_collection) {
-  if (v8_flags.correctness_fuzzer_suppressions) {
+  if (FLAG_correctness_fuzzer_suppressions) {
     // Abort range errors in correctness fuzzing, as their causes differ
     // accross correctness-fuzzing scenarios.
     if (target.is_identical_to(isolate->range_error_function())) {
@@ -556,7 +550,7 @@ MaybeHandle<JSObject> ErrorUtils::Construct(
         JSObject);
   }
 
-  if (!options->IsUndefined(isolate)) {
+  if (FLAG_harmony_error_cause && !options->IsUndefined(isolate)) {
     // If Type(options) is Object and ? HasProperty(options, "cause") then
     //   a. Let cause be ? Get(options, "cause").
     //   b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
@@ -681,7 +675,7 @@ Handle<String> DoFormatMessage(Isolate* isolate, MessageTemplate index,
   isolate->native_context()->IncrementErrorsThrown();
 
   Handle<String> msg;
-  if (!MessageFormatter::TryFormat(isolate, index, arg0_str, arg1_str, arg2_str)
+  if (!MessageFormatter::Format(isolate, index, arg0_str, arg1_str, arg2_str)
            .ToHandle(&msg)) {
     DCHECK(isolate->has_pending_exception());
     isolate->clear_pending_exception();
@@ -699,7 +693,7 @@ Handle<JSObject> ErrorUtils::MakeGenericError(
     Isolate* isolate, Handle<JSFunction> constructor, MessageTemplate index,
     Handle<Object> arg0, Handle<Object> arg1, Handle<Object> arg2,
     FrameSkipMode mode) {
-  if (v8_flags.clear_exceptions_on_js_entry) {
+  if (FLAG_clear_exceptions_on_js_entry) {
     // This function used to be implemented in JavaScript, and JSEntry
     // clears any pending exceptions - so whenever we'd call this from C++,
     // pending exceptions would be cleared. Preserve this behavior.
@@ -721,7 +715,7 @@ Handle<JSObject> ErrorUtils::MakeGenericError(
 namespace {
 
 bool ComputeLocation(Isolate* isolate, MessageLocation* target) {
-  JavaScriptStackFrameIterator it(isolate);
+  JavaScriptFrameIterator it(isolate);
   if (!it.done()) {
     // Compute the location from the function and the relocation info of the
     // baseline code. For optimized code this will use the deoptimization
@@ -732,8 +726,7 @@ bool ComputeLocation(Isolate* isolate, MessageLocation* target) {
     Handle<SharedFunctionInfo> shared(summary.function()->shared(), isolate);
     Handle<Object> script(shared->script(), isolate);
     SharedFunctionInfo::EnsureSourcePositionsAvailable(isolate, shared);
-    int pos =
-        summary.abstract_code()->SourcePosition(isolate, summary.code_offset());
+    int pos = summary.abstract_code()->SourcePosition(summary.code_offset());
     if (script->IsScript() &&
         !(Handle<Script>::cast(script)->source().IsUndefined(isolate))) {
       Handle<Script> casted_script = Handle<Script>::cast(script);
@@ -783,7 +776,6 @@ Handle<String> RenderCallSite(Isolate* isolate, Handle<Object> object,
   if (ComputeLocation(isolate, location)) {
     UnoptimizedCompileFlags flags = UnoptimizedCompileFlags::ForFunctionCompile(
         isolate, *location->shared());
-    flags.set_is_reparse(true);
     UnoptimizedCompileState compile_state;
     ReusableUnoptimizedCompileState reusable_state(isolate);
     ParseInfo info(isolate, flags, &compile_state, &reusable_state);
@@ -844,7 +836,6 @@ Object ErrorUtils::ThrowSpreadArgError(Isolate* isolate, MessageTemplate id,
   if (ComputeLocation(isolate, &location)) {
     UnoptimizedCompileFlags flags = UnoptimizedCompileFlags::ForFunctionCompile(
         isolate, *location.shared());
-    flags.set_is_reparse(true);
     UnoptimizedCompileState compile_state;
     ReusableUnoptimizedCompileState reusable_state(isolate);
     ParseInfo info(isolate, flags, &compile_state, &reusable_state);
@@ -922,7 +913,6 @@ Object ErrorUtils::ThrowLoadFromNullOrUndefined(Isolate* isolate,
 
     UnoptimizedCompileFlags flags = UnoptimizedCompileFlags::ForFunctionCompile(
         isolate, *location.shared());
-    flags.set_is_reparse(true);
     UnoptimizedCompileState compile_state;
     ReusableUnoptimizedCompileState reusable_state(isolate);
     ParseInfo info(isolate, flags, &compile_state, &reusable_state);

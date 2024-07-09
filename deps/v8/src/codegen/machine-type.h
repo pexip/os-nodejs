@@ -6,7 +6,6 @@
 #define V8_CODEGEN_MACHINE_TYPE_H_
 
 #include <iosfwd>
-#include <limits>
 
 #include "include/v8-fast-api-calls.h"
 #include "src/base/bits.h"
@@ -49,9 +48,8 @@ enum class MachineRepresentation : uint8_t {
   kFloat32,
   kFloat64,
   kSimd128,
-  kSimd256,
   kFirstFPRepresentation = kFloat32,
-  kLastRepresentation = kSimd256
+  kLastRepresentation = kSimd128
 };
 
 bool IsSubtype(MachineRepresentation rep1, MachineRepresentation rep2);
@@ -66,11 +64,10 @@ ASSERT_CONSECUTIVE(Word16, Word32)
 ASSERT_CONSECUTIVE(Word32, Word64)
 ASSERT_CONSECUTIVE(Float32, Float64)
 ASSERT_CONSECUTIVE(Float64, Simd128)
-ASSERT_CONSECUTIVE(Simd128, Simd256)
 #undef ASSERT_CONSECUTIVE
 
 static_assert(MachineRepresentation::kLastRepresentation ==
-                  MachineRepresentation::kSimd256,
+                  MachineRepresentation::kSimd128,
               "FP and SIMD representations must be last.");
 
 static_assert(static_cast<int>(MachineRepresentation::kLastRepresentation) <
@@ -86,8 +83,6 @@ enum class MachineSemantic : uint8_t {
   kUint32,
   kInt64,
   kUint64,
-  kSignedBigInt64,
-  kUnsignedBigInt64,
   kNumber,
   kAny
 };
@@ -154,6 +149,10 @@ class MachineType {
   constexpr bool IsCompressedPointer() const {
     return representation() == MachineRepresentation::kCompressedPointer;
   }
+  constexpr static MachineRepresentation TaggedRepresentation() {
+    return (kTaggedSize == 4) ? MachineRepresentation::kWord32
+                              : MachineRepresentation::kWord64;
+  }
   constexpr static MachineRepresentation PointerRepresentation() {
     return (kSystemPointerSize == 4) ? MachineRepresentation::kWord32
                                      : MachineRepresentation::kWord64;
@@ -191,14 +190,6 @@ class MachineType {
     return MachineType(MachineRepresentation::kWord64,
                        MachineSemantic::kUint64);
   }
-  constexpr static MachineType SignedBigInt64() {
-    return MachineType(MachineRepresentation::kWord64,
-                       MachineSemantic::kSignedBigInt64);
-  }
-  constexpr static MachineType UnsignedBigInt64() {
-    return MachineType(MachineRepresentation::kWord64,
-                       MachineSemantic::kUnsignedBigInt64);
-  }
   constexpr static MachineType Float32() {
     return MachineType(MachineRepresentation::kFloat32,
                        MachineSemantic::kNumber);
@@ -209,9 +200,6 @@ class MachineType {
   }
   constexpr static MachineType Simd128() {
     return MachineType(MachineRepresentation::kSimd128, MachineSemantic::kNone);
-  }
-  constexpr static MachineType Simd256() {
-    return MachineType(MachineRepresentation::kSimd256, MachineSemantic::kNone);
   }
   constexpr static MachineType Pointer() {
     return MachineType(PointerRepresentation(), MachineSemantic::kNone);
@@ -240,7 +228,7 @@ class MachineType {
   }
   constexpr static MachineType SandboxedPointer() {
     return MachineType(MachineRepresentation::kSandboxedPointer,
-                       MachineSemantic::kInt64);
+                       MachineSemantic::kNone);
   }
   constexpr static MachineType Bool() {
     return MachineType(MachineRepresentation::kBit, MachineSemantic::kBool);
@@ -270,8 +258,6 @@ class MachineType {
         return MachineType::Float64();
       case MachineRepresentation::kSimd128:
         return MachineType::Simd128();
-      case MachineRepresentation::kSimd256:
-        return MachineType::Simd256();
       case MachineRepresentation::kTagged:
         return MachineType::AnyTagged();
       case MachineRepresentation::kTaggedSigned:
@@ -295,8 +281,6 @@ class MachineType {
         return MachineType::AnyTagged();
       case CTypeInfo::Type::kBool:
         return MachineType::Bool();
-      case CTypeInfo::Type::kUint8:
-        return MachineType::Uint8();
       case CTypeInfo::Type::kInt32:
         return MachineType::Int32();
       case CTypeInfo::Type::kUint32:
@@ -314,10 +298,7 @@ class MachineType {
         return MachineType::Float32();
       case CTypeInfo::Type::kFloat64:
         return MachineType::Float64();
-      case CTypeInfo::Type::kPointer:
-        return MachineType::Pointer();
       case CTypeInfo::Type::kV8Value:
-      case CTypeInfo::Type::kSeqOneByteString:
       case CTypeInfo::Type::kApiObject:
         return MachineType::AnyTagged();
     }
@@ -408,8 +389,6 @@ V8_EXPORT_PRIVATE inline constexpr int ElementSizeLog2Of(
       return 3;
     case MachineRepresentation::kSimd128:
       return 4;
-    case MachineRepresentation::kSimd256:
-      return 5;
     case MachineRepresentation::kTaggedSigned:
     case MachineRepresentation::kTaggedPointer:
     case MachineRepresentation::kTagged:
@@ -426,35 +405,16 @@ V8_EXPORT_PRIVATE inline constexpr int ElementSizeLog2Of(
 
 constexpr int kMaximumReprSizeLog2 =
     ElementSizeLog2Of(MachineRepresentation::kSimd128);
-constexpr int kMaximumReprSizeInBytes = 1 << kMaximumReprSizeLog2;
+constexpr int kMaximumReprSizeInBytes = 1 << kTaggedSizeLog2;
 
-static_assert(kMaximumReprSizeLog2 >=
+STATIC_ASSERT(kMaximumReprSizeLog2 >=
               ElementSizeLog2Of(MachineRepresentation::kTagged));
-static_assert(kMaximumReprSizeLog2 >=
+STATIC_ASSERT(kMaximumReprSizeLog2 >=
               ElementSizeLog2Of(MachineRepresentation::kWord64));
 
 V8_EXPORT_PRIVATE inline constexpr int ElementSizeInBytes(
     MachineRepresentation rep) {
   return 1 << ElementSizeLog2Of(rep);
-}
-
-inline constexpr int ElementSizeInBits(MachineRepresentation rep) {
-  return 8 * ElementSizeInBytes(rep);
-}
-
-inline constexpr uint64_t MaxUnsignedValue(MachineRepresentation rep) {
-  switch (rep) {
-    case MachineRepresentation::kWord8:
-      return std::numeric_limits<uint8_t>::max();
-    case MachineRepresentation::kWord16:
-      return std::numeric_limits<uint16_t>::max();
-    case MachineRepresentation::kWord32:
-      return std::numeric_limits<uint32_t>::max();
-    case MachineRepresentation::kWord64:
-      return std::numeric_limits<uint64_t>::max();
-    default:
-      UNREACHABLE();
-  }
 }
 
 V8_EXPORT_PRIVATE inline constexpr int ElementSizeInPointers(

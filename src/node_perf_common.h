@@ -20,19 +20,16 @@ namespace performance {
 
 // These occur before the environment is created. Cache them
 // here and add them to the milestones when the env is init'd.
-extern const uint64_t performance_process_start;
-extern const double performance_process_start_timestamp;
 extern uint64_t performance_v8_start;
 
-#define NODE_PERFORMANCE_MILESTONES(V)                                         \
-  V(TIME_ORIGIN_TIMESTAMP, "timeOriginTimestamp")                              \
-  V(TIME_ORIGIN, "timeOrigin")                                                 \
-  V(ENVIRONMENT, "environment")                                                \
-  V(NODE_START, "nodeStart")                                                   \
-  V(V8_START, "v8Start")                                                       \
-  V(LOOP_START, "loopStart")                                                   \
-  V(LOOP_EXIT, "loopExit")                                                     \
+#define NODE_PERFORMANCE_MILESTONES(V)                                        \
+  V(ENVIRONMENT, "environment")                                               \
+  V(NODE_START, "nodeStart")                                                  \
+  V(V8_START, "v8Start")                                                      \
+  V(LOOP_START, "loopStart")                                                  \
+  V(LOOP_EXIT, "loopExit")                                                    \
   V(BOOTSTRAP_COMPLETE, "bootstrapComplete")
+
 
 #define NODE_PERFORMANCE_ENTRY_TYPES(V)                                       \
   V(GC, "gc")                                                                 \
@@ -63,15 +60,10 @@ class PerformanceState {
     AliasedBufferIndex observers;
   };
 
-  explicit PerformanceState(v8::Isolate* isolate,
-                            uint64_t time_origin,
-                            double time_origin_timestamp,
-                            const SerializeInfo* info);
+  explicit PerformanceState(v8::Isolate* isolate, const SerializeInfo* info);
   SerializeInfo Serialize(v8::Local<v8::Context> context,
                           v8::SnapshotCreator* creator);
-  void Deserialize(v8::Local<v8::Context> context,
-                   uint64_t time_origin,
-                   double time_origin_timestamp);
+  void Deserialize(v8::Local<v8::Context> context);
   friend std::ostream& operator<<(std::ostream& o, const SerializeInfo& i);
 
   AliasedUint8Array root;
@@ -85,8 +77,6 @@ class PerformanceState {
             uint64_t ts = PERFORMANCE_NOW());
 
  private:
-  void Initialize(uint64_t time_origin, double time_origin_timestamp);
-  void ResetMilestones();
   struct performance_state_internal {
     // doubles first so that they are always sizeof(double)-aligned
     double milestones[NODE_PERFORMANCE_MILESTONE_INVALID];

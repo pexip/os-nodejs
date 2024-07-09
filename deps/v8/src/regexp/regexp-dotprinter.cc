@@ -135,8 +135,8 @@ void DotPrinterImpl::VisitText(TextNode* that) {
         }
         break;
       }
-      case TextElement::CLASS_RANGES: {
-        RegExpClassRanges* node = elm.class_ranges();
+      case TextElement::CHAR_CLASS: {
+        RegExpCharacterClass* node = elm.char_class();
         os_ << "[";
         if (node->is_negated()) os_ << "^";
         for (int j = 0; j < node->ranges(zone)->length(); j++) {

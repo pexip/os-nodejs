@@ -24,12 +24,9 @@ tmpdir.refresh();
 
   const session = await child.connectInspectorSession();
 
-  await session.send({ method: 'NodeRuntime.enable' });
-  await session.waitForNotification('NodeRuntime.waitingForDebugger');
   await session.send([
     { method: 'Runtime.enable' },
     { method: 'Runtime.runIfWaitingForDebugger' }]);
-  await session.send({ method: 'NodeRuntime.disable' });
 
   session.disconnect();
   assert.match(stderr,
@@ -64,7 +61,7 @@ tmpdir.refresh();
 
 // Outputs coverage when event loop is drained, with no async logic.
 {
-  const coverageDirectory = tmpdir.resolve('coverage');
+  const coverageDirectory = path.join(tmpdir.path, 'coverage');
   async function getCoveredFiles() {
     const coverageFiles = await fs.readdir(coverageDirectory);
     const files = new Set();

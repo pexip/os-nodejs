@@ -26,9 +26,10 @@ const fixtures = require('../common/fixtures');
 const tmpdir = require('../common/tmpdir');
 
 const fs = require('fs');
+const path = require('path');
 
 const fileFixture = fixtures.path('a.js');
-const fileTemp = tmpdir.resolve('a.js');
+const fileTemp = path.join(tmpdir.path, 'a.js');
 
 // Copy fixtures to temp.
 tmpdir.refresh();

@@ -5,6 +5,10 @@
 const common = require('../common');
 
 const {
+  join,
+} = require('path');
+
+const {
   closeSync,
   open,
   write,
@@ -16,7 +20,7 @@ const assert = require('assert');
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
-const filename = tmpdir.resolve('test.txt');
+const filename = join(tmpdir.path, 'test.txt');
 
 open(filename, 'w+', common.mustSucceed((fd) => {
   assert.throws(() => {
@@ -32,7 +36,7 @@ open(filename, 'w+', common.mustSucceed((fd) => {
   closeSync(fd);
 }));
 
-const filename2 = tmpdir.resolve('test2.txt');
+const filename2 = join(tmpdir.path, 'test2.txt');
 
 // Make sure negative length's don't cause aborts either
 

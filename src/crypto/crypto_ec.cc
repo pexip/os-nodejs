@@ -66,6 +66,7 @@ void ECDH::Initialize(Environment* env, Local<Object> target) {
   Local<Context> context = env->context();
 
   Local<FunctionTemplate> t = NewFunctionTemplate(isolate, New);
+  t->Inherit(BaseObject::GetConstructorTemplate(env));
 
   t->InstanceTemplate()->SetInternalFieldCount(ECDH::kInternalFieldCount);
 
@@ -130,6 +131,8 @@ void ECDH::MemoryInfo(MemoryTracker* tracker) const {
   tracker->TrackFieldWithSize("key", key_ ? kSizeOf_EC_KEY : 0);
 }
 
+ECDH::~ECDH() {}
+
 void ECDH::New(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
@@ -155,7 +158,7 @@ void ECDH::GenerateKeys(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
   ECDH* ecdh;
-  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.Holder());
 
   if (!EC_KEY_generate_key(ecdh->key_.get()))
     return THROW_ERR_CRYPTO_OPERATION_FAILED(env, "Failed to generate key");
@@ -193,10 +196,10 @@ ECPointPointer ECDH::BufferToPoint(Environment* env,
 void ECDH::ComputeSecret(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
-  CHECK(IsAnyBufferSource(args[0]));
+  CHECK(IsAnyByteSource(args[0]));
 
   ECDH* ecdh;
-  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.Holder());
 
   MarkPopErrorOnReturn mark_pop_error_on_return;
 
@@ -240,7 +243,7 @@ void ECDH::GetPublicKey(const FunctionCallbackInfo<Value>& args) {
   CHECK_EQ(args.Length(), 1);
 
   ECDH* ecdh;
-  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.Holder());
 
   const EC_GROUP* group = EC_KEY_get0_group(ecdh->key_.get());
   const EC_POINT* pub = EC_KEY_get0_public_key(ecdh->key_.get());
@@ -263,7 +266,7 @@ void ECDH::GetPrivateKey(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
   ECDH* ecdh;
-  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.Holder());
 
   const BIGNUM* b = EC_KEY_get0_private_key(ecdh->key_.get());
   if (b == nullptr)
@@ -289,7 +292,7 @@ void ECDH::SetPrivateKey(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
   ECDH* ecdh;
-  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.Holder());
 
   ArrayBufferOrViewContents<unsigned char> priv_buffer(args[0]);
   if (UNLIKELY(!priv_buffer.CheckSizeInt32()))
@@ -345,9 +348,9 @@ void ECDH::SetPublicKey(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
   ECDH* ecdh;
-  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&ecdh, args.Holder());
 
-  CHECK(IsAnyBufferSource(args[0]));
+  CHECK(IsAnyByteSource(args[0]));
 
   MarkPopErrorOnReturn mark_pop_error_on_return;
 
@@ -393,12 +396,13 @@ void ECDH::ConvertKey(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
   CHECK_EQ(args.Length(), 3);
-  CHECK(IsAnyBufferSource(args[0]));
+  CHECK(IsAnyByteSource(args[0]));
 
   ArrayBufferOrViewContents<char> args0(args[0]);
   if (UNLIKELY(!args0.CheckSizeInt32()))
     return THROW_ERR_OUT_OF_RANGE(env, "key is too big");
-  if (args0.empty()) return args.GetReturnValue().SetEmptyString();
+  if (args0.size() == 0)
+    return args.GetReturnValue().SetEmptyString();
 
   node::Utf8Value curve(env->isolate(), args[1]);
 
@@ -839,9 +843,10 @@ Maybe<void> ExportJWKEcKey(
   return JustVoid();
 }
 
-Maybe<void> ExportJWKEdKey(Environment* env,
-                           std::shared_ptr<KeyObjectData> key,
-                           Local<Object> target) {
+Maybe<bool> ExportJWKEdKey(
+    Environment* env,
+    std::shared_ptr<KeyObjectData> key,
+    Local<Object> target) {
   ManagedEVPPKey pkey = key->GetAsymmetricKey();
   Mutex::ScopedLock lock(*pkey.mutex());
 
@@ -866,7 +871,7 @@ Maybe<void> ExportJWKEdKey(Environment* env,
           env->context(),
           env->jwk_crv_string(),
           OneByteString(env->isolate(), curve)).IsNothing()) {
-    return Nothing<void>();
+    return Nothing<bool>();
   }
 
   size_t len = 0;
@@ -874,7 +879,7 @@ Maybe<void> ExportJWKEdKey(Environment* env,
   Local<Value> error;
 
   if (!EVP_PKEY_get_raw_public_key(pkey.get(), nullptr, &len))
-    return Nothing<void>();
+    return Nothing<bool>();
 
   ByteSource::Builder out(len);
 
@@ -887,7 +892,7 @@ Maybe<void> ExportJWKEdKey(Environment* env,
         !target->Set(env->context(), env->jwk_d_string(), encoded).IsJust()) {
       if (!error.IsEmpty())
         env->isolate()->ThrowException(error);
-      return Nothing<void>();
+      return Nothing<bool>();
     }
   }
 
@@ -899,17 +904,17 @@ Maybe<void> ExportJWKEdKey(Environment* env,
       !target->Set(env->context(), env->jwk_x_string(), encoded).IsJust()) {
     if (!error.IsEmpty())
       env->isolate()->ThrowException(error);
-    return Nothing<void>();
+    return Nothing<bool>();
   }
 
   if (target->Set(
           env->context(),
           env->jwk_kty_string(),
           env->jwk_okp_string()).IsNothing()) {
-    return Nothing<void>();
+    return Nothing<bool>();
   }
 
-  return JustVoid();
+  return Just(true);
 }
 
 std::shared_ptr<KeyObjectData> ImportJWKEcKey(

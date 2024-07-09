@@ -260,7 +260,7 @@ int SwissNameDictionary::NumberOfEnumerableProperties() {
     if (k.FilterKey(ENUMERABLE_STRINGS)) continue;
     PropertyDetails details = this->DetailsAt(i);
     PropertyAttributes attr = details.attributes();
-    if ((int{attr} & ONLY_ENUMERABLE) == 0) result++;
+    if ((attr & ONLY_ENUMERABLE) == 0) result++;
   }
   return result;
 }
@@ -284,14 +284,14 @@ Object SwissNameDictionary::SlowReverseLookup(Isolate* isolate, Object value) {
 // deleted element count is MaxUsableCapacity(Capacity()). All data in the
 // meta table is unsigned. Using this, we verify the values of the constants
 // |kMax1ByteMetaTableCapacity| and |kMax2ByteMetaTableCapacity|.
-static_assert(SwissNameDictionary::kMax1ByteMetaTableCapacity - 1 <=
+STATIC_ASSERT(SwissNameDictionary::kMax1ByteMetaTableCapacity - 1 <=
               std::numeric_limits<uint8_t>::max());
-static_assert(SwissNameDictionary::MaxUsableCapacity(
+STATIC_ASSERT(SwissNameDictionary::MaxUsableCapacity(
                   SwissNameDictionary::kMax1ByteMetaTableCapacity) <=
               std::numeric_limits<uint8_t>::max());
-static_assert(SwissNameDictionary::kMax2ByteMetaTableCapacity - 1 <=
+STATIC_ASSERT(SwissNameDictionary::kMax2ByteMetaTableCapacity - 1 <=
               std::numeric_limits<uint16_t>::max());
-static_assert(SwissNameDictionary::MaxUsableCapacity(
+STATIC_ASSERT(SwissNameDictionary::MaxUsableCapacity(
                   SwissNameDictionary::kMax2ByteMetaTableCapacity) <=
               std::numeric_limits<uint16_t>::max());
 

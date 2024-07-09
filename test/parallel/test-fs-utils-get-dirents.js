@@ -7,6 +7,7 @@ const assert = require('assert');
 const { internalBinding } = require('internal/test/binding');
 const { UV_DIRENT_UNKNOWN } = internalBinding('constants').fs;
 const fs = require('fs');
+const path = require('path');
 
 const tmpdir = require('../common/tmpdir');
 const filename = 'foo';
@@ -14,7 +15,7 @@ const filename = 'foo';
 {
   // setup
   tmpdir.refresh();
-  fs.writeFileSync(tmpdir.resolve(filename), '');
+  fs.writeFileSync(path.join(tmpdir.path, filename), '');
 }
 // getDirents
 {

@@ -13,14 +13,15 @@ ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 [ -x "$NODE" ] || NODE=$(command -v node)
 NPM="$ROOT/deps/npm/bin/npm-cli.js"
 
-# shellcheck disable=SC1091
-. "$ROOT/tools/dep_updaters/utils.sh"
-
 NEW_VERSION=$("$NODE" "$NPM" view eslint dist-tags.latest)
 CURRENT_VERSION=$("$NODE" -p "require('./tools/node_modules/eslint/package.json').version")
 
-# This function exit with 0 if new version and current version are the same
-compare_dependency_version "eslint" "$NEW_VERSION" "$CURRENT_VERSION"
+echo "Comparing $NEW_VERSION with $CURRENT_VERSION"
+
+if [ "$NEW_VERSION" = "$CURRENT_VERSION" ]; then
+  echo "Skipped because ESlint is on the latest version."
+  exit 0
+fi
 
 cd "$( dirname "$0" )" || exit
 rm -rf ../node_modules/eslint
@@ -47,8 +48,7 @@ rm -rf ../node_modules/eslint
         eslint-plugin-markdown \
         @babel/core \
         @babel/eslint-parser \
-        @babel/plugin-syntax-import-attributes \
-        @stylistic/eslint-plugin-js
+        @babel/plugin-syntax-import-attributes
     )
     (
         cd node_modules/eslint
@@ -63,8 +63,7 @@ rm -rf ../node_modules/eslint
         eslint-plugin-markdown \
         @babel/core \
         @babel/eslint-parser \
-        @babel/plugin-syntax-import-attributes \
-        @stylistic/eslint-plugin-js
+        @babel/plugin-syntax-import-attributes
     )
     # Use dmn to remove some unneeded files.
     "$NODE" "$NPM" exec --package=dmn@2.2.2 --yes -- dmn -f clean

@@ -19,4 +19,3 @@ console.log('load2.js');
 console.log('load.js');
 if (!ok) throw new Error(`*****tion failed: Some text`);
 print("*****tion failed: Some text");
-check()`\01`;

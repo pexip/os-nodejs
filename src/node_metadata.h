@@ -49,7 +49,8 @@ namespace node {
   V(simdutf)                                                                   \
   V(ada)                                                                       \
   NODE_VERSIONS_KEY_UNDICI(V)                                                  \
-  V(cjs_module_lexer)
+  V(cjs_module_lexer)                                                          \
+  V(base64)
 
 #if HAVE_OPENSSL
 #define NODE_VERSIONS_KEY_CRYPTO(V) V(openssl)

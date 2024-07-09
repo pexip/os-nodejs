@@ -4,6 +4,7 @@
 
 const common = require('../common');
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 
 const mode = common.isWindows ? 0o444 : 0o644;
@@ -19,7 +20,7 @@ function test(mode, asString) {
     (mode | maskToIgnore).toString(8) : (mode | maskToIgnore);
 
   {
-    const file = tmpdir.resolve(`openSync-${suffix}.txt`);
+    const file = path.join(tmpdir.path, `openSync-${suffix}.txt`);
     const fd = fs.openSync(file, 'w+', input);
     assert.strictEqual(fs.fstatSync(fd).mode & 0o777, mode);
     fs.closeSync(fd);
@@ -27,7 +28,7 @@ function test(mode, asString) {
   }
 
   {
-    const file = tmpdir.resolve(`open-${suffix}.txt`);
+    const file = path.join(tmpdir.path, `open-${suffix}.txt`);
     fs.open(file, 'w+', input, common.mustSucceed((fd) => {
       assert.strictEqual(fs.fstatSync(fd).mode & 0o777, mode);
       fs.closeSync(fd);

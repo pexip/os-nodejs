@@ -5,7 +5,7 @@
 // Check that creating a server without listening does not leak resources.
 
 require('../common');
-const { onGC } = require('../common/gc');
+const onGC = require('../common/ongc');
 const Countdown = require('../common/countdown');
 
 const http = require('http');

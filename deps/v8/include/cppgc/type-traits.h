@@ -16,7 +16,7 @@ class Visitor;
 
 namespace internal {
 template <typename T, typename WeaknessTag, typename WriteBarrierPolicy,
-          typename CheckingPolicy, typename StorageType>
+          typename CheckingPolicy>
 class BasicMember;
 struct DijkstraWriteBarrierPolicy;
 struct NoWriteBarrierPolicy;
@@ -126,10 +126,9 @@ template <typename BasicMemberCandidate, typename WeaknessTag,
           typename WriteBarrierPolicy>
 struct IsSubclassOfBasicMemberTemplate {
  private:
-  template <typename T, typename CheckingPolicy, typename StorageType>
+  template <typename T, typename CheckingPolicy>
   static std::true_type SubclassCheck(
-      BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy,
-                  StorageType>*);
+      BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy>*);
   static std::false_type SubclassCheck(...);
 
  public:
@@ -170,15 +169,6 @@ struct IsComplete {
   static constexpr bool value =
       decltype(IsSizeOfKnown(std::declval<T*>()))::value;
 };
-
-template <typename T, typename U>
-constexpr bool IsDecayedSameV =
-    std::is_same_v<std::decay_t<T>, std::decay_t<U>>;
-
-template <typename B, typename D>
-constexpr bool IsStrictlyBaseOfV =
-    std::is_base_of_v<std::decay_t<B>, std::decay_t<D>> &&
-    !IsDecayedSameV<B, D>;
 
 }  // namespace internal
 

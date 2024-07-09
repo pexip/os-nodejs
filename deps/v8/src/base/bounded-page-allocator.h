@@ -23,24 +23,6 @@ enum class PageInitializationMode {
   kAllocatedPagesCanBeUninitialized,
 };
 
-// Defines how BoundedPageAllocator frees pages when FreePages or ReleasePages
-// is requested.
-enum class PageFreeingMode {
-  // Pages are freed/released by setting permissions to kNoAccess. This is the
-  // preferred mode when current platform/configuration allows any page
-  // permissions reconfiguration.
-  kMakeInaccessible,
-
-  // Pages are freed/released by using DiscardSystemPages of the underlying
-  // page allocator. This mode should be used for the cases when page permission
-  // reconfiguration is not allowed. In particular, on MacOS on ARM64 ("Apple
-  // M1"/Apple Silicon) it's not allowed to reconfigure RWX pages to anything
-  // else.
-  // This mode is not compatible with kAllocatedPagesMustBeZeroInitialized
-  // page initialization mode.
-  kDiscard,
-};
-
 // This is a v8::PageAllocator implementation that allocates pages within the
 // pre-reserved region of virtual space. This class requires the virtual space
 // to be kept reserved during the lifetime of this object.
@@ -58,8 +40,7 @@ class V8_BASE_EXPORT BoundedPageAllocator : public v8::PageAllocator {
 
   BoundedPageAllocator(v8::PageAllocator* page_allocator, Address start,
                        size_t size, size_t allocate_page_size,
-                       PageInitializationMode page_initialization_mode,
-                       PageFreeingMode page_freeing_mode);
+                       PageInitializationMode page_initialization_mode);
   BoundedPageAllocator(const BoundedPageAllocator&) = delete;
   BoundedPageAllocator& operator=(const BoundedPageAllocator&) = delete;
   ~BoundedPageAllocator() override = default;
@@ -100,9 +81,6 @@ class V8_BASE_EXPORT BoundedPageAllocator : public v8::PageAllocator {
 
   bool SetPermissions(void* address, size_t size, Permission access) override;
 
-  bool RecommitPages(void* address, size_t size,
-                     PageAllocator::Permission access) override;
-
   bool DiscardSystemPages(void* address, size_t size) override;
 
   bool DecommitPages(void* address, size_t size) override;
@@ -114,7 +92,6 @@ class V8_BASE_EXPORT BoundedPageAllocator : public v8::PageAllocator {
   v8::PageAllocator* const page_allocator_;
   v8::base::RegionAllocator region_allocator_;
   const PageInitializationMode page_initialization_mode_;
-  const PageFreeingMode page_freeing_mode_;
 };
 
 }  // namespace base

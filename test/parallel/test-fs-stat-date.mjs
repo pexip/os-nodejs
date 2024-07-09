@@ -4,6 +4,7 @@ import * as common from '../common/index.mjs';
 
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
+import path from 'node:path';
 import assert from 'node:assert';
 import tmpdir from '../common/tmpdir.js';
 
@@ -12,7 +13,7 @@ import tmpdir from '../common/tmpdir.js';
 const ignoredErrors = new Set(['EINVAL', 'EOVERFLOW']);
 
 tmpdir.refresh();
-const filepath = tmpdir.resolve('timestamp');
+const filepath = path.resolve(tmpdir.path, 'timestamp');
 
 await (await fsPromises.open(filepath, 'w')).close();
 

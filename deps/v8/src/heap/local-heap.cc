@@ -61,17 +61,11 @@ LocalHeap::LocalHeap(Heap* heap, ThreadKind kind,
 
   heap_->safepoint()->AddLocalHeap(this, [this] {
     if (!is_main_thread()) {
-      saved_marking_barrier_ =
-          WriteBarrier::SetForThread(marking_barrier_.get());
+      WriteBarrier::SetForThread(marking_barrier_.get());
       if (heap_->incremental_marking()->IsMarking()) {
         marking_barrier_->Activate(
-            heap_->incremental_marking()->IsCompacting(),
-            heap_->incremental_marking()->IsMinorMarking()
-                ? MarkingBarrierType::kMinor
-                : MarkingBarrierType::kMajor);
+            heap_->incremental_marking()->IsCompacting());
       }
-
-      SetUpSharedMarking();
     }
   });
 
@@ -88,18 +82,10 @@ LocalHeap::~LocalHeap() {
 
   heap_->safepoint()->RemoveLocalHeap(this, [this] {
     FreeLinearAllocationArea();
-    FreeSharedLinearAllocationArea();
 
     if (!is_main_thread()) {
-      CodePageHeaderModificationScope rwx_write_scope(
-          "Publishing of marking barrier results for Code space pages requires "
-          "write access to Code page headers");
-      marking_barrier_->PublishIfNeeded();
-      marking_barrier_->PublishSharedIfNeeded();
-      MarkingBarrier* overwritten =
-          WriteBarrier::SetForThread(saved_marking_barrier_);
-      DCHECK_EQ(overwritten, marking_barrier_.get());
-      USE(overwritten);
+      marking_barrier_->Publish();
+      WriteBarrier::ClearForThread(marking_barrier_.get());
     }
   });
 
@@ -108,63 +94,33 @@ LocalHeap::~LocalHeap() {
     current_local_heap = nullptr;
   }
 
-  DCHECK(gc_epilogue_callbacks_.IsEmpty());
+  DCHECK(gc_epilogue_callbacks_.empty());
 }
 
-void LocalHeap::SetUpMainThreadForTesting() {
-  Unpark();
-  SetUpMainThread();
-}
+void LocalHeap::SetUpMainThreadForTesting() { SetUpMainThread(); }
 
 void LocalHeap::SetUpMainThread() {
   DCHECK(is_main_thread());
-  DCHECK(IsRunning());
   SetUp();
-  SetUpSharedMarking();
 }
 
 void LocalHeap::SetUp() {
   DCHECK_NULL(old_space_allocator_);
-  old_space_allocator_ = std::make_unique<ConcurrentAllocator>(
-      this, heap_->old_space(), ConcurrentAllocator::Context::kNotGC);
+  old_space_allocator_ =
+      std::make_unique<ConcurrentAllocator>(this, heap_->old_space());
 
   DCHECK_NULL(code_space_allocator_);
-  code_space_allocator_ = std::make_unique<ConcurrentAllocator>(
-      this, heap_->code_space(), ConcurrentAllocator::Context::kNotGC);
+  code_space_allocator_ =
+      std::make_unique<ConcurrentAllocator>(this, heap_->code_space());
 
   DCHECK_NULL(shared_old_space_allocator_);
-  if (heap_->isolate()->has_shared_space()) {
-    shared_old_space_allocator_ = std::make_unique<ConcurrentAllocator>(
-        this, heap_->shared_allocation_space(),
-        ConcurrentAllocator::Context::kNotGC);
+  if (heap_->isolate()->shared_isolate()) {
+    shared_old_space_allocator_ =
+        std::make_unique<ConcurrentAllocator>(this, heap_->shared_old_space());
   }
 
   DCHECK_NULL(marking_barrier_);
   marking_barrier_ = std::make_unique<MarkingBarrier>(this);
-}
-
-void LocalHeap::SetUpSharedMarking() {
-#if DEBUG
-  // Ensure the thread is either in the running state or holds the safepoint
-  // lock. This guarantees that the state of incremental marking can't change
-  // concurrently (this requires a safepoint).
-  if (is_main_thread()) {
-    DCHECK(IsRunning());
-  } else {
-    heap()->safepoint()->AssertActive();
-  }
-#endif  // DEBUG
-
-  Isolate* isolate = heap_->isolate();
-
-  if (isolate->has_shared_space() && !isolate->is_shared_space_isolate()) {
-    if (isolate->shared_space_isolate()
-            ->heap()
-            ->incremental_marking()
-            ->IsMarking()) {
-      marking_barrier_->ActivateShared();
-    }
-  }
 }
 
 void LocalHeap::EnsurePersistentHandles() {
@@ -385,20 +341,12 @@ void LocalHeap::FreeLinearAllocationArea() {
 }
 
 void LocalHeap::FreeSharedLinearAllocationArea() {
-  if (shared_old_space_allocator_) {
-    shared_old_space_allocator_->FreeLinearAllocationArea();
-  }
+  shared_old_space_allocator_->FreeLinearAllocationArea();
 }
 
 void LocalHeap::MakeLinearAllocationAreaIterable() {
   old_space_allocator_->MakeLinearAllocationAreaIterable();
   code_space_allocator_->MakeLinearAllocationAreaIterable();
-}
-
-void LocalHeap::MakeSharedLinearAllocationAreaIterable() {
-  if (shared_old_space_allocator_) {
-    shared_old_space_allocator_->MakeLinearAllocationAreaIterable();
-  }
 }
 
 void LocalHeap::MarkLinearAllocationAreaBlack() {
@@ -411,15 +359,26 @@ void LocalHeap::UnmarkLinearAllocationArea() {
   code_space_allocator_->UnmarkLinearAllocationArea();
 }
 
-void LocalHeap::MarkSharedLinearAllocationAreaBlack() {
-  if (shared_old_space_allocator_) {
-    shared_old_space_allocator_->MarkLinearAllocationAreaBlack();
-  }
-}
+bool LocalHeap::TryPerformCollection() {
+  if (is_main_thread()) {
+    heap_->CollectGarbageForBackground(this);
+    return true;
+  } else {
+    DCHECK(IsRunning());
+    if (!heap_->collection_barrier_->TryRequestGC()) return false;
 
-void LocalHeap::UnmarkSharedLinearAllocationArea() {
-  if (shared_old_space_allocator_) {
-    shared_old_space_allocator_->UnmarkLinearAllocationArea();
+    LocalHeap* main_thread = heap_->main_thread_local_heap();
+
+    const ThreadState old_state = main_thread->state_.SetCollectionRequested();
+
+    if (old_state.IsRunning()) {
+      const bool performed_gc =
+          heap_->collection_barrier_->AwaitCollectionBackground(this);
+      return performed_gc;
+    } else {
+      DCHECK(old_state.IsParked());
+      return false;
+    }
   }
 }
 
@@ -430,67 +389,48 @@ Address LocalHeap::PerformCollectionAndAllocateAgain(
   CHECK(!main_thread_parked_);
   allocation_failed_ = true;
   static const int kMaxNumberOfRetries = 3;
-  int failed_allocations = 0;
-  int parked_allocations = 0;
 
   for (int i = 0; i < kMaxNumberOfRetries; i++) {
-    if (!heap_->CollectGarbageFromAnyThread(this)) {
+    if (!TryPerformCollection()) {
       main_thread_parked_ = true;
-      parked_allocations++;
     }
 
     AllocationResult result = AllocateRaw(object_size, type, origin, alignment);
 
-    if (result.IsFailure()) {
-      failed_allocations++;
-    } else {
+    if (!result.IsFailure()) {
       allocation_failed_ = false;
       main_thread_parked_ = false;
       return result.ToObjectChecked().address();
     }
   }
 
-  if (v8_flags.trace_gc) {
-    heap_->isolate()->PrintWithTimestamp(
-        "Background allocation failure: "
-        "allocations=%d"
-        "allocations.parked=%d",
-        failed_allocations, parked_allocations);
-  }
-
   heap_->FatalProcessOutOfMemory("LocalHeap: allocation failed");
 }
 
-void LocalHeap::AddGCEpilogueCallback(GCEpilogueCallback* callback, void* data,
-                                      GCType gc_type) {
-  DCHECK(IsRunning());
-  gc_epilogue_callbacks_.Add(callback, LocalIsolate::FromHeap(this), gc_type,
-                             data);
+void LocalHeap::AddGCEpilogueCallback(GCEpilogueCallback* callback,
+                                      void* data) {
+  DCHECK(!IsParked());
+  std::pair<GCEpilogueCallback*, void*> callback_and_data(callback, data);
+  DCHECK_EQ(std::find(gc_epilogue_callbacks_.begin(),
+                      gc_epilogue_callbacks_.end(), callback_and_data),
+            gc_epilogue_callbacks_.end());
+  gc_epilogue_callbacks_.push_back(callback_and_data);
 }
 
 void LocalHeap::RemoveGCEpilogueCallback(GCEpilogueCallback* callback,
                                          void* data) {
-  DCHECK(IsRunning());
-  gc_epilogue_callbacks_.Remove(callback, data);
+  DCHECK(!IsParked());
+  std::pair<GCEpilogueCallback*, void*> callback_and_data(callback, data);
+  auto it = std::find(gc_epilogue_callbacks_.begin(),
+                      gc_epilogue_callbacks_.end(), callback_and_data);
+  *it = gc_epilogue_callbacks_.back();
+  gc_epilogue_callbacks_.pop_back();
 }
 
-void LocalHeap::InvokeGCEpilogueCallbacksInSafepoint(GCType gc_type,
-                                                     GCCallbackFlags flags) {
-  gc_epilogue_callbacks_.Invoke(gc_type, flags);
-}
-
-void LocalHeap::NotifyObjectSizeChange(
-    HeapObject object, int old_size, int new_size,
-    ClearRecordedSlots clear_recorded_slots,
-    UpdateInvalidatedObjectSize update_invalidated_object_size) {
-  heap()->NotifyObjectSizeChange(object, old_size, new_size,
-                                 clear_recorded_slots,
-                                 update_invalidated_object_size);
-}
-
-void LocalHeap::WeakenDescriptorArrays(
-    GlobalHandleVector<DescriptorArray> strong_descriptor_arrays) {
-  AsHeap()->WeakenDescriptorArrays(std::move(strong_descriptor_arrays));
+void LocalHeap::InvokeGCEpilogueCallbacksInSafepoint() {
+  for (auto callback_and_data : gc_epilogue_callbacks_) {
+    callback_and_data.first(callback_and_data.second);
+  }
 }
 
 }  // namespace internal

@@ -10,9 +10,9 @@ if (!common.hasCrypto)
 const assert = require('assert');
 const tls = require('tls');
 const fixtures = require('../common/fixtures');
-const { duplexPair } = require('stream');
+const makeDuplexPair = require('../common/duplexpair');
 
-const [ clientSide, serverSide ] = duplexPair();
+const { clientSide, serverSide } = makeDuplexPair();
 new tls.TLSSocket(serverSide, {
   isServer: true,
   SNICallback: common.mustCall((servername, cb) => {

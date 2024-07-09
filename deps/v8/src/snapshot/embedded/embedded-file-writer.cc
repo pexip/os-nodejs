@@ -157,20 +157,44 @@ void EmbeddedFileWriter::WriteCodeSection(PlatformEmbeddedFileWriterBase* w,
 #endif
 
   w->AlignToCodeAlignment();
-  w->DeclareSymbolGlobal(EmbeddedBlobCodeSymbol().c_str());
-  w->DeclareLabel(EmbeddedBlobCodeSymbol().c_str());
+  w->DeclareLabel(EmbeddedBlobCodeDataSymbol().c_str());
 
-  static_assert(Builtins::kAllBuiltinsAreIsolateIndependent);
+  STATIC_ASSERT(Builtins::kAllBuiltinsAreIsolateIndependent);
   for (Builtin builtin = Builtins::kFirst; builtin <= Builtins::kLast;
        ++builtin) {
     WriteBuiltin(w, blob, builtin);
   }
-  w->AlignToPageSizeIfNeeded();
+  w->PaddingAfterCode();
   w->Newline();
 }
 
 void EmbeddedFileWriter::WriteFileEpilogue(PlatformEmbeddedFileWriterBase* w,
                                            const i::EmbeddedData* blob) const {
+  {
+    base::EmbeddedVector<char, kTemporaryStringLength>
+        embedded_blob_code_symbol;
+    base::SNPrintF(embedded_blob_code_symbol, "v8_%s_embedded_blob_code_",
+                   embedded_variant_);
+
+    w->Comment("Pointer to the beginning of the embedded blob code.");
+    w->SectionData();
+    w->AlignToDataAlignment();
+    w->DeclarePointerToSymbol(embedded_blob_code_symbol.begin(),
+                              EmbeddedBlobCodeDataSymbol().c_str());
+    w->Newline();
+
+    base::EmbeddedVector<char, kTemporaryStringLength>
+        embedded_blob_data_symbol;
+    base::SNPrintF(embedded_blob_data_symbol, "v8_%s_embedded_blob_data_",
+                   embedded_variant_);
+
+    w->Comment("Pointer to the beginning of the embedded blob data section.");
+    w->AlignToDataAlignment();
+    w->DeclarePointerToSymbol(embedded_blob_data_symbol.begin(),
+                              EmbeddedBlobDataDataSymbol().c_str());
+    w->Newline();
+  }
+
   {
     base::EmbeddedVector<char, kTemporaryStringLength>
         embedded_blob_code_size_symbol;
@@ -200,7 +224,7 @@ void EmbeddedFileWriter::WriteFileEpilogue(PlatformEmbeddedFileWriterBase* w,
                    embedded_variant_);
 
     w->MaybeEmitUnwindData(unwind_info_symbol.begin(),
-                           EmbeddedBlobCodeSymbol().c_str(), blob,
+                           EmbeddedBlobCodeDataSymbol().c_str(), blob,
                            reinterpret_cast<const void*>(&unwind_infos_[0]));
   }
 #endif  // V8_OS_WIN64
@@ -269,7 +293,10 @@ void EmbeddedFileWriter::PrepareBuiltinSourcePositionMap(Builtins* builtins) {
   for (Builtin builtin = Builtins::kFirst; builtin <= Builtins::kLast;
        ++builtin) {
     // Retrieve the SourcePositionTable and copy it.
-    Code code = builtins->code(builtin);
+    Code code = FromCodeT(builtins->code(builtin));
+    // Verify that the code object is still the "real code" and not a
+    // trampoline (which wouldn't have source positions).
+    DCHECK(!code.is_off_heap_trampoline());
     ByteArray source_position_table = code.source_position_table();
     std::vector<unsigned char> data(source_position_table.GetDataStartAddress(),
                                     source_position_table.GetDataEndAddress());

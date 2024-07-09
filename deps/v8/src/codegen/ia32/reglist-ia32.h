@@ -22,9 +22,6 @@ constexpr RegList kJSCallerSaved = {
     ebx,   // used as caller-saved register in JavaScript code
     edi};  // callee function
 
-// Caller-saved registers according to the x86 ABI
-constexpr RegList kCallerSaved = {eax, ecx, edx};
-
 constexpr int kNumJSCallerSaved = 5;
 
 }  // namespace internal

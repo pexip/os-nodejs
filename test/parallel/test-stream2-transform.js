@@ -413,11 +413,11 @@ const { PassThrough, Transform } = require('stream');
     ended = true;
   });
 
-  for (const obj of objects) {
+  objects.forEach(function(obj) {
     jp.write(JSON.stringify(obj));
     const res = jp.read();
     assert.deepStrictEqual(res, obj);
-  }
+  });
 
   jp.end();
   // Read one more time to get the 'end' event
@@ -454,11 +454,11 @@ const { PassThrough, Transform } = require('stream');
     ended = true;
   });
 
-  for (const obj of objects) {
+  objects.forEach(function(obj) {
     js.write(obj);
     const res = js.read();
     assert.strictEqual(res, JSON.stringify(obj));
-  }
+  });
 
   js.end();
   // Read one more time to get the 'end' event

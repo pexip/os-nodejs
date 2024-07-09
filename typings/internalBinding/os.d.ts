@@ -2,7 +2,7 @@ declare namespace InternalOSBinding {
   type OSContext = {};
 }
 
-export interface OSBinding {
+declare function InternalBinding(binding: 'os'): {
   getHostname(ctx: InternalOSBinding.OSContext): string | undefined;
   getLoadAvg(array: Float64Array): void;
   getUptime(): number;
@@ -22,4 +22,4 @@ export interface OSBinding {
   getPriority(pid: number, ctx: InternalOSBinding.OSContext): number | undefined;
   getOSInformation(ctx: InternalOSBinding.OSContext): [sysname: string, version: string, release: string];
   isBigEndian: boolean;
-}
+};

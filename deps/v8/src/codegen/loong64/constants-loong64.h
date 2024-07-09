@@ -71,6 +71,7 @@ const uint32_t kFCSRExceptionCauseMask = kFCSRCauseMask ^ kFCSRInexactCauseMask;
 
 // Actual value of root register is offset from the root array's start
 // to take advantage of negative displacement values.
+// TODO(sigurds): Choose best value.
 constexpr int kRootRegisterBias = 256;
 
 // Helper functions for converting between register numbers and names.
@@ -136,7 +137,7 @@ enum SoftwareInterruptCodes {
 //   debugger.
 const uint32_t kMaxWatchpointCode = 31;
 const uint32_t kMaxStopCode = 127;
-static_assert(kMaxWatchpointCode < kMaxStopCode);
+STATIC_ASSERT(kMaxWatchpointCode < kMaxStopCode);
 
 // ----- Fields offset and length.
 const int kRjShift = 5;
@@ -534,6 +535,8 @@ enum Opcode : uint32_t {
 // On LOONG64 we use this enum to abstract from conditional branch instructions.
 // The 'U' prefix is used to specify unsigned comparisons.
 enum Condition {
+  // Any value < 0 is considered no_condition.
+  kNoCondition = -1,
   overflow = 0,
   no_overflow = 1,
   Uless = 2,
@@ -579,25 +582,13 @@ enum Condition {
   uge = Ugreater_equal,
   ule = Uless_equal,
   ugt = Ugreater,
-
-  // Unified cross-platform condition names/aliases.
-  kEqual = equal,
-  kNotEqual = not_equal,
-  kLessThan = less,
-  kGreaterThan = greater,
-  kLessThanEqual = less_equal,
-  kGreaterThanEqual = greater_equal,
-  kUnsignedLessThan = Uless,
-  kUnsignedGreaterThan = Ugreater,
-  kUnsignedLessThanEqual = Uless_equal,
-  kUnsignedGreaterThanEqual = Ugreater_equal,
-  kOverflow = overflow,
-  kNoOverflow = no_overflow,
-  kZero = equal,
-  kNotZero = not_equal,
+  cc_default = kNoCondition
 };
 
 // Returns the equivalent of !cc.
+// Negation of the default kNoCondition (-1) results in a non-default
+// no_condition value (-2). As long as tests for no_condition check
+// for condition < 0, this will work as expected.
 inline Condition NegateCondition(Condition cc) {
   DCHECK(cc != cc_always);
   return static_cast<Condition>(cc ^ 1);
@@ -708,8 +699,7 @@ inline Hint NegateHint(Hint hint) { return no_hint; }
 // registers and other constants.
 
 // Break 0xfffff, reserved for redirected real time call.
-const Instr rtCallRedirInstr =
-    static_cast<uint32_t>(BREAK) | call_rt_redirected;
+const Instr rtCallRedirInstr = BREAK | call_rt_redirected;
 // A nop instruction. (Encoding of addi_w 0 0 0).
 const Instr nopInstr = ADDI_W;
 
@@ -1292,8 +1282,7 @@ InstructionBase::Type InstructionBase::InstructionType() const {
 
 template <class P>
 bool InstructionGetters<P>::IsTrap() const {
-  if ((this->Bits(31, 15) << 15) == BREAK) return true;
-  return false;
+  return true;
 }
 
 }  // namespace internal

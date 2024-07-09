@@ -6,6 +6,7 @@
 #define V8_STRINGS_CHAR_PREDICATES_H_
 
 #include "src/base/strings.h"
+#include "src/common/globals.h"
 #include "src/strings/unicode.h"
 
 namespace v8 {

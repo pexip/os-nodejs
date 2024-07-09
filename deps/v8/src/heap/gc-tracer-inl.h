@@ -8,7 +8,6 @@
 #include "src/base/platform/platform.h"
 #include "src/execution/isolate.h"
 #include "src/heap/gc-tracer.h"
-#include "src/heap/heap-inl.h"
 
 namespace v8 {
 namespace internal {
@@ -38,8 +37,9 @@ GCTracer::Scope::Scope(GCTracer* tracer, ScopeId scope, ThreadKind thread_kind)
 #ifdef V8_RUNTIME_CALL_STATS
   if (V8_LIKELY(!TracingFlags::is_runtime_stats_enabled())) return;
   if (thread_kind_ == ThreadKind::kMain) {
-    DCHECK(tracer_->heap_->IsMainThread() ||
-           tracer_->heap_->IsSharedMainThread());
+#if DEBUG
+    AssertMainThread();
+#endif  // DEBUG
     runtime_stats_ = tracer_->heap_->isolate_->counters()->runtime_call_stats();
     runtime_stats_->Enter(&timer_, GCTracer::RCSCounterFromScope(scope));
   } else {
@@ -56,8 +56,10 @@ GCTracer::Scope::~Scope() {
   tracer_->AddScopeSample(scope_, duration_ms);
 
   if (thread_kind_ == ThreadKind::kMain) {
-    DCHECK(tracer_->heap_->IsMainThread() ||
-           tracer_->heap_->IsSharedMainThread());
+#if DEBUG
+    AssertMainThread();
+#endif  // DEBUG
+
     if (scope_ == ScopeId::MC_INCREMENTAL ||
         scope_ == ScopeId::MC_INCREMENTAL_START ||
         scope_ == ScopeId::MC_INCREMENTAL_FINALIZE) {
@@ -75,31 +77,6 @@ GCTracer::Scope::~Scope() {
 #endif  // defined(V8_RUNTIME_CALL_STATS)
 }
 
-constexpr const char* GCTracer::Scope::Name(ScopeId id) {
-#define CASE(scope)  \
-  case Scope::scope: \
-    return "V8.GC_" #scope;
-  switch (id) {
-    TRACER_SCOPES(CASE)
-    TRACER_BACKGROUND_SCOPES(CASE)
-    default:
-      return nullptr;
-  }
-#undef CASE
-}
-
-constexpr bool GCTracer::Scope::NeedsYoungEpoch(ScopeId id) {
-#define CASE(scope)  \
-  case Scope::scope: \
-    return true;
-  switch (id) {
-    TRACER_YOUNG_EPOCH_SCOPES(CASE)
-    default:
-      return false;
-  }
-#undef CASE
-}
-
 constexpr int GCTracer::Scope::IncrementalOffset(ScopeId id) {
   DCHECK_LE(FIRST_INCREMENTAL_SCOPE, id);
   DCHECK_GE(LAST_INCREMENTAL_SCOPE, id);
@@ -108,8 +85,7 @@ constexpr int GCTracer::Scope::IncrementalOffset(ScopeId id) {
 
 constexpr bool GCTracer::Event::IsYoungGenerationEvent(Type type) {
   DCHECK_NE(START, type);
-  return type == SCAVENGER || type == MINOR_MARK_COMPACTOR ||
-         type == INCREMENTAL_MINOR_MARK_COMPACTOR;
+  return type == SCAVENGER || type == MINOR_MARK_COMPACTOR;
 }
 
 CollectionEpoch GCTracer::CurrentEpoch(Scope::ScopeId id) const {
@@ -121,16 +97,11 @@ bool GCTracer::IsInObservablePause() const {
   return 0.0 < start_of_observable_pause_;
 }
 
-bool GCTracer::IsInAtomicPause() const {
-  return current_.state == Event::State::ATOMIC;
-}
-
 bool GCTracer::IsConsistentWithCollector(GarbageCollector collector) const {
   return (collector == GarbageCollector::SCAVENGER &&
           current_.type == Event::SCAVENGER) ||
          (collector == GarbageCollector::MINOR_MARK_COMPACTOR &&
-          (current_.type == Event::MINOR_MARK_COMPACTOR ||
-           current_.type == Event::INCREMENTAL_MINOR_MARK_COMPACTOR)) ||
+          current_.type == Event::MINOR_MARK_COMPACTOR) ||
          (collector == GarbageCollector::MARK_COMPACTOR &&
           (current_.type == Event::MARK_COMPACTOR ||
            current_.type == Event::INCREMENTAL_MARK_COMPACTOR));
@@ -138,9 +109,7 @@ bool GCTracer::IsConsistentWithCollector(GarbageCollector collector) const {
 
 bool GCTracer::IsSweepingInProgress() const {
   return (current_.type == Event::MARK_COMPACTOR ||
-          current_.type == Event::INCREMENTAL_MARK_COMPACTOR ||
-          current_.type == Event::MINOR_MARK_COMPACTOR ||
-          current_.type == Event::INCREMENTAL_MINOR_MARK_COMPACTOR) &&
+          current_.type == Event::INCREMENTAL_MARK_COMPACTOR) &&
          current_.state == Event::State::SWEEPING;
 }
 #endif
@@ -183,7 +152,7 @@ WorkerThreadRuntimeCallStats* GCTracer::worker_thread_runtime_call_stats() {
 }
 
 RuntimeCallCounterId GCTracer::RCSCounterFromScope(Scope::ScopeId id) {
-  static_assert(Scope::FIRST_SCOPE == Scope::MC_INCREMENTAL);
+  STATIC_ASSERT(Scope::FIRST_SCOPE == Scope::MC_INCREMENTAL);
   return static_cast<RuntimeCallCounterId>(
       static_cast<int>(RuntimeCallCounterId::kGC_MC_INCREMENTAL) +
       static_cast<int>(id));
@@ -191,7 +160,7 @@ RuntimeCallCounterId GCTracer::RCSCounterFromScope(Scope::ScopeId id) {
 #endif  // defined(V8_RUNTIME_CALL_STATS)
 
 double GCTracer::MonotonicallyIncreasingTimeInMs() {
-  if (V8_UNLIKELY(v8_flags.predictable)) {
+  if (V8_UNLIKELY(FLAG_predictable)) {
     return heap_->MonotonicallyIncreasingTimeInMs();
   } else {
     return base::TimeTicks::Now().ToInternalValue() /

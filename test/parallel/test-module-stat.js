@@ -7,10 +7,11 @@ const Module = require('module');
 const fs = require('fs');
 const tmpdir = require('../common/tmpdir');
 const { ok, strictEqual } = require('assert');
+const { join } = require('path');
 
-const directory = tmpdir.resolve('directory');
-const doesNotExist = tmpdir.resolve('does-not-exist');
-const file = tmpdir.resolve('file.js');
+const directory = join(tmpdir.path, 'directory');
+const doesNotExist = join(tmpdir.path, 'does-not-exist');
+const file = join(tmpdir.path, 'file.js');
 
 tmpdir.refresh();
 fs.writeFileSync(file, "module.exports = { a: 'b' }");

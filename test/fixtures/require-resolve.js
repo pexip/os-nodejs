@@ -12,12 +12,10 @@ assert.strictEqual(
   path.join(nodeModules, 'bar.js')
 );
 
-if (require.resolve.paths) {
-  // Verify that existing paths are removed.
-  assert.throws(() => {
-    require.resolve('bar', { paths: [] })
-  }, /^Error: Cannot find module 'bar'/);
-}
+// Verify that existing paths are removed.
+assert.throws(() => {
+  require.resolve('bar', { paths: [] })
+}, /^Error: Cannot find module 'bar'/);
 
 // Verify that resolution path can be overwritten.
 {
@@ -41,7 +39,7 @@ if (require.resolve.paths) {
 }
 
 // Verify that the default paths can be used and modified.
-if (require.resolve.paths) {
+{
   const paths = require.resolve.paths('bar');
 
   assert.strictEqual(paths[0], nodeModules);
@@ -58,7 +56,7 @@ if (require.resolve.paths) {
 }
 
 // Verify that relative request paths work properly.
-if (require.resolve.paths) {
+{
   const searchIn = './' + path.relative(process.cwd(), nestedIndex);
 
   // Search in relative paths.
@@ -87,15 +85,13 @@ if (require.resolve.paths) {
   }
 }
 
-if (require.resolve.paths) {
-  // Test paths option validation
-  assert.throws(() => {
-    require.resolve('.\\three.js', { paths: 'foo' })
-  }, {
-    code: 'ERR_INVALID_ARG_VALUE',
-    name: 'TypeError',
-  });
-}
+// Test paths option validation
+assert.throws(() => {
+  require.resolve('.\\three.js', { paths: 'foo' })
+}, {
+  code: 'ERR_INVALID_ARG_VALUE',
+  name: 'TypeError',
+});
 
 // Verify that the default require.resolve() is used for empty options.
 assert.strictEqual(

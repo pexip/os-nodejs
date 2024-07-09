@@ -4,8 +4,3 @@ include_rules = [
   # separate directory.
   "+src/compiler",
 ]
-specific_include_rules = {
-  "maglev-graph-builder\.h": [
-    "+src/interpreter/interpreter-intrinsics.h",
-  ],
-}

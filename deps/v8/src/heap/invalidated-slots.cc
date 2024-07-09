@@ -4,9 +4,7 @@
 
 #include "src/heap/invalidated-slots.h"
 
-#include "src/base/logging.h"
 #include "src/heap/invalidated-slots-inl.h"
-#include "src/heap/memory-chunk-layout.h"
 #include "src/heap/memory-chunk.h"
 #include "src/heap/spaces.h"
 #include "src/objects/objects-inl.h"
@@ -14,31 +12,19 @@
 namespace v8 {
 namespace internal {
 
-InvalidatedSlotsFilter InvalidatedSlotsFilter::OldToOld(
-    MemoryChunk* chunk, LivenessCheck liveness_check) {
+InvalidatedSlotsFilter InvalidatedSlotsFilter::OldToOld(MemoryChunk* chunk) {
   return InvalidatedSlotsFilter(chunk, chunk->invalidated_slots<OLD_TO_OLD>(),
-                                OLD_TO_OLD, liveness_check);
+                                OLD_TO_OLD);
 }
 
-InvalidatedSlotsFilter InvalidatedSlotsFilter::OldToNew(
-    MemoryChunk* chunk, LivenessCheck liveness_check) {
+InvalidatedSlotsFilter InvalidatedSlotsFilter::OldToNew(MemoryChunk* chunk) {
   return InvalidatedSlotsFilter(chunk, chunk->invalidated_slots<OLD_TO_NEW>(),
-                                OLD_TO_NEW, liveness_check);
-}
-
-InvalidatedSlotsFilter InvalidatedSlotsFilter::OldToShared(
-    MemoryChunk* chunk, LivenessCheck liveness_check) {
-  return InvalidatedSlotsFilter(chunk,
-                                chunk->invalidated_slots<OLD_TO_SHARED>(),
-                                OLD_TO_SHARED, liveness_check);
+                                OLD_TO_NEW);
 }
 
 InvalidatedSlotsFilter::InvalidatedSlotsFilter(
     MemoryChunk* chunk, InvalidatedSlots* invalidated_slots,
-    RememberedSetType remembered_set_type, LivenessCheck liveness_check)
-    : marking_state_(liveness_check == LivenessCheck::kYes
-                         ? chunk->heap()->non_atomic_marking_state()
-                         : nullptr) {
+    RememberedSetType remembered_set_type) {
   USE(remembered_set_type);
   invalidated_slots = invalidated_slots ? invalidated_slots : &empty_;
 
@@ -60,16 +46,6 @@ InvalidatedSlotsFilter::InvalidatedSlotsFilter(
 
 InvalidatedSlotsCleanup InvalidatedSlotsCleanup::OldToNew(MemoryChunk* chunk) {
   return InvalidatedSlotsCleanup(chunk, chunk->invalidated_slots<OLD_TO_NEW>());
-}
-
-InvalidatedSlotsCleanup InvalidatedSlotsCleanup::OldToOld(MemoryChunk* chunk) {
-  return InvalidatedSlotsCleanup(chunk, chunk->invalidated_slots<OLD_TO_OLD>());
-}
-
-InvalidatedSlotsCleanup InvalidatedSlotsCleanup::OldToShared(
-    MemoryChunk* chunk) {
-  return InvalidatedSlotsCleanup(chunk,
-                                 chunk->invalidated_slots<OLD_TO_SHARED>());
 }
 
 InvalidatedSlotsCleanup InvalidatedSlotsCleanup::NoCleanup(MemoryChunk* chunk) {

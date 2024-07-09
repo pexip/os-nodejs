@@ -45,8 +45,6 @@ class PersistentHandles {
     return NewHandle(*obj);
   }
 
-  Isolate* isolate() const { return isolate_; }
-
 #ifdef DEBUG
   V8_EXPORT_PRIVATE bool Contains(Address* location);
 #endif
@@ -114,7 +112,6 @@ class V8_NODISCARD PersistentHandlesScope {
   V8_EXPORT_PRIVATE std::unique_ptr<PersistentHandles> Detach();
 
  private:
-  Address* first_block_;
   Address* prev_limit_;
   Address* prev_next_;
   HandleScopeImplementer* const impl_;

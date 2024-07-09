@@ -27,7 +27,7 @@ function failAsync(value) {
     });
 }
 
-for (const prefixValue of prefixValues) {
+prefixValues.forEach((prefixValue) => {
   fail(prefixValue);
   failAsync(prefixValue);
-}
+});

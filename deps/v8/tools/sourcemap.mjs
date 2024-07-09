@@ -127,7 +127,7 @@ WebInspector.SourceMap.load = function(sourceMapURL, compiledURL, callback)
 
 WebInspector.SourceMap.prototype = {
     /**
-     * @return {string[]}
+     * @return {Array.<string>}
      */
     sources()
     {

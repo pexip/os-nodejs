@@ -19,8 +19,7 @@ testUpdateSettingsWith({
     'maxHeaderListSize': 1,
     'maxFrameSize': 16385,
     'enablePush': false,
-    'enableConnectProtocol': true,
-    'customSettings': { '9999': 301 }
+    'enableConnectProtocol': true
   }
 });
 testUpdateSettingsWith({

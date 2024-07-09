@@ -7,10 +7,11 @@ const assert = require('assert');
 const { spawnSync } = require('child_process');
 const tmpdir = require('../common/tmpdir');
 const fixtures = require('../common/fixtures');
+const path = require('path');
 const fs = require('fs');
 
 tmpdir.refresh();
-const blobPath = tmpdir.resolve('snapshot.blob');
+const blobPath = path.join(tmpdir.path, 'snapshot.blob');
 const file = fixtures.path('snapshot', 'marked.js');
 
 {
@@ -29,14 +30,14 @@ const file = fixtures.path('snapshot', 'marked.js');
   console.log(stdout);
   assert.strictEqual(child.status, 0);
 
-  const stats = fs.statSync(tmpdir.resolve('snapshot.blob'));
+  const stats = fs.statSync(path.join(tmpdir.path, 'snapshot.blob'));
   assert(stats.isFile());
 }
 
 {
   let child = spawnSync(process.execPath, [
     '--snapshot-blob',
-    tmpdir.resolve('snapshot.blob'),
+    path.join(tmpdir.path, 'snapshot.blob'),
     fixtures.path('snapshot', 'check-marked.js'),
   ], {
     cwd: tmpdir.path,

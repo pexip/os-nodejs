@@ -140,10 +140,6 @@ export class SVG {
     return this.element('rect', classes);
   }
 
-  static path(classes) {
-    return this.element('path', classes);
-  }
-
   static g(classes) {
     return this.element('g', classes);
   }
@@ -320,28 +316,6 @@ export function gradientStopsFromGroups(
     lastHeight = height;
   }
   return stops;
-}
-
-export class Debouncer {
-  constructor(callback, timeout = 250) {
-    this._callback = callback;
-    this._timeout = timeout;
-    this._timeoutId = 0;
-  }
-
-  callNow(...args) {
-    this.clear();
-    return this._callback(...args);
-  }
-
-  call(...args) {
-    this.clear();
-    this._timeoutId = window.setTimeout(this._callback, this._timeout, ...args);
-  }
-
-  clear() {
-    clearTimeout(this._timeoutId);
-  }
 }
 
 export * from '../helper.mjs';

@@ -43,7 +43,7 @@ class PromiseFulfillReactionJobTask
     : public TorqueGeneratedPromiseFulfillReactionJobTask<
           PromiseFulfillReactionJobTask, PromiseReactionJobTask> {
  public:
-  static_assert(kSize == kSizeOfAllPromiseReactionJobTasks);
+  STATIC_ASSERT(kSize == kSizeOfAllPromiseReactionJobTasks);
 
   using BodyDescriptor = StructBodyDescriptor;
 
@@ -55,7 +55,7 @@ class PromiseRejectReactionJobTask
     : public TorqueGeneratedPromiseRejectReactionJobTask<
           PromiseRejectReactionJobTask, PromiseReactionJobTask> {
  public:
-  static_assert(kSize == kSizeOfAllPromiseReactionJobTasks);
+  STATIC_ASSERT(kSize == kSizeOfAllPromiseReactionJobTasks);
 
   using BodyDescriptor = StructBodyDescriptor;
 

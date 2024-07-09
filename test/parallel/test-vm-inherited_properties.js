@@ -21,11 +21,11 @@ let result = vm.runInContext('Object.hasOwnProperty(this, "propBase");',
 assert.strictEqual(result, false);
 
 // Ref: https://github.com/nodejs/node/issues/5350
-base = { __proto__: null };
+base = Object.create(null);
 base.x = 1;
 base.y = 2;
 
-sandbox = { __proto__: base };
+sandbox = Object.create(base);
 sandbox.z = 3;
 
 assert.deepStrictEqual(Object.keys(sandbox), ['z']);

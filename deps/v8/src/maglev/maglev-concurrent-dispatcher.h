@@ -25,7 +25,7 @@ class MaglevCompilationInfo;
 // that should still be addressed soon:
 // - Full tracing support through --trace-opt.
 // - Concurrent codegen.
-// - Concurrent InstructionStream object creation (optional?).
+// - Concurrent Code object creation (optional?).
 // - Test support for concurrency (see %FinalizeOptimization).
 
 // Exports needed functionality without exposing implementation details.
@@ -47,7 +47,7 @@ class MaglevCompilationJob final : public OptimizedCompilationJob {
  public:
   static std::unique_ptr<MaglevCompilationJob> New(Isolate* isolate,
                                                    Handle<JSFunction> function);
-  ~MaglevCompilationJob() override;
+  virtual ~MaglevCompilationJob();
 
   Status PrepareJobImpl(Isolate* isolate) override;
   Status ExecuteJobImpl(RuntimeCallStats* stats,
@@ -55,14 +55,6 @@ class MaglevCompilationJob final : public OptimizedCompilationJob {
   Status FinalizeJobImpl(Isolate* isolate) override;
 
   Handle<JSFunction> function() const;
-
-  bool specialize_to_function_context() const;
-
-  base::TimeDelta time_taken_to_prepare() { return time_taken_to_prepare_; }
-  base::TimeDelta time_taken_to_execute() { return time_taken_to_execute_; }
-  base::TimeDelta time_taken_to_finalize() { return time_taken_to_finalize_; }
-
-  void RecordCompilationStats(Isolate* isolate) const;
 
  private:
   explicit MaglevCompilationJob(std::unique_ptr<MaglevCompilationInfo>&& info);
@@ -90,8 +82,6 @@ class MaglevConcurrentDispatcher final {
 
   // Called from the main thread.
   void FinalizeFinishedJobs();
-
-  void AwaitCompileJobs();
 
   bool is_enabled() const { return static_cast<bool>(job_handle_); }
 

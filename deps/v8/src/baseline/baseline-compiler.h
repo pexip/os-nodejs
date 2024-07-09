@@ -11,7 +11,6 @@
 #if ENABLE_SPARKPLUG
 
 #include "src/base/logging.h"
-#include "src/base/pointer-with-payload.h"
 #include "src/base/threaded-list.h"
 #include "src/base/vlq.h"
 #include "src/baseline/baseline-assembler.h"
@@ -89,15 +88,13 @@ class BaselineCompiler {
   uint32_t Uint(int operand_index);
   int32_t Int(int operand_index);
   uint32_t Index(int operand_index);
-  uint32_t Flag8(int operand_index);
-  uint32_t Flag16(int operand_index);
+  uint32_t Flag(int operand_index);
   uint32_t RegisterCount(int operand_index);
   TaggedIndex IndexAsTagged(int operand_index);
   TaggedIndex UintAsTagged(int operand_index);
   Smi IndexAsSmi(int operand_index);
   Smi IntAsSmi(int operand_index);
-  Smi Flag8AsSmi(int operand_index);
-  Smi Flag16AsSmi(int operand_index);
+  Smi FlagAsSmi(int operand_index);
 
   // Jump helpers.
   Label* NewLabel();
@@ -174,27 +171,25 @@ class BaselineCompiler {
 
   int max_call_args_ = 0;
 
-  // Mark location as a jump target reachable via indirect branches, required
-  // for CFI.
-  enum class MarkAsIndirectJumpTarget { kNo, kYes };
-
-  struct BaselineLabelPointer : base::PointerWithPayload<Label, bool, 1> {
-    void MarkAsIndirectJumpTarget() { SetPayload(true); }
-    bool IsIndirectJumpTarget() const { return GetPayload(); }
+  struct ThreadedLabel {
+    Label label;
+    ThreadedLabel* ptr;
+    ThreadedLabel** next() { return &ptr; }
   };
 
-  Label* EnsureLabel(
-      int i, MarkAsIndirectJumpTarget mark = MarkAsIndirectJumpTarget::kNo) {
-    if (labels_[i].GetPointer() == nullptr) {
-      labels_[i].SetPointer(zone_.New<Label>());
+  struct BaselineLabels {
+    base::ThreadedList<ThreadedLabel> linked;
+    Label unlinked;
+  };
+
+  BaselineLabels* EnsureLabels(int i) {
+    if (labels_[i] == nullptr) {
+      labels_[i] = zone_.New<BaselineLabels>();
     }
-    if (mark == MarkAsIndirectJumpTarget::kYes) {
-      labels_[i].MarkAsIndirectJumpTarget();
-    }
-    return labels_[i].GetPointer();
+    return labels_[i];
   }
 
-  BaselineLabelPointer* labels_;
+  BaselineLabels** labels_;
 };
 
 }  // namespace baseline

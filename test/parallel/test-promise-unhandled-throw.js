@@ -47,8 +47,7 @@ process.on('uncaughtException', common.mustCall((err, origin) => {
   counter.dec();
   assert.strictEqual(origin, 'unhandledRejection', err);
   const knownError = errors.shift();
-  assert.strictEqual(err.message, knownError.message);
-  assert.strictEqual(err.code, knownError.code);
+  assert.deepStrictEqual(err, knownError);
   // Check if the errors are reference equal.
   assert(identical.shift() ? err === knownError : err !== knownError);
 }, 2));

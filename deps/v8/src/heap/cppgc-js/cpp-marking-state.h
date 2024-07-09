@@ -18,7 +18,7 @@ namespace internal {
 class JSObject;
 class EmbedderDataSlot;
 
-class CppMarkingState final {
+class CppMarkingState {
  public:
   using EmbedderDataSnapshot =
       std::pair<EmbedderDataSlot::EmbedderDataSlotSnapshot,
@@ -48,8 +48,6 @@ class CppMarkingState final {
   inline void MarkAndPush(const EmbedderDataSnapshot&);
   inline void MarkAndPush(const EmbedderDataSlot type_slot,
                           const EmbedderDataSlot instance_slot);
-  inline void MarkAndPushForWriteBarrier(const EmbedderDataSlot type_slot,
-                                         const EmbedderDataSlot instance_slot);
 
   bool IsLocalEmpty() {
     return marking_state_.marking_worklist().IsLocalEmpty();

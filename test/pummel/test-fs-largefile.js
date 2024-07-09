@@ -24,13 +24,14 @@ const common = require('../common');
 
 const assert = require('assert');
 const fs = require('fs');
+const path = require('path');
 
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
 try {
 
-  const filepath = tmpdir.resolve('large.txt');
+  const filepath = path.join(tmpdir.path, 'large.txt');
   const fd = fs.openSync(filepath, 'w+');
   const offset = 5 * 1024 * 1024 * 1024; // 5GB
   const message = 'Large File';

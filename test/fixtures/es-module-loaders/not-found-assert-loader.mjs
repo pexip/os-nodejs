@@ -1,16 +1,22 @@
 import assert from 'node:assert';
 
-// A loader that asserts that the defaultResolve will throw "not found"
-// (skipping the top-level main of course, and the built-in ones needed for run-worker).
+// a loader that asserts that the defaultResolve will throw "not found"
+// (skipping the top-level main of course)
 let mainLoad = true;
 export async function resolve(specifier, { importAttributes }, next) {
-  if (mainLoad || specifier === 'path' || specifier === 'worker_threads') {
+  if (mainLoad) {
     mainLoad = false;
     return next(specifier);
   }
-  await assert.rejects(next(specifier), { code: 'ERR_MODULE_NOT_FOUND' });
-  return {
-    url: 'node:fs',
-    importAttributes,
-  };
+  try {
+    await next(specifier);
+  }
+  catch (e) {
+    assert.strictEqual(e.code, 'ERR_MODULE_NOT_FOUND');
+    return {
+      url: 'node:fs',
+      importAttributes,
+    };
+  }
+  assert.fail(`Module resolution for ${specifier} should be throw ERR_MODULE_NOT_FOUND`);
 }

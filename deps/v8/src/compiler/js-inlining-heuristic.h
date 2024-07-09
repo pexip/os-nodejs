@@ -18,12 +18,9 @@ class JSInliningHeuristic final : public AdvancedReducer {
   JSInliningHeuristic(Editor* editor, Zone* local_zone,
                       OptimizedCompilationInfo* info, JSGraph* jsgraph,
                       JSHeapBroker* broker,
-                      SourcePositionTable* source_positions,
-                      NodeOriginTable* node_origins, Mode mode,
-                      const wasm::WasmModule* wasm_module = nullptr)
+                      SourcePositionTable* source_positions, Mode mode)
       : AdvancedReducer(editor),
-        inliner_(editor, local_zone, info, jsgraph, broker, source_positions,
-                 node_origins, wasm_module),
+        inliner_(editor, local_zone, info, jsgraph, broker, source_positions),
         candidates_(local_zone),
         seen_(local_zone),
         source_positions_(source_positions),
@@ -31,11 +28,9 @@ class JSInliningHeuristic final : public AdvancedReducer {
         broker_(broker),
         mode_(mode),
         max_inlined_bytecode_size_cumulative_(
-            v8_flags.max_inlined_bytecode_size_cumulative),
+            FLAG_max_inlined_bytecode_size_cumulative),
         max_inlined_bytecode_size_absolute_(
-            v8_flags.max_inlined_bytecode_size_absolute) {
-    DCHECK_EQ(mode == kWasmOnly, wasm_module != nullptr);
-  }
+            FLAG_max_inlined_bytecode_size_absolute) {}
 
   const char* reducer_name() const override { return "JSInliningHeuristic"; }
 
@@ -55,18 +50,18 @@ class JSInliningHeuristic final : public AdvancedReducer {
   static const int kMaxCallPolymorphism = 4;
 
   struct Candidate {
-    OptionalJSFunctionRef functions[kMaxCallPolymorphism];
+    base::Optional<JSFunctionRef> functions[kMaxCallPolymorphism];
     // In the case of polymorphic inlining, this tells if each of the
     // functions could be inlined.
     bool can_inline_function[kMaxCallPolymorphism];
     // Strong references to bytecode to ensure it is not flushed from SFI
     // while choosing inlining candidates.
-    OptionalBytecodeArrayRef bytecode[kMaxCallPolymorphism];
+    base::Optional<BytecodeArrayRef> bytecode[kMaxCallPolymorphism];
     // TODO(2206): For now polymorphic inlining is treated orthogonally to
     // inlining based on SharedFunctionInfo. This should be unified and the
     // above array should be switched to SharedFunctionInfo instead. Currently
     // we use {num_functions == 1 && functions[0].is_null()} as an indicator.
-    OptionalSharedFunctionInfoRef shared_info;
+    base::Optional<SharedFunctionInfoRef> shared_info;
     int num_functions;
     Node* node = nullptr;     // The call site at which to inline.
     CallFrequency frequency;  // Relative frequency of this call site.

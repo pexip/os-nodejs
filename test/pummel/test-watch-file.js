@@ -24,10 +24,11 @@
 require('../common');
 const assert = require('assert');
 const fs = require('fs');
+const path = require('path');
 const tmpdir = require('../common/tmpdir');
 
 tmpdir.refresh();
-const f = tmpdir.resolve('x.txt');
+const f = path.join(tmpdir.path, 'x.txt');
 fs.closeSync(fs.openSync(f, 'w'));
 
 let changes = 0;

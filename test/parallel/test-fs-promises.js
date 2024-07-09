@@ -57,24 +57,23 @@ assert.strictEqual(
     {
       code: 'ENOENT',
       name: 'Error',
-      message: /^ENOENT: no such file or directory, access/,
-      stack: /at async Function\.rejects/
+      message: /^ENOENT: no such file or directory, access/
     }
-  ).then(common.mustCall());
+  );
 
   assert.rejects(
     access(__filename, 8),
     {
       code: 'ERR_OUT_OF_RANGE',
     }
-  ).then(common.mustCall());
+  );
 
   assert.rejects(
     access(__filename, { [Symbol.toPrimitive]() { return 5; } }),
     {
       code: 'ERR_INVALID_ARG_TYPE',
     }
-  ).then(common.mustCall());
+  );
 }
 
 function verifyStatObject(stat) {
@@ -178,21 +177,11 @@ async function executeOnHandle(dest, func) {
       });
     }
 
-    // Use fallback buffer allocation when first argument is null
+    // Use fallback buffer allocation when input not buffer
     {
       await executeOnHandle(dest, async (handle) => {
-        const ret = await handle.read(null, 0, 0, 0);
+        const ret = await handle.read(0, 0, 0, 0);
         assert.strictEqual(ret.buffer.length, 16384);
-      });
-    }
-
-    // TypeError if buffer is not ArrayBufferView or nullable object
-    {
-      await executeOnHandle(dest, async (handle) => {
-        await assert.rejects(
-          async () => handle.read(0, 0, 0, 0),
-          { code: 'ERR_INVALID_ARG_TYPE' }
-        );
       });
     }
 
@@ -314,7 +303,7 @@ async function executeOnHandle(dest, func) {
                            (await readlink(newLink)).toLowerCase());
 
         const newMode = 0o666;
-        if (common.isMacOS) {
+        if (common.isOSX) {
           // `lchmod` is only available on macOS.
           await lchmod(newLink, newMode);
           stats = await lstat(newLink);
@@ -408,7 +397,7 @@ async function executeOnHandle(dest, func) {
       const dir = path.join(tmpDir, nextdir(), nextdir());
       await mkdir(path.dirname(dir));
       await writeFile(dir, '');
-      await assert.rejects(
+      assert.rejects(
         mkdir(dir, { recursive: true }),
         {
           code: 'EEXIST',
@@ -425,7 +414,7 @@ async function executeOnHandle(dest, func) {
       const dir = path.join(file, nextdir(), nextdir());
       await mkdir(path.dirname(file));
       await writeFile(file, '');
-      await assert.rejects(
+      assert.rejects(
         mkdir(dir, { recursive: true }),
         {
           code: 'ENOTDIR',
@@ -464,14 +453,14 @@ async function executeOnHandle(dest, func) {
             code: 'ERR_INVALID_ARG_TYPE',
             name: 'TypeError'
           }
-        ).then(common.mustCall());
+        );
       });
     }
 
     // `mkdtemp` with invalid numeric prefix
     {
       await mkdtemp(path.resolve(tmpDir, 'FOO'));
-      await assert.rejects(
+      assert.rejects(
         // mkdtemp() expects to get a string prefix.
         async () => mkdtemp(1),
         {

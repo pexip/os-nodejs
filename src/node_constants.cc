@@ -63,14 +63,10 @@
 
 namespace node {
 
-using v8::Context;
-using v8::Isolate;
 using v8::Local;
-using v8::Null;
 using v8::Object;
-using v8::Value;
 
-namespace constants {
+namespace {
 
 void DefineErrnoConstants(Local<Object> target) {
 #ifdef E2BIG
@@ -848,8 +844,40 @@ void DefineCryptoConstants(Local<Object> target) {
     NODE_DEFINE_CONSTANT(target, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
 #endif
 
+#ifdef SSL_OP_EPHEMERAL_RSA
+    NODE_DEFINE_CONSTANT(target, SSL_OP_EPHEMERAL_RSA);
+#endif
+
 #ifdef SSL_OP_LEGACY_SERVER_CONNECT
     NODE_DEFINE_CONSTANT(target, SSL_OP_LEGACY_SERVER_CONNECT);
+#endif
+
+#ifdef SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
+    NODE_DEFINE_CONSTANT(target, SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER);
+#endif
+
+#ifdef SSL_OP_MICROSOFT_SESS_ID_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_MICROSOFT_SESS_ID_BUG);
+#endif
+
+#ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
+    NODE_DEFINE_CONSTANT(target, SSL_OP_MSIE_SSLV2_RSA_PADDING);
+#endif
+
+#ifdef SSL_OP_NETSCAPE_CA_DN_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_NETSCAPE_CA_DN_BUG);
+#endif
+
+#ifdef SSL_OP_NETSCAPE_CHALLENGE_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_NETSCAPE_CHALLENGE_BUG);
+#endif
+
+#ifdef SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG);
+#endif
+
+#ifdef SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG);
 #endif
 
 #ifdef SSL_OP_NO_COMPRESSION
@@ -900,8 +928,40 @@ void DefineCryptoConstants(Local<Object> target) {
     NODE_DEFINE_CONSTANT(target, SSL_OP_NO_TLSv1_3);
 #endif
 
+#ifdef SSL_OP_PKCS1_CHECK_1
+    NODE_DEFINE_CONSTANT(target, SSL_OP_PKCS1_CHECK_1);
+#endif
+
+#ifdef SSL_OP_PKCS1_CHECK_2
+    NODE_DEFINE_CONSTANT(target, SSL_OP_PKCS1_CHECK_2);
+#endif
+
 #ifdef SSL_OP_PRIORITIZE_CHACHA
     NODE_DEFINE_CONSTANT(target, SSL_OP_PRIORITIZE_CHACHA);
+#endif
+
+#ifdef SSL_OP_SINGLE_DH_USE
+    NODE_DEFINE_CONSTANT(target, SSL_OP_SINGLE_DH_USE);
+#endif
+
+#ifdef SSL_OP_SINGLE_ECDH_USE
+    NODE_DEFINE_CONSTANT(target, SSL_OP_SINGLE_ECDH_USE);
+#endif
+
+#ifdef SSL_OP_SSLEAY_080_CLIENT_DH_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_SSLEAY_080_CLIENT_DH_BUG);
+#endif
+
+#ifdef SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG);
+#endif
+
+#ifdef SSL_OP_TLS_BLOCK_PADDING_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_TLS_BLOCK_PADDING_BUG);
+#endif
+
+#ifdef SSL_OP_TLS_D5_BUG
+    NODE_DEFINE_CONSTANT(target, SSL_OP_TLS_D5_BUG);
 #endif
 
 #ifdef SSL_OP_TLS_ROLLBACK_BUG
@@ -971,6 +1031,9 @@ void DefineCryptoConstants(Local<Object> target) {
 #ifdef DH_NOT_SUITABLE_GENERATOR
     NODE_DEFINE_CONSTANT(target, DH_NOT_SUITABLE_GENERATOR);
 #endif
+
+#define ALPN_ENABLED 1
+    NODE_DEFINE_CONSTANT(target, ALPN_ENABLED);
 
 #ifdef RSA_PKCS1_PADDING
     NODE_DEFINE_CONSTANT(target, RSA_PKCS1_PADDING);
@@ -1057,10 +1120,6 @@ void DefineSystemConstants(Local<Object> target) {
   NODE_DEFINE_CONSTANT(target, UV_DIRENT_SOCKET);
   NODE_DEFINE_CONSTANT(target, UV_DIRENT_CHAR);
   NODE_DEFINE_CONSTANT(target, UV_DIRENT_BLOCK);
-
-  // Define module specific constants
-  NODE_DEFINE_CONSTANT(target, EXTENSIONLESS_FORMAT_JAVASCRIPT);
-  NODE_DEFINE_CONSTANT(target, EXTENSIONLESS_FORMAT_WASM);
 
   NODE_DEFINE_CONSTANT(target, S_IFMT);
   NODE_DEFINE_CONSTANT(target, S_IFREG);
@@ -1278,14 +1337,10 @@ void DefineTraceConstants(Local<Object> target) {
   NODE_DEFINE_CONSTANT(target, TRACE_EVENT_PHASE_LINK_IDS);
 }
 
-void CreatePerContextProperties(Local<Object> target,
-                                Local<Value> unused,
-                                Local<Context> context,
-                                void* priv) {
-  Isolate* isolate = context->GetIsolate();
-  Environment* env = Environment::GetCurrent(context);
+}  // anonymous namespace
 
-  CHECK(target->SetPrototype(env->context(), Null(env->isolate())).FromJust());
+void DefineConstants(v8::Isolate* isolate, Local<Object> target) {
+  Environment* env = Environment::GetCurrent(isolate);
 
   Local<Object> os_constants = Object::New(isolate);
   CHECK(os_constants->SetPrototype(env->context(),
@@ -1365,8 +1420,4 @@ void CreatePerContextProperties(Local<Object> target,
               trace_constants).Check();
 }
 
-}  // namespace constants
 }  // namespace node
-
-NODE_BINDING_CONTEXT_AWARE_INTERNAL(constants,
-                                    node::constants::CreatePerContextProperties)

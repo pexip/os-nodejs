@@ -1,4 +1,4 @@
-export interface OptionsBinding {
+declare function InternalBinding(binding: 'options'): {
   getOptions(): {
     options: Map<
       string,
@@ -32,4 +32,4 @@ export interface OptionsBinding {
     kHostPort: 6;
     kStringList: 7;
   };
-}
+};

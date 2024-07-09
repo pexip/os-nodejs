@@ -13,14 +13,16 @@
 namespace v8 {
 namespace internal {
 
-LogEventListener::CodeTag V8FileLogger::ToNativeByScript(
-    LogEventListener::CodeTag tag, Script script) {
+CodeEventListener::LogEventsAndTags Logger::ToNativeByScript(
+    CodeEventListener::LogEventsAndTags tag, Script script) {
   if (script.type() != Script::TYPE_NATIVE) return tag;
   switch (tag) {
-    case LogEventListener::CodeTag::kFunction:
-      return LogEventListener::CodeTag::kNativeFunction;
-    case LogEventListener::CodeTag::kScript:
-      return LogEventListener::CodeTag::kNativeScript;
+    case CodeEventListener::FUNCTION_TAG:
+      return CodeEventListener::NATIVE_FUNCTION_TAG;
+    case CodeEventListener::LAZY_COMPILE_TAG:
+      return CodeEventListener::NATIVE_LAZY_COMPILE_TAG;
+    case CodeEventListener::SCRIPT_TAG:
+      return CodeEventListener::NATIVE_SCRIPT_TAG;
     default:
       return tag;
   }
@@ -28,8 +30,8 @@ LogEventListener::CodeTag V8FileLogger::ToNativeByScript(
 
 template <class TimerEvent>
 void TimerEventScope<TimerEvent>::LogTimerEvent(v8::LogEventStatus se) {
-  V8FileLogger::CallEventLogger(isolate_, TimerEvent::name(), se,
-                                TimerEvent::expose_to_api());
+  Logger::CallEventLogger(isolate_, TimerEvent::name(), se,
+                          TimerEvent::expose_to_api());
 }
 
 }  // namespace internal

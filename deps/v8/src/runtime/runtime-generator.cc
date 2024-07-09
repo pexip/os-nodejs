@@ -2,9 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "src/execution/arguments-inl.h"
 #include "src/heap/factory.h"
 #include "src/heap/heap-inl.h"
+#include "src/logging/counters.h"
 #include "src/objects/js-generator-inl.h"
+#include "src/objects/objects-inl.h"
+#include "src/runtime/runtime-utils.h"
 
 namespace v8 {
 namespace internal {
@@ -58,18 +62,16 @@ RUNTIME_FUNCTION(Runtime_CreateJSGeneratorObject) {
 
   Handle<JSGeneratorObject> generator =
       isolate->factory()->NewJSGeneratorObject(function);
-  DisallowGarbageCollection no_gc;
-  auto raw_generator = *generator;
-  raw_generator.set_function(*function);
-  raw_generator.set_context(isolate->context());
-  raw_generator.set_receiver(*receiver);
-  raw_generator.set_parameters_and_registers(*parameters_and_registers);
-  raw_generator.set_resume_mode(JSGeneratorObject::ResumeMode::kNext);
-  raw_generator.set_continuation(JSGeneratorObject::kGeneratorExecuting);
-  if (raw_generator.IsJSAsyncGeneratorObject()) {
-    JSAsyncGeneratorObject::cast(raw_generator).set_is_awaiting(0);
+  generator->set_function(*function);
+  generator->set_context(isolate->context());
+  generator->set_receiver(*receiver);
+  generator->set_parameters_and_registers(*parameters_and_registers);
+  generator->set_resume_mode(JSGeneratorObject::ResumeMode::kNext);
+  generator->set_continuation(JSGeneratorObject::kGeneratorExecuting);
+  if (generator->IsJSAsyncGeneratorObject()) {
+    Handle<JSAsyncGeneratorObject>::cast(generator)->set_is_awaiting(0);
   }
-  return raw_generator;
+  return *generator;
 }
 
 RUNTIME_FUNCTION(Runtime_GeneratorClose) {
@@ -110,7 +112,7 @@ RUNTIME_FUNCTION(Runtime_AsyncGeneratorReject) {
   UNREACHABLE();
 }
 
-RUNTIME_FUNCTION(Runtime_AsyncGeneratorYieldWithAwait) {
+RUNTIME_FUNCTION(Runtime_AsyncGeneratorYield) {
   // Runtime call is implemented in InterpreterIntrinsics and lowered in
   // JSIntrinsicLowering
   UNREACHABLE();

@@ -6,47 +6,27 @@ const bench = common.createBenchmark(main, {
   n: [2e4],
   len: [1e2, 1e3],
   strict: [0, 1],
-  arrayBuffer: [0, 1],
-  method: ['deepEqual', 'notDeepEqual', 'unequal_length'],
-}, {
-  combinationFilter: (p) => {
-    return p.strict === 1 || p.method === 'deepEqual';
-  },
+  method: ['deepEqual', 'notDeepEqual'],
 });
 
-function main({ len, n, method, strict, arrayBuffer }) {
-  let actual = Buffer.alloc(len);
-  let expected = Buffer.alloc(len + Number(method === 'unequal_length'));
-
-
-  if (method === 'unequal_length') {
-    method = 'notDeepEqual';
-  }
-
-  for (let i = 0; i < len; i++) {
-    actual.writeInt8(i % 128, i);
-    expected.writeInt8(i % 128, i);
-  }
-
-  if (method.includes('not')) {
-    const position = Math.floor(len / 2);
-    expected[position] = expected[position] + 1;
-  }
+function main({ len, n, method, strict }) {
+  const data = Buffer.allocUnsafe(len + 1);
+  const actual = Buffer.alloc(len);
+  const expected = Buffer.alloc(len);
+  const expectedWrong = Buffer.alloc(len + 1);
+  data.copy(actual);
+  data.copy(expected);
+  data.copy(expectedWrong);
 
   if (strict) {
     method = method.replace('eep', 'eepStrict');
   }
-
   const fn = assert[method];
-
-  if (arrayBuffer) {
-    actual = actual.buffer;
-    expected = expected.buffer;
-  }
+  const value2 = method.includes('not') ? expectedWrong : expected;
 
   bench.start();
   for (let i = 0; i < n; ++i) {
-    fn(actual, expected);
+    fn(actual, value2);
   }
   bench.end(n);
 }

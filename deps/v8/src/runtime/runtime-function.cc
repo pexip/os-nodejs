@@ -3,8 +3,12 @@
 // found in the LICENSE file.
 
 #include "src/builtins/accessors.h"
+#include "src/codegen/compiler.h"
+#include "src/execution/arguments-inl.h"
 #include "src/execution/isolate-inl.h"
 #include "src/heap/heap-inl.h"  // For ToBoolean. TODO(jkummerow): Drop.
+#include "src/logging/counters.h"
+#include "src/runtime/runtime-utils.h"
 
 namespace v8 {
 namespace internal {
@@ -45,7 +49,7 @@ RUNTIME_FUNCTION(Runtime_FunctionGetSourceCode) {
   if (function->IsJSFunction()) {
     Handle<SharedFunctionInfo> shared(
         Handle<JSFunction>::cast(function)->shared(), isolate);
-    return *SharedFunctionInfo::GetSourceCode(isolate, shared);
+    return *SharedFunctionInfo::GetSourceCode(shared);
   }
   return ReadOnlyRoots(isolate).undefined_value();
 }

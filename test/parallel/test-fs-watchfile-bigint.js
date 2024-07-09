@@ -7,10 +7,11 @@ const common = require('../common');
 const assert = require('assert');
 const { BigIntStats } = require('internal/fs/utils');
 const fs = require('fs');
+const path = require('path');
 
 const tmpdir = require('../common/tmpdir');
 
-const enoentFile = tmpdir.resolve('non-existent-file');
+const enoentFile = path.join(tmpdir.path, 'non-existent-file');
 const expectedStatObject = new BigIntStats(
   0n,                                        // dev
   0n,                                        // mode

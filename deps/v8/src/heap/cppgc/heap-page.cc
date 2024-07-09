@@ -5,7 +5,6 @@
 #include "src/heap/cppgc/heap-page.h"
 
 #include <algorithm>
-#include <cstddef>
 
 #include "include/cppgc/internal/api-constants.h"
 #include "src/base/logging.h"
@@ -18,13 +17,10 @@
 #include "src/heap/cppgc/object-start-bitmap.h"
 #include "src/heap/cppgc/page-memory.h"
 #include "src/heap/cppgc/raw-heap.h"
-#include "src/heap/cppgc/remembered-set.h"
 #include "src/heap/cppgc/stats-collector.h"
 
 namespace cppgc {
 namespace internal {
-
-static_assert(api_constants::kGuardPageSize == kGuardPageSize);
 
 namespace {
 
@@ -34,10 +30,6 @@ Address AlignAddress(Address address, size_t alignment) {
 }
 
 }  // namespace
-
-HeapBase& BasePage::heap() const {
-  return static_cast<HeapBase&>(heap_handle_);
-}
 
 // static
 BasePage* BasePage::FromInnerAddress(const HeapBase* heap, void* address) {
@@ -86,13 +78,6 @@ ConstAddress BasePage::PayloadEnd() const {
   return const_cast<BasePage*>(this)->PayloadEnd();
 }
 
-size_t BasePage::AllocatedSize() const {
-  return is_large() ? LargePage::PageHeaderSize() +
-                          LargePage::From(this)->PayloadSize()
-                    : NormalPage::From(this)->PayloadSize() +
-                          RoundUp(sizeof(NormalPage), kAllocationGranularity);
-}
-
 size_t BasePage::AllocatedBytesAtLastGC() const {
   return is_large() ? LargePage::From(this)->AllocatedBytesAtLastGC()
                     : NormalPage::From(this)->AllocatedBytesAtLastGC();
@@ -128,43 +113,17 @@ const HeapObjectHeader* BasePage::TryObjectHeaderFromInnerAddress(
   return header;
 }
 
-#if defined(CPPGC_YOUNG_GENERATION)
-void BasePage::AllocateSlotSet() {
-  DCHECK_NULL(slot_set_);
-  slot_set_ = decltype(slot_set_)(
-      static_cast<SlotSet*>(
-          SlotSet::Allocate(SlotSet::BucketsForSize(AllocatedSize()))),
-      SlotSetDeleter{AllocatedSize()});
-}
-
-void BasePage::SlotSetDeleter::operator()(SlotSet* slot_set) const {
-  DCHECK_NOT_NULL(slot_set);
-  SlotSet::Delete(slot_set, SlotSet::BucketsForSize(page_size_));
-}
-
-void BasePage::ResetSlotSet() { slot_set_.reset(); }
-#endif  // defined(CPPGC_YOUNG_GENERATION)
-
 BasePage::BasePage(HeapBase& heap, BaseSpace& space, PageType type)
-    : BasePageHandle(heap),
-      space_(space),
-      type_(type)
-#if defined(CPPGC_YOUNG_GENERATION)
-      ,
-      slot_set_(nullptr, SlotSetDeleter{})
-#endif  // defined(CPPGC_YOUNG_GENERATION)
-{
+    : heap_(heap), space_(space), type_(type) {
   DCHECK_EQ(0u, (reinterpret_cast<uintptr_t>(this) - kGuardPageSize) &
                     kPageOffsetMask);
-  DCHECK_EQ(&heap.raw_heap(), space_.raw_heap());
+  DCHECK_EQ(&heap_.raw_heap(), space_.raw_heap());
 }
 
 // static
-NormalPage* NormalPage::TryCreate(PageBackend& page_backend,
-                                  NormalPageSpace& space) {
-  void* memory = page_backend.TryAllocateNormalPageMemory();
-  if (!memory) return nullptr;
-
+NormalPage* NormalPage::Create(PageBackend& page_backend,
+                               NormalPageSpace& space) {
+  void* memory = page_backend.AllocateNormalPageMemory(space.index());
   auto* normal_page = new (memory) NormalPage(*space.raw_heap()->heap(), space);
   normal_page->SynchronizedStore();
   normal_page->heap().stats_collector()->NotifyAllocatedMemory(kPageSize);
@@ -202,7 +161,8 @@ void NormalPage::Destroy(NormalPage* page) {
 }
 
 NormalPage::NormalPage(HeapBase& heap, BaseSpace& space)
-    : BasePage(heap, space, PageType::kNormal), object_start_bitmap_() {
+    : BasePage(heap, space, PageType::kNormal),
+      object_start_bitmap_(PayloadStart()) {
   DCHECK_LT(kLargeObjectSizeThreshold,
             static_cast<size_t>(PayloadEnd() - PayloadStart()));
 }
@@ -255,22 +215,20 @@ size_t LargePage::AllocationSize(size_t payload_size) {
 }
 
 // static
-LargePage* LargePage::TryCreate(PageBackend& page_backend,
-                                LargePageSpace& space, size_t size) {
+LargePage* LargePage::Create(PageBackend& page_backend, LargePageSpace& space,
+                             size_t size) {
   // Ensure that the API-provided alignment guarantees does not violate the
   // internally guaranteed alignment of large page allocations.
-  static_assert(kGuaranteedObjectAlignment <=
+  STATIC_ASSERT(kGuaranteedObjectAlignment <=
                 api_constants::kMaxSupportedAlignment);
-  static_assert(
+  STATIC_ASSERT(
       api_constants::kMaxSupportedAlignment % kGuaranteedObjectAlignment == 0);
 
   DCHECK_LE(kLargeObjectSizeThreshold, size);
   const size_t allocation_size = AllocationSize(size);
 
   auto* heap = space.raw_heap()->heap();
-  void* memory = page_backend.TryAllocateLargePageMemory(allocation_size);
-  if (!memory) return nullptr;
-
+  void* memory = page_backend.AllocateLargePageMemory(allocation_size);
   LargePage* page = new (memory) LargePage(*heap, space, size);
   page->SynchronizedStore();
   page->heap().stats_collector()->NotifyAllocatedMemory(allocation_size);
@@ -280,8 +238,6 @@ LargePage* LargePage::TryCreate(PageBackend& page_backend,
 // static
 void LargePage::Destroy(LargePage* page) {
   DCHECK(page);
-  HeapBase& heap = page->heap();
-  const size_t payload_size = page->PayloadSize();
 #if DEBUG
   const BaseSpace& space = page->space();
   {
@@ -293,8 +249,9 @@ void LargePage::Destroy(LargePage* page) {
   }
 #endif  // DEBUG
   page->~LargePage();
-  PageBackend* backend = heap.page_backend();
-  heap.stats_collector()->NotifyFreedMemory(AllocationSize(payload_size));
+  PageBackend* backend = page->heap().page_backend();
+  page->heap().stats_collector()->NotifyFreedMemory(
+      AllocationSize(page->PayloadSize()));
   backend->FreeLargePageMemory(reinterpret_cast<Address>(page));
 }
 

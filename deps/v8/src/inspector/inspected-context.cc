@@ -76,8 +76,10 @@ InspectedContext::InspectedContext(V8InspectorImpl* inspector,
     return;
   }
 
-  m_inspector->console()->installAsyncStackTaggingAPI(info.context,
-                                                      console.As<v8::Object>());
+  if (v8::debug::isExperimentalAsyncStackTaggingApiEnabled()) {
+    m_inspector->console()->installAsyncStackTaggingAPI(
+        info.context, console.As<v8::Object>());
+  }
 
   if (info.hasMemoryOnConsole) {
     m_inspector->console()->installMemoryGetter(info.context,

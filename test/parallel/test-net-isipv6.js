@@ -235,10 +235,10 @@ const v6not = [
   '02001:0000:1234:0000:0000:C1C0:ABCD:0876',
 ];
 
-for (const ip of v6) {
+v6.forEach((ip) => {
   assert.strictEqual(net.isIPv6(ip), true);
-}
+});
 
-for (const ip of v6not) {
+v6not.forEach((ip) => {
   assert.strictEqual(net.isIPv6(ip), false);
-}
+});

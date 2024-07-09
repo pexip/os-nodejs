@@ -562,9 +562,7 @@ std::vector<Field> ClassType::ComputeHeaderFields() const {
   std::vector<Field> result;
   for (Field& field : ComputeAllFields()) {
     if (field.index) break;
-    // The header is allowed to end with an optional padding field of size 0.
-    DCHECK(std::get<0>(field.GetFieldSizeInformation()) == 0 ||
-           *field.offset < header_size());
+    DCHECK(*field.offset < header_size());
     result.push_back(std::move(field));
   }
   return result;
@@ -574,9 +572,7 @@ std::vector<Field> ClassType::ComputeArrayFields() const {
   std::vector<Field> result;
   for (Field& field : ComputeAllFields()) {
     if (!field.index) {
-      // The header is allowed to end with an optional padding field of size 0.
-      DCHECK(std::get<0>(field.GetFieldSizeInformation()) == 0 ||
-             *field.offset < header_size());
+      DCHECK(*field.offset < header_size());
       continue;
     }
     result.push_back(std::move(field));
@@ -609,8 +605,6 @@ void ComputeSlotKindsHelper(std::vector<ObjectSlotKind>* slots,
   size_t offset = start_offset;
   for (const Field& field : fields) {
     size_t field_size = std::get<0>(field.GetFieldSizeInformation());
-    // Support optional padding fields.
-    if (field_size == 0) continue;
     size_t slot_index = offset / TargetArchitecture::TaggedSize();
     // Rounding-up division to find the number of slots occupied by all the
     // fields up to and including the current one.
@@ -1046,8 +1040,7 @@ bool Signature::HasSameTypesAs(const Signature& other,
 namespace {
 bool FirstTypeIsContext(const std::vector<const Type*> parameter_types) {
   return !parameter_types.empty() &&
-         (parameter_types[0] == TypeOracle::GetContextType() ||
-          parameter_types[0] == TypeOracle::GetNoContextType());
+         parameter_types[0] == TypeOracle::GetContextType();
 }
 }  // namespace
 
@@ -1232,7 +1225,7 @@ base::Optional<std::tuple<size_t, std::string>> SizeOf(const Type* type) {
     size_string = "kSystemPointerSize";
   } else if (type->IsSubtypeOf(TypeOracle::GetExternalPointerType())) {
     size = TargetArchitecture::ExternalPointerSize();
-    size_string = "kExternalPointerSlotSize";
+    size_string = "kExternalPointerSize";
   } else if (type->IsSubtypeOf(TypeOracle::GetVoidType())) {
     size = 0;
     size_string = "0";

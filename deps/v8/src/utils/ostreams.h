@@ -11,8 +11,10 @@
 #include <ostream>
 #include <streambuf>
 
+#include "include/v8config.h"
 #include "src/base/macros.h"
 #include "src/base/platform/mutex.h"
+#include "src/base/strings.h"
 #include "src/common/globals.h"
 
 namespace v8 {
@@ -80,8 +82,6 @@ class StdoutStream : public std::ostream {
   StdoutStream() : std::ostream(&stream_) {}
 
  private:
-  friend class StderrStream;
-
   static V8_EXPORT_PRIVATE base::RecursiveMutex* GetStdoutMutex();
 
   AndroidLogStream stream_;
@@ -93,20 +93,11 @@ class StdoutStream : public OFStream {
   StdoutStream() : OFStream(stdout) {}
 
  private:
-  friend class StderrStream;
   static V8_EXPORT_PRIVATE base::RecursiveMutex* GetStdoutMutex();
 
   base::RecursiveMutexGuard mutex_guard_{GetStdoutMutex()};
 };
 #endif
-
-class StderrStream : public OFStream {
- public:
-  StderrStream() : OFStream(stderr) {}
-
- private:
-  base::RecursiveMutexGuard mutex_guard_{StdoutStream::GetStdoutMutex()};
-};
 
 // Wrappers to disambiguate uint16_t and base::uc16.
 struct AsUC16 {
@@ -162,20 +153,7 @@ template <typename T>
 struct PrintIteratorRange {
   T start;
   T end;
-  const char* separator = ", ";
-  const char* startBracket = "[";
-  const char* endBracket = "]";
-
   PrintIteratorRange(T start, T end) : start(start), end(end) {}
-  PrintIteratorRange& WithoutBrackets() {
-    startBracket = "";
-    endBracket = "";
-    return *this;
-  }
-  PrintIteratorRange& WithSeparator(const char* separator) {
-    this->separator = separator;
-    return *this;
-  }
 };
 
 // Print any collection which can be iterated via std::begin and std::end.
@@ -211,12 +189,12 @@ V8_EXPORT_PRIVATE std::ostream& operator<<(std::ostream& os,
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const PrintIteratorRange<T>& range) {
-  const char* separator = "";
-  os << range.startBracket;
-  for (T it = range.start; it != range.end; ++it, separator = range.separator) {
-    os << separator << *it;
+  const char* comma = "";
+  os << "[";
+  for (T it = range.start; it != range.end; ++it, comma = ", ") {
+    os << comma << *it;
   }
-  os << range.endBracket;
+  os << "]";
   return os;
 }
 

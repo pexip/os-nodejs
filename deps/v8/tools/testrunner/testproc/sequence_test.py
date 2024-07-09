@@ -64,7 +64,7 @@ class TestSequenceProc(unittest.TestCase):
   def _test(self, tests, batch_size, max_heavy):
     # Set up a simple processing pipeline:
     # Loader -> observe results -> sequencer -> execution.
-    loader = LoadProc(iter(tests), initial_batch_size=batch_size)
+    loader = LoadProc(iter(tests))
     results = FakeResultObserver()
     sequence_proc = SequenceProc(max_heavy)
     execution = FakeExecutionProc()
@@ -74,7 +74,7 @@ class TestSequenceProc(unittest.TestCase):
 
     # Fill the execution queue (with the number of tests potentially
     # executed in parallel).
-    loader.load_initial_tests()
+    loader.load_initial_tests(batch_size)
 
     # Simulate the execution test by test.
     while execution.tests:

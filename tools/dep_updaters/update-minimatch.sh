@@ -7,62 +7,53 @@
 
 set -ex
 
-BASE_DIR=$(cd "$(dirname "$0")/../.." && pwd)
-[ -z "$NODE" ] && NODE="$BASE_DIR/out/Release/node"
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+[ -z "$NODE" ] && NODE="$ROOT/out/Release/node"
 [ -x "$NODE" ] || NODE=$(command -v node)
-DEPS_DIR="$BASE_DIR/deps"
-NPM="$DEPS_DIR/npm/bin/npm-cli.js"
-
-# shellcheck disable=SC1091
-. "$BASE_DIR/tools/dep_updaters/utils.sh"
+NPM="$ROOT/deps/npm/bin/npm-cli.js"
 
 NEW_VERSION=$("$NODE" "$NPM" view minimatch dist-tags.latest)
-CURRENT_VERSION=$("$NODE" -p "require('./deps/minimatch/package.json').version")
+CURRENT_VERSION=$("$NODE" -p "require('./deps/minimatch/src/package.json').version")
 
-# This function exit with 0 if new version and current version are the same
-compare_dependency_version "minimatch" "$NEW_VERSION" "$CURRENT_VERSION"
+echo "Comparing $NEW_VERSION with $CURRENT_VERSION"
+
+if [ "$NEW_VERSION" = "$CURRENT_VERSION" ]; then
+  echo "Skipped because minimatch is on the latest version."
+  exit 0
+fi
 
 cd "$( dirname "$0" )/../.." || exit
 
-echo "Making temporary workspace..."
+rm -rf deps/minimatch/src
+rm -rf deps/minimatch/index.js
 
-WORKSPACE=$(mktemp -d 2> /dev/null || mktemp -d -t 'tmp')
+(
+    rm -rf minimatch-tmp
+    mkdir minimatch-tmp
+    cd minimatch-tmp || exit
 
-cleanup () {
-  EXIT_CODE=$?
-  [ -d "$WORKSPACE" ] && rm -rf "$WORKSPACE"
-  exit $EXIT_CODE
-}
+    "$NODE" "$NPM" init --yes
 
-trap cleanup INT TERM EXIT
+    "$NODE" "$NPM" install --global-style --no-bin-links --ignore-scripts "minimatch@$NEW_VERSION"
+    cd node_modules/minimatch
+    "$NODE" "$NPM" exec --package=esbuild@0.17.15 --yes -- esbuild ./dist/cjs/index.js --bundle --platform=node --outfile=minimatch.js
+)
 
-cd "$WORKSPACE"
+ls -l minimatch-tmp
+mv minimatch-tmp/node_modules/minimatch deps/minimatch/src
+mv deps/minimatch/src/minimatch.js deps/minimatch/index.js
+cp deps/minimatch/src/LICENSE deps/minimatch/LICENSE
 
-echo "Fetching minimatch source archive..."
+rm -rf minimatch-tmp/
 
-"$NODE" "$NPM" pack "minimatch@$NEW_VERSION"
+echo "All done!"
+echo ""
+echo "Please git add minimatch, commit the new version:"
+echo ""
+echo "$ git add -A deps/minimatch"
+echo "$ git commit -m \"deps: update minimatch to $NEW_VERSION\""
+echo ""
 
-MINIMATCH_TGZ="minimatch-$NEW_VERSION.tgz"
-
-log_and_verify_sha256sum "minimatch" "$MINIMATCH_TGZ"
-
-rm -r "$DEPS_DIR/minimatch"/*
-
-tar -xf "$MINIMATCH_TGZ"
-
-cd package
-
-"$NODE" "$NPM" install esbuild --save-dev
-
-"$NODE" "$NPM" pkg set scripts.node-build="esbuild ./dist/commonjs/index.js --bundle --platform=node --outfile=index.js"
-
-"$NODE" "$NPM" run node-build
-
-rm -rf node_modules
-
-mv ./* "$DEPS_DIR/minimatch"
-
-# Update the version number on maintaining-dependencies.md
-# and print the new version as the last line of the script as we need
-# to add it to $GITHUB_ENV variable
-finalize_version_update "minimatch" "$NEW_VERSION"
+# The last line of the script should always print the new version,
+# as we need to add it to $GITHUB_ENV variable.
+echo "NEW_VERSION=$NEW_VERSION"

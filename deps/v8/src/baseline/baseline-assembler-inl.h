@@ -32,10 +32,12 @@
 #include "src/baseline/ppc/baseline-assembler-ppc-inl.h"
 #elif V8_TARGET_ARCH_S390X
 #include "src/baseline/s390/baseline-assembler-s390-inl.h"
-#elif V8_TARGET_ARCH_RISCV32 || V8_TARGET_ARCH_RISCV64
-#include "src/baseline/riscv/baseline-assembler-riscv-inl.h"
+#elif V8_TARGET_ARCH_RISCV64
+#include "src/baseline/riscv64/baseline-assembler-riscv64-inl.h"
 #elif V8_TARGET_ARCH_MIPS64
 #include "src/baseline/mips64/baseline-assembler-mips64-inl.h"
+#elif V8_TARGET_ARCH_MIPS
+#include "src/baseline/mips/baseline-assembler-mips-inl.h"
 #elif V8_TARGET_ARCH_LOONG64
 #include "src/baseline/loong64/baseline-assembler-loong64-inl.h"
 #else
@@ -55,23 +57,13 @@ int BaselineAssembler::pc_offset() const { return __ pc_offset(); }
 void BaselineAssembler::CodeEntry() const { __ CodeEntry(); }
 void BaselineAssembler::ExceptionHandler() const { __ ExceptionHandler(); }
 void BaselineAssembler::RecordComment(const char* string) {
-  if (!v8_flags.code_comments) return;
+  if (!FLAG_code_comments) return;
   __ RecordComment(string);
 }
 void BaselineAssembler::Trap() { __ Trap(); }
 void BaselineAssembler::DebugBreak() { __ DebugBreak(); }
 void BaselineAssembler::CallRuntime(Runtime::FunctionId function, int nargs) {
   __ CallRuntime(function, nargs);
-}
-
-void BaselineAssembler::CallBuiltin(Builtin builtin) {
-  // BaselineAssemblerOptions defines how builtin calls are generated.
-  __ CallBuiltin(builtin);
-}
-
-void BaselineAssembler::TailCallBuiltin(Builtin builtin) {
-  // BaselineAssemblerOptions defines how builtin tail calls are generated.
-  __ TailCallBuiltin(builtin);
 }
 
 MemOperand BaselineAssembler::ContextOperand() {
@@ -114,12 +106,13 @@ void BaselineAssembler::SmiUntag(Register output, Register value) {
 
 void BaselineAssembler::LoadFixedArrayElement(Register output, Register array,
                                               int32_t index) {
-  LoadTaggedField(output, array, FixedArray::kHeaderSize + index * kTaggedSize);
+  LoadTaggedAnyField(output, array,
+                     FixedArray::kHeaderSize + index * kTaggedSize);
 }
 
 void BaselineAssembler::LoadPrototype(Register prototype, Register object) {
   __ LoadMap(prototype, object);
-  LoadTaggedField(prototype, prototype, Map::kPrototypeOffset);
+  LoadTaggedPointerField(prototype, prototype, Map::kPrototypeOffset);
 }
 void BaselineAssembler::LoadContext(Register output) {
   LoadRegister(output, interpreter::Register::current_context());
@@ -137,11 +130,6 @@ void BaselineAssembler::LoadRegister(Register output,
 void BaselineAssembler::StoreRegister(interpreter::Register output,
                                       Register value) {
   Move(output, value);
-}
-
-template <typename Field>
-void BaselineAssembler::DecodeField(Register reg) {
-  __ DecodeField<Field>(reg);
 }
 
 SaveAccumulatorScope::SaveAccumulatorScope(BaselineAssembler* assembler)

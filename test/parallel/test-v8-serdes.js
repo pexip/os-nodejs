@@ -107,6 +107,7 @@ const hostObject = new (internalBinding('js_stream').JSStream)();
 {
   const text = 'hostObjectTag';
   const data = Buffer.from(text);
+  const arrayBufferViews = common.getArrayBufferViews(data);
 
   // `buf` is one of `TypedArray` or `DataView`.
   function testWriteRawBytes(buf) {
@@ -137,9 +138,9 @@ const hostObject = new (internalBinding('js_stream').JSStream)();
     assert.strictEqual(des.readValue().val, hostObject);
   }
 
-  for (const buf of common.getArrayBufferViews(data)) {
+  arrayBufferViews.forEach((buf) => {
     testWriteRawBytes(buf);
-  }
+  });
 }
 
 {

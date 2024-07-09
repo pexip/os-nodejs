@@ -2,14 +2,14 @@
 const common = require('../common');
 const assert = require('assert');
 const http = require('http');
-const { duplexPair } = require('stream');
+const MakeDuplexPair = require('../common/duplexpair');
 
 // Regression test for the crash reported in
 // https://github.com/nodejs/node/issues/15102 (httpParser.finish() is called
 // during httpParser.execute()):
 
 {
-  const [ clientSide, serverSide ] = duplexPair();
+  const { clientSide, serverSide } = MakeDuplexPair();
 
   serverSide.on('data', common.mustCall((data) => {
     assert.strictEqual(data.toString('utf8'), `\

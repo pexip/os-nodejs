@@ -1,5 +1,6 @@
 #include "node_string.h"
 #include "node/inspector/protocol/Protocol.h"
+#include "node_util.h"
 #include "simdutf.h"
 #include "util-inl.h"
 
@@ -84,7 +85,7 @@ String StringViewToUtf8(v8_inspector::StringView view) {
 String fromDouble(double d) {
   std::ostringstream stream;
   stream.imbue(std::locale::classic());  // Ignore current locale
-  stream << std::fixed << d;
+  stream << d;
   return stream.str();
 }
 
@@ -95,6 +96,16 @@ double toDouble(const char* buffer, size_t length, bool* ok) {
   stream >> d;
   *ok = !stream.fail();
   return d;
+}
+
+std::unique_ptr<Value> parseMessage(const std::string_view message,
+                                    bool binary) {
+  if (binary) {
+    return Value::parseBinary(
+        reinterpret_cast<const uint8_t*>(message.data()),
+        message.length());
+  }
+  return parseJSON(message);
 }
 
 ProtocolMessage jsonToMessage(String message) {

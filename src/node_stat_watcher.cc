@@ -25,7 +25,6 @@
 #include "memory_tracker-inl.h"
 #include "node_external_reference.h"
 #include "node_file-inl.h"
-#include "permission/permission.h"
 #include "util-inl.h"
 
 #include <cstring>
@@ -41,21 +40,21 @@ using v8::Integer;
 using v8::Isolate;
 using v8::Local;
 using v8::Object;
-using v8::ObjectTemplate;
 using v8::Uint32;
 using v8::Value;
 
-void StatWatcher::CreatePerIsolateProperties(IsolateData* isolate_data,
-                                             Local<ObjectTemplate> target) {
-  Isolate* isolate = isolate_data->isolate();
+void StatWatcher::Initialize(Environment* env, Local<Object> target) {
+  Isolate* isolate = env->isolate();
+  HandleScope scope(env->isolate());
 
   Local<FunctionTemplate> t = NewFunctionTemplate(isolate, StatWatcher::New);
   t->InstanceTemplate()->SetInternalFieldCount(
       StatWatcher::kInternalFieldCount);
-  t->Inherit(HandleWrap::GetConstructorTemplate(isolate_data));
+  t->Inherit(HandleWrap::GetConstructorTemplate(env));
+
   SetProtoMethod(isolate, t, "start", StatWatcher::Start);
 
-  SetConstructorFunction(isolate, target, "StatWatcher", t);
+  SetConstructorFunction(env->context(), target, "StatWatcher", t);
 }
 
 void StatWatcher::RegisterExternalReferences(
@@ -107,15 +106,11 @@ void StatWatcher::Start(const FunctionCallbackInfo<Value>& args) {
   CHECK_EQ(args.Length(), 2);
 
   StatWatcher* wrap;
-  ASSIGN_OR_RETURN_UNWRAP(&wrap, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&wrap, args.Holder());
   CHECK(!uv_is_active(wrap->GetHandle()));
 
   node::Utf8Value path(args.GetIsolate(), args[0]);
   CHECK_NOT_NULL(*path);
-  THROW_IF_INSUFFICIENT_PERMISSIONS(
-      wrap->env(),
-      permission::PermissionScope::kFileSystemRead,
-      path.ToStringView());
 
   CHECK(args[1]->IsUint32());
   const uint32_t interval = args[1].As<Uint32>()->Value();

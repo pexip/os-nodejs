@@ -1,4 +1,4 @@
-export interface ConfigBinding {
+declare function InternalBinding(binding: 'config'): {
   isDebugBuild: boolean;
   hasOpenSSL: boolean;
   fipsMode: boolean;
@@ -9,4 +9,4 @@ export interface ConfigBinding {
   noBrowserGlobals: boolean;
   bits: number;
   hasDtrace: boolean;
-}
+};

@@ -6,8 +6,7 @@
 
 <!-- source_link=lib/http.js -->
 
-This module, containing both a client and server, can be imported via
-`require('node:http')` (CommonJS) or `import * as http from 'node:http'` (ES module).
+To use the HTTP server and client one must `require('node:http')`.
 
 The HTTP interfaces in Node.js are designed to support many features
 of the protocol which have been traditionally difficult to use.
@@ -17,12 +16,14 @@ user is able to stream data.
 
 HTTP message headers are represented by an object like this:
 
-```json
-{ "content-length": "123",
-  "content-type": "text/plain",
-  "connection": "keep-alive",
-  "host": "example.com",
-  "accept": "*/*" }
+<!-- eslint-skip -->
+
+```js
+{ 'content-length': '123',
+  'content-type': 'text/plain',
+  'connection': 'keep-alive',
+  'host': 'example.com',
+  'accept': '*/*' }
 ```
 
 Keys are lowercased. Values are not modified.
@@ -39,7 +40,7 @@ property, which is an array of `[key, value, key2, value2, ...]`. For
 example, the previous message header object might have a `rawHeaders`
 list like the following:
 
-<!-- eslint-disable @stylistic/js/semi -->
+<!-- eslint-disable semi -->
 
 ```js
 [ 'ConTent-Length', '123456',
@@ -181,6 +182,9 @@ changes:
 
 `options` in [`socket.connect()`][] are also supported.
 
+The default [`http.globalAgent`][] that is used by [`http.request()`][] has all
+of these values set to their respective defaults.
+
 To configure any of them, a custom [`http.Agent`][] instance must be created.
 
 ```mjs
@@ -304,9 +308,7 @@ removed from the array on `'timeout'`.
 <!-- YAML
 added: v0.11.4
 changes:
-  - version:
-    - v17.7.0
-    - v16.15.0
+  - version: v17.7.0
     pr-url: https://github.com/nodejs/node/pull/41906
     description: The `options` parameter is now optional.
 -->
@@ -1609,9 +1611,7 @@ type other than {net.Socket}.
 ### Event: `'dropRequest'`
 
 <!-- YAML
-added:
-  - v18.7.0
-  - v16.17.0
+added: v18.7.0
 -->
 
 * `request` {http.IncomingMessage} Arguments for the HTTP request, as it is in
@@ -1665,39 +1665,11 @@ type other than {net.Socket}.
 
 <!-- YAML
 added: v0.1.90
-changes:
-  - version:
-      - v19.0.0
-    pr-url: https://github.com/nodejs/node/pull/43522
-    description: The method closes idle connections before returning.
-
 -->
 
 * `callback` {Function}
 
-Stops the server from accepting new connections and closes all connections
-connected to this server which are not sending a request or waiting for
-a response.
-See [`net.Server.close()`][].
-
-```js
-const http = require('node:http');
-
-const server = http.createServer({ keepAliveTimeout: 60000 }, (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    data: 'Hello World!',
-  }));
-});
-
-server.listen(8000);
-// Close the server after 10 seconds
-setTimeout(() => {
-  server.close(() => {
-    console.log('server on port 8000 closed successfully');
-  });
-}, 10000);
-```
+Stops the server from accepting new connections. See [`net.Server.close()`][].
 
 ### `server.closeAllConnections()`
 
@@ -1705,36 +1677,7 @@ setTimeout(() => {
 added: v18.2.0
 -->
 
-Closes all established HTTP(S) connections connected to this server, including
-active connections connected to this server which are sending a request or
-waiting for a response. This does _not_ destroy sockets upgraded to a different
-protocol, such as WebSocket or HTTP/2.
-
-> This is a forceful way of closing all connections and should be used with
-> caution. Whenever using this in conjunction with `server.close`, calling this
-> _after_ `server.close` is recommended as to avoid race conditions where new
-> connections are created between a call to this and a call to `server.close`.
-
-```js
-const http = require('node:http');
-
-const server = http.createServer({ keepAliveTimeout: 60000 }, (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    data: 'Hello World!',
-  }));
-});
-
-server.listen(8000);
-// Close the server after 10 seconds
-setTimeout(() => {
-  server.close(() => {
-    console.log('server on port 8000 closed successfully');
-  });
-  // Closes all connections, ensuring the server closes successfully
-  server.closeAllConnections();
-}, 10000);
-```
+Closes all connections connected to this server.
 
 ### `server.closeIdleConnections()`
 
@@ -1745,37 +1688,6 @@ added: v18.2.0
 Closes all connections connected to this server which are not sending a request
 or waiting for a response.
 
-> Starting with Node.js 19.0.0, there's no need for calling this method in
-> conjunction with `server.close` to reap `keep-alive` connections. Using it
-> won't cause any harm though, and it can be useful to ensure backwards
-> compatibility for libraries and applications that need to support versions
-> older than 19.0.0. Whenever using this in conjunction with `server.close`,
-> calling this _after_ `server.close` is recommended as to avoid race
-> conditions where new connections are created between a call to this and a
-> call to `server.close`.
-
-```js
-const http = require('node:http');
-
-const server = http.createServer({ keepAliveTimeout: 60000 }, (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    data: 'Hello World!',
-  }));
-});
-
-server.listen(8000);
-// Close the server after 10 seconds
-setTimeout(() => {
-  server.close(() => {
-    console.log('server on port 8000 closed successfully');
-  });
-  // Closes idle connections, such as keep-alive connections. Server will close
-  // once remaining active connections are terminated
-  server.closeIdleConnections();
-}, 10000);
-```
-
 ### `server.headersTimeout`
 
 <!-- YAML
@@ -1783,9 +1695,7 @@ added:
  - v11.3.0
  - v10.14.0
 changes:
-  - version:
-    - v19.4.0
-    - v18.14.0
+  - version: v18.14.0
     pr-url: https://github.com/nodejs/node/pull/45778
     description: The default is now set to the minimum between 60000 (60 seconds) or `requestTimeout`.
 -->
@@ -1931,17 +1841,6 @@ to 8.0.0, which did not have a keep-alive timeout.
 
 The socket timeout logic is set up on connection, so changing this value only
 affects new connections to the server, not any existing connections.
-
-### `server[Symbol.asyncDispose]()`
-
-<!-- YAML
-added: v20.4.0
--->
-
-> Stability: 1 - Experimental
-
-Calls [`server.close()`][] and returns a promise that fulfills when the
-server has closed.
 
 ## Class: `http.ServerResponse`
 
@@ -2429,9 +2328,8 @@ it will switch to implicit header mode and flush the implicit headers.
 This sends a chunk of the response body. This method may
 be called multiple times to provide successive parts of the body.
 
-If `rejectNonStandardBodyWrites` is set to true in `createServer`
-then writing to the body is not allowed when the request method or response
-status do not support content. If an attempt is made to write to the body for a
+Writing to the body is not allowed when the request method or response status
+do not support content. If an attempt is made to write to the body for a
 HEAD request or as part of a `204` or `304`response, a synchronous `Error`
 with the code `ERR_HTTP_BODY_NOT_ALLOWED` is thrown.
 
@@ -2732,9 +2630,7 @@ as an argument to any listeners on the event.
 <!-- YAML
 added: v0.1.5
 changes:
-  - version:
-    - v19.5.0
-    - v18.14.0
+  - version: v18.14.0
     pr-url: https://github.com/nodejs/node/pull/45982
     description: >-
      The `joinDuplicateHeaders` option in the `http.request()`
@@ -2781,9 +2677,7 @@ header name:
 ### `message.headersDistinct`
 
 <!-- YAML
-added:
-  - v18.3.0
-  - v16.17.0
+added: v18.3.0
 -->
 
 * {Object}
@@ -2935,9 +2829,7 @@ The request/response trailers object. Only populated at the `'end'` event.
 ### `message.trailersDistinct`
 
 <!-- YAML
-added:
-  - v18.3.0
-  - v16.17.0
+added: v18.3.0
 -->
 
 * {Object}
@@ -2967,33 +2859,30 @@ Accept: text/plain
 To parse the URL into its parts:
 
 ```js
-new URL(`http://${process.env.HOST ?? 'localhost'}${request.url}`);
+new URL(request.url, `http://${request.headers.host}`);
 ```
 
-When `request.url` is `'/status?name=ryan'` and `process.env.HOST` is undefined:
+When `request.url` is `'/status?name=ryan'` and `request.headers.host` is
+`'localhost:3000'`:
 
 ```console
 $ node
-> new URL(`http://${process.env.HOST ?? 'localhost'}${request.url}`);
+> new URL(request.url, `http://${request.headers.host}`)
 URL {
-  href: 'http://localhost/status?name=ryan',
-  origin: 'http://localhost',
+  href: 'http://localhost:3000/status?name=ryan',
+  origin: 'http://localhost:3000',
   protocol: 'http:',
   username: '',
   password: '',
-  host: 'localhost',
+  host: 'localhost:3000',
   hostname: 'localhost',
-  port: '',
+  port: '3000',
   pathname: '/status',
   search: '?name=ryan',
   searchParams: URLSearchParams { 'name' => 'ryan' },
   hash: ''
 }
 ```
-
-Ensure that you set `process.env.HOST` to the server's host name, or consider
-replacing this part entirely. If using `req.headers.host`, ensure proper
-validation is used, as clients may specify a custom `Host` header.
 
 ## Class: `http.OutgoingMessage`
 
@@ -3063,21 +2952,19 @@ will result in a `TypeError` being thrown.
 ### `outgoingMessage.appendHeader(name, value)`
 
 <!-- YAML
-added:
-  - v18.3.0
-  - v16.17.0
+added: v18.3.0
 -->
 
 * `name` {string} Header name
 * `value` {string|string\[]} Header value
 * Returns: {this}
 
-Append a single header value to the header object.
+Append a single header value for the header object.
 
-If the value is an array, this is equivalent to calling this method multiple
+If the value is an array, this is equivalent of calling this method multiple
 times.
 
-If there were no previous values for the header, this is equivalent to calling
+If there were no previous value for the header, this is equivalent of calling
 [`outgoingMessage.setHeader(name, value)`][].
 
 Depending of the value of `options.uniqueHeaders` when the client request or the
@@ -3171,7 +3058,7 @@ added: v0.4.0
 -->
 
 * `name` {string} Name of header
-* Returns: {string | undefined}
+* Returns {string | undefined}
 
 Gets the value of the HTTP header with the given name. If that header is not
 set, the returned value will be `undefined`.
@@ -3182,7 +3069,7 @@ set, the returned value will be `undefined`.
 added: v7.7.0
 -->
 
-* Returns: {string\[]}
+* Returns {string\[]}
 
 Returns an array containing the unique names of the current outgoing headers.
 All names are lowercase.
@@ -3221,7 +3108,7 @@ added: v7.7.0
 -->
 
 * `name` {string}
-* Returns: {boolean}
+* Returns {boolean}
 
 Returns `true` if the header identified by `name` is currently set in the
 outgoing headers. The header name is case-insensitive.
@@ -3283,13 +3170,13 @@ headers with the same name.
 ### `outgoingMessage.setHeaders(headers)`
 
 <!-- YAML
-added:
-  - v19.6.0
-  - v18.15.0
+added: v18.15.0
 -->
 
 * `headers` {Headers|Map}
-* Returns: {this}
+* Returns: {http.ServerResponse}
+
+Returns the response object.
 
 Sets multiple header values for implicit headers.
 `headers` must be an instance of [`Headers`][] or `Map`,
@@ -3298,14 +3185,14 @@ its value will be replaced.
 
 ```js
 const headers = new Headers({ foo: 'bar' });
-outgoingMessage.setHeaders(headers);
+response.setHeaders(headers);
 ```
 
 or
 
 ```js
 const headers = new Map([['foo', 'bar']]);
-outgoingMessage.setHeaders(headers);
+res.setHeaders(headers);
 ```
 
 When headers have been set with [`outgoingMessage.setHeaders()`][],
@@ -3439,7 +3326,7 @@ changes:
 * `chunk` {string|Buffer|Uint8Array}
 * `encoding` {string} **Default**: `utf8`
 * `callback` {Function}
-* Returns: {boolean}
+* Returns {boolean}
 
 Sends a chunk of the body. This method can be called multiple times.
 
@@ -3480,7 +3367,7 @@ Found'`.
 <!-- YAML
 added: v0.1.13
 changes:
-  - version: v20.1.0
+  - version: v18.17.0
     pr-url: https://github.com/nodejs/node/pull/47405
     description: The `highWaterMark` option is supported now.
   - version: v18.0.0
@@ -3490,9 +3377,7 @@ changes:
   - version: v18.0.0
     pr-url: https://github.com/nodejs/node/pull/42163
     description: The `noDelay` option now defaults to `true`.
-  - version:
-    - v17.7.0
-    - v16.15.0
+  - version: v17.7.0
     pr-url: https://github.com/nodejs/node/pull/41310
     description: The `noDelay`, `keepAlive` and `keepAliveInitialDelay`
                  options are supported now.
@@ -3531,10 +3416,9 @@ changes:
   * `IncomingMessage` {http.IncomingMessage} Specifies the `IncomingMessage`
     class to be used. Useful for extending the original `IncomingMessage`.
     **Default:** `IncomingMessage`.
-  * `joinDuplicateHeaders` {boolean} If set to `true`, this option allows
-    joining the field line values of multiple headers in a request with
-    a comma (`, `) instead of discarding the duplicates.
-    For more information, refer to [`message.headers`][].
+  * `joinDuplicateHeaders` {boolean} It joins the field line values of multiple
+    headers in a request with `, ` instead of discarding the duplicates.
+    See [`message.headers`][] for more information.
     **Default:** `false`.
   * `keepAlive` {boolean} If set to `true`, it enables keep-alive functionality
     on the socket immediately after a new incoming connection is received,
@@ -3543,36 +3427,16 @@ changes:
   * `keepAliveInitialDelay` {number} If set to a positive number, it sets the
     initial delay before the first keepalive probe is sent on an idle socket.
     **Default:** `0`.
-  * `keepAliveTimeout`: The number of milliseconds of inactivity a server
-    needs to wait for additional incoming data, after it has finished writing
-    the last response, before a socket will be destroyed.
-    See [`server.keepAliveTimeout`][] for more information.
-    **Default:** `5000`.
-  * `maxHeaderSize` {number} Optionally overrides the value of
-    [`--max-http-header-size`][] for requests received by this server, i.e.
-    the maximum length of request headers in bytes.
-    **Default:** 16384 (16 KiB).
-  * `noDelay` {boolean} If set to `true`, it disables the use of Nagle's
-    algorithm immediately after a new incoming connection is received.
-    **Default:** `true`.
   * `requestTimeout`: Sets the timeout value in milliseconds for receiving
     the entire request from the client.
     See [`server.requestTimeout`][] for more information.
     **Default:** `300000`.
-  * `requireHostHeader` {boolean} If set to `true`, it forces the server to
-    respond with a 400 (Bad Request) status code to any HTTP/1.1
-    request message that lacks a Host header
-    (as mandated by the specification).
-    **Default:** `true`.
   * `ServerResponse` {http.ServerResponse} Specifies the `ServerResponse` class
     to be used. Useful for extending the original `ServerResponse`. **Default:**
     `ServerResponse`.
   * `uniqueHeaders` {Array} A list of response headers that should be sent only
     once. If the header's value is an array, the items will be joined
     using `; `.
-  * `rejectNonStandardBodyWrites` {boolean} If set to `true`, an error is thrown
-    when writing to an HTTP response which does not have a body.
-    **Default:** `false`.
 
 * `requestListener` {Function}
 
@@ -3730,19 +3594,12 @@ server.listen(8000);
 
 <!-- YAML
 added: v0.5.9
-changes:
-  - version:
-      - v19.0.0
-    pr-url: https://github.com/nodejs/node/pull/43522
-    description: The agent now uses HTTP Keep-Alive and a 5 second timeout by
-                 default.
 -->
 
 * {http.Agent}
 
 Global instance of `Agent` which is used as the default for all HTTP client
-requests. Diverges from a default `Agent` configuration by having `keepAlive`
-enabled and a `timeout` of 5 seconds.
+requests.
 
 ## `http.maxHeaderSize`
 
@@ -4025,9 +3882,9 @@ the following events will be emitted in the following order:
   * `'data'` any number of times, on the `res` object
 * (connection closed here)
 * `'aborted'` on the `res` object
-* `'close'`
 * `'error'` on the `res` object with an error with message
   `'Error: aborted'` and code `'ECONNRESET'`
+* `'close'`
 * `'close'` on the `res` object
 
 If `req.destroy()` is called before a socket is assigned, the following
@@ -4055,9 +3912,9 @@ events will be emitted in the following order:
   * `'data'` any number of times, on the `res` object
 * (`req.destroy()` called here)
 * `'aborted'` on the `res` object
-* `'close'`
 * `'error'` on the `res` object with an error with message `'Error: aborted'`
   and code `'ECONNRESET'`, or the error with which `req.destroy()` was called
+* `'close'`
 * `'close'` on the `res` object
 
 If `req.abort()` is called before a socket is assigned, the following
@@ -4105,9 +3962,7 @@ and the `cause`, if one was provided.
 <!-- YAML
 added: v14.3.0
 changes:
-  - version:
-    - v19.5.0
-    - v18.14.0
+  - version: v18.14.0
     pr-url: https://github.com/nodejs/node/pull/46143
     description: The `label` parameter is added.
 -->
@@ -4123,6 +3978,7 @@ identified by `code: 'ERR_INVALID_HTTP_TOKEN'`.
 
 It is not necessary to use this method before passing headers to an HTTP request
 or response. The HTTP module will automatically validate such headers.
+Examples:
 
 Example:
 
@@ -4215,9 +4071,7 @@ try {
 ## `http.setMaxIdleHTTPParsers(max)`
 
 <!-- YAML
-added:
-  - v18.8.0
-  - v16.18.0
+added: v18.8.0
 -->
 
 * `max` {number} **Default:** `1000`.
@@ -4290,9 +4144,7 @@ Set the maximum number of idle HTTP parsers.
 [`response.write(data, encoding)`]: #responsewritechunk-encoding-callback
 [`response.writeContinue()`]: #responsewritecontinue
 [`response.writeHead()`]: #responsewriteheadstatuscode-statusmessage-headers
-[`server.close()`]: #serverclosecallback
 [`server.headersTimeout`]: #serverheaderstimeout
-[`server.keepAliveTimeout`]: #serverkeepalivetimeout
 [`server.listen()`]: net.md#serverlisten
 [`server.requestTimeout`]: #serverrequesttimeout
 [`server.timeout`]: #servertimeout

@@ -25,7 +25,8 @@ int SourceImpl<T>::Pull(
 
   status = DoPull(std::move(next), options, data, count, max_count_hint);
 
-  if (status == bob::Status::STATUS_EOS) eos_ = true;
+  if (status == bob::Status::STATUS_END)
+    eos_ = true;
 
   return status;
 }

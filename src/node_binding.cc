@@ -14,10 +14,22 @@
 #define NODE_BUILTIN_OPENSSL_BINDINGS(V)
 #endif
 
+#if NODE_HAVE_I18N_SUPPORT
+#define NODE_BUILTIN_ICU_BINDINGS(V) V(icu)
+#else
+#define NODE_BUILTIN_ICU_BINDINGS(V)
+#endif
+
 #if HAVE_INSPECTOR
 #define NODE_BUILTIN_PROFILER_BINDINGS(V) V(profiler)
 #else
 #define NODE_BUILTIN_PROFILER_BINDINGS(V)
+#endif
+
+#if HAVE_DTRACE || HAVE_ETW
+#define NODE_BUILTIN_DTRACE_BINDINGS(V) V(dtrace)
+#else
+#define NODE_BUILTIN_DTRACE_BINDINGS(V)
 #endif
 
 // A list of built-in bindings. In order to do binding registration
@@ -26,8 +38,6 @@
 // function. This helps the built-in bindings are loaded properly when
 // node is built as static library. No need to depend on the
 // __attribute__((constructor)) like mechanism in GCC.
-// The binding IDs that start with 'internal_only' are not exposed to the user
-// land even from internal/test/binding module under --expose-internals.
 #define NODE_BUILTIN_STANDARD_BINDINGS(V)                                      \
   V(async_wrap)                                                                \
   V(blob)                                                                      \
@@ -36,10 +46,8 @@
   V(builtins)                                                                  \
   V(cares_wrap)                                                                \
   V(config)                                                                    \
-  V(constants)                                                                 \
   V(contextify)                                                                \
   V(credentials)                                                               \
-  V(encoding_binding)                                                          \
   V(errors)                                                                    \
   V(fs)                                                                        \
   V(fs_dir)                                                                    \
@@ -48,7 +56,6 @@
   V(http2)                                                                     \
   V(http_parser)                                                               \
   V(inspector)                                                                 \
-  V(internal_only_v8)                                                          \
   V(js_stream)                                                                 \
   V(js_udp_wrap)                                                               \
   V(messaging)                                                                 \
@@ -57,7 +64,6 @@
   V(options)                                                                   \
   V(os)                                                                        \
   V(performance)                                                               \
-  V(permission)                                                                \
   V(pipe_wrap)                                                                 \
   V(process_wrap)                                                              \
   V(process_methods)                                                           \
@@ -91,7 +97,8 @@
   NODE_BUILTIN_STANDARD_BINDINGS(V)                                            \
   NODE_BUILTIN_OPENSSL_BINDINGS(V)                                             \
   NODE_BUILTIN_ICU_BINDINGS(V)                                                 \
-  NODE_BUILTIN_PROFILER_BINDINGS(V)
+  NODE_BUILTIN_PROFILER_BINDINGS(V)                                            \
+  NODE_BUILTIN_DTRACE_BINDINGS(V)
 
 // This is used to load built-in bindings. Instead of using
 // __attribute__((constructor)), we call the _register_<modname>
@@ -105,7 +112,7 @@ NODE_BUILTIN_BINDINGS(V)
 
 #define V(modname)                                                             \
   void _register_isolate_##modname(node::IsolateData* isolate_data,            \
-                                   v8::Local<v8::ObjectTemplate> target);
+                                   v8::Local<v8::FunctionTemplate> target);
 NODE_BINDINGS_WITH_PER_ISOLATE_INIT(V)
 #undef V
 
@@ -239,11 +246,11 @@ using v8::Context;
 using v8::EscapableHandleScope;
 using v8::Exception;
 using v8::FunctionCallbackInfo;
+using v8::FunctionTemplate;
 using v8::HandleScope;
 using v8::Isolate;
 using v8::Local;
 using v8::Object;
-using v8::ObjectTemplate;
 using v8::String;
 using v8::Value;
 
@@ -576,11 +583,13 @@ inline struct node_module* FindModule(struct node_module* list,
 void CreateInternalBindingTemplates(IsolateData* isolate_data) {
 #define V(modname)                                                             \
   do {                                                                         \
-    Local<ObjectTemplate> templ =                                              \
-        ObjectTemplate::New(isolate_data->isolate());                          \
-    templ->SetInternalFieldCount(BaseObject::kInternalFieldCount);             \
+    Local<FunctionTemplate> templ =                                            \
+        FunctionTemplate::New(isolate_data->isolate());                        \
+    templ->InstanceTemplate()->SetInternalFieldCount(                          \
+        BaseObject::kInternalFieldCount);                                      \
+    templ->Inherit(BaseObject::GetConstructorTemplate(isolate_data));          \
     _register_isolate_##modname(isolate_data, templ);                          \
-    isolate_data->set_##modname##_binding_template(templ);                     \
+    isolate_data->set_##modname##_binding(templ);                              \
   } while (0);
   NODE_BINDINGS_WITH_PER_ISOLATE_INIT(V)
 #undef V
@@ -589,20 +598,21 @@ void CreateInternalBindingTemplates(IsolateData* isolate_data) {
 static Local<Object> GetInternalBindingExportObject(IsolateData* isolate_data,
                                                     const char* mod_name,
                                                     Local<Context> context) {
-  Local<ObjectTemplate> templ;
-
+  Local<FunctionTemplate> ctor;
 #define V(name)                                                                \
   if (strcmp(mod_name, #name) == 0) {                                          \
-    templ = isolate_data->name##_binding_template();                           \
+    ctor = isolate_data->name##_binding();                                     \
   } else  // NOLINT(readability/braces)
   NODE_BINDINGS_WITH_PER_ISOLATE_INIT(V)
 #undef V
   {
-    // Default template.
-    templ = isolate_data->binding_data_default_template();
+    ctor = isolate_data->binding_data_ctor_template();
   }
 
-  Local<Object> obj = templ->NewInstance(context).ToLocalChecked();
+  Local<Object> obj = ctor->GetFunction(context)
+                          .ToLocalChecked()
+                          ->NewInstance(context)
+                          .ToLocalChecked();
   return obj;
 }
 
@@ -623,6 +633,7 @@ void GetInternalBinding(const FunctionCallbackInfo<Value>& args) {
   Realm* realm = Realm::GetCurrent(args);
   Isolate* isolate = realm->isolate();
   HandleScope scope(isolate);
+  Local<Context> context = realm->context();
 
   CHECK(args[0]->IsString());
 
@@ -634,6 +645,19 @@ void GetInternalBinding(const FunctionCallbackInfo<Value>& args) {
   if (mod != nullptr) {
     exports = InitInternalBinding(realm, mod);
     realm->internal_bindings.insert(mod);
+  } else if (!strcmp(*module_v, "constants")) {
+    exports = Object::New(isolate);
+    CHECK(exports->SetPrototype(context, Null(isolate)).FromJust());
+    DefineConstants(isolate, exports);
+  } else if (!strcmp(*module_v, "natives")) {
+    exports = realm->env()->builtin_loader()->GetSourceObject(context);
+    // Legacy feature: process.binding('natives').config contains stringified
+    // config.gypi
+    CHECK(exports
+              ->Set(context,
+                    realm->isolate_data()->config_string(),
+                    realm->env()->builtin_loader()->GetConfigString(isolate))
+              .FromJust());
   } else {
     return THROW_ERR_INVALID_MODULE(isolate, "No such binding: %s", *module_v);
   }

@@ -1,9 +1,8 @@
 #include "node_dir.h"
-#include "memory_tracker-inl.h"
 #include "node_external_reference.h"
 #include "node_file-inl.h"
 #include "node_process-inl.h"
-#include "permission/permission.h"
+#include "memory_tracker-inl.h"
 #include "util.h"
 
 #include "tracing/trace_event.h"
@@ -53,7 +52,7 @@ static const char* get_dir_func_name_by_type(uv_fs_type req_type) {
     FS_TYPE_TO_NAME(CLOSEDIR, "closedir")
 #undef FS_TYPE_TO_NAME
     default:
-      return "unknown";
+      return "unknow";
   }
 }
 
@@ -187,7 +186,7 @@ void DirHandle::Close(const FunctionCallbackInfo<Value>& args) {
   CHECK_GE(argc, 1);
 
   DirHandle* dir;
-  ASSIGN_OR_RETURN_UNWRAP(&dir, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&dir, args.Holder());
 
   dir->closing_ = false;
   dir->closed_ = true;
@@ -288,7 +287,7 @@ void DirHandle::Read(const FunctionCallbackInfo<Value>& args) {
   const enum encoding encoding = ParseEncoding(isolate, args[0], UTF8);
 
   DirHandle* dir;
-  ASSIGN_OR_RETURN_UNWRAP(&dir, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&dir, args.Holder());
 
   CHECK(args[1]->IsNumber());
   uint64_t buffer_size = static_cast<uint64_t>(args[1].As<Number>()->Value());
@@ -372,19 +371,12 @@ static void OpenDir(const FunctionCallbackInfo<Value>& args) {
 
   FSReqBase* req_wrap_async = GetReqWrap(args, 2);
   if (req_wrap_async != nullptr) {  // openDir(path, encoding, req)
-    ASYNC_THROW_IF_INSUFFICIENT_PERMISSIONS(
-        env,
-        req_wrap_async,
-        permission::PermissionScope::kFileSystemRead,
-        path.ToStringView());
     FS_DIR_ASYNC_TRACE_BEGIN1(
         UV_FS_OPENDIR, req_wrap_async, "path", TRACE_STR_COPY(*path))
     AsyncCall(env, req_wrap_async, args, "opendir", encoding, AfterOpenDir,
               uv_fs_opendir, *path);
   } else {  // openDir(path, encoding, undefined, ctx)
     CHECK_EQ(argc, 4);
-    THROW_IF_INSUFFICIENT_PERMISSIONS(
-        env, permission::PermissionScope::kFileSystemRead, path.ToStringView());
     FSReqWrapSync req_wrap_sync;
     FS_DIR_SYNC_TRACE_BEGIN(opendir);
     int result = SyncCall(env, args[3], &req_wrap_sync, "opendir",
@@ -402,58 +394,28 @@ static void OpenDir(const FunctionCallbackInfo<Value>& args) {
   }
 }
 
-static void OpenDirSync(const FunctionCallbackInfo<Value>& args) {
-  Environment* env = Environment::GetCurrent(args);
+void Initialize(Local<Object> target,
+                Local<Value> unused,
+                Local<Context> context,
+                void* priv) {
+  Environment* env = Environment::GetCurrent(context);
   Isolate* isolate = env->isolate();
 
-  CHECK_GE(args.Length(), 1);
-
-  BufferValue path(isolate, args[0]);
-  CHECK_NOT_NULL(*path);
-  THROW_IF_INSUFFICIENT_PERMISSIONS(
-      env, permission::PermissionScope::kFileSystemRead, path.ToStringView());
-
-  uv_fs_t req;
-  auto make = OnScopeLeave([&req]() { uv_fs_req_cleanup(&req); });
-  FS_DIR_SYNC_TRACE_BEGIN(opendir);
-  int err = uv_fs_opendir(nullptr, &req, *path, nullptr);
-  FS_DIR_SYNC_TRACE_END(opendir);
-  if (err < 0) {
-    return env->ThrowUVException(err, "opendir");
-  }
-
-  uv_dir_t* dir = static_cast<uv_dir_t*>(req.ptr);
-  DirHandle* handle = DirHandle::New(env, dir);
-
-  args.GetReturnValue().Set(handle->object().As<Value>());
-}
-
-void CreatePerIsolateProperties(IsolateData* isolate_data,
-                                Local<ObjectTemplate> target) {
-  Isolate* isolate = isolate_data->isolate();
-
-  SetMethod(isolate, target, "opendir", OpenDir);
-  SetMethod(isolate, target, "opendirSync", OpenDirSync);
+  SetMethod(context, target, "opendir", OpenDir);
 
   // Create FunctionTemplate for DirHandle
   Local<FunctionTemplate> dir = NewFunctionTemplate(isolate, DirHandle::New);
-  dir->Inherit(AsyncWrap::GetConstructorTemplate(isolate_data));
+  dir->Inherit(AsyncWrap::GetConstructorTemplate(env));
   SetProtoMethod(isolate, dir, "read", DirHandle::Read);
   SetProtoMethod(isolate, dir, "close", DirHandle::Close);
   Local<ObjectTemplate> dirt = dir->InstanceTemplate();
   dirt->SetInternalFieldCount(DirHandle::kInternalFieldCount);
-  SetConstructorFunction(isolate, target, "DirHandle", dir);
-  isolate_data->set_dir_instance_template(dirt);
+  SetConstructorFunction(context, target, "DirHandle", dir);
+  env->set_dir_instance_template(dirt);
 }
-
-void CreatePerContextProperties(Local<Object> target,
-                                Local<Value> unused,
-                                Local<Context> context,
-                                void* priv) {}
 
 void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
   registry->Register(OpenDir);
-  registry->Register(OpenDirSync);
   registry->Register(DirHandle::New);
   registry->Register(DirHandle::Read);
   registry->Register(DirHandle::Close);
@@ -463,8 +425,6 @@ void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
 
 }  // end namespace node
 
-NODE_BINDING_CONTEXT_AWARE_INTERNAL(fs_dir,
-                                    node::fs_dir::CreatePerContextProperties)
-NODE_BINDING_PER_ISOLATE_INIT(fs_dir, node::fs_dir::CreatePerIsolateProperties)
+NODE_BINDING_CONTEXT_AWARE_INTERNAL(fs_dir, node::fs_dir::Initialize)
 NODE_BINDING_EXTERNAL_REFERENCE(fs_dir,
                                 node::fs_dir::RegisterExternalReferences)

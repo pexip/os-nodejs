@@ -93,7 +93,8 @@ bool ada_can_parse_with_base(const char* input, size_t input_length,
 }
 
 void ada_free(ada_url result) noexcept {
-  auto* r = (ada::result<ada::url_aggregator>*)result;
+  ada::result<ada::url_aggregator>* r =
+      (ada::result<ada::url_aggregator>*)result;
   delete r;
 }
 
@@ -110,7 +111,7 @@ bool ada_is_valid(ada_url result) noexcept {
 // caller must free the result with ada_free_owned_string
 ada_owned_string ada_get_origin(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
-  ada_owned_string owned{};
+  ada_owned_string owned;
   if (!r) {
     owned.data = nullptr;
     owned.length = 0;
@@ -125,12 +126,14 @@ ada_owned_string ada_get_origin(ada_url result) noexcept {
 
 void ada_free_owned_string(ada_owned_string owned) noexcept {
   delete[] owned.data;
+  owned.data = nullptr;
+  owned.length = 0;
 }
 
 ada_string ada_get_href(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_href();
   return ada_string_create(out.data(), out.length());
@@ -139,7 +142,7 @@ ada_string ada_get_href(ada_url result) noexcept {
 ada_string ada_get_username(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_username();
   return ada_string_create(out.data(), out.length());
@@ -148,7 +151,7 @@ ada_string ada_get_username(ada_url result) noexcept {
 ada_string ada_get_password(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_password();
   return ada_string_create(out.data(), out.length());
@@ -157,7 +160,7 @@ ada_string ada_get_password(ada_url result) noexcept {
 ada_string ada_get_port(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_port();
   return ada_string_create(out.data(), out.length());
@@ -166,7 +169,7 @@ ada_string ada_get_port(ada_url result) noexcept {
 ada_string ada_get_hash(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_hash();
   return ada_string_create(out.data(), out.length());
@@ -175,7 +178,7 @@ ada_string ada_get_hash(ada_url result) noexcept {
 ada_string ada_get_host(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_host();
   return ada_string_create(out.data(), out.length());
@@ -184,7 +187,7 @@ ada_string ada_get_host(ada_url result) noexcept {
 ada_string ada_get_hostname(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_hostname();
   return ada_string_create(out.data(), out.length());
@@ -193,7 +196,7 @@ ada_string ada_get_hostname(ada_url result) noexcept {
 ada_string ada_get_pathname(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_pathname();
   return ada_string_create(out.data(), out.length());
@@ -202,7 +205,7 @@ ada_string ada_get_pathname(ada_url result) noexcept {
 ada_string ada_get_search(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_search();
   return ada_string_create(out.data(), out.length());
@@ -211,7 +214,7 @@ ada_string ada_get_search(ada_url result) noexcept {
 ada_string ada_get_protocol(ada_url result) noexcept {
   ada::result<ada::url_aggregator>& r = get_instance(result);
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view out = r->get_protocol();
   return ada_string_create(out.data(), out.length());
@@ -470,14 +473,15 @@ ada_url_search_params ada_parse_search_params(const char* input,
 }
 
 void ada_free_search_params(ada_url_search_params result) {
-  auto* r = (ada::result<ada::url_search_params>*)result;
+  ada::result<ada::url_search_params>* r =
+      (ada::result<ada::url_search_params>*)result;
   delete r;
 }
 
 ada_owned_string ada_search_params_to_string(ada_url_search_params result) {
   ada::result<ada::url_search_params>& r =
       *(ada::result<ada::url_search_params>*)result;
-  if (!r) return ada_owned_string{nullptr, 0};
+  if (!r) return ada_owned_string{NULL, 0};
   std::string out = r->to_string();
   ada_owned_string owned{};
   owned.length = out.size();
@@ -500,15 +504,6 @@ void ada_search_params_sort(ada_url_search_params result) {
       *(ada::result<ada::url_search_params>*)result;
   if (r) {
     r->sort();
-  }
-}
-
-void ada_search_params_reset(ada_url_search_params result, const char* input,
-                             size_t length) {
-  ada::result<ada::url_search_params>& r =
-      *(ada::result<ada::url_search_params>*)result;
-  if (r) {
-    r->reset(std::string_view(input, length));
   }
 }
 
@@ -581,11 +576,11 @@ ada_string ada_search_params_get(ada_url_search_params result, const char* key,
   ada::result<ada::url_search_params>& r =
       *(ada::result<ada::url_search_params>*)result;
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   auto found = r->get(std::string_view(key, key_length));
   if (!found.has_value()) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   return ada_string_create(found->data(), found->length());
 }
@@ -636,12 +631,14 @@ ada_url_search_params_entries_iter ada_search_params_get_entries(
 }
 
 void ada_free_strings(ada_strings result) {
-  auto* r = (ada::result<std::vector<std::string>>*)result;
+  ada::result<std::vector<std::string>>* r =
+      (ada::result<std::vector<std::string>>*)result;
   delete r;
 }
 
 size_t ada_strings_size(ada_strings result) {
-  auto* r = (ada::result<std::vector<std::string>>*)result;
+  ada::result<std::vector<std::string>>* r =
+      (ada::result<std::vector<std::string>>*)result;
   if (!r) {
     return 0;
   }
@@ -649,35 +646,39 @@ size_t ada_strings_size(ada_strings result) {
 }
 
 ada_string ada_strings_get(ada_strings result, size_t index) {
-  auto* r = (ada::result<std::vector<std::string>>*)result;
+  ada::result<std::vector<std::string>>* r =
+      (ada::result<std::vector<std::string>>*)result;
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   std::string_view view = (*r)->at(index);
   return ada_string_create(view.data(), view.length());
 }
 
 void ada_free_search_params_keys_iter(ada_url_search_params_keys_iter result) {
-  auto* r = (ada::result<ada::url_search_params_keys_iter>*)result;
+  ada::result<ada::url_search_params_keys_iter>* r =
+      (ada::result<ada::url_search_params_keys_iter>*)result;
   delete r;
 }
 
 ada_string ada_search_params_keys_iter_next(
     ada_url_search_params_keys_iter result) {
-  auto* r = (ada::result<ada::url_search_params_keys_iter>*)result;
+  ada::result<ada::url_search_params_keys_iter>* r =
+      (ada::result<ada::url_search_params_keys_iter>*)result;
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   auto next = (*r)->next();
   if (!next.has_value()) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   return ada_string_create(next->data(), next->length());
 }
 
 bool ada_search_params_keys_iter_has_next(
     ada_url_search_params_keys_iter result) {
-  auto* r = (ada::result<ada::url_search_params_keys_iter>*)result;
+  ada::result<ada::url_search_params_keys_iter>* r =
+      (ada::result<ada::url_search_params_keys_iter>*)result;
   if (!r) {
     return false;
   }
@@ -686,26 +687,29 @@ bool ada_search_params_keys_iter_has_next(
 
 void ada_free_search_params_values_iter(
     ada_url_search_params_values_iter result) {
-  auto* r = (ada::result<ada::url_search_params_values_iter>*)result;
+  ada::result<ada::url_search_params_values_iter>* r =
+      (ada::result<ada::url_search_params_values_iter>*)result;
   delete r;
 }
 
 ada_string ada_search_params_values_iter_next(
     ada_url_search_params_values_iter result) {
-  auto* r = (ada::result<ada::url_search_params_values_iter>*)result;
+  ada::result<ada::url_search_params_values_iter>* r =
+      (ada::result<ada::url_search_params_values_iter>*)result;
   if (!r) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   auto next = (*r)->next();
   if (!next.has_value()) {
-    return ada_string_create(nullptr, 0);
+    return ada_string_create(NULL, 0);
   }
   return ada_string_create(next->data(), next->length());
 }
 
 bool ada_search_params_values_iter_has_next(
     ada_url_search_params_values_iter result) {
-  auto* r = (ada::result<ada::url_search_params_values_iter>*)result;
+  ada::result<ada::url_search_params_values_iter>* r =
+      (ada::result<ada::url_search_params_values_iter>*)result;
   if (!r) {
     return false;
   }
@@ -714,17 +718,19 @@ bool ada_search_params_values_iter_has_next(
 
 void ada_free_search_params_entries_iter(
     ada_url_search_params_entries_iter result) {
-  auto* r = (ada::result<ada::url_search_params_entries_iter>*)result;
+  ada::result<ada::url_search_params_entries_iter>* r =
+      (ada::result<ada::url_search_params_entries_iter>*)result;
   delete r;
 }
 
 ada_string_pair ada_search_params_entries_iter_next(
     ada_url_search_params_entries_iter result) {
-  auto* r = (ada::result<ada::url_search_params_entries_iter>*)result;
-  if (!r) return {ada_string_create(nullptr, 0), ada_string_create(nullptr, 0)};
+  ada::result<ada::url_search_params_entries_iter>* r =
+      (ada::result<ada::url_search_params_entries_iter>*)result;
+  if (!r) return {ada_string_create(NULL, 0), ada_string_create(NULL, 0)};
   auto next = (*r)->next();
   if (!next.has_value()) {
-    return {ada_string_create(nullptr, 0), ada_string_create(nullptr, 0)};
+    return {ada_string_create(NULL, 0), ada_string_create(NULL, 0)};
   }
   return ada_string_pair{
       ada_string_create(next->first.data(), next->first.length()),
@@ -733,7 +739,8 @@ ada_string_pair ada_search_params_entries_iter_next(
 
 bool ada_search_params_entries_iter_has_next(
     ada_url_search_params_entries_iter result) {
-  auto* r = (ada::result<ada::url_search_params_entries_iter>*)result;
+  ada::result<ada::url_search_params_entries_iter>* r =
+      (ada::result<ada::url_search_params_entries_iter>*)result;
   if (!r) {
     return false;
   }

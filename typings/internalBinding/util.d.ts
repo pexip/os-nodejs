@@ -7,7 +7,7 @@ declare namespace InternalUtilBinding {
   }
 }
 
-export interface UtilBinding {
+declare function InternalBinding(binding: 'util'): {
   // PER_ISOLATE_PRIVATE_SYMBOL_PROPERTIES, defined in src/env_properties.h
   arrow_message_private_symbol: 1;
   contextify_context_private_symbol: 2;
@@ -43,6 +43,5 @@ export interface UtilBinding {
   shouldAbortOnUncaughtToggle: [shouldAbort: 0 | 1];
   WeakReference: typeof InternalUtilBinding.WeakReference;
   guessHandleType(fd: number): 'TCP' | 'TTY' | 'UDP' | 'FILE' | 'PIPE' | 'UNKNOWN';
-  parseEnv(content: string): Record<string, string>;
-  styleText(format: Array<string> | string, text: string): string;
-}
+  toUSVString(str: string, start: number): string;
+};

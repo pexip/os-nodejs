@@ -11,11 +11,11 @@ const fixtures = require('../common/fixtures');
 
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
-const npmSandbox = tmpdir.resolve('npm-sandbox');
+const npmSandbox = path.join(tmpdir.path, 'npm-sandbox');
 fs.mkdirSync(npmSandbox);
-const homeDir = tmpdir.resolve('home');
+const homeDir = path.join(tmpdir.path, 'home');
 fs.mkdirSync(homeDir);
-const installDir = tmpdir.resolve('install-dir');
+const installDir = path.join(tmpdir.path, 'install-dir');
 fs.mkdirSync(installDir);
 
 const corepackYarnPath = path.join(

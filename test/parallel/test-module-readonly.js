@@ -16,7 +16,7 @@ const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
 // Create readOnlyMod.js and set to read only
-const readOnlyMod = tmpdir.resolve('readOnlyMod');
+const readOnlyMod = path.join(tmpdir.path, 'readOnlyMod');
 const readOnlyModRelative = path.relative(__dirname, readOnlyMod);
 const readOnlyModFullPath = `${readOnlyMod}.js`;
 

@@ -73,7 +73,6 @@ class TranslatedValue {
     kInt32,
     kInt64,
     kInt64ToBigInt,
-    kUint64ToBigInt,
     kUInt32,
     kBoolBit,
     kFloat,
@@ -112,8 +111,6 @@ class TranslatedValue {
   static TranslatedValue NewInt64(TranslatedState* container, int64_t value);
   static TranslatedValue NewInt64ToBigInt(TranslatedState* container,
                                           int64_t value);
-  static TranslatedValue NewUint64ToBigInt(TranslatedState* container,
-                                           uint64_t value);
   static TranslatedValue NewUInt32(TranslatedState* container, uint32_t value);
   static TranslatedValue NewBool(TranslatedState* container, uint32_t value);
   static TranslatedValue NewTagged(TranslatedState* container, Object literal);
@@ -155,9 +152,7 @@ class TranslatedValue {
     uint32_t uint32_value_;
     // kind is kInt32.
     int32_t int32_value_;
-    // kind is kUint64ToBigInt.
-    uint64_t uint64_value_;
-    // kind is kInt64 or kInt64ToBigInt.
+    // kind is kInt64.
     int64_t int64_value_;
     // kind is kFloat
     Float32 float_value_;
@@ -172,7 +167,6 @@ class TranslatedValue {
   int32_t int32_value() const;
   int64_t int64_value() const;
   uint32_t uint32_value() const;
-  uint64_t uint64_value() const;
   Float32 float_value() const;
   Float64 double_value() const;
   int object_length() const;
@@ -183,7 +177,7 @@ class TranslatedFrame {
  public:
   enum Kind {
     kUnoptimizedFunction,
-    kInlinedExtraArguments,
+    kArgumentsAdaptor,
     kConstructStub,
     kBuiltinContinuation,
 #if V8_ENABLE_WEBASSEMBLY
@@ -282,7 +276,7 @@ class TranslatedFrame {
                                           int return_value_count);
   static TranslatedFrame AccessorFrame(Kind kind,
                                        SharedFunctionInfo shared_info);
-  static TranslatedFrame InlinedExtraArguments(SharedFunctionInfo shared_info,
+  static TranslatedFrame ArgumentsAdaptorFrame(SharedFunctionInfo shared_info,
                                                int height);
   static TranslatedFrame ConstructStubFrame(BytecodeOffset bailout_id,
                                             SharedFunctionInfo shared_info,
@@ -317,7 +311,7 @@ class TranslatedFrame {
 
   void Add(const TranslatedValue& value) { values_.push_back(value); }
   TranslatedValue* ValueAt(int index) { return &(values_[index]); }
-  void Handlify(Isolate* isolate);
+  void Handlify();
 
   Kind kind_;
   BytecodeOffset bytecode_offset_;

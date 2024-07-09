@@ -6,7 +6,7 @@ if (!common.hasCrypto)
 const assert = require('assert');
 const http2 = require('http2');
 const { PADDING_STRATEGY_ALIGNED, PADDING_STRATEGY_CALLBACK } = http2.constants;
-const { duplexPair } = require('stream');
+const makeDuplexPair = require('../common/duplexpair');
 
 {
   const testData = '<h1>Hello World.</h1>';
@@ -21,7 +21,7 @@ const { duplexPair } = require('stream');
     stream.end(testData);
   }));
 
-  const [ clientSide, serverSide ] = duplexPair();
+  const { clientSide, serverSide } = makeDuplexPair();
 
   // The lengths of the expected writes... note that this is highly
   // sensitive to how the internals are implemented.

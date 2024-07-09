@@ -225,11 +225,6 @@ bool OS::SetPermissions(void* address, size_t size, MemoryPermission access) {
 }
 
 // static
-bool OS::RecommitPages(void* address, size_t size, MemoryPermission access) {
-  return SetPermissions(address, size, access);
-}
-
-// static
 bool OS::HasLazyCommits() {
   SB_NOTIMPLEMENTED();
   return false;

@@ -270,7 +270,7 @@ function testFtruncate(cb) {
 ['', false, null, undefined, {}, []].forEach((input) => {
   ['ftruncate', 'ftruncateSync'].forEach((fnName) => {
     assert.throws(
-      () => fs[fnName](input, 1, () => {}),
+      () => fs[fnName](input),
       {
         code: 'ERR_INVALID_ARG_TYPE',
         name: 'TypeError',

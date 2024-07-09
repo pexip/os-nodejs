@@ -44,7 +44,7 @@ const s = http.createServer(common.mustCall((req, res) => {
     case 'headers': {
       // Check that header-related functions work before setting any headers
       const headers = res.getHeaders();
-      const exoticObj = { __proto__: null };
+      const exoticObj = Object.create(null);
       assert.deepStrictEqual(headers, exoticObj);
       assert.deepStrictEqual(res.getHeaderNames(), []);
       assert.deepStrictEqual(res.getRawHeaderNames(), []);

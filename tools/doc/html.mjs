@@ -35,7 +35,7 @@ import * as common from './common.mjs';
 import * as typeParser from './type-parser.mjs';
 import buildCSSForFlavoredJS from './buildCSSForFlavoredJS.mjs';
 
-const dynamicSizes = { __proto__: null };
+const dynamicSizes = Object.create(null);
 
 const { highlight, getLanguage } = highlightJs;
 
@@ -250,7 +250,7 @@ export function preprocessElements({ filename }) {
             const actualCharCount = Math.max(charCountFirstTwoLines, previousNode.charCountFirstTwoLines);
             (dynamicSizes[filename] ??= new Set()).add(actualCharCount);
             node.value = `<pre class="with-${actualCharCount}-chars">` +
-              '<input class="js-flavor-toggle" type="checkbox"' +
+              '<input class="js-flavor-selector" type="checkbox"' +
               // If CJS comes in second, ESM should display by default.
               (node.lang === 'cjs' ? ' checked' : '') +
               ' aria-label="Show modern ES modules syntax">' +
@@ -394,16 +394,16 @@ function versionSort(a, b) {
   b = minVersion(b).trim();
   let i = 0; // Common prefix length.
   while (i < a.length && i < b.length && a[i] === b[i]) i++;
-  a = a.substring(i);
-  b = b.substring(i);
+  a = a.substr(i);
+  b = b.substr(i);
   return +b.match(numberRe)[0] - +a.match(numberRe)[0];
 }
 
 const DEPRECATION_HEADING_PATTERN = /^DEP\d+:/;
 export function buildToc({ filename, apilinks }) {
   return (tree, file) => {
-    const idCounters = { __proto__: null };
-    const legacyIdCounters = { __proto__: null };
+    const idCounters = Object.create(null);
+    const legacyIdCounters = Object.create(null);
     let toc = '';
     let depth = 0;
 
@@ -467,7 +467,7 @@ export function buildToc({ filename, apilinks }) {
         .use(htmlStringify)
         .processSync(toc).toString();
 
-      file.toc = `<details role="navigation" id="toc" open><summary>Table of contents</summary>${inner}</details>`;
+      file.toc = `<details id="toc" open><summary>Table of contents</summary>${inner}</details>`;
       file.tocPicker = `<div class="toc">${inner}</div>`;
     } else {
       file.toc = file.tocPicker = '<!-- TOC -->';
@@ -527,11 +527,11 @@ function altDocs(filename, docCreated, versions) {
 
   return list ? `
     <li class="picker-header">
-      <a href="#alt-docs" aria-controls="alt-docs">
-        <span class="picker-arrow"></span>
+      <a href="#">
+        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker" tabindex="-1"><ol id="alt-docs">${list}</ol></div>
+      <div class="picker"><ol id="alt-docs">${list}</ol></div>
     </li>
   ` : '';
 }
@@ -557,12 +557,12 @@ function gtocPicker(id) {
 
   return `
     <li class="picker-header">
-      <a href="#gtoc-picker" aria-controls="gtoc-picker">
-        <span class="picker-arrow"></span>
+      <a href="#">
+        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Index
       </a>
 
-      <div class="picker" tabindex="-1" id="gtoc-picker">${gtoc}</div>
+      <div class="picker">${gtoc}</div>
     </li>
   `;
 }
@@ -574,12 +574,12 @@ function tocPicker(id, content) {
 
   return `
     <li class="picker-header">
-      <a href="#toc-picker" aria-controls="toc-picker">
-        <span class="picker-arrow"></span>
+      <a href="#">
+        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Table of contents
       </a>
 
-      <div class="picker" tabindex="-1">${content.tocPicker.replace('<ul', '<ul id="toc-picker"')}</div>
+      <div class="picker">${content.tocPicker}</div>
     </li>
   `;
 }

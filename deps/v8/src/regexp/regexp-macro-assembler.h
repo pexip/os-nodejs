@@ -6,8 +6,6 @@
 #define V8_REGEXP_REGEXP_MACRO_ASSEMBLER_H_
 
 #include "src/base/strings.h"
-#include "src/execution/frame-constants.h"
-#include "src/objects/fixed-array.h"
 #include "src/regexp/regexp-ast.h"
 #include "src/regexp/regexp.h"
 
@@ -31,7 +29,6 @@ class RegExpMacroAssembler {
   // The implementation must be able to handle at least:
   static constexpr int kMaxRegisterCount = (1 << 16);
   static constexpr int kMaxRegister = kMaxRegisterCount - 1;
-  static constexpr int kMaxCaptures = (kMaxRegister - 1) / 2;
   static constexpr int kMaxCPOffset = (1 << 15) - 1;
   static constexpr int kMinCPOffset = -(1 << 15);
 
@@ -115,8 +112,8 @@ class RegExpMacroAssembler {
   // character. Returns false if the type of special character class does
   // not have custom support.
   // May clobber the current loaded character.
-  virtual bool CheckSpecialClassRanges(StandardCharacterSet type,
-                                       Label* on_no_match) {
+  virtual bool CheckSpecialCharacterClass(StandardCharacterSet type,
+                                          Label* on_no_match) {
     return false;
   }
 
@@ -170,7 +167,6 @@ class RegExpMacroAssembler {
   V(MIPS)                       \
   V(LOONG64)                    \
   V(RISCV)                      \
-  V(RISCV32)                    \
   V(S390)                       \
   V(PPC)                        \
   V(X64)                        \
@@ -295,7 +291,7 @@ class NativeRegExpMacroAssembler: public RegExpMacroAssembler {
   };
 
   NativeRegExpMacroAssembler(Isolate* isolate, Zone* zone)
-      : RegExpMacroAssembler(isolate, zone), range_array_cache_(zone) {}
+      : RegExpMacroAssembler(isolate, zone) {}
   ~NativeRegExpMacroAssembler() override = default;
 
   // Returns a {Result} sentinel, or the number of successful matches.
@@ -331,9 +327,8 @@ class NativeRegExpMacroAssembler: public RegExpMacroAssembler {
   // Called from generated code.
   static int CheckStackGuardState(Isolate* isolate, int start_index,
                                   RegExp::CallOrigin call_origin,
-                                  Address* return_address,
-                                  InstructionStream re_code, Address* subject,
-                                  const byte** input_start,
+                                  Address* return_address, Code re_code,
+                                  Address* subject, const byte** input_start,
                                   const byte** input_end);
 
   static Address word_character_map_address() {
@@ -354,7 +349,7 @@ class NativeRegExpMacroAssembler: public RegExpMacroAssembler {
                      const byte* input_end, int* output, int output_size,
                      Isolate* isolate, JSRegExp regexp);
 
-  ZoneUnorderedMap<uint32_t, Handle<FixedUInt16Array>> range_array_cache_;
+  std::unordered_map<uint32_t, Handle<ByteArray>> range_array_cache_;
 };
 
 }  // namespace internal

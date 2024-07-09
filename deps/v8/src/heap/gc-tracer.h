@@ -11,6 +11,7 @@
 #include "src/base/optional.h"
 #include "src/base/ring-buffer.h"
 #include "src/common/globals.h"
+#include "src/heap/heap.h"
 #include "src/init/heap-symbols.h"
 #include "src/logging/counters.h"
 #include "testing/gtest/include/gtest/gtest_prod.h"  // nogncheck
@@ -29,12 +30,7 @@ enum ScavengeSpeedMode { kForAllObjects, kForSurvivedObjects };
 #define TRACE_GC_CATEGORIES \
   "devtools.timeline," TRACE_DISABLED_BY_DEFAULT("v8.gc")
 
-// Sweeping for full GC may be interleaved with sweeping for minor
-// gc. The below scopes should use TRACE_GC_EPOCH to associate them
-// with the right cycle.
 #define TRACE_GC(tracer, scope_id)                                    \
-  DCHECK_NE(GCTracer::Scope::MC_SWEEP, scope_id);                     \
-  DCHECK_NE(GCTracer::Scope::MC_BACKGROUND_SWEEPING, scope_id);       \
   GCTracer::Scope UNIQUE_IDENTIFIER(gc_tracer_scope)(                 \
       tracer, GCTracer::Scope::ScopeId(scope_id), ThreadKind::kMain); \
   TRACE_EVENT0(TRACE_GC_CATEGORIES,                                   \
@@ -86,7 +82,7 @@ class V8_EXPORT_PRIVATE GCTracer {
       NUMBER_OF_INCREMENTAL_SCOPES =
           LAST_INCREMENTAL_SCOPE - FIRST_INCREMENTAL_SCOPE + 1,
       FIRST_GENERAL_BACKGROUND_SCOPE = BACKGROUND_YOUNG_ARRAY_BUFFER_SWEEP,
-      LAST_GENERAL_BACKGROUND_SCOPE = BACKGROUND_SAFEPOINT,
+      LAST_GENERAL_BACKGROUND_SCOPE = BACKGROUND_UNMAPPER,
       FIRST_MC_BACKGROUND_SCOPE = MC_BACKGROUND_EVACUATE_COPY,
       LAST_MC_BACKGROUND_SCOPE = MC_BACKGROUND_SWEEPING,
       FIRST_TOP_MC_SCOPE = MC_CLEAR,
@@ -101,11 +97,15 @@ class V8_EXPORT_PRIVATE GCTracer {
     V8_INLINE ~Scope();
     Scope(const Scope&) = delete;
     Scope& operator=(const Scope&) = delete;
-    static constexpr const char* Name(ScopeId id);
-    static constexpr bool NeedsYoungEpoch(ScopeId id);
-    static constexpr int IncrementalOffset(ScopeId id);
+    static const char* Name(ScopeId id);
+    static bool NeedsYoungEpoch(ScopeId id);
+    V8_INLINE static constexpr int IncrementalOffset(ScopeId id);
 
    private:
+#if DEBUG
+    void AssertMainThread();
+#endif  // DEBUG
+
     GCTracer* const tracer_;
     const ScopeId scope_;
     const ThreadKind thread_kind_;
@@ -124,8 +124,7 @@ class V8_EXPORT_PRIVATE GCTracer {
       MARK_COMPACTOR = 1,
       INCREMENTAL_MARK_COMPACTOR = 2,
       MINOR_MARK_COMPACTOR = 3,
-      INCREMENTAL_MINOR_MARK_COMPACTOR = 4,
-      START = 5,
+      START = 4
     };
 
     // Returns true if the event corresponds to a young generation GC.
@@ -209,8 +208,7 @@ class V8_EXPORT_PRIVATE GCTracer {
 
     enum class Mode { None, Scavenger, Finalize };
 
-    Mode mode() const { return mode_; }
-    const char* trace_event_name() const { return trace_event_name_; }
+    Mode mode;
 
     // The timer used for a given GC type:
     // - GCScavenger: young generation GC
@@ -218,14 +216,8 @@ class V8_EXPORT_PRIVATE GCTracer {
     // - GCFinalizeMC: finalization of incremental full GC
     // - GCFinalizeMCReduceMemory: finalization of incremental full GC with
     //   memory reduction.
-    TimedHistogram* type_timer() const { return type_timer_; }
-    TimedHistogram* type_priority_timer() const { return type_priority_timer_; }
-
-   private:
-    Mode mode_;
-    const char* trace_event_name_;
-    TimedHistogram* type_timer_;
-    TimedHistogram* type_priority_timer_;
+    TimedHistogram* type_timer;
+    TimedHistogram* type_priority_timer;
   };
 
   static const int kThroughputTimeFrameMs = 5000;
@@ -268,16 +260,17 @@ class V8_EXPORT_PRIVATE GCTracer {
   void StartInSafepoint();
   void StopInSafepoint();
 
-  void NotifyFullSweepingCompleted();
-  void NotifyYoungSweepingCompleted();
-
+  void NotifySweepingCompleted();
   void NotifyFullCppGCCompleted();
+
   void NotifyYoungCppGCRunning();
   void NotifyYoungCppGCCompleted();
 
+  void NotifyYoungGenerationHandling(
+      YoungGenerationHandling young_generation_handling);
+
 #ifdef DEBUG
   V8_INLINE bool IsInObservablePause() const;
-  V8_INLINE bool IsInAtomicPause() const;
 
   // Checks if the current event is consistent with a collector.
   V8_INLINE bool IsConsistentWithCollector(GarbageCollector collector) const;
@@ -347,7 +340,7 @@ class V8_EXPORT_PRIVATE GCTracer {
       double time_ms = 0) const;
 
   // Allocation throughput in the embedder in bytes/millisecond in the
-  // last time_ms milliseconds.
+  // last time_ms milliseconds. Reported through v8::EmbedderHeapTracer.
   // Returns 0 if no allocation events have been recorded.
   double EmbedderAllocationThroughputInBytesPerMillisecond(
       double time_ms = 0) const;
@@ -368,7 +361,7 @@ class V8_EXPORT_PRIVATE GCTracer {
   double CurrentOldGenerationAllocationThroughputInBytesPerMillisecond() const;
 
   // Allocation throughput in the embedder in bytes/milliseconds in the last
-  // kThroughputTimeFrameMs seconds.
+  // kThroughputTimeFrameMs seconds. Reported through v8::EmbedderHeapTracer.
   // Returns 0 if no allocation events have been recorded.
   double CurrentEmbedderAllocationThroughputInBytesPerMillisecond() const;
 
@@ -404,12 +397,6 @@ class V8_EXPORT_PRIVATE GCTracer {
 #ifdef V8_RUNTIME_CALL_STATS
   V8_INLINE WorkerThreadRuntimeCallStats* worker_thread_runtime_call_stats();
 #endif  // defined(V8_RUNTIME_CALL_STATS)
-
-  bool IsCurrentGCDueToAllocationFailure() const {
-    return current_.gc_reason == GarbageCollectionReason::kAllocationFailure;
-  }
-
-  GarbageCollector GetCurrentCollector() const;
 
  private:
   FRIEND_TEST(GCTracer, AverageSpeed);
@@ -563,10 +550,8 @@ class V8_EXPORT_PRIVATE GCTracer {
 
   // A full GC cycle stops only when both v8 and cppgc (if available) GCs have
   // finished sweeping.
-  bool notified_full_sweeping_completed_ = false;
+  bool notified_sweeping_completed_ = false;
   bool notified_full_cppgc_completed_ = false;
-
-  bool notified_young_sweeping_completed_ = false;
   // Similar to full GCs, a young GC cycle stops only when both v8 and cppgc GCs
   // have finished sweeping.
   bool notified_young_cppgc_completed_ = false;

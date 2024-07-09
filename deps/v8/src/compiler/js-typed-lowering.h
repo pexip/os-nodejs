@@ -6,7 +6,9 @@
 #define V8_COMPILER_JS_TYPED_LOWERING_H_
 
 #include "src/base/compiler-specific.h"
+#include "src/common/globals.h"
 #include "src/compiler/graph-reducer.h"
+#include "src/compiler/opcodes.h"
 
 namespace v8 {
 namespace internal {
@@ -61,8 +63,6 @@ class V8_EXPORT_PRIVATE JSTypedLowering final
   Reduction ReduceJSToName(Node* node);
   Reduction ReduceJSToNumberInput(Node* input);
   Reduction ReduceJSToNumber(Node* node);
-  Reduction ReduceJSToBigInt(Node* node);
-  Reduction ReduceJSToBigIntConvertNumber(Node* node);
   Reduction ReduceJSToNumeric(Node* node);
   Reduction ReduceJSToStringInput(Node* input);
   Reduction ReduceJSToString(Node* node);

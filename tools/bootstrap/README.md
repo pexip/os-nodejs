@@ -1,2 +1,3 @@
-Refer to [BUILDING.md](../../BUILDING.md#option-2-automated-install-with-boxstarter) for
-instructions on how to build Node.js with boxstarter.
+See the main project
+[BUILDING.md](../../BUILDING.md#option-2-automated-install-with-boxstarter)
+for details on how to use this script.

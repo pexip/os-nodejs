@@ -15,15 +15,11 @@ namespace internal {
 
 namespace {
 
-// All asserts are allowed by default except for one.
-constexpr uint32_t kInitialValue =
-    ~(1 << HANDLE_DEREFERENCE_ALL_THREADS_ASSERT);
-
 template <PerThreadAssertType kType>
 using PerThreadDataBit = base::BitField<bool, kType, 1>;
 
-// Thread-local storage for assert data.
-thread_local uint32_t current_per_thread_assert_data(kInitialValue);
+// Thread-local storage for assert data. Default all asserts to "allow".
+thread_local uint32_t current_per_thread_assert_data(~0);
 
 }  // namespace
 
@@ -85,10 +81,8 @@ bool PerThreadAssertScope<kType, kAllow>::IsAllowed() {
                                                     enable)                \
   PER_ISOLATE_ASSERT_SCOPE_DEFINITION(DisableType, field, enable)
 
-PER_ISOLATE_DCHECK_TYPE(PER_ISOLATE_ASSERT_ENABLE_SCOPE_DEFINITION, true)
-PER_ISOLATE_CHECK_TYPE(PER_ISOLATE_ASSERT_ENABLE_SCOPE_DEFINITION, true)
-PER_ISOLATE_DCHECK_TYPE(PER_ISOLATE_ASSERT_DISABLE_SCOPE_DEFINITION, false)
-PER_ISOLATE_CHECK_TYPE(PER_ISOLATE_ASSERT_DISABLE_SCOPE_DEFINITION, false)
+PER_ISOLATE_ASSERT_TYPE(PER_ISOLATE_ASSERT_ENABLE_SCOPE_DEFINITION, true)
+PER_ISOLATE_ASSERT_TYPE(PER_ISOLATE_ASSERT_DISABLE_SCOPE_DEFINITION, false)
 
 // -----------------------------------------------------------------------------
 // Instantiations.
@@ -101,8 +95,6 @@ template class PerThreadAssertScope<HANDLE_ALLOCATION_ASSERT, false>;
 template class PerThreadAssertScope<HANDLE_ALLOCATION_ASSERT, true>;
 template class PerThreadAssertScope<HANDLE_DEREFERENCE_ASSERT, false>;
 template class PerThreadAssertScope<HANDLE_DEREFERENCE_ASSERT, true>;
-template class PerThreadAssertScope<HANDLE_DEREFERENCE_ALL_THREADS_ASSERT,
-                                    true>;
 template class PerThreadAssertScope<CODE_DEPENDENCY_CHANGE_ASSERT, false>;
 template class PerThreadAssertScope<CODE_DEPENDENCY_CHANGE_ASSERT, true>;
 template class PerThreadAssertScope<CODE_ALLOCATION_ASSERT, false>;

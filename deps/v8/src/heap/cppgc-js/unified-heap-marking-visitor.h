@@ -65,17 +65,41 @@ class V8_EXPORT_PRIVATE MutatorUnifiedHeapMarkingVisitor
   MutatorUnifiedHeapMarkingVisitor(HeapBase&, MutatorMarkingState&,
                                    UnifiedHeapMarkingState&);
   ~MutatorUnifiedHeapMarkingVisitor() override = default;
+
+ protected:
+  void VisitRoot(const void*, TraceDescriptor, const SourceLocation&) final;
+  void VisitWeakRoot(const void*, TraceDescriptor, WeakCallback, const void*,
+                     const SourceLocation&) final;
 };
 
-class V8_EXPORT_PRIVATE ConcurrentUnifiedHeapMarkingVisitor
+class V8_EXPORT_PRIVATE MutatorMinorGCMarkingVisitor final
+    : public MutatorUnifiedHeapMarkingVisitor {
+ public:
+  using MutatorUnifiedHeapMarkingVisitor::MutatorUnifiedHeapMarkingVisitor;
+  ~MutatorMinorGCMarkingVisitor() override = default;
+
+ protected:
+  // Override and make the function empty, since we don't want to trace V8
+  // reference during cppgc's minor GC.
+  void Visit(const TracedReferenceBase&) final {}
+};
+
+class V8_EXPORT_PRIVATE ConcurrentUnifiedHeapMarkingVisitor final
     : public UnifiedHeapMarkingVisitorBase {
  public:
   ConcurrentUnifiedHeapMarkingVisitor(HeapBase&, Heap*,
-                                      cppgc::internal::ConcurrentMarkingState&,
-                                      CppHeap::CollectionType);
+                                      cppgc::internal::ConcurrentMarkingState&);
   ~ConcurrentUnifiedHeapMarkingVisitor() override;
 
  protected:
+  void VisitRoot(const void*, TraceDescriptor, const SourceLocation&) final {
+    UNREACHABLE();
+  }
+  void VisitWeakRoot(const void*, TraceDescriptor, WeakCallback, const void*,
+                     const SourceLocation&) final {
+    UNREACHABLE();
+  }
+
   bool DeferTraceToMutatorThreadIfConcurrent(const void*, cppgc::TraceCallback,
                                              size_t) final;
 

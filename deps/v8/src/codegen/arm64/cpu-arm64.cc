@@ -8,7 +8,6 @@
 
 #include "src/codegen/arm64/utils-arm64.h"
 #include "src/codegen/cpu-features.h"
-#include "src/codegen/flush-instruction-cache.h"
 
 #if V8_OS_DARWIN
 #include <libkern/OSCacheControl.h>

@@ -26,14 +26,14 @@ after(() => {
     'describe beforeEach',
     'describe nested beforeEach',
     'describe nested it 1',
-    'describe nested afterEach',
     'describe afterEach',
+    'describe nested afterEach',
 
     'describe beforeEach',
     'describe nested beforeEach',
     'describe nested test 2',
-    'describe nested afterEach',
     'describe afterEach',
+    'describe nested afterEach',
 
     'describe nested after',
     'describe after',

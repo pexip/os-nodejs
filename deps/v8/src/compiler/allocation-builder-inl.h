@@ -9,6 +9,7 @@
 #include "src/compiler/allocation-builder.h"
 #include "src/heap/heap-inl.h"
 #include "src/objects/arguments-inl.h"
+#include "src/objects/map-inl.h"
 
 namespace v8 {
 namespace internal {
@@ -32,7 +33,7 @@ void AllocationBuilder::AllocateContext(int variadic_part_length, MapRef map) {
   int size = Context::SizeFor(variadic_part_length);
   Allocate(size, AllocationType::kYoung, Type::OtherInternal());
   Store(AccessBuilder::ForMap(), map);
-  static_assert(static_cast<int>(Context::kLengthOffset) ==
+  STATIC_ASSERT(static_cast<int>(Context::kLengthOffset) ==
                 static_cast<int>(FixedArray::kLengthOffset));
   Store(AccessBuilder::ForFixedArrayLength(),
         jsgraph()->Constant(variadic_part_length));

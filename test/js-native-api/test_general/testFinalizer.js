@@ -4,7 +4,6 @@
 const common = require('../../common');
 const test_general = require(`./build/${common.buildType}/test_general`);
 const assert = require('assert');
-const { gcUntil } = require('../../common/gc');
 
 let finalized = {};
 const callback = common.mustCall(2);
@@ -31,7 +30,7 @@ async function testFinalizeAndWrap() {
   test_general.wrap(finalizeAndWrap);
   test_general.addFinalizerOnly(finalizeAndWrap, common.mustCall());
   finalizeAndWrap = null;
-  await gcUntil('test finalize and wrap',
-                () => test_general.derefItemWasCalled());
+  await common.gcUntil('test finalize and wrap',
+                       () => test_general.derefItemWasCalled());
 }
 testFinalizeAndWrap();

@@ -1,10 +1,14 @@
 'use strict';
 
-const { hasIntl } = require('../common');
+const common = require('../common');
+if (!common.hasIntl)
+  common.skip('missing Intl');
 
-const { strictEqual } = require('node:assert');
-const { domainToASCII, domainToUnicode } = require('node:url');
-const { test } = require('node:test');
+const strictEqual = require('assert').strictEqual;
+const url = require('url');
+
+const domainToASCII = url.domainToASCII;
+const domainToUnicode = url.domainToUnicode;
 
 const domainWithASCII = [
   ['ıíd', 'xn--d-iga7r'],
@@ -17,11 +21,11 @@ const domainWithASCII = [
   ['भारत.org', 'xn--h2brj9c.org'],
 ];
 
-test('domainToASCII and domainToUnicode', { skip: !hasIntl }, () => {
-  for (const [domain, ascii] of domainWithASCII) {
-    const domainConvertedToASCII = domainToASCII(domain);
-    strictEqual(domainConvertedToASCII, ascii);
-    const asciiConvertedToUnicode = domainToUnicode(ascii);
-    strictEqual(asciiConvertedToUnicode, domain);
-  }
+domainWithASCII.forEach((pair) => {
+  const domain = pair[0];
+  const ascii = pair[1];
+  const domainConvertedToASCII = domainToASCII(domain);
+  strictEqual(domainConvertedToASCII, ascii);
+  const asciiConvertedToUnicode = domainToUnicode(ascii);
+  strictEqual(asciiConvertedToUnicode, domain);
 });

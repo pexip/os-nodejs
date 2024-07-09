@@ -25,8 +25,6 @@ class Hash final : public BaseObject {
   bool HashUpdate(const char* data, size_t len);
 
   static void GetHashes(const v8::FunctionCallbackInfo<v8::Value>& args);
-  static void GetCachedAliases(const v8::FunctionCallbackInfo<v8::Value>& args);
-  static void OneShotDigest(const v8::FunctionCallbackInfo<v8::Value>& args);
 
  protected:
   static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -36,7 +34,7 @@ class Hash final : public BaseObject {
   Hash(Environment* env, v8::Local<v8::Object> wrap);
 
  private:
-  EVPMDCtxPointer mdctx_{};
+  EVPMDPointer mdctx_ {};
   unsigned int md_len_ = 0;
   ByteSource digest_;
 };

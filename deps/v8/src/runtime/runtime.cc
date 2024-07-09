@@ -5,9 +5,14 @@
 #include "src/runtime/runtime.h"
 
 #include "src/base/hashmap.h"
+#include "src/base/platform/wrappers.h"
+#include "src/codegen/reloc-info.h"
 #include "src/execution/isolate.h"
+#include "src/handles/handles-inl.h"
+#include "src/heap/heap.h"
+#include "src/objects/contexts.h"
+#include "src/objects/objects-inl.h"
 #include "src/runtime/runtime-utils.h"
-#include "src/strings/string-hasher-inl.h"
 
 namespace v8 {
 namespace internal {
@@ -132,7 +137,6 @@ bool Runtime::NeedsExactContext(FunctionId id) {
     case Runtime::kThrowThrowMethodMissing:
     case Runtime::kThrowTypeError:
     case Runtime::kThrowUnsupportedSuperError:
-    case Runtime::kTerminateExecution:
 #if V8_ENABLE_WEBASSEMBLY
     case Runtime::kThrowWasmError:
     case Runtime::kThrowWasmStackOverflow:
@@ -171,7 +175,6 @@ bool Runtime::IsNonReturning(FunctionId id) {
     case Runtime::kThrowSymbolAsyncIteratorInvalid:
     case Runtime::kThrowTypeError:
     case Runtime::kThrowConstAssignError:
-    case Runtime::kTerminateExecution:
 #if V8_ENABLE_WEBASSEMBLY
     case Runtime::kThrowWasmError:
     case Runtime::kThrowWasmStackOverflow:
@@ -193,7 +196,7 @@ bool Runtime::MayAllocate(FunctionId id) {
 }
 
 bool Runtime::IsAllowListedForFuzzing(FunctionId id) {
-  CHECK(v8_flags.fuzzing);
+  CHECK(FLAG_fuzzing);
   switch (id) {
     // Runtime functions allowlisted for all fuzzers. Only add functions that
     // help increase coverage.
@@ -219,10 +222,10 @@ bool Runtime::IsAllowListedForFuzzing(FunctionId id) {
     case Runtime::kGetOptimizationStatus:
     case Runtime::kHeapObjectVerify:
     case Runtime::kIsBeingInterpreted:
-      return !v8_flags.allow_natives_for_differential_fuzzing;
+      return !FLAG_allow_natives_for_differential_fuzzing;
     case Runtime::kVerifyType:
-      return !v8_flags.allow_natives_for_differential_fuzzing &&
-             !v8_flags.concurrent_recompilation;
+      return !FLAG_allow_natives_for_differential_fuzzing &&
+             !FLAG_concurrent_recompilation;
     case Runtime::kBaselineOsr:
     case Runtime::kCompileBaseline:
       return ENABLE_SPARKPLUG;

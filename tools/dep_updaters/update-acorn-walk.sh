@@ -7,52 +7,47 @@
 
 set -ex
 
-BASE_DIR=$(cd "$(dirname "$0")/../.." && pwd)
-[ -z "$NODE" ] && NODE="$BASE_DIR/out/Release/node"
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+[ -z "$NODE" ] && NODE="$ROOT/out/Release/node"
 [ -x "$NODE" ] || NODE=$(command -v node)
-NPM="$BASE_DIR/deps/npm/bin/npm-cli.js"
-DEPS_DIR="$BASE_DIR/deps"
-
-# shellcheck disable=SC1091
-. "$BASE_DIR/tools/dep_updaters/utils.sh"
+NPM="$ROOT/deps/npm/bin/npm-cli.js"
 
 NEW_VERSION=$("$NODE" "$NPM" view acorn-walk dist-tags.latest)
 CURRENT_VERSION=$("$NODE" -p "require('./deps/acorn/acorn-walk/package.json').version")
 
-# This function exit with 0 if new version and current version are the same
-compare_dependency_version "acorn-walk" "$NEW_VERSION" "$CURRENT_VERSION"
+echo "Comparing $NEW_VERSION with $CURRENT_VERSION"
+
+if [ "$NEW_VERSION" = "$CURRENT_VERSION" ]; then
+  echo "Skipped because Acorn-walk is on the latest version."
+  exit 0
+fi
 
 cd "$( dirname "$0" )/../.." || exit
 
-echo "Making temporary workspace..."
+rm -rf deps/acorn/acorn-walk
 
-WORKSPACE=$(mktemp -d 2> /dev/null || mktemp -d -t 'tmp')
+(
+    rm -rf acorn-walk-tmp
+    mkdir acorn-walk-tmp
+    cd acorn-walk-tmp || exit
 
-cleanup () {
-  EXIT_CODE=$?
-  [ -d "$WORKSPACE" ] && rm -rf "$WORKSPACE"
-  exit $EXIT_CODE
-}
+    "$NODE" "$NPM" init --yes
 
-trap cleanup INT TERM EXIT
+    "$NODE" "$NPM" install --global-style --no-bin-links --ignore-scripts "acorn-walk@$NEW_VERSION"
+)
 
-cd "$WORKSPACE"
+mv acorn-walk-tmp/node_modules/acorn-walk deps/acorn
 
-echo "Fetching acorn-walk source archive..."
+rm -rf acorn-walk-tmp/
 
-"$NODE" "$NPM" pack "acorn-walk@$NEW_VERSION"
+echo "All done!"
+echo ""
+echo "Please git add acorn-walk, commit the new version:"
+echo ""
+echo "$ git add -A deps/acorn-walk"
+echo "$ git commit -m \"deps: update acorn-walk to $NEW_VERSION\""
+echo ""
 
-ACORN_WALK_TGZ="acorn-walk-$NEW_VERSION.tgz"
-
-log_and_verify_sha256sum "acorn-walk" "$ACORN_WALK_TGZ"
-
-rm -r "$DEPS_DIR/acorn/acorn-walk"/*
-
-tar -xf "$ACORN_WALK_TGZ"
-
-mv package/* "$DEPS_DIR/acorn/acorn-walk"
-
-# Update the version number on maintaining-dependencies.md
-# and print the new version as the last line of the script as we need
-# to add it to $GITHUB_ENV variable
-finalize_version_update "acorn-walk" "$NEW_VERSION"
+# The last line of the script should always print the new version,
+# as we need to add it to $GITHUB_ENV variable.
+echo "NEW_VERSION=$NEW_VERSION"

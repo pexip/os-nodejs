@@ -35,8 +35,8 @@ function fail(fn) {
   }, { code: 'ERR_INVALID_ARG_TYPE', name: 'TypeError' });
 }
 
-for (const test of typeErrorTests) {
-  for (const namespace of [path.posix, path.win32]) {
+typeErrorTests.forEach((test) => {
+  [path.posix, path.win32].forEach((namespace) => {
     fail(namespace.join, test);
     fail(namespace.resolve, test);
     fail(namespace.normalize, test);
@@ -52,8 +52,8 @@ for (const test of typeErrorTests) {
     if (test !== undefined) {
       fail(namespace.basename, 'foo', test);
     }
-  }
-}
+  });
+});
 
 // path.sep tests
 // windows

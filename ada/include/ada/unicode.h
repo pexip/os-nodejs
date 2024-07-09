@@ -67,6 +67,12 @@ bool to_ascii(std::optional<std::string>& out, std::string_view plain,
 
 /**
  * @private
+ * @see https://www.unicode.org/reports/tr46/#ToUnicode
+ */
+std::string to_unicode(std::string_view input);
+
+/**
+ * @private
  * Checks if the input has tab or newline characters.
  *
  * @attention The has_tabs_or_newline function is a bottleneck and it is simple

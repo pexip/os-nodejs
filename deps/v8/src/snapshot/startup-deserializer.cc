@@ -5,21 +5,16 @@
 #include "src/snapshot/startup-deserializer.h"
 
 #include "src/api/api.h"
-#include "src/codegen/flush-instruction-cache.h"
+#include "src/codegen/assembler-inl.h"
 #include "src/execution/v8threads.h"
-#include "src/handles/handles-inl.h"
-#include "src/heap/paged-spaces-inl.h"
-#include "src/logging/counters-scopes.h"
+#include "src/heap/heap-inl.h"
 #include "src/logging/log.h"
-#include "src/objects/oddball.h"
-#include "src/roots/roots-inl.h"
+#include "src/snapshot/snapshot.h"
 
 namespace v8 {
 namespace internal {
 
 void StartupDeserializer::DeserializeIntoIsolate() {
-  NestedTimedHistogramScope histogram_timer(
-      isolate()->counters()->snapshot_deserialize_isolate());
   HandleScope scope(isolate());
 
   // No active threads.
@@ -53,6 +48,8 @@ void StartupDeserializer::DeserializeIntoIsolate() {
     FlushICache();
   }
 
+  CheckNoArrayBufferBackingStores();
+
   isolate()->heap()->set_native_contexts_list(
       ReadOnlyRoots(isolate()).undefined_value());
   // The allocation site list is build during root iteration, but if no sites
@@ -78,7 +75,7 @@ void StartupDeserializer::DeserializeIntoIsolate() {
 }
 
 void StartupDeserializer::LogNewMapEvents() {
-  if (v8_flags.log_maps) LOG(isolate(), LogAllMaps());
+  if (FLAG_log_maps) LOG(isolate(), LogAllMaps());
 }
 
 void StartupDeserializer::FlushICache() {

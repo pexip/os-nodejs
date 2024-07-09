@@ -6,7 +6,7 @@
 
 const common = require('../common');
 const { AsyncLocalStorage } = require('async_hooks');
-const { onGC } = require('../common/gc');
+const onGC = require('../common/ongc');
 
 let asyncLocalStorage = new AsyncLocalStorage();
 

@@ -33,10 +33,10 @@ const workerCount = 4;
 const expectedReqCount = 16;
 
 if (cluster.isPrimary) {
-  let listeningCount = 0;
   let reusedCount = 0;
   let reqCount = 0;
   let lastSession = null;
+  let shootOnce = false;
   let workerPort = null;
 
   function shoot() {
@@ -46,7 +46,7 @@ if (cluster.isPrimary) {
       session: lastSession,
       rejectUnauthorized: false
     }, () => {
-      c.on('end', c.end);
+      c.end();
     }).on('close', () => {
       // Wait for close to shoot off another connection. We don't want to shoot
       // until a new session is allocated, if one will be. The new session is
@@ -73,8 +73,9 @@ if (cluster.isPrimary) {
       console.error('[primary] got %j', msg);
       if (msg === 'reused') {
         ++reusedCount;
-      } else if (msg === 'listening' && ++listeningCount === workerCount) {
-        workerPort = port;
+      } else if (msg === 'listening' && !shootOnce) {
+        workerPort = port || workerPort;
+        shootOnce = true;
         shoot();
       }
     });

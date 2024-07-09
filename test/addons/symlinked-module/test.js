@@ -16,7 +16,7 @@ const tmpdir = require('../../common/tmpdir');
 tmpdir.refresh();
 
 const addonPath = path.join(__dirname, 'build', common.buildType);
-const addonLink = tmpdir.resolve('addon');
+const addonLink = path.join(tmpdir.path, 'addon');
 
 try {
   fs.symlinkSync(addonPath, addonLink, 'dir');

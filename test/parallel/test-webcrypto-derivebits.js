@@ -7,7 +7,7 @@ if (!common.hasCrypto)
   common.skip('missing crypto');
 
 const assert = require('assert');
-const { subtle } = globalThis.crypto;
+const { subtle } = require('crypto').webcrypto;
 
 // This is only a partial test. The WebCrypto Web Platform Tests
 // will provide much greater coverage.

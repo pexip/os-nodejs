@@ -8,22 +8,18 @@
 #include <limits>
 #include <memory>
 
-#include "include/cppgc/internal/caged-heap.h"
 #include "include/cppgc/platform.h"
 #include "src/base/bounded-page-allocator.h"
-#include "src/base/lazy-instance.h"
-#include "src/base/platform/mutex.h"
 #include "src/heap/cppgc/globals.h"
 #include "src/heap/cppgc/virtual-memory.h"
 
 namespace cppgc {
 namespace internal {
 
-namespace testing {
-class TestWithHeap;
-}
+struct CagedHeapLocalData;
+class HeapBase;
 
-class V8_EXPORT_PRIVATE CagedHeap final {
+class CagedHeap final {
  public:
   using AllocatorType = v8::base::BoundedPageAllocator;
 
@@ -41,21 +37,22 @@ class V8_EXPORT_PRIVATE CagedHeap final {
            ~(kCagedHeapReservationAlignment - 1);
   }
 
-  static void InitializeIfNeeded(PageAllocator&);
-
-  static CagedHeap& Instance();
+  CagedHeap(HeapBase& heap, PageAllocator& platform_allocator);
 
   CagedHeap(const CagedHeap&) = delete;
   CagedHeap& operator=(const CagedHeap&) = delete;
 
-  AllocatorType& page_allocator() { return *page_bounded_allocator_; }
-  const AllocatorType& page_allocator() const {
-    return *page_bounded_allocator_;
+  AllocatorType& allocator() { return *bounded_allocator_; }
+  const AllocatorType& allocator() const { return *bounded_allocator_; }
+
+  CagedHeapLocalData& local_data() {
+    return *static_cast<CagedHeapLocalData*>(reserved_area_.address());
+  }
+  const CagedHeapLocalData& local_data() const {
+    return *static_cast<CagedHeapLocalData*>(reserved_area_.address());
   }
 
   bool IsOnHeap(const void* address) const {
-    DCHECK_EQ(reserved_area_.address(),
-              reinterpret_cast<void*>(CagedHeapBase::GetBase()));
     return reinterpret_cast<void*>(BaseFromAddress(address)) ==
            reserved_area_.address();
   }
@@ -63,17 +60,8 @@ class V8_EXPORT_PRIVATE CagedHeap final {
   void* base() const { return reserved_area_.address(); }
 
  private:
-  friend class v8::base::LeakyObject<CagedHeap>;
-  friend class testing::TestWithHeap;
-
-  explicit CagedHeap(PageAllocator& platform_allocator);
-
-  static CagedHeap* instance_;
-
   const VirtualMemory reserved_area_;
-  // BoundedPageAllocator is thread-safe, no need to use external
-  // synchronization.
-  std::unique_ptr<AllocatorType> page_bounded_allocator_;
+  std::unique_ptr<AllocatorType> bounded_allocator_;
 };
 
 }  // namespace internal

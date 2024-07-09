@@ -5,11 +5,16 @@
 #include "src/interpreter/interpreter-intrinsics-generator.h"
 
 #include "src/builtins/builtins.h"
+#include "src/codegen/code-factory.h"
+#include "src/execution/frames.h"
 #include "src/heap/factory-inl.h"
+#include "src/interpreter/bytecodes.h"
 #include "src/interpreter/interpreter-assembler.h"
 #include "src/interpreter/interpreter-intrinsics.h"
 #include "src/objects/js-generator.h"
 #include "src/objects/objects-inl.h"
+#include "src/objects/source-text-module.h"
+#include "src/utils/allocation.h"
 
 namespace v8 {
 namespace internal {
@@ -82,7 +87,7 @@ TNode<Object> IntrinsicsGenerator::InvokeIntrinsic(
 #define HANDLE_CASE(name, lower_case, expected_arg_count)            \
   __ BIND(&lower_case);                                              \
   {                                                                  \
-    if (v8_flags.debug_code && expected_arg_count >= 0) {            \
+    if (FLAG_debug_code && expected_arg_count >= 0) {                \
       AbortIfArgCountMismatch(expected_arg_count, args.reg_count()); \
     }                                                                \
     TNode<Object> value = name(args, context, expected_arg_count);   \
@@ -261,11 +266,11 @@ TNode<Object> IntrinsicsGenerator::AsyncGeneratorResolve(
                                 arg_count);
 }
 
-TNode<Object> IntrinsicsGenerator::AsyncGeneratorYieldWithAwait(
+TNode<Object> IntrinsicsGenerator::AsyncGeneratorYield(
     const InterpreterAssembler::RegListNodePair& args, TNode<Context> context,
     int arg_count) {
-  return IntrinsicAsBuiltinCall(
-      args, context, Builtin::kAsyncGeneratorYieldWithAwait, arg_count);
+  return IntrinsicAsBuiltinCall(args, context, Builtin::kAsyncGeneratorYield,
+                                arg_count);
 }
 
 void IntrinsicsGenerator::AbortIfArgCountMismatch(int expected,

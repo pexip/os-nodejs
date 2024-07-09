@@ -21,6 +21,8 @@ namespace v8 {
 namespace internal {
 namespace torque {
 
+DEFINE_CONTEXTUAL_VARIABLE(CurrentAst)
+
 using TypeList = std::vector<TypeExpression*>;
 
 struct ExpressionWithSource {
@@ -40,18 +42,12 @@ struct EnumEntry {
   base::Optional<TypeExpression*> type;
 };
 
-class BuildFlags : public base::ContextualClass<BuildFlags> {
+class BuildFlags : public ContextualClass<BuildFlags> {
  public:
   BuildFlags() {
     build_flags_["V8_SFI_HAS_UNIQUE_ID"] = V8_SFI_HAS_UNIQUE_ID;
-    build_flags_["V8_SFI_NEEDS_PADDING"] = V8_SFI_NEEDS_PADDING;
     build_flags_["V8_EXTERNAL_CODE_SPACE"] = V8_EXTERNAL_CODE_SPACE_BOOL;
     build_flags_["TAGGED_SIZE_8_BYTES"] = TAGGED_SIZE_8_BYTES;
-#ifdef V8_INTL_SUPPORT
-    build_flags_["V8_INTL_SUPPORT"] = true;
-#else
-    build_flags_["V8_INTL_SUPPORT"] = false;
-#endif
     build_flags_["V8_ENABLE_SWISS_NAME_DICTIONARY"] =
         V8_ENABLE_SWISS_NAME_DICTIONARY_BOOL;
 #ifdef V8_ENABLE_JAVASCRIPT_PROMISE_HOOKS
@@ -71,7 +67,6 @@ class BuildFlags : public base::ContextualClass<BuildFlags> {
 #else
     build_flags_["V8_ENABLE_WEBASSEMBLY"] = false;
 #endif
-    build_flags_["V8_ENABLE_SANDBOX"] = V8_ENABLE_SANDBOX_BOOL;
     build_flags_["DEBUG"] = DEBUG_BOOL;
   }
   static bool GetFlag(const std::string& name, const char* production) {
@@ -86,6 +81,7 @@ class BuildFlags : public base::ContextualClass<BuildFlags> {
  private:
   std::unordered_map<std::string, bool> build_flags_;
 };
+DEFINE_CONTEXTUAL_VARIABLE(BuildFlags)
 
 template <>
 V8_EXPORT_PRIVATE const ParseResultTypeId ParseResultHolder<std::string>::id =
@@ -423,13 +419,12 @@ base::Optional<ParseResult> MakeMethodCall(ParseResultIterator* child_results) {
 base::Optional<ParseResult> MakeNewExpression(
     ParseResultIterator* child_results) {
   bool pretenured = child_results->NextAs<bool>();
-  bool clear_padding = child_results->NextAs<bool>();
 
   auto type = child_results->NextAs<TypeExpression*>();
   auto initializers = child_results->NextAs<std::vector<NameAndExpression>>();
 
-  Expression* result = MakeNode<NewExpression>(type, std::move(initializers),
-                                               pretenured, clear_padding);
+  Expression* result =
+      MakeNode<NewExpression>(type, std::move(initializers), pretenured);
   return ParseResult{result};
 }
 
@@ -550,9 +545,7 @@ base::Optional<ParseResult> MakeDebugStatement(
     ParseResultIterator* child_results) {
   auto kind = child_results->NextAs<Identifier*>()->value;
   DCHECK(kind == "unreachable" || kind == "debug");
-  Statement* result = MakeNode<DebugStatement>(
-      kind == "unreachable" ? DebugStatement::Kind::kUnreachable
-                            : DebugStatement::Kind::kDebug);
+  Statement* result = MakeNode<DebugStatement>(kind, kind == "unreachable");
   return ParseResult{result};
 }
 
@@ -668,8 +661,6 @@ base::Optional<ParseResult> MakeTorqueMacroDeclaration(
 
 base::Optional<ParseResult> MakeTorqueBuiltinDeclaration(
     ParseResultIterator* child_results) {
-  const bool has_custom_interface_descriptor = HasAnnotation(
-      child_results, ANNOTATION_CUSTOM_INTERFACE_DESCRIPTOR, "builtin");
   auto transitioning = child_results->NextAs<bool>();
   auto javascript_linkage = child_results->NextAs<bool>();
   auto name = child_results->NextAs<Identifier*>();
@@ -684,8 +675,7 @@ base::Optional<ParseResult> MakeTorqueBuiltinDeclaration(
   auto return_type = child_results->NextAs<TypeExpression*>();
   auto body = child_results->NextAs<base::Optional<Statement*>>();
   CallableDeclaration* declaration = MakeNode<TorqueBuiltinDeclaration>(
-      transitioning, javascript_linkage, name, args, return_type,
-      has_custom_interface_descriptor, body);
+      transitioning, javascript_linkage, name, args, return_type, body);
   Declaration* result = declaration;
   if (generic_parameters.empty()) {
     if (!body) ReportError("A non-generic declaration needs a body.");
@@ -2569,7 +2559,6 @@ struct TorqueGrammar : Grammar {
   Symbol newExpression = {
       Rule({Token("new"),
             CheckIf(Sequence({Token("("), Token("Pretenured"), Token(")")})),
-            CheckIf(Sequence({Token("("), Token("ClearPadding"), Token(")")})),
             &simpleType, &initializerList},
            MakeNewExpression)};
 
@@ -2841,8 +2830,8 @@ struct TorqueGrammar : Grammar {
             &parameterListNoVararg, &returnType, optionalLabelList,
             &optionalBody},
            AsSingletonVector<Declaration*, MakeTorqueMacroDeclaration>()),
-      Rule({annotations, CheckIf(Token("transitioning")),
-            CheckIf(Token("javascript")), Token("builtin"), &name,
+      Rule({CheckIf(Token("transitioning")), CheckIf(Token("javascript")),
+            Token("builtin"), &name,
             TryOrDefault<GenericParameters>(&genericParameters),
             &parameterListAllowVararg, &returnType, &optionalBody},
            AsSingletonVector<Declaration*, MakeTorqueBuiltinDeclaration>()),

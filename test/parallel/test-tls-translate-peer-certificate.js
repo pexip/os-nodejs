@@ -53,7 +53,7 @@ deepStrictEqual(
 }
 
 deepStrictEqual(translatePeerCertificate({ infoAccess: '' }),
-                { infoAccess: { __proto__: null } });
+                { infoAccess: Object.create(null) });
 deepStrictEqual(translatePeerCertificate({ infoAccess: null }),
                 { infoAccess: null });
 {
@@ -61,7 +61,7 @@ deepStrictEqual(translatePeerCertificate({ infoAccess: null }),
       '__proto__:mostly harmless\n' +
       'hasOwnProperty:not a function\n' +
       'OCSP - URI:file:///etc/passwd\n';
-  const expected = { __proto__: null };
+  const expected = Object.create(null);
   expected.__proto__ = ['mostly harmless'];
   expected.hasOwnProperty = ['not a function'];
   expected['OCSP - URI'] = ['file:///etc/passwd'];

@@ -13,21 +13,19 @@ const util = require('util');
 const buf = Buffer.from([0xef, 0xbb, 0xbf, 0x74, 0x65,
                          0x73, 0x74, 0xe2, 0x82, 0xac]);
 
-const encoding_sets = ['unicode-1-1-utf-8', 'unicode11utf8', 'unicode20utf8',
-                       'utf8', 'utf-8', 'x-unicode20utf8'];
 // Make Sure TextDecoder exist
 assert(TextDecoder);
 
 // Test TextDecoder, UTF-8, fatal: false, ignoreBOM: false
 {
-  encoding_sets.forEach((i) => {
+  ['unicode-1-1-utf-8', 'utf8', 'utf-8'].forEach((i) => {
     const dec = new TextDecoder(i);
     assert.strictEqual(dec.encoding, 'utf-8');
     const res = dec.decode(buf);
     assert.strictEqual(res, 'test€');
   });
 
-  encoding_sets.forEach((i) => {
+  ['unicode-1-1-utf-8', 'utf8', 'utf-8'].forEach((i) => {
     const dec = new TextDecoder(i);
     let res = '';
     res += dec.decode(buf.slice(0, 8), { stream: true });
@@ -38,13 +36,13 @@ assert(TextDecoder);
 
 // Test TextDecoder, UTF-8, fatal: false, ignoreBOM: true
 {
-  encoding_sets.forEach((i) => {
+  ['unicode-1-1-utf-8', 'utf8', 'utf-8'].forEach((i) => {
     const dec = new TextDecoder(i, { ignoreBOM: true });
     const res = dec.decode(buf);
     assert.strictEqual(res, '\ufefftest€');
   });
 
-  encoding_sets.forEach((i) => {
+  ['unicode-1-1-utf-8', 'utf8', 'utf-8'].forEach((i) => {
     const dec = new TextDecoder(i, { ignoreBOM: true });
     let res = '';
     res += dec.decode(buf.slice(0, 8), { stream: true });

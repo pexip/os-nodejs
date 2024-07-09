@@ -5,19 +5,16 @@
 #include "src/compiler/machine-graph.h"
 
 #include "src/codegen/external-reference.h"
+#include "src/compiler/node-properties.h"
 
 namespace v8 {
 namespace internal {
 namespace compiler {
 
-Node* MachineGraph::UniqueInt32Constant(int32_t value) {
-  return graph()->NewNode(common()->Int32Constant(value));
-}
-
 Node* MachineGraph::Int32Constant(int32_t value) {
   Node** loc = cache_.FindInt32Constant(value);
   if (*loc == nullptr) {
-    *loc = UniqueInt32Constant(value);
+    *loc = graph()->NewNode(common()->Int32Constant(value));
   }
   return *loc;
 }

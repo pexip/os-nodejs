@@ -8,11 +8,8 @@ import {LogEntry} from './log.mjs';
 export class TickLogEntry extends LogEntry {
   constructor(time, vmState, processedStack) {
     super(TickLogEntry.extractType(vmState, processedStack), time);
-    /** @type {string} */
     this.state = vmState;
-    /** @type {CodeEntry[]} */
     this.stack = processedStack;
-    /** @type {number} */
     this._endTime = time;
   }
 
@@ -42,7 +39,7 @@ export class TickLogEntry extends LogEntry {
       return 'Idle';
     }
     const topOfStack = processedStack[0];
-    if (typeof topOfStack === 'number' || typeof topOfStack === 'bigint') {
+    if (typeof topOfStack === 'number') {
       // TODO(cbruni): Handle VmStack and native ticks better.
       return 'Other';
     }

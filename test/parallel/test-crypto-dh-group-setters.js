@@ -6,8 +6,21 @@ if (!common.hasCrypto)
 const assert = require('assert');
 const crypto = require('crypto');
 
-// Unlike DiffieHellman, DiffieHellmanGroup does not have any setters.
-const dhg = crypto.getDiffieHellman('modp1');
-assert.strictEqual(dhg.constructor, crypto.DiffieHellmanGroup);
-assert.strictEqual(dhg.setPrivateKey, undefined);
-assert.strictEqual(dhg.setPublicKey, undefined);
+assert.throws(
+  function() {
+    crypto.getDiffieHellman('modp1').setPrivateKey('');
+  },
+  new RegExp('^TypeError: crypto\\.getDiffieHellman\\(\\.\\.\\.\\)\\.' +
+  'setPrivateKey is not a function$'),
+  'crypto.getDiffieHellman(\'modp1\').setPrivateKey(\'\') ' +
+  'failed to throw the expected error.'
+);
+assert.throws(
+  function() {
+    crypto.getDiffieHellman('modp1').setPublicKey('');
+  },
+  new RegExp('^TypeError: crypto\\.getDiffieHellman\\(\\.\\.\\.\\)\\.' +
+  'setPublicKey is not a function$'),
+  'crypto.getDiffieHellman(\'modp1\').setPublicKey(\'\') ' +
+  'failed to throw the expected error.'
+);

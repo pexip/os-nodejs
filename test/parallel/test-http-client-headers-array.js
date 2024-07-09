@@ -10,8 +10,7 @@ function execute(options) {
     const expectHeaders = {
       'x-foo': 'boom',
       'cookie': 'a=1; b=2; c=3',
-      'connection': 'keep-alive',
-      'host': 'example.com',
+      'connection': 'close'
     };
 
     // no Host header when you set headers an array
@@ -29,7 +28,6 @@ function execute(options) {
 
     assert.deepStrictEqual(req.headers, expectHeaders);
 
-    res.writeHead(200, { 'Connection': 'close' });
     res.end();
   }).listen(0, function() {
     options = Object.assign(options, {
@@ -44,20 +42,13 @@ function execute(options) {
 // Should be the same except for implicit Host header on the first two
 execute({ headers: { 'x-foo': 'boom', 'cookie': 'a=1; b=2; c=3' } });
 execute({ headers: { 'x-foo': 'boom', 'cookie': [ 'a=1', 'b=2', 'c=3' ] } });
+execute({ headers: [[ 'x-foo', 'boom' ], [ 'cookie', 'a=1; b=2; c=3' ]] });
 execute({ headers: [
-  [ 'x-foo', 'boom' ],
-  [ 'cookie', 'a=1; b=2; c=3' ],
-  [ 'Host', 'example.com' ],
-] });
-execute({ headers: [
-  [ 'x-foo', 'boom' ],
-  [ 'cookie', [ 'a=1', 'b=2', 'c=3' ]],
-  [ 'Host', 'example.com' ],
+  [ 'x-foo', 'boom' ], [ 'cookie', [ 'a=1', 'b=2', 'c=3' ]],
 ] });
 execute({ headers: [
   [ 'x-foo', 'boom' ], [ 'cookie', 'a=1' ],
-  [ 'cookie', 'b=2' ], [ 'cookie', 'c=3' ],
-  [ 'Host', 'example.com'],
+  [ 'cookie', 'b=2' ], [ 'cookie', 'c=3'],
 ] });
 
 // Authorization and Host header both missing from the second
@@ -66,5 +57,4 @@ execute({ auth: 'foo:bar', headers:
 execute({ auth: 'foo:bar', headers: [
   [ 'x-foo', 'boom' ], [ 'cookie', 'a=1' ],
   [ 'cookie', 'b=2' ], [ 'cookie', 'c=3'],
-  [ 'Host', 'example.com'],
 ] });

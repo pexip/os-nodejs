@@ -6,6 +6,7 @@ const assert = require('assert');
 const fixtures = require('../common/fixtures');
 const fs = require('fs');
 const http2 = require('http2');
+const path = require('path');
 
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
@@ -29,7 +30,7 @@ let offsetTimeout = common.platformTimeout(100);
 let didReceiveData = false;
 
 const content = Buffer.alloc(writeSize, 0x44);
-const filepath = tmpdir.resolve('http2-large-write.tmp');
+const filepath = path.join(tmpdir.path, 'http2-large-write.tmp');
 fs.writeFileSync(filepath, content, 'binary');
 const fd = fs.openSync(filepath, 'r');
 process.on('beforeExit', () => fs.closeSync(fd));

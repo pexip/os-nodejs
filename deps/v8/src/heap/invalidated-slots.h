@@ -21,9 +21,7 @@ namespace internal {
 // that potentially invalidates slots recorded concurrently. The second part
 // of each element is the size of the corresponding object before the layout
 // change.
-using InvalidatedSlots = std::map<HeapObject, int, Object::Comparer>;
-
-class NonAtomicMarkingState;
+using InvalidatedSlots = std::set<HeapObject, Object::Comparer>;
 
 // This class provides IsValid predicate that takes into account the set
 // of invalidated objects in the given memory chunk.
@@ -33,38 +31,22 @@ class NonAtomicMarkingState;
 // n is the number of IsValid queries.
 class V8_EXPORT_PRIVATE InvalidatedSlotsFilter {
  public:
-  enum class LivenessCheck {
-    kYes,
-    kNo,
-  };
-
-  static InvalidatedSlotsFilter OldToOld(MemoryChunk* chunk,
-                                         LivenessCheck liveness_check);
-  static InvalidatedSlotsFilter OldToNew(MemoryChunk* chunk,
-                                         LivenessCheck liveness_check);
-  static InvalidatedSlotsFilter OldToShared(MemoryChunk* chunk,
-                                            LivenessCheck liveness_check);
+  static InvalidatedSlotsFilter OldToOld(MemoryChunk* chunk);
+  static InvalidatedSlotsFilter OldToNew(MemoryChunk* chunk);
 
   inline bool IsValid(Address slot);
 
  private:
-  struct InvalidatedObjectInfo {
-    Address address;
-    int size;
-    bool is_live;
-  };
-
   explicit InvalidatedSlotsFilter(MemoryChunk* chunk,
                                   InvalidatedSlots* invalidated_slots,
-                                  RememberedSetType remembered_set_type,
-                                  LivenessCheck liveness_check);
+                                  RememberedSetType remembered_set_type);
 
   InvalidatedSlots::const_iterator iterator_;
   InvalidatedSlots::const_iterator iterator_end_;
   Address sentinel_;
-  InvalidatedObjectInfo current_{kNullAddress, 0, false};
-  InvalidatedObjectInfo next_{kNullAddress, 0, false};
-  NonAtomicMarkingState* const marking_state_;
+  Address invalidated_start_;
+  Address next_invalidated_start_;
+  int invalidated_size_;
   InvalidatedSlots empty_;
 #ifdef DEBUG
   Address last_slot_;
@@ -78,8 +60,6 @@ class V8_EXPORT_PRIVATE InvalidatedSlotsFilter {
 class V8_EXPORT_PRIVATE InvalidatedSlotsCleanup {
  public:
   static InvalidatedSlotsCleanup OldToNew(MemoryChunk* chunk);
-  static InvalidatedSlotsCleanup OldToOld(MemoryChunk* chunk);
-  static InvalidatedSlotsCleanup OldToShared(MemoryChunk* chunk);
   static InvalidatedSlotsCleanup NoCleanup(MemoryChunk* chunk);
 
   explicit InvalidatedSlotsCleanup(MemoryChunk* chunk,

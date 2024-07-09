@@ -1,7 +1,4 @@
-promise_test(() => Promise.all([
-  fetch("resources/urltestdata.json").then(res => res.json()),
-  fetch("resources/urltestdata-javascript-only.json").then(res => res.json()),
-]).then((tests) => tests.flat()).then(runURLTests), "Loading data…");
+promise_test(() => fetch("resources/urltestdata.json").then(res => res.json()).then(runURLTests), "Loading data…");
 
 function runURLTests(urlTests) {
   for (const expected of urlTests) {

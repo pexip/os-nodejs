@@ -11,12 +11,7 @@ DEPS_DIR="$BASE_DIR/deps"
 . "$BASE_DIR/tools/dep_updaters/utils.sh"
 
 NEW_VERSION="$("$NODE" --input-type=module <<'EOF'
-const res = await fetch('https://api.github.com/repos/ngtcp2/ngtcp2/releases',
-  process.env.GITHUB_TOKEN && {
-    headers: {
-      "Authorization": `Bearer ${process.env.GITHUB_TOKEN}`
-    },
-  });
+const res = await fetch('https://api.github.com/repos/ngtcp2/ngtcp2/releases');
 if (!res.ok) throw new Error(`FetchError: ${res.status} ${res.statusText}`, { cause: res });
 const releases = await res.json()
 const { tag_name } = releases.at(0);
@@ -28,8 +23,12 @@ NGTCP2_VERSION_H="$DEPS_DIR/ngtcp2/ngtcp2/lib/includes/ngtcp2/version.h"
 
 CURRENT_VERSION=$(grep "#define NGTCP2_VERSION" "$NGTCP2_VERSION_H" | sed -n "s/^.*VERSION \"\(.*\)\"/\1/p")
 
-# This function exit with 0 if new version and current version are the same
-compare_dependency_version "ngtcp2" "$NEW_VERSION" "$CURRENT_VERSION"
+echo "Comparing $NEW_VERSION with $CURRENT_VERSION"
+
+if [ "$NEW_VERSION" = "$CURRENT_VERSION" ]; then
+  echo "Skipped because ngtcp2 is on the latest version."
+  exit 0
+fi
 
 WORKSPACE=$(mktemp -d 2> /dev/null || mktemp -d -t 'tmp')
 
@@ -63,10 +62,18 @@ autoreconf -i
 
 ./configure --prefix="$PWD/build" --enable-lib-only 
 
-replace_dir "$DEPS_DIR/ngtcp2/ngtcp2/lib" "lib"
-replace_dir "$DEPS_DIR/ngtcp2/ngtcp2/crypto" "crypto"
+cp -R lib/* "$DEPS_DIR/ngtcp2/ngtcp2/lib/"
 
-# Update the version number on maintaining-dependencies.md
-# and print the new version as the last line of the script as we need
-# to add it to $GITHUB_ENV variable
-finalize_version_update "ngtcp2" "$NEW_VERSION"
+cp -R crypto/* "$DEPS_DIR/ngtcp2/ngtcp2/crypto/"
+
+echo "All done!"
+echo ""
+echo "Please git add ngtcp2, commit the new version:"
+echo ""
+echo "$ git add -A deps/ngtcp2"
+echo "$ git commit -m \"deps: update ngtcp2 to $NEW_VERSION\""
+echo ""
+
+# The last line of the script should always print the new version,
+# as we need to add it to $GITHUB_ENV variable.
+echo "NEW_VERSION=$NEW_VERSION"

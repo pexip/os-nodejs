@@ -4,6 +4,7 @@ const tmpdir = require('../common/tmpdir');
 const fixtures = require('../common/fixtures');
 const { describe, it, test } = require('node:test');
 const assert = require('node:assert');
+const path = require('node:path');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const timers = require('node:timers/promises');
@@ -87,7 +88,7 @@ describe('concurrency: true implies Infinity', { concurrency: true }, () => {
 }
 
 test('--test multiple files', { skip: os.availableParallelism() < 3 }, async () => {
-  await fs.writeFile(tmpdir.resolve('test-runner-concurrency'), '');
+  await fs.writeFile(path.resolve(tmpdir.path, 'test-runner-concurrency'), '');
   const { code, stderr } = await common.spawnPromisified(process.execPath, [
     '--test',
     fixtures.path('test-runner', 'concurrency', 'a.mjs'),

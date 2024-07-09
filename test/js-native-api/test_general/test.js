@@ -4,7 +4,6 @@
 const common = require('../../common');
 const test_general = require(`./build/${common.buildType}/test_general`);
 const assert = require('assert');
-const { gcUntil } = require('../../common/gc');
 
 const val1 = '1';
 const val2 = 1;
@@ -80,9 +79,9 @@ async function runGCTests() {
   assert.strictEqual(test_general.derefItemWasCalled(), false);
 
   (() => test_general.wrap({}))();
-  await gcUntil('deref_item() was called upon garbage collecting a ' +
+  await common.gcUntil('deref_item() was called upon garbage collecting a ' +
                        'wrapped object.',
-                () => test_general.derefItemWasCalled());
+                       () => test_general.derefItemWasCalled());
 
   // Ensure that removing a wrap and garbage collecting does not fire the
   // finalize callback.
@@ -90,7 +89,7 @@ async function runGCTests() {
   test_general.testFinalizeWrap(z);
   test_general.removeWrap(z);
   z = null;
-  await gcUntil(
+  await common.gcUntil(
     'finalize callback was not called upon garbage collection.',
     () => (!test_general.finalizeWasCalled()));
 }

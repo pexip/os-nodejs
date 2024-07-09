@@ -9,6 +9,7 @@ common.skipIfInspectorDisabled();
 
 const assert = require('assert');
 const fs = require('fs');
+const path = require('path');
 const { spawnSync } = require('child_process');
 
 const tmpdir = require('../common/tmpdir');
@@ -37,7 +38,7 @@ const {
     console.log(output.stderr.toString());
   }
   assert.strictEqual(output.status, 0);
-  const dir = tmpdir.resolve('prof');
+  const dir = path.join(tmpdir.path, 'prof');
   assert(fs.existsSync(dir));
   const profiles = getHeapProfiles(dir);
   assert.strictEqual(profiles.length, 1);

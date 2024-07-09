@@ -22,11 +22,12 @@
 'use strict';
 require('../common');
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 
 const tmpdir = require('../common/tmpdir');
 
-const file = tmpdir.resolve('write.txt');
+const file = path.join(tmpdir.path, 'write.txt');
 
 tmpdir.refresh();
 

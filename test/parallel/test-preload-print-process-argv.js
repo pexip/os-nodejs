@@ -7,18 +7,19 @@ require('../common');
 
 const tmpdir = require('../common/tmpdir');
 const assert = require('assert');
+const { join } = require('path');
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 
 tmpdir.refresh();
 
 fs.writeFileSync(
-  tmpdir.resolve('preload.js'),
+  join(tmpdir.path, 'preload.js'),
   'console.log(JSON.stringify(process.argv));',
   'utf-8');
 
 fs.writeFileSync(
-  tmpdir.resolve('main.js'),
+  join(tmpdir.path, 'main.js'),
   'console.log(JSON.stringify(process.argv));',
   'utf-8');
 

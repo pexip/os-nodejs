@@ -10,9 +10,9 @@ if (!common.hasCrypto)
   common.skip('missing crypto');
 
 const { TLSSocket } = require('tls');
-const { duplexPair } = require('stream');
+const makeDuplexPair = require('../common/duplexpair');
 
-let [ clientSide ] = duplexPair();
+let { clientSide } = makeDuplexPair();
 
 let clientTLS = new TLSSocket(clientSide, { isServer: false });
 let clientTLSHandle = clientTLS._handle;  // eslint-disable-line no-unused-vars

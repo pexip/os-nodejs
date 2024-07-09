@@ -1,30 +1,27 @@
 'use strict';
+const common = require('../common');
+const assert = require('assert');
+const url = require('url');
 
-require('../common');
+const throwsObjsAndReportTypes = [
+  undefined,
+  null,
+  true,
+  false,
+  0,
+  function() {},
+  Symbol('foo'),
+];
 
-const assert = require('node:assert');
-const url = require('node:url');
-const { test } = require('node:test');
-
-test('format invalid input', () => {
-  const throwsObjsAndReportTypes = [
-    undefined,
-    null,
-    true,
-    false,
-    0,
-    function() {},
-    Symbol('foo'),
-  ];
-
-  for (const urlObject of throwsObjsAndReportTypes) {
-    assert.throws(() => {
-      url.format(urlObject);
-    }, {
-      code: 'ERR_INVALID_ARG_TYPE',
-      name: 'TypeError',
-    });
-  }
-  assert.strictEqual(url.format(''), '');
-  assert.strictEqual(url.format({}), '');
-});
+for (const urlObject of throwsObjsAndReportTypes) {
+  assert.throws(() => {
+    url.format(urlObject);
+  }, {
+    code: 'ERR_INVALID_ARG_TYPE',
+    name: 'TypeError',
+    message: 'The "urlObject" argument must be one of type object or string.' +
+             common.invalidArgTypeHelper(urlObject)
+  });
+}
+assert.strictEqual(url.format(''), '');
+assert.strictEqual(url.format({}), '');

@@ -21,7 +21,6 @@
 #include "src/objects/js-collator-inl.h"
 #include "src/objects/js-date-time-format-inl.h"
 #include "src/objects/js-display-names-inl.h"
-#include "src/objects/js-duration-format-inl.h"
 #include "src/objects/js-list-format-inl.h"
 #include "src/objects/js-locale-inl.h"
 #include "src/objects/js-number-format-inl.h"
@@ -86,7 +85,15 @@ BUILTIN(NumberFormatPrototypeFormatToParts) {
 
   Handle<Object> x;
   if (args.length() >= 2) {
-    x = args.at(1);
+    Handle<Object> value = args.at(1);
+    if (FLAG_harmony_intl_number_format_v3) {
+      ASSIGN_RETURN_FAILURE_ON_EXCEPTION(
+          isolate, x,
+          Intl::ToIntlMathematicalValueAsNumberBigIntOrString(isolate, value));
+    } else {
+      ASSIGN_RETURN_FAILURE_ON_EXCEPTION(isolate, x,
+                                         Object::ToNumeric(isolate, value));
+    }
   } else {
     x = isolate->factory()->nan_value();
   }
@@ -138,21 +145,46 @@ BUILTIN(DateTimeFormatPrototypeFormatToParts) {
       Handle<JSDateTimeFormat>::cast(date_format_holder);
 
   Handle<Object> x = args.atOrUndefined(isolate, 1);
+  if (x->IsUndefined(isolate)) {
+    x = factory->NewNumber(JSDate::CurrentTimeValue(isolate));
+  } else {
+    ASSIGN_RETURN_FAILURE_ON_EXCEPTION(isolate, x,
+                                       Object::ToNumber(isolate, args.at(1)));
+  }
+
+  double date_value = DateCache::TimeClip(x->Number());
+  if (std::isnan(date_value)) {
+    THROW_NEW_ERROR_RETURN_FAILURE(
+        isolate, NewRangeError(MessageTemplate::kInvalidTimeValue));
+  }
+
   RETURN_RESULT_OR_FAILURE(isolate, JSDateTimeFormat::FormatToParts(
-                                        isolate, dtf, x, false, method_name));
+                                        isolate, dtf, date_value, false));
 }
 
 // Common code for DateTimeFormatPrototypeFormtRange(|ToParts)
 template <class T, MaybeHandle<T> (*F)(Isolate*, Handle<JSDateTimeFormat>,
-                                       Handle<Object>, Handle<Object>,
-                                       const char* const)>
+                                       double, double)>
 V8_WARN_UNUSED_RESULT Object DateTimeFormatRange(
     BuiltinArguments args, Isolate* isolate, const char* const method_name) {
   // 1. Let dtf be this value.
-  // 2. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
-  CHECK_RECEIVER(JSDateTimeFormat, dtf, method_name);
+  // 2. If Type(dtf) is not Object, throw a TypeError exception.
+  CHECK_RECEIVER(JSObject, date_format_holder, method_name);
 
-  // 3. If startDate is undefined or endDate is undefined, throw a TypeError
+  Factory* factory = isolate->factory();
+
+  // 3. If dtf does not have an [[InitializedDateTimeFormat]] internal slot,
+  //    throw a TypeError exception.
+  if (!date_format_holder->IsJSDateTimeFormat()) {
+    THROW_NEW_ERROR_RETURN_FAILURE(
+        isolate, NewTypeError(MessageTemplate::kIncompatibleMethodReceiver,
+                              factory->NewStringFromAsciiChecked(method_name),
+                              date_format_holder));
+  }
+  Handle<JSDateTimeFormat> dtf =
+      Handle<JSDateTimeFormat>::cast(date_format_holder);
+
+  // 4. If startDate is undefined or endDate is undefined, throw a TypeError
   // exception.
   Handle<Object> start_date = args.atOrUndefined(isolate, 1);
   Handle<Object> end_date = args.atOrUndefined(isolate, 2);
@@ -160,12 +192,25 @@ V8_WARN_UNUSED_RESULT Object DateTimeFormatRange(
     THROW_NEW_ERROR_RETURN_FAILURE(
         isolate, NewTypeError(MessageTemplate::kInvalidTimeValue));
   }
+  // 5. Let x be ? ToNumber(startDate).
+  ASSIGN_RETURN_FAILURE_ON_EXCEPTION(isolate, start_date,
+                                     Object::ToNumber(isolate, start_date));
+  double x = start_date->Number();
 
-  // 4. Return ? FormatDateTimeRange(dtf, startDate, endDate)
+  // 6. Let y be ? ToNumber(endDate).
+  ASSIGN_RETURN_FAILURE_ON_EXCEPTION(isolate, end_date,
+                                     Object::ToNumber(isolate, end_date));
+  double y = end_date->Number();
+  // 7. If x is greater than y, throw a RangeError exception.
+  if (x > y) {
+    THROW_NEW_ERROR_RETURN_FAILURE(
+        isolate, NewRangeError(MessageTemplate::kInvalidTimeValue));
+  }
+
+  // 8. Return ? FormatDateTimeRange(dtf, x, y)
   // OR
-  // 4. Return ? FormatDateTimeRangeToParts(dtf, startDate, endDate).
-  RETURN_RESULT_OR_FAILURE(isolate,
-                           F(isolate, dtf, start_date, end_date, method_name));
+  // 8. Return ? FormatDateTimeRangeToParts(dtf, x, y).
+  RETURN_RESULT_OR_FAILURE(isolate, F(isolate, dtf, x, y));
 }
 
 BUILTIN(DateTimeFormatPrototypeFormatRange) {
@@ -384,51 +429,6 @@ BUILTIN(DisplayNamesPrototypeOf) {
                            JSDisplayNames::Of(isolate, holder, code_obj));
 }
 
-// Intl.DurationFormat
-BUILTIN(DurationFormatConstructor) {
-  HandleScope scope(isolate);
-
-  return DisallowCallConstructor<JSDurationFormat>(
-      args, isolate, v8::Isolate::UseCounterFeature::kDurationFormat,
-      "Intl.DurationFormat");
-}
-
-BUILTIN(DurationFormatPrototypeResolvedOptions) {
-  HandleScope scope(isolate);
-  CHECK_RECEIVER(JSDurationFormat, holder,
-                 "Intl.DurationFormat.prototype.resolvedOptions");
-  return *JSDurationFormat::ResolvedOptions(isolate, holder);
-}
-
-BUILTIN(DurationFormatSupportedLocalesOf) {
-  HandleScope scope(isolate);
-  Handle<Object> locales = args.atOrUndefined(isolate, 1);
-  Handle<Object> options = args.atOrUndefined(isolate, 2);
-
-  RETURN_RESULT_OR_FAILURE(
-      isolate, Intl::SupportedLocalesOf(
-                   isolate, "Intl.DurationFormat.supportedLocalesOf",
-                   JSDurationFormat::GetAvailableLocales(), locales, options));
-}
-
-BUILTIN(DurationFormatPrototypeFormat) {
-  HandleScope scope(isolate);
-  CHECK_RECEIVER(JSDurationFormat, holder,
-                 "Intl.DurationFormat.prototype.format");
-  Handle<Object> value = args.atOrUndefined(isolate, 1);
-  RETURN_RESULT_OR_FAILURE(isolate,
-                           JSDurationFormat::Format(isolate, holder, value));
-}
-
-BUILTIN(DurationFormatPrototypeFormatToParts) {
-  HandleScope scope(isolate);
-  CHECK_RECEIVER(JSDurationFormat, holder,
-                 "Intl.DurationFormat.prototype.formatToParts");
-  Handle<Object> value = args.atOrUndefined(isolate, 1);
-  RETURN_RESULT_OR_FAILURE(
-      isolate, JSDurationFormat::FormatToParts(isolate, holder, value));
-}
-
 // Intl.NumberFormat
 
 BUILTIN(NumberFormatConstructor) {
@@ -505,8 +505,25 @@ BUILTIN(NumberFormatInternalFormatNumber) {
   // 3. If value is not provided, let value be undefined.
   Handle<Object> value = args.atOrUndefined(isolate, 1);
 
-  RETURN_RESULT_OR_FAILURE(isolate, JSNumberFormat::NumberFormatFunction(
-                                        isolate, number_format, value));
+  // 4. Let x be ? ToNumeric(value).
+  Handle<Object> numeric_obj;
+  if (FLAG_harmony_intl_number_format_v3) {
+    ASSIGN_RETURN_FAILURE_ON_EXCEPTION(
+        isolate, numeric_obj,
+        Intl::ToIntlMathematicalValueAsNumberBigIntOrString(isolate, value));
+  } else {
+    ASSIGN_RETURN_FAILURE_ON_EXCEPTION(isolate, numeric_obj,
+                                       Object::ToNumeric(isolate, value));
+  }
+
+  icu::number::LocalizedNumberFormatter* icu_localized_number_formatter =
+      number_format->icu_number_formatter().raw();
+  CHECK_NOT_NULL(icu_localized_number_formatter);
+
+  // Return FormatNumber(nf, x).
+  RETURN_RESULT_OR_FAILURE(
+      isolate, JSNumberFormat::FormatNumeric(
+                   isolate, *icu_localized_number_formatter, numeric_obj));
 }
 
 // Common code for NumberFormatPrototypeFormtRange(|ToParts)
@@ -536,7 +553,19 @@ V8_WARN_UNUSED_RESULT Object NumberFormatRange(BuiltinArguments args,
                               factory->NewStringFromStaticChars("end"), end));
   }
 
-  RETURN_RESULT_OR_FAILURE(isolate, F(isolate, nf, start, end));
+  // 4. Let x be ? ToIntlMathematicalValue(start).
+  Handle<Object> x;
+  ASSIGN_RETURN_FAILURE_ON_EXCEPTION(
+      isolate, x,
+      Intl::ToIntlMathematicalValueAsNumberBigIntOrString(isolate, start));
+
+  // 5. Let y be ? ToIntlMathematicalValue(end).
+  Handle<Object> y;
+  ASSIGN_RETURN_FAILURE_ON_EXCEPTION(
+      isolate, y,
+      Intl::ToIntlMathematicalValueAsNumberBigIntOrString(isolate, end));
+
+  RETURN_RESULT_OR_FAILURE(isolate, F(isolate, nf, x, y));
 }
 
 BUILTIN(NumberFormatPrototypeFormatRange) {
@@ -610,8 +639,7 @@ BUILTIN(DateTimeFormatInternalFormat) {
   Handle<Object> date = args.atOrUndefined(isolate, 1);
 
   RETURN_RESULT_OR_FAILURE(isolate, JSDateTimeFormat::DateTimeFormat(
-                                        isolate, date_format_holder, date,
-                                        "DateTime Format Functions"));
+                                        isolate, date_format_holder, date));
 }
 
 BUILTIN(IntlGetCanonicalLocales) {
@@ -901,39 +929,28 @@ BUILTIN(RelativeTimeFormatPrototypeResolvedOptions) {
   return *JSRelativeTimeFormat::ResolvedOptions(isolate, format_holder);
 }
 
-bool IsFastLocale(Object maybe_locale) {
-  DisallowGarbageCollection no_gc;
-  if (!maybe_locale.IsSeqOneByteString()) {
-    return false;
-  }
-  auto locale = SeqOneByteString::cast(maybe_locale);
-  uint8_t* chars = locale.GetChars(no_gc);
-  if (locale.length() < 2 || !std::isalpha(chars[0]) ||
-      !std::isalpha(chars[1])) {
-    return false;
-  }
-  if (locale.length() != 2 &&
-      (locale.length() != 5 || chars[2] != '-' || !std::isalpha(chars[3]) ||
-       !std::isalpha(chars[4]))) {
-    return false;
-  }
-  char first = chars[0] | 0x20;
-  char second = chars[1] | 0x20;
-  return (first != 'a' || second != 'z') && (first != 'e' || second != 'l') &&
-         (first != 'l' || second != 't') && (first != 't' || second != 'r');
+BUILTIN(StringPrototypeToLocaleLowerCase) {
+  HandleScope scope(isolate);
+
+  isolate->CountUsage(v8::Isolate::UseCounterFeature::kStringToLocaleLowerCase);
+
+  TO_THIS_STRING(string, "String.prototype.toLocaleLowerCase");
+
+  RETURN_RESULT_OR_FAILURE(
+      isolate, Intl::StringLocaleConvertCase(isolate, string, false,
+                                             args.atOrUndefined(isolate, 1)));
 }
 
 BUILTIN(StringPrototypeToLocaleUpperCase) {
   HandleScope scope(isolate);
-  Handle<Object> maybe_locale = args.atOrUndefined(isolate, 1);
+
+  isolate->CountUsage(v8::Isolate::UseCounterFeature::kStringToLocaleUpperCase);
+
   TO_THIS_STRING(string, "String.prototype.toLocaleUpperCase");
-  if (maybe_locale->IsUndefined() || IsFastLocale(*maybe_locale)) {
-    string = String::Flatten(isolate, string);
-    RETURN_RESULT_OR_FAILURE(isolate, Intl::ConvertToUpper(isolate, string));
-  } else {
-    RETURN_RESULT_OR_FAILURE(isolate, Intl::StringLocaleConvertCase(
-                                          isolate, string, true, maybe_locale));
-  }
+
+  RETURN_RESULT_OR_FAILURE(
+      isolate, Intl::StringLocaleConvertCase(isolate, string, true,
+                                             args.atOrUndefined(isolate, 1)));
 }
 
 BUILTIN(PluralRulesConstructor) {
@@ -1003,6 +1020,8 @@ BUILTIN(PluralRulesPrototypeSelectRange) {
                                      Object::ToNumber(isolate, end));
 
   // 6. Return ! ResolvePluralRange(pr, x, y).
+  // Inside ResolvePluralRange
+  // 5. If x is NaN or y is NaN, throw a RangeError exception.
   if (x->IsNaN()) {
     THROW_NEW_ERROR_RETURN_FAILURE(
         isolate, NewRangeError(MessageTemplate::kInvalid,
@@ -1014,9 +1033,16 @@ BUILTIN(PluralRulesPrototypeSelectRange) {
                                isolate->factory()->endRange_string(), y));
   }
 
+  // 6. If x > y, throw a RangeError exception.
+  double x_double = x->Number();
+  double y_double = y->Number();
+  if (x_double > y_double) {
+    THROW_NEW_ERROR_RETURN_FAILURE(
+        isolate, NewRangeError(MessageTemplate::kInvalid, x, y));
+  }
   RETURN_RESULT_OR_FAILURE(
       isolate, JSPluralRules::ResolvePluralRange(isolate, plural_rules,
-                                                 x->Number(), y->Number()));
+                                                 x_double, y_double));
 }
 
 BUILTIN(PluralRulesSupportedLocalesOf) {

@@ -24,14 +24,7 @@ const requiredCallback = common.mustCall((results) => {
   assert.strictEqual(seeds.length, kRepetitions);
 });
 
-function generateSeed() {
-  return execFilePromise(process.execPath, [
-    // Needed for %NeverOptimizeFunction.
-    '--allow-natives-syntax',
-    targetScript,
-  ]);
-}
-
+const generateSeed = () => execFilePromise(process.execPath, [targetScript]);
 const subprocesses = [...new Array(kRepetitions)].map(generateSeed);
 
 Promise.all(subprocesses)

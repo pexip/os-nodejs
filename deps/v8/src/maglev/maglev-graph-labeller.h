@@ -33,17 +33,16 @@ class MaglevGraphLabeller {
 
   int max_node_id() const { return next_node_id_ - 1; }
 
-  void PrintNodeLabel(std::ostream& os, const NodeBase* node) {
+  int max_node_id_width() const { return std::ceil(std::log10(max_node_id())); }
+
+  void PrintNodeLabel(std::ostream& os, const Node* node) {
     auto node_id_it = node_ids_.find(node);
 
     if (node_id_it == node_ids_.end()) {
-      os << "<unregistered node " << node << ">";
+      os << "<invalid node " << node << ">";
       return;
     }
 
-    if (node->has_id()) {
-      os << "v" << node->id() << "/";
-    }
     os << "n" << node_id_it->second;
   }
 

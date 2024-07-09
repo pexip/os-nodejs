@@ -35,7 +35,7 @@ Install and update using `pip`_:
 
     $ pip install -U Jinja2
 
-.. _pip: https://pip.pypa.io/en/stable/getting-started/
+.. _pip: https://pip.pypa.io/en/stable/quickstart/
 
 
 In A Nutshell
@@ -54,25 +54,13 @@ In A Nutshell
     {% endblock %}
 
 
-Donate
-------
-
-The Pallets organization develops and supports Jinja and other popular
-packages. In order to grow the community of contributors and users, and
-allow the maintainers to devote more time to the projects, `please
-donate today`_.
-
-.. _please donate today: https://palletsprojects.com/donate
-
-
 Links
 -----
 
--   Documentation: https://jinja.palletsprojects.com/
--   Changes: https://jinja.palletsprojects.com/changes/
--   PyPI Releases: https://pypi.org/project/Jinja2/
--   Source Code: https://github.com/pallets/jinja/
--   Issue Tracker: https://github.com/pallets/jinja/issues/
 -   Website: https://palletsprojects.com/p/jinja/
--   Twitter: https://twitter.com/PalletsTeam
--   Chat: https://discord.gg/pallets
+-   Documentation: https://jinja.palletsprojects.com/
+-   Releases: https://pypi.org/project/Jinja2/
+-   Code: https://github.com/pallets/jinja
+-   Issue tracker: https://github.com/pallets/jinja/issues
+-   Test status: https://dev.azure.com/pallets/jinja/_build
+-   Official chat: https://discord.gg/t6rrQZH

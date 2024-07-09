@@ -17,11 +17,7 @@ const nodeBinary = process.execPath;
 
 tmpdir.refresh();
 
-if (!tmpdir.hasEnoughSpace(120 * 1024 * 1024)) {
-  common.skip('Available disk space < 120MB');
-}
-
-const appBundlePath = tmpdir.resolve('node_sandboxed.app');
+const appBundlePath = path.join(tmpdir.path, 'node_sandboxed.app');
 const appBundleContentPath = path.join(appBundlePath, 'Contents');
 const appExecutablePath = path.join(
   appBundleContentPath, 'MacOS', 'node');

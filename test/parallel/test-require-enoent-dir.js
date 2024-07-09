@@ -8,10 +8,10 @@ const path = require('path');
 
 tmpdir.refresh();
 
-const fooPath = tmpdir.resolve('foo.cjs');
+const fooPath = path.join(tmpdir.path, 'foo.cjs');
 fs.writeFileSync(fooPath, '');
 
-const dirPath = tmpdir.resolve('delete_me');
+const dirPath = path.join(tmpdir.path, 'delete_me');
 fs.mkdirSync(dirPath, {
   recursive: true
 });

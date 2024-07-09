@@ -2,9 +2,9 @@
 
 require('../common');
 const fixtures = require('../common/fixtures');
-const { execFileSync } = require('child_process');
+const { execSync } = require('child_process');
 
-execFileSync(process.execPath, {
+execSync(process.execPath, {
   encoding: 'utf8',
   stdio: 'inherit',
   env: {

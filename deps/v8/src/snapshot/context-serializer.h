@@ -7,6 +7,7 @@
 
 #include "src/objects/contexts.h"
 #include "src/snapshot/serializer.h"
+#include "src/utils/address-map.h"
 
 namespace v8 {
 namespace internal {

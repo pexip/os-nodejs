@@ -1331,13 +1331,12 @@ const tsp = require('timers/promises');
 
 {
   const ac = new AbortController();
-  const reason = new Error('Reason');
   const r = Readable.from(async function* () {
     for (let i = 0; i < 10; i++) {
       await Promise.resolve();
       yield String(i);
       if (i === 5) {
-        ac.abort(reason);
+        ac.abort();
       }
     }
   }());
@@ -1350,7 +1349,6 @@ const tsp = require('timers/promises');
   });
   const cb = common.mustCall((err) => {
     assert.strictEqual(err.name, 'AbortError');
-    assert.strictEqual(err.cause, reason);
     assert.strictEqual(res, '012345');
     assert.strictEqual(w.destroyed, true);
     assert.strictEqual(r.destroyed, true);
@@ -1478,14 +1476,10 @@ const tsp = require('timers/promises');
     });
 
     const duplex = new PassThrough();
-    const transform = new PassThrough();
 
     read.push(null);
 
-    await pipelinePromise(read, transform, duplex, { end: false });
-
-    assert.strictEqual(transform.destroyed, true);
-    assert.strictEqual(transform.writableEnded, true);
+    await pipelinePromise(read, duplex, { end: false });
 
     assert.strictEqual(duplex.destroyed, false);
     assert.strictEqual(duplex.writableEnded, false);

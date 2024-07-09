@@ -17,7 +17,7 @@ class EntryFrameConstants : public AllStatic {
  public:
   // This is the offset to where JSEntry pushes the current value of
   // Isolate::c_entry_fp onto the stack.
-  static constexpr int kNextExitFrameFPOffset = -6 * kSystemPointerSize;
+  static constexpr int kCallerFPOffset = -6 * kSystemPointerSize;
 
   // EntryFrame is used by JSEntry, JSConstructEntry and JSRunMicrotasksEntry.
   // All of them take |root_register_value| as the first parameter.
@@ -34,24 +34,17 @@ class EntryFrameConstants : public AllStatic {
   static constexpr int kMicrotaskQueueArgOffset = +3 * kSystemPointerSize;
 };
 
-class WasmLiftoffSetupFrameConstants : public TypedFrameConstants {
+class WasmCompileLazyFrameConstants : public TypedFrameConstants {
  public:
-  // Number of gp parameters, without the instance.
-  static constexpr int kNumberOfSavedGpParamRegs = 3;
+  static constexpr int kNumberOfSavedGpParamRegs = 4;
   static constexpr int kNumberOfSavedFpParamRegs = 6;
 
-  // There's one spilled value (which doesn't need visiting) below the instance.
-  static constexpr int kInstanceSpillOffset =
-      TYPED_FRAME_PUSHED_VALUE_OFFSET(1);
-
-  static constexpr int kParameterSpillsOffset[] = {
-      TYPED_FRAME_PUSHED_VALUE_OFFSET(2), TYPED_FRAME_PUSHED_VALUE_OFFSET(3),
-      TYPED_FRAME_PUSHED_VALUE_OFFSET(4)};
-
-  // SP-relative.
-  static constexpr int kWasmInstanceOffset = 2 * kSystemPointerSize;
-  static constexpr int kDeclaredFunctionIndexOffset = 1 * kSystemPointerSize;
-  static constexpr int kNativeModuleOffset = 0;
+  // FP-relative.
+  static constexpr int kWasmInstanceOffset = TYPED_FRAME_PUSHED_VALUE_OFFSET(0);
+  static constexpr int kFixedFrameSizeFromFp =
+      TypedFrameConstants::kFixedFrameSizeFromFp +
+      kNumberOfSavedGpParamRegs * kSystemPointerSize +
+      kNumberOfSavedFpParamRegs * kSimd128Size;
 };
 
 // Frame constructed by the {WasmDebugBreak} builtin.

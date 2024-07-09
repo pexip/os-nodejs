@@ -26,7 +26,7 @@ const {
   defaultResolve: resolve
 } = internalResolve;
 
-const rel = (file) => tmpdir.resolve(file);
+const rel = (file) => path.join(tmpdir.path, file);
 const previousCwd = process.cwd();
 const nmDir = rel('node_modules');
 
@@ -40,8 +40,8 @@ try {
   [
     [ '/es-modules/package-type-module/index.js', 'module' ],
     [ '/es-modules/package-type-commonjs/index.js', 'commonjs' ],
-    [ '/es-modules/package-without-type/index.js', null ],
-    [ '/es-modules/package-without-pjson/index.js', null ],
+    [ '/es-modules/package-without-type/index.js', 'commonjs' ],
+    [ '/es-modules/package-without-pjson/index.js', 'commonjs' ],
   ].forEach(([ testScript, expectedType ]) => {
     const resolvedPath = path.resolve(fixtures.path(testScript));
     const resolveResult = resolve(url.pathToFileURL(resolvedPath));
@@ -54,11 +54,11 @@ try {
    *
    * for test-module-ne: everything .js that is not 'module' is 'commonjs'
    */
-  for (const [ moduleName, moduleExtension, moduleType, expectedResolvedType ] of
+  for (const [ moduleName, moduleExtenstion, moduleType, expectedResolvedType ] of
     [ [ 'test-module-mainjs', 'js', 'module', 'module'],
       [ 'test-module-mainmjs', 'mjs', 'module', 'module'],
       [ 'test-module-cjs', 'js', 'commonjs', 'commonjs'],
-      [ 'test-module-ne', 'js', undefined, null],
+      [ 'test-module-ne', 'js', undefined, 'commonjs'],
     ]) {
     process.chdir(previousCwd);
     tmpdir.refresh();
@@ -72,14 +72,14 @@ try {
     const mDir = rel(`node_modules/${moduleName}`);
     const subDir = rel(`node_modules/${moduleName}/subdir`);
     const pkg = rel(`node_modules/${moduleName}/package.json`);
-    const script = rel(`node_modules/${moduleName}/subdir/mainfile.${moduleExtension}`);
+    const script = rel(`node_modules/${moduleName}/subdir/mainfile.${moduleExtenstion}`);
 
     createDir(nmDir);
     createDir(mDir);
     createDir(subDir);
     const pkgJsonContent = {
       ...(moduleType !== undefined) && { type: moduleType },
-      main: `subdir/mainfile.${moduleExtension}`
+      main: `subdir/mainfile.${moduleExtenstion}`
     };
     fs.writeFileSync(pkg, JSON.stringify(pkgJsonContent));
     fs.writeFileSync(script,

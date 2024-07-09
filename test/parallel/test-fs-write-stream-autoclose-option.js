@@ -1,11 +1,12 @@
 'use strict';
 const common = require('../common');
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 
 const tmpdir = require('../common/tmpdir');
 
-const file = tmpdir.resolve('write-autoclose-opt1.txt');
+const file = path.join(tmpdir.path, 'write-autoclose-opt1.txt');
 tmpdir.refresh();
 let stream = fs.createWriteStream(file, { flags: 'w+', autoClose: false });
 stream.write('Test1');

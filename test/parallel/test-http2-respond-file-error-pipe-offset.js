@@ -6,6 +6,7 @@ if (!common.hasCrypto)
 if (common.isWindows)
   common.skip('no mkfifo on Windows');
 const child_process = require('child_process');
+const path = require('path');
 const fs = require('fs');
 const http2 = require('http2');
 const assert = require('assert');
@@ -13,7 +14,7 @@ const assert = require('assert');
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
-const pipeName = tmpdir.resolve('pipe');
+const pipeName = path.join(tmpdir.path, 'pipe');
 
 const mkfifo = child_process.spawnSync('mkfifo', [ pipeName ]);
 if (mkfifo.error && mkfifo.error.code === 'ENOENT') {

@@ -31,7 +31,5 @@ assert.throws(() => dnsPromises.lookup('127.0.0.1', { all: 'true' }),
               { code: 'ERR_INVALID_ARG_TYPE' });
 assert.throws(() => dnsPromises.lookup('127.0.0.1', { verbatim: 'true' }),
               { code: 'ERR_INVALID_ARG_TYPE' });
-assert.throws(() => dnsPromises.lookup('127.0.0.1', { order: 'true' }),
-              { code: 'ERR_INVALID_ARG_VALUE' });
 assert.throws(() => dnsPromises.lookup('127.0.0.1', '6'),
               { code: 'ERR_INVALID_ARG_TYPE' });

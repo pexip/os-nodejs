@@ -34,8 +34,8 @@ class V8_EXPORT_PRIVATE GCInvoker final : public GarbageCollector {
   GCInvoker(const GCInvoker&) = delete;
   GCInvoker& operator=(const GCInvoker&) = delete;
 
-  void CollectGarbage(GCConfig) final;
-  void StartIncrementalGarbageCollection(GCConfig) final;
+  void CollectGarbage(GarbageCollector::Config) final;
+  void StartIncrementalGarbageCollection(GarbageCollector::Config) final;
   size_t epoch() const final;
   const EmbedderStackState* override_stack_state() const final;
 

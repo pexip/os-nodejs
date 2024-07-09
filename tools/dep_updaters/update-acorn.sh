@@ -7,62 +7,57 @@
 
 set -ex
 
-BASE_DIR=$(cd "$(dirname "$0")/../.." && pwd)
-[ -z "$NODE" ] && NODE="$BASE_DIR/out/Release/node"
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+[ -z "$NODE" ] && NODE="$ROOT/out/Release/node"
 [ -x "$NODE" ] || NODE=$(command -v node)
-NPM="$BASE_DIR/deps/npm/bin/npm-cli.js"
-DEPS_DIR="$BASE_DIR/deps"
-
-# shellcheck disable=SC1091
-. "$BASE_DIR/tools/dep_updaters/utils.sh"
+NPM="$ROOT/deps/npm/bin/npm-cli.js"
 
 NEW_VERSION=$("$NODE" "$NPM" view acorn dist-tags.latest)
 CURRENT_VERSION=$("$NODE" -p "require('./deps/acorn/acorn/package.json').version")
 
-# This function exit with 0 if new version and current version are the same
-compare_dependency_version "acorn" "$NEW_VERSION" "$CURRENT_VERSION"
+echo "Comparing $NEW_VERSION with $CURRENT_VERSION"
+
+if [ "$NEW_VERSION" = "$CURRENT_VERSION" ]; then
+  echo "Skipped because Acorn is on the latest version."
+  exit 0
+fi
 
 cd "$( dirname "$0" )/../.." || exit
 
-echo "Making temporary workspace..."
+rm -rf deps/acorn/acorn
 
-WORKSPACE=$(mktemp -d 2> /dev/null || mktemp -d -t 'tmp')
+(
+    rm -rf acorn-tmp
+    mkdir acorn-tmp
+    cd acorn-tmp || exit
 
-cleanup () {
-  EXIT_CODE=$?
-  [ -d "$WORKSPACE" ] && rm -rf "$WORKSPACE"
-  exit $EXIT_CODE
-}
+    "$NODE" "$NPM" init --yes
 
-trap cleanup INT TERM EXIT
-
-cd "$WORKSPACE"
-
-echo "Fetching acorn source archive..."
-
-"$NODE" "$NPM" pack "acorn@$NEW_VERSION"
-
-ACORN_TGZ="acorn-$NEW_VERSION.tgz"
-
-log_and_verify_sha256sum "acorn" "$ACORN_TGZ"
-
-rm -r "$DEPS_DIR/acorn/acorn"/*
-
-tar -xf "$ACORN_TGZ"
-
-mv package/* "$DEPS_DIR/acorn/acorn"
+    "$NODE" "$NPM" install --global-style --no-bin-links --ignore-scripts "acorn@$NEW_VERSION"
+)
 
 # update version information in src/acorn_version.h
-cat > "$BASE_DIR/src/acorn_version.h" <<EOF
+cat > "$ROOT/src/acorn_version.h" <<EOF
 // This is an auto generated file, please do not edit.
-// Refer to tools/dep_updaters/update-acorn.sh
+// Refer to tools/update-acorn.sh
 #ifndef SRC_ACORN_VERSION_H_
 #define SRC_ACORN_VERSION_H_
 #define ACORN_VERSION "$NEW_VERSION"
 #endif  // SRC_ACORN_VERSION_H_
 EOF
 
-# Update the version number on maintaining-dependencies.md
-# and print the new version as the last line of the script as we need
-# to add it to $GITHUB_ENV variable
-finalize_version_update "acorn" "$NEW_VERSION" "src/acorn_version.h"
+mv acorn-tmp/node_modules/acorn deps/acorn
+
+rm -rf acorn-tmp/
+
+echo "All done!"
+echo ""
+echo "Please git add acorn, commit the new version:"
+echo ""
+echo "$ git add -A deps/acorn src/acorn_version.h"
+echo "$ git commit -m \"deps: update acorn to $NEW_VERSION\""
+echo ""
+
+# The last line of the script should always print the new version,
+# as we need to add it to $GITHUB_ENV variable.
+echo "NEW_VERSION=$NEW_VERSION"

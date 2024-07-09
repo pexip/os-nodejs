@@ -13,10 +13,6 @@ strictEqual(
 );
 
 strictEqual(
-  determineSpecificType(true),
-  'type boolean (true)',
-);
-strictEqual(
   determineSpecificType(false),
   'type boolean (false)',
 );
@@ -37,34 +33,13 @@ strictEqual(
 );
 
 strictEqual(
-  determineSpecificType({ __proto__: null }),
+  determineSpecificType(Object.create(null)),
   '[Object: null prototype] {}',
 );
 
 strictEqual(
   determineSpecificType(''),
   "type string ('')",
-);
-
-strictEqual(
-  determineSpecificType(''),
-  "type string ('')",
-);
-strictEqual(
-  determineSpecificType("''"),
-  "type string (\"''\")",
-);
-strictEqual(
-  determineSpecificType('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor'),
-  "type string ('Lorem ipsum dolor sit ame...')",
-);
-strictEqual(
-  determineSpecificType("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor'"),
-  "type string ('Lorem ipsum dolor sit ame...')",
-);
-strictEqual(
-  determineSpecificType("Lorem' ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"),
-  "type string (\"Lorem' ipsum dolor sit am...\")",
 );
 
 strictEqual(
@@ -75,38 +50,6 @@ strictEqual(
 strictEqual(
   determineSpecificType(function foo() {}),
   'function foo',
-);
-
-const implicitlyNamed = function() {}; // eslint-disable-line func-style
-strictEqual(
-  determineSpecificType(implicitlyNamed),
-  'function implicitlyNamed',
-);
-strictEqual(
-  determineSpecificType(() => {}),
-  'function ',
-);
-function noName() {}
-delete noName.name;
-strictEqual(
-  noName.name,
-  '',
-);
-strictEqual(
-  determineSpecificType(noName),
-  'function ',
-);
-
-function * generatorFn() {}
-strictEqual(
-  determineSpecificType(generatorFn),
-  'function generatorFn',
-);
-
-async function asyncFn() {}
-strictEqual(
-  determineSpecificType(asyncFn),
-  'function asyncFn',
 );
 
 strictEqual(
@@ -189,10 +132,6 @@ strictEqual(
 
 strictEqual(
   determineSpecificType({}),
-  'an instance of Object',
-);
-strictEqual(
-  determineSpecificType(new Object()),
   'an instance of Object',
 );
 

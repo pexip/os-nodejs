@@ -1,11 +1,10 @@
-#include "base_object-inl.h"
 #include "env.h"
+#include "base_object-inl.h"
 #include "handle_wrap.h"
-#include "node_context_data.h"
-#include "req_wrap.h"
 #include "util-inl.h"
-
-#define NODE_OFF_EXTSTR_DATA sizeof(void*)
+#include "req_wrap.h"
+#include "v8abbr.h"
+#include "node_context_data.h"
 
 #define NODEDBG_SYMBOL(Name)  nodedbg_ ## Name
 

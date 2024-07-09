@@ -130,17 +130,9 @@ class AsyncGeneratorBuiltinsAssembler : public AsyncBuiltinsAssembler {
   // for AsyncGenerators.
   template <typename Descriptor>
   void AsyncGeneratorAwait(bool is_catchable);
-  void AsyncGeneratorAwaitResume(
-      TNode<Context> context,
-      TNode<JSAsyncGeneratorObject> async_generator_object, TNode<Object> value,
-      JSAsyncGeneratorObject::ResumeMode resume_mode);
   void AsyncGeneratorAwaitResumeClosure(
       TNode<Context> context, TNode<Object> value,
       JSAsyncGeneratorObject::ResumeMode resume_mode);
-  void AsyncGeneratorReturnClosedReject(
-      TNode<Context> context,
-      TNode<JSAsyncGeneratorObject> async_generator_object,
-      TNode<Object> value);
 };
 
 // Shared implementation for the 3 Async Iterator protocol methods of Async
@@ -216,10 +208,12 @@ AsyncGeneratorBuiltinsAssembler::AllocateAsyncGeneratorRequest(
   return CAST(request);
 }
 
-void AsyncGeneratorBuiltinsAssembler::AsyncGeneratorAwaitResume(
-    TNode<Context> context,
-    TNode<JSAsyncGeneratorObject> async_generator_object, TNode<Object> value,
+void AsyncGeneratorBuiltinsAssembler::AsyncGeneratorAwaitResumeClosure(
+    TNode<Context> context, TNode<Object> value,
     JSAsyncGeneratorObject::ResumeMode resume_mode) {
+  const TNode<JSAsyncGeneratorObject> async_generator_object =
+      CAST(LoadContextElement(context, Context::EXTENSION_INDEX));
+
   SetGeneratorNotAwaiting(async_generator_object);
 
   CSA_SLOW_DCHECK(this, IsGeneratorSuspended(async_generator_object));
@@ -251,16 +245,6 @@ void AsyncGeneratorBuiltinsAssembler::AsyncGeneratorAwaitResume(
 
   TailCallBuiltin(Builtin::kAsyncGeneratorResumeNext, context,
                   async_generator_object);
-}
-
-void AsyncGeneratorBuiltinsAssembler::AsyncGeneratorAwaitResumeClosure(
-    TNode<Context> context, TNode<Object> value,
-    JSAsyncGeneratorObject::ResumeMode resume_mode) {
-  const TNode<JSAsyncGeneratorObject> async_generator_object =
-      CAST(LoadContextElement(context, Context::EXTENSION_INDEX));
-
-  AsyncGeneratorAwaitResume(context, async_generator_object, value,
-                            resume_mode);
 }
 
 template <typename Descriptor>
@@ -334,19 +318,6 @@ AsyncGeneratorBuiltinsAssembler::TakeFirstAsyncGeneratorRequestFromQueue(
 
   StoreObjectField(generator, JSAsyncGeneratorObject::kQueueOffset, next);
   return request;
-}
-
-void AsyncGeneratorBuiltinsAssembler::AsyncGeneratorReturnClosedReject(
-    TNode<Context> context, TNode<JSAsyncGeneratorObject> generator,
-    TNode<Object> value) {
-  SetGeneratorNotAwaiting(generator);
-
-  // https://tc39.github.io/proposal-async-iteration/
-  //    #async-generator-resume-next-return-processor-rejected step 2:
-  // Return ! AsyncGeneratorReject(_F_.[[Generator]], _reason_).
-  CallBuiltin(Builtin::kAsyncGeneratorReject, context, generator, value);
-
-  TailCallBuiltin(Builtin::kAsyncGeneratorResumeNext, context, generator);
 }
 }  // namespace
 
@@ -510,19 +481,6 @@ TF_BUILTIN(AsyncGeneratorResumeNext, AsyncGeneratorBuiltinsAssembler) {
     // Remember the {resume_type} for the {generator}.
     StoreObjectFieldNoWriteBarrier(
         generator, JSGeneratorObject::kResumeModeOffset, resume_type);
-
-    Label if_instrumentation(this, Label::kDeferred),
-        if_instrumentation_done(this);
-    Branch(IsDebugActive(), &if_instrumentation, &if_instrumentation_done);
-    BIND(&if_instrumentation);
-    {
-      const TNode<JSPromise> promise = LoadObjectField<JSPromise>(
-          next, AsyncGeneratorRequest::kPromiseOffset);
-      CallRuntime(Runtime::kDebugPushPromise, context, promise);
-      Goto(&if_instrumentation_done);
-    }
-    BIND(&if_instrumentation_done);
-
     CallStub(CodeFactory::ResumeGenerator(isolate()), context,
              LoadValueFromAsyncGeneratorRequest(next), generator);
     var_state = LoadGeneratorState(generator);
@@ -611,12 +569,11 @@ TF_BUILTIN(AsyncGeneratorReject, AsyncGeneratorBuiltinsAssembler) {
       TakeFirstAsyncGeneratorRequestFromQueue(generator);
   TNode<JSPromise> promise = LoadPromiseFromAsyncGeneratorRequest(next);
 
-  // No debug event needed, there was already a debug event that got us here.
   Return(CallBuiltin(Builtin::kRejectPromise, context, promise, value,
-                     FalseConstant()));
+                     TrueConstant()));
 }
 
-TF_BUILTIN(AsyncGeneratorYieldWithAwait, AsyncGeneratorBuiltinsAssembler) {
+TF_BUILTIN(AsyncGeneratorYield, AsyncGeneratorBuiltinsAssembler) {
   const auto generator = Parameter<JSGeneratorObject>(Descriptor::kGenerator);
   const auto value = Parameter<Object>(Descriptor::kValue);
   const auto is_caught = Parameter<Oddball>(Descriptor::kIsCaught);
@@ -628,14 +585,13 @@ TF_BUILTIN(AsyncGeneratorYieldWithAwait, AsyncGeneratorBuiltinsAssembler) {
       LoadPromiseFromAsyncGeneratorRequest(request);
 
   Await(context, generator, value, outer_promise,
-        AsyncGeneratorYieldWithAwaitResolveSharedFunConstant(),
+        AsyncGeneratorYieldResolveSharedFunConstant(),
         AsyncGeneratorAwaitRejectSharedFunConstant(), is_caught);
   SetGeneratorAwaiting(generator);
   Return(UndefinedConstant());
 }
 
-TF_BUILTIN(AsyncGeneratorYieldWithAwaitResolveClosure,
-           AsyncGeneratorBuiltinsAssembler) {
+TF_BUILTIN(AsyncGeneratorYieldResolveClosure, AsyncGeneratorBuiltinsAssembler) {
   const auto context = Parameter<Context>(Descriptor::kContext);
   const auto value = Parameter<Object>(Descriptor::kValue);
   const TNode<JSAsyncGeneratorObject> generator =
@@ -655,7 +611,7 @@ TF_BUILTIN(AsyncGeneratorReturn, AsyncGeneratorBuiltinsAssembler) {
   // AsyncGeneratorReturn is called when resuming requests with "return" resume
   // modes. It is similar to AsyncGeneratorAwait(), but selects different
   // resolve/reject closures depending on whether or not the generator is marked
-  // as closed, and handles exception on Await explicitly.
+  // as closed.
   //
   // In particular, non-closed generators will resume the generator with either
   // "return" or "throw" resume modes, allowing finally blocks or catch blocks
@@ -668,8 +624,7 @@ TF_BUILTIN(AsyncGeneratorReturn, AsyncGeneratorBuiltinsAssembler) {
   // (per proposal-async-iteration/#sec-asyncgeneratorresumenext step 10.b.i)
   //
   // In all cases, the final step is to jump back to AsyncGeneratorResumeNext.
-  const auto generator =
-      Parameter<JSAsyncGeneratorObject>(Descriptor::kGenerator);
+  const auto generator = Parameter<JSGeneratorObject>(Descriptor::kGenerator);
   const auto value = Parameter<Object>(Descriptor::kValue);
   const auto is_caught = Parameter<Oddball>(Descriptor::kIsCaught);
   const TNode<AsyncGeneratorRequest> req =
@@ -695,34 +650,9 @@ TF_BUILTIN(AsyncGeneratorReturn, AsyncGeneratorBuiltinsAssembler) {
   auto context = Parameter<Context>(Descriptor::kContext);
   const TNode<JSPromise> outer_promise =
       LoadPromiseFromAsyncGeneratorRequest(req);
+  Await(context, generator, value, outer_promise, var_on_resolve.value(),
+        var_on_reject.value(), is_caught);
 
-  Label done(this), await_exception(this, Label::kDeferred),
-      closed_await_exception(this, Label::kDeferred);
-  TVARIABLE(Object, var_exception);
-  {
-    compiler::ScopedExceptionHandler handler(this, &await_exception,
-                                             &var_exception);
-
-    Await(context, generator, value, outer_promise, var_on_resolve.value(),
-          var_on_reject.value(), is_caught);
-  }
-  Goto(&done);
-
-  BIND(&await_exception);
-  {
-    GotoIf(IsGeneratorStateClosed(state), &closed_await_exception);
-    // Tail call to AsyncGeneratorResumeNext
-    AsyncGeneratorAwaitResume(context, generator, var_exception.value(),
-                              JSGeneratorObject::kThrow);
-  }
-
-  BIND(&closed_await_exception);
-  {
-    // Tail call to AsyncGeneratorResumeNext
-    AsyncGeneratorReturnClosedReject(context, generator, var_exception.value());
-  }
-
-  BIND(&done);
   Return(UndefinedConstant());
 }
 
@@ -765,7 +695,14 @@ TF_BUILTIN(AsyncGeneratorReturnClosedRejectClosure,
   const TNode<JSAsyncGeneratorObject> generator =
       CAST(LoadContextElement(context, Context::EXTENSION_INDEX));
 
-  AsyncGeneratorReturnClosedReject(context, generator, value);
+  SetGeneratorNotAwaiting(generator);
+
+  // https://tc39.github.io/proposal-async-iteration/
+  //    #async-generator-resume-next-return-processor-rejected step 2:
+  // Return ! AsyncGeneratorReject(_F_.[[Generator]], _reason_).
+  CallBuiltin(Builtin::kAsyncGeneratorReject, context, generator, value);
+
+  TailCallBuiltin(Builtin::kAsyncGeneratorResumeNext, context, generator);
 }
 
 }  // namespace internal

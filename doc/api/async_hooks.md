@@ -704,7 +704,7 @@ import {
   executionAsyncId,
   executionAsyncResource,
   createHook,
-} from 'node:async_hooks';
+} from 'async_hooks';
 const sym = Symbol('state'); // Private symbol to avoid pollution
 
 createHook({

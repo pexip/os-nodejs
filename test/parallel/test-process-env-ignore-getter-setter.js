@@ -40,7 +40,7 @@ assert.throws(
 
 const attributes = ['configurable', 'writable', 'enumerable'];
 
-for (const attribute of attributes) {
+attributes.forEach((attribute) => {
   assert.throws(
     () => {
       Object.defineProperty(process.env, 'goo', {
@@ -55,7 +55,7 @@ for (const attribute of attributes) {
           ' and enumerable data descriptor'
     }
   );
-}
+});
 
 assert.strictEqual(process.env.goo, undefined);
 Object.defineProperty(process.env, 'goo', {

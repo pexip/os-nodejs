@@ -123,6 +123,7 @@ class SwVfpRegister : public RegisterBase<SwVfpRegister, kSwVfpAfterLast> {
   }
   void split_code(int* vm, int* m) const { split_code(code(), vm, m); }
   VfpRegList ToVfpRegList() const {
+    DCHECK(is_valid());
     // Each bit in the list corresponds to a S register.
     return uint64_t{0x1} << code();
   }
@@ -162,6 +163,7 @@ class DwVfpRegister : public RegisterBase<DwVfpRegister, kDoubleAfterLast> {
   }
   void split_code(int* vm, int* m) const { split_code(code(), vm, m); }
   VfpRegList ToVfpRegList() const {
+    DCHECK(is_valid());
     // A D register overlaps two S registers.
     return uint64_t{0x3} << (code() * 2);
   }
@@ -189,6 +191,7 @@ class LowDwVfpRegister
     return SwVfpRegister::from_code(code() * 2 + 1);
   }
   VfpRegList ToVfpRegList() const {
+    DCHECK(is_valid());
     // A D register overlaps two S registers.
     return uint64_t{0x3} << (code() * 2);
   }
@@ -209,7 +212,7 @@ enum Simd128RegisterCode {
 class QwNeonRegister : public RegisterBase<QwNeonRegister, kSimd128AfterLast> {
  public:
   static void split_code(int reg_code, int* vm, int* m) {
-    V8_ASSUME(reg_code >= 0 && reg_code < kNumRegisters);
+    DCHECK(from_code(reg_code).is_valid());
     int encoded_code = reg_code << 1;
     *m = (encoded_code & 0x10) >> 4;
     *vm = encoded_code & 0x0F;
@@ -220,6 +223,7 @@ class QwNeonRegister : public RegisterBase<QwNeonRegister, kSimd128AfterLast> {
     return DwVfpRegister::from_code(code() * 2 + 1);
   }
   VfpRegList ToVfpRegList() const {
+    DCHECK(is_valid());
     // A Q register overlaps four S registers.
     return uint64_t{0xf} << (code() * 4);
   }
@@ -308,6 +312,7 @@ constexpr Register kJavaScriptCallTargetRegister = kJSFunctionRegister;
 constexpr Register kJavaScriptCallNewTargetRegister = r3;
 constexpr Register kJavaScriptCallExtraArg1Register = r2;
 
+constexpr Register kOffHeapTrampolineRegister = ip;
 constexpr Register kRuntimeCallFunctionRegister = r1;
 constexpr Register kRuntimeCallArgCountRegister = r0;
 constexpr Register kRuntimeCallArgvRegister = r2;

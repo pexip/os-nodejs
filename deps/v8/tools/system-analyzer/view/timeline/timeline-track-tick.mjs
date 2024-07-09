@@ -2,11 +2,63 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import {Flame, FlameBuilder} from '../../profiling.mjs';
+import {TickLogEntry} from '../../log/tick.mjs';
 import {Timeline} from '../../timeline.mjs';
 import {delay, DOM, SVG} from '../helper.mjs';
 
 import {TimelineTrackStackedBase} from './timeline-track-stacked-base.mjs'
+
+class Flame {
+  constructor(time, logEntry, depth) {
+    this._time = time;
+    this._logEntry = logEntry;
+    this.depth = depth;
+    this._duration = -1;
+    this.parent = undefined;
+    this.children = [];
+  }
+
+  static add(time, logEntry, stack, flames) {
+    const depth = stack.length;
+    const newFlame = new Flame(time, logEntry, depth)
+    if (depth > 0) {
+      const parent = stack[depth - 1];
+      newFlame.parent = parent;
+      parent.children.push(newFlame);
+    }
+    flames.push(newFlame);
+    stack.push(newFlame);
+  }
+
+  stop(time) {
+    if (this._duration !== -1) throw new Error('Already stopped');
+    this._duration = time - this._time
+  }
+
+  get time() {
+    return this._time;
+  }
+
+  get logEntry() {
+    return this._logEntry;
+  }
+
+  get startTime() {
+    return this._time;
+  }
+
+  get endTime() {
+    return this._time + this._duration;
+  }
+
+  get duration() {
+    return this._duration;
+  }
+
+  get type() {
+    return TickLogEntry.extractCodeEntryType(this._logEntry?.entry);
+  }
+}
 
 DOM.defineCustomElement(
     'view/timeline/timeline-track', 'timeline-track-tick',
@@ -17,10 +69,45 @@ DOM.defineCustomElement(
       }
 
       _prepareDrawableItems() {
-        const flameBuilder = FlameBuilder.forTime(this._timeline.values, true);
-        this._drawableItems = new Timeline(Flame, flameBuilder.flames);
+        const tmpFlames = [];
+        // flameStack = [bottom, ..., top];
+        const flameStack = [];
+        const ticks = this._timeline.values;
+        let maxDepth = 0;
+        for (let tickIndex = 0; tickIndex < ticks.length; tickIndex++) {
+          const tick = ticks[tickIndex];
+          const tickStack = tick.stack;
+          maxDepth = Math.max(maxDepth, tickStack.length);
+          // tick.stack = [top, .... , bottom];
+          for (let stackIndex = tickStack.length - 1; stackIndex >= 0;
+               stackIndex--) {
+            const codeEntry = tickStack[stackIndex];
+            // codeEntry is either a CodeEntry or a raw pc.
+            const logEntry = codeEntry?.logEntry;
+            const flameStackIndex = tickStack.length - stackIndex - 1;
+            if (flameStackIndex < flameStack.length) {
+              if (flameStack[flameStackIndex].logEntry === logEntry) continue;
+              for (let k = flameStackIndex; k < flameStack.length; k++) {
+                flameStack[k].stop(tick.time);
+              }
+              flameStack.length = flameStackIndex;
+            }
+            Flame.add(tick.time, logEntry, flameStack, tmpFlames);
+          }
+          if (tickStack.length < flameStack.length) {
+            for (let k = tickStack.length; k < flameStack.length; k++) {
+              flameStack[k].stop(tick.time);
+            }
+            flameStack.length = tickStack.length;
+          }
+        }
+        const lastTime = ticks[ticks.length - 1].time;
+        for (let k = 0; k < flameStack.length; k++) {
+          flameStack[k].stop(lastTime);
+        }
+        this._drawableItems = new Timeline(Flame, tmpFlames);
         this._annotations.flames = this._drawableItems;
-        this._adjustStackDepth(flameBuilder.maxDepth);
+        this._adjustStackDepth(maxDepth);
       }
 
       _drawAnnotations(logEntry, time) {

@@ -133,15 +133,6 @@ assert.throws(() => dnsPromises.lookup(false, () => {}),
   }, err);
 });
 
-[0, 1, 0n, 1n, '', '0', Symbol(), {}, [], () => {}].forEach((order) => {
-  const err = { code: 'ERR_INVALID_ARG_VALUE' };
-  const options = { order };
-  assert.throws(() => { dnsPromises.lookup(false, options); }, err);
-  assert.throws(() => {
-    dns.lookup(false, options, common.mustNotCall());
-  }, err);
-});
-
 (async function() {
   let res;
 
@@ -214,4 +205,4 @@ tickValue = 1;
 
 // Should fail due to stub.
 assert.rejects(dnsPromises.lookup('example.com'),
-               { code: 'ENOMEM', hostname: 'example.com' }).then(common.mustCall());
+               { code: 'ENOMEM', hostname: 'example.com' });

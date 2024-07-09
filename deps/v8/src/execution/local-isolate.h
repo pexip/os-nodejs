@@ -67,23 +67,16 @@ class V8_EXPORT_PRIVATE LocalIsolate final : private HiddenLocalFactory {
   base::SharedMutex* internalized_string_access() {
     return isolate_->internalized_string_access();
   }
-  base::SharedMutex* shared_function_info_access() {
-    return isolate_->shared_function_info_access();
-  }
   const AstStringConstants* ast_string_constants() {
     return isolate_->ast_string_constants();
   }
   LazyCompileDispatcher* lazy_compile_dispatcher() {
     return isolate_->lazy_compile_dispatcher();
   }
-  V8FileLogger* main_thread_logger() {
+  Logger* main_thread_logger() {
     // TODO(leszeks): This is needed for logging in ParseInfo. Figure out a way
     // to use the LocalLogger for this instead.
-    return isolate_->v8_file_logger();
-  }
-
-  bool is_precise_binary_code_coverage() const {
-    return isolate_->is_precise_binary_code_coverage();
+    return isolate_->logger();
   }
 
   v8::internal::LocalFactory* factory() {
@@ -98,7 +91,6 @@ class V8_EXPORT_PRIVATE LocalIsolate final : private HiddenLocalFactory {
 
   void RegisterDeserializerStarted();
   void RegisterDeserializerFinished();
-  bool has_active_deserializer() const;
 
   template <typename T>
   Handle<T> Throw(Handle<Object> exception) {
@@ -113,9 +105,9 @@ class V8_EXPORT_PRIVATE LocalIsolate final : private HiddenLocalFactory {
   int GetNextUniqueSharedFunctionInfoId();
 #endif  // V8_SFI_HAS_UNIQUE_ID
 
-  // TODO(cbruni): rename this back to logger() once the V8FileLogger
-  // refactoring is completed.
-  LocalLogger* v8_file_logger() const { return logger_.get(); }
+  bool is_collecting_type_profile() const;
+
+  LocalLogger* logger() const { return logger_.get(); }
   ThreadId thread_id() const { return thread_id_; }
   Address stack_limit() const { return stack_limit_; }
 #ifdef V8_RUNTIME_CALL_STATS

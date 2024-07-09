@@ -2,13 +2,14 @@
 
 const tmpdir = require('../common/tmpdir');
 const { spawnSync } = require('child_process');
+const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
 
 function buildSnapshot(entry, env) {
   const child = spawnSync(process.execPath, [
     '--snapshot-blob',
-    tmpdir.resolve('snapshot.blob'),
+    path.join(tmpdir.path, 'snapshot.blob'),
     '--build-snapshot',
     entry,
   ], {
@@ -28,14 +29,14 @@ function buildSnapshot(entry, env) {
 
   assert.strictEqual(child.status, 0);
 
-  const stats = fs.statSync(tmpdir.resolve('snapshot.blob'));
+  const stats = fs.statSync(path.join(tmpdir.path, 'snapshot.blob'));
   assert(stats.isFile());
 
   return { child, stderr, stdout };
 }
 
 function runWithSnapshot(entry, env) {
-  const args = ['--snapshot-blob', tmpdir.resolve('snapshot.blob')];
+  const args = ['--snapshot-blob', path.join(tmpdir.path, 'snapshot.blob')];
   if (entry !== undefined) {
     args.push(entry);
   }

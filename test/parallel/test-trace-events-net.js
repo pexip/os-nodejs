@@ -3,6 +3,7 @@ const common = require('../common');
 const assert = require('assert');
 const cp = require('child_process');
 const fs = require('fs');
+const path = require('path');
 const tmpdir = require('../common/tmpdir');
 
 const CODE = `
@@ -18,7 +19,7 @@ const CODE = `
 `;
 
 tmpdir.refresh();
-const FILE_NAME = tmpdir.resolve('node_trace.1.log');
+const FILE_NAME = path.join(tmpdir.path, 'node_trace.1.log');
 
 const proc = cp.spawn(process.execPath,
                       [ '--trace-events-enabled',
@@ -32,11 +33,12 @@ proc.once('exit', common.mustCall(() => {
     const traces = JSON.parse(data.toString()).traceEvents;
     assert(traces.length > 0);
     let count = 0;
-    for (const trace of traces) {
-      if (trace.cat === 'node,node.net,node.net.native' && trace.name === 'connect') {
+    traces.forEach((trace) => {
+      if (trace.cat === 'node,node.net,node.net.native' &&
+          trace.name === 'connect') {
         count++;
       }
-    }
+    });
     // Two begin, two end
     assert.strictEqual(count, 4);
   }));

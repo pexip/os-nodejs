@@ -10,9 +10,6 @@ DEPS_DIR="$BASE_DIR/deps"
 NEW_UPSTREAM_SHA1=$(git ls-remote "https://github.com/google/googletest.git" HEAD | awk '{print $1}')
 NEW_VERSION=$(echo "$NEW_UPSTREAM_SHA1" | head -c 7)
 
-# shellcheck disable=SC1091
-. "$BASE_DIR/tools/dep_updaters/utils.sh"
-
 echo "Comparing $NEW_VERSION with current revision"
 
 git remote add googletest-upstream https://github.com/google/googletest.git
@@ -83,7 +80,14 @@ NEW_GYP=$(
 
 echo "$NEW_GYP" >"$DEPS_DIR/googletest/googletest.gyp"
 
-# Update the version number on maintaining-dependencies.md
-# and print the new version as the last line of the script as we need
-# to add it to $GITHUB_ENV variable
-finalize_version_update "googletest" "$NEW_VERSION"
+echo "All done!"
+echo ""
+echo "Please git stage googletest, commit the new version:"
+echo ""
+echo "$ git stage -A deps/googletest"
+echo "$ git commit -m \"deps: update googletest to $NEW_VERSION\""
+echo ""
+
+# The last line of the script should always print the new version,
+# as we need to add it to $GITHUB_ENV variable.
+echo "NEW_VERSION=$NEW_VERSION"

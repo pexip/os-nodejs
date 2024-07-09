@@ -8,10 +8,11 @@ const assert = require('assert');
 const { spawnSync } = require('child_process');
 const tmpdir = require('../common/tmpdir');
 const fixtures = require('../common/fixtures');
+const path = require('path');
 const fs = require('fs');
 
 tmpdir.refresh();
-const blobPath = tmpdir.resolve('snapshot.blob');
+const blobPath = path.join(tmpdir.path, 'snapshot.blob');
 const entry = fixtures.path('empty.js');
 
 // The flag used can be any flag that makes a difference in
@@ -33,7 +34,7 @@ const entry = fixtures.path('empty.js');
     console.log(child.stdout.toString());
     assert.strictEqual(child.status, 0);
   }
-  const stats = fs.statSync(tmpdir.resolve('snapshot.blob'));
+  const stats = fs.statSync(path.join(tmpdir.path, 'snapshot.blob'));
   assert(stats.isFile());
 }
 
@@ -51,7 +52,7 @@ const entry = fixtures.path('empty.js');
 
   const stderr = child.stderr.toString().trim();
   assert.match(stderr, /Failed to load the startup snapshot/);
-  assert.strictEqual(child.status, 14);
+  assert.strictEqual(child.status, 1);
 }
 
 {

@@ -27,6 +27,7 @@ if (!common.canCreateSymLink())
 const fixtures = require('../common/fixtures');
 
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 
 const tmpdir = require('../common/tmpdir');
@@ -34,7 +35,7 @@ tmpdir.refresh();
 
 // Test creating and reading symbolic link
 const linkData = fixtures.path('/cycles/root.js');
-const linkPath = tmpdir.resolve('symlink1.js');
+const linkPath = path.join(tmpdir.path, 'symlink1.js');
 
 let linkTime;
 let fileTime;

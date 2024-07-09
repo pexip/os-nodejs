@@ -36,12 +36,12 @@ class V8Profile extends Profile {
   static IC_RE =
       /^(LoadGlobalIC: )|(Handler: )|(?:CallIC|LoadIC|StoreIC)|(?:Builtin: (?:Keyed)?(?:Load|Store)IC_)/;
   static BYTECODES_RE = /^(BytecodeHandler: )/;
-  static SPARKPLUG_HANDLERS_RE = /^(Builtin: .*Baseline.*)/;
+  static BASELINE_HANDLERS_RE = /^(Builtin: .*Baseline.*)/;
   static BUILTINS_RE = /^(Builtin: )/;
   static STUBS_RE = /^(Stub: )/;
 
   constructor(separateIc, separateBytecodes, separateBuiltins, separateStubs,
-        separateSparkplugHandlers) {
+        separateBaselineHandlers) {
     super();
     const regexps = [];
     if (!separateIc) regexps.push(V8Profile.IC_RE);
@@ -137,7 +137,7 @@ class CppEntriesProvider {
     let response;
     let json;
     try {
-      response = await fetch(url, { timeout: 20 });
+      response = await fetch(url);
       if (response.status == 404) {
         throw new Error(
           `Local symbol server returned 404: ${await response.text()}`);
@@ -388,8 +388,8 @@ export class ArgumentsProcessor extends BaseArgumentsProcessor {
         'Separate Builtin entries'],
       '--separate-stubs': ['separateStubs', parseBool,
         'Separate Stub entries'],
-      '--separate-sparkplug-handlers': ['separateSparkplugHandlers', parseBool,
-        'Separate Sparkplug Handler entries'],
+      '--separate-baseline-handlers': ['separateBaselineHandlers', parseBool,
+        'Separate Baseline Handler entries'],
       '--linux': ['platform', 'linux',
         'Specify that we are running on *nix platform'],
       '--windows': ['platform', 'windows',
@@ -441,7 +441,7 @@ export class ArgumentsProcessor extends BaseArgumentsProcessor {
       separateBytecodes: false,
       separateBuiltins: true,
       separateStubs: true,
-      separateSparkplugHandlers: false,
+      separateBaselineHandlers: false,
       preprocessJson: null,
       sourceMap: null,
       targetRootFS: '',
@@ -478,7 +478,7 @@ export class TickProcessor extends LogReader {
       params.separateBytecodes,
       params.separateBuiltins,
       params.separateStubs,
-      params.separateSparkplugHandlers,
+      params.separateBaselineHandlers,
       params.callGraphSize,
       params.ignoreUnknown,
       params.stateFilter,
@@ -498,7 +498,7 @@ export class TickProcessor extends LogReader {
     separateBytecodes,
     separateBuiltins,
     separateStubs,
-    separateSparkplugHandlers,
+    separateBaselineHandlers,
     callGraphSize,
     ignoreUnknown,
     stateFilter,
@@ -632,7 +632,7 @@ export class TickProcessor extends LogReader {
       this.profile_ = new JsonProfile();
     } else {
       this.profile_ = new V8Profile(separateIc, separateBytecodes,
-        separateBuiltins, separateStubs, separateSparkplugHandlers);
+        separateBuiltins, separateStubs, separateBaselineHandlers);
     }
     this.codeTypes_ = {};
     // Count each tick as a time unit.
@@ -660,7 +660,7 @@ export class TickProcessor extends LogReader {
     GC: 1,
     PARSER: 2,
     BYTECODE_COMPILER: 3,
-    // TODO(cbruni): add SPARKPLUG_COMPILER
+    // TODO(cbruni): add BASELINE_COMPILER
     COMPILER: 4,
     OTHER: 5,
     EXTERNAL: 6,

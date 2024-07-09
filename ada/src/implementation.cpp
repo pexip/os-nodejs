@@ -11,8 +11,7 @@ namespace ada {
 template <class result_type>
 ada_warn_unused tl::expected<result_type, ada::errors> parse(
     std::string_view input, const result_type* base_url) {
-  result_type u =
-      ada::parser::parse_url_impl<result_type, true>(input, base_url);
+  result_type u = ada::parser::parse_url<result_type>(input, base_url);
   if (!u.is_valid) {
     return tl::unexpected(errors::generic_error);
   }
@@ -48,22 +47,16 @@ std::string href_from_file(std::string_view input) {
 }
 
 bool can_parse(std::string_view input, const std::string_view* base_input) {
-  ada::url_aggregator base_aggregator;
+  ada::result<ada::url_aggregator> base;
   ada::url_aggregator* base_pointer = nullptr;
-
   if (base_input != nullptr) {
-    base_aggregator = ada::parser::parse_url_impl<ada::url_aggregator, false>(
-        *base_input, nullptr);
-    if (!base_aggregator.is_valid) {
+    base = ada::parse<url_aggregator>(*base_input);
+    if (!base) {
       return false;
     }
-    base_pointer = &base_aggregator;
+    base_pointer = &base.value();
   }
-
-  ada::url_aggregator result =
-      ada::parser::parse_url_impl<ada::url_aggregator, false>(input,
-                                                              base_pointer);
-  return result.is_valid;
+  return ada::parse<url_aggregator>(input, base_pointer).has_value();
 }
 
 ada_warn_unused std::string to_string(ada::encoding_type type) {

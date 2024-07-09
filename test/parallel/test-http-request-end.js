@@ -20,12 +20,11 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 'use strict';
-const common = require('../common');
+require('../common');
 const assert = require('assert');
 const http = require('http');
 
 const expected = 'Post Body For Test';
-const expectedStatusCode = 200;
 
 const server = http.Server(function(req, res) {
   let result = '';
@@ -35,12 +34,12 @@ const server = http.Server(function(req, res) {
     result += chunk;
   });
 
-  req.on('end', common.mustCall(() => {
+  req.on('end', function() {
     assert.strictEqual(result, expected);
-    res.writeHead(expectedStatusCode);
-    res.end('hello world\n');
     server.close();
-  }));
+    res.writeHead(200);
+    res.end('hello world\n');
+  });
 
 });
 
@@ -50,9 +49,12 @@ server.listen(0, function() {
     path: '/',
     method: 'POST'
   }, function(res) {
-    assert.strictEqual(res.statusCode, expectedStatusCode);
+    console.log(res.statusCode);
     res.resume();
-  }).on('error', common.mustNotCall());
+  }).on('error', function(e) {
+    console.log(e.message);
+    process.exit(1);
+  });
 
   const result = req.end(expected);
 

@@ -7,8 +7,7 @@ const common = require('../common');
 // returns the proper set of cli options when invoked
 
 const assert = require('assert');
-const { exec, spawn } = require('child_process');
-const { once } = require('events');
+const { exec } = require('child_process');
 let stdOut;
 
 
@@ -54,13 +53,3 @@ function testForSubstring(options) {
 }
 
 startPrintHelpTest();
-
-// Test closed stdout for `node --help`. Like `node --help | head -n5`.
-(async () => {
-  const cp = spawn(process.execPath, ['--help'], {
-    stdio: ['inherit', 'pipe', 'inherit'],
-  });
-  cp.stdout.destroy();
-  const [exitCode] = await once(cp, 'exit');
-  assert.strictEqual(exitCode, 0);
-})().then(common.mustCall());

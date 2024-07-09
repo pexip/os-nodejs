@@ -10,7 +10,7 @@ const os = require('os');
 
 const fixture = fixtures.path('exit.js');
 const echoFixture = fixtures.path('echo.js');
-const execOpts = { encoding: 'utf8', shell: true, env: { ...process.env, NODE: process.execPath, FIXTURE: fixture } };
+const execOpts = { encoding: 'utf8', shell: true };
 
 {
   execFile(
@@ -46,12 +46,7 @@ const execOpts = { encoding: 'utf8', shell: true, env: { ...process.env, NODE: p
 
 {
   // Verify the shell option works properly
-  execFile(
-    `"${common.isWindows ? execOpts.env.NODE : '$NODE'}"`,
-    [`"${common.isWindows ? execOpts.env.FIXTURE : '$FIXTURE'}"`, 0],
-    execOpts,
-    common.mustSucceed(),
-  );
+  execFile(process.execPath, [fixture, 0], execOpts, common.mustSucceed());
 }
 
 {

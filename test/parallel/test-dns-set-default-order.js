@@ -19,7 +19,9 @@ cares.getaddrinfo = common.mustCallAtLeast((...args) => {
 const dns = require('dns');
 const dnsPromises = dns.promises;
 
-// We want to test the parameter of order only so that we
+let verbatim;
+
+// We want to test the parameter of verbatim only so that we
 // ignore possible errors here.
 function allowFailed(fn) {
   return fn.catch((_err) => {
@@ -44,68 +46,48 @@ assert.throws(() => dns.promises.setDefaultResultOrder(4), {
   let callsLength = 0;
   const checkParameter = (expected) => {
     assert.strictEqual(calls.length, callsLength + 1);
-    const order = calls[callsLength][4];
-    assert.strictEqual(order, expected);
+    verbatim = calls[callsLength][4];
+    assert.strictEqual(verbatim, expected);
     callsLength += 1;
   };
 
   dns.setDefaultResultOrder('verbatim');
   await allowFailed(promisify(dns.lookup)('example.org'));
-  checkParameter(cares.DNS_ORDER_VERBATIM);
+  checkParameter(true);
   await allowFailed(dnsPromises.lookup('example.org'));
-  checkParameter(cares.DNS_ORDER_VERBATIM);
+  checkParameter(true);
   await allowFailed(promisify(dns.lookup)('example.org', {}));
-  checkParameter(cares.DNS_ORDER_VERBATIM);
+  checkParameter(true);
   await allowFailed(dnsPromises.lookup('example.org', {}));
-  checkParameter(cares.DNS_ORDER_VERBATIM);
+  checkParameter(true);
 
   dns.setDefaultResultOrder('ipv4first');
   await allowFailed(promisify(dns.lookup)('example.org'));
-  checkParameter(cares.DNS_ORDER_IPV4_FIRST);
+  checkParameter(false);
   await allowFailed(dnsPromises.lookup('example.org'));
-  checkParameter(cares.DNS_ORDER_IPV4_FIRST);
+  checkParameter(false);
   await allowFailed(promisify(dns.lookup)('example.org', {}));
-  checkParameter(cares.DNS_ORDER_IPV4_FIRST);
+  checkParameter(false);
   await allowFailed(dnsPromises.lookup('example.org', {}));
-  checkParameter(cares.DNS_ORDER_IPV4_FIRST);
-
-  dns.setDefaultResultOrder('ipv6first');
-  await allowFailed(promisify(dns.lookup)('example.org'));
-  checkParameter(cares.DNS_ORDER_IPV6_FIRST);
-  await allowFailed(dnsPromises.lookup('example.org'));
-  checkParameter(cares.DNS_ORDER_IPV6_FIRST);
-  await allowFailed(promisify(dns.lookup)('example.org', {}));
-  checkParameter(cares.DNS_ORDER_IPV6_FIRST);
-  await allowFailed(dnsPromises.lookup('example.org', {}));
-  checkParameter(cares.DNS_ORDER_IPV6_FIRST);
+  checkParameter(false);
 
   dns.promises.setDefaultResultOrder('verbatim');
   await allowFailed(promisify(dns.lookup)('example.org'));
-  checkParameter(cares.DNS_ORDER_VERBATIM);
+  checkParameter(true);
   await allowFailed(dnsPromises.lookup('example.org'));
-  checkParameter(cares.DNS_ORDER_VERBATIM);
+  checkParameter(true);
   await allowFailed(promisify(dns.lookup)('example.org', {}));
-  checkParameter(cares.DNS_ORDER_VERBATIM);
+  checkParameter(true);
   await allowFailed(dnsPromises.lookup('example.org', {}));
-  checkParameter(cares.DNS_ORDER_VERBATIM);
+  checkParameter(true);
 
   dns.promises.setDefaultResultOrder('ipv4first');
   await allowFailed(promisify(dns.lookup)('example.org'));
-  checkParameter(cares.DNS_ORDER_IPV4_FIRST);
+  checkParameter(false);
   await allowFailed(dnsPromises.lookup('example.org'));
-  checkParameter(cares.DNS_ORDER_IPV4_FIRST);
+  checkParameter(false);
   await allowFailed(promisify(dns.lookup)('example.org', {}));
-  checkParameter(cares.DNS_ORDER_IPV4_FIRST);
+  checkParameter(false);
   await allowFailed(dnsPromises.lookup('example.org', {}));
-  checkParameter(cares.DNS_ORDER_IPV4_FIRST);
-
-  dns.promises.setDefaultResultOrder('ipv6first');
-  await allowFailed(promisify(dns.lookup)('example.org'));
-  checkParameter(cares.DNS_ORDER_IPV6_FIRST);
-  await allowFailed(dnsPromises.lookup('example.org'));
-  checkParameter(cares.DNS_ORDER_IPV6_FIRST);
-  await allowFailed(promisify(dns.lookup)('example.org', {}));
-  checkParameter(cares.DNS_ORDER_IPV6_FIRST);
-  await allowFailed(dnsPromises.lookup('example.org', {}));
-  checkParameter(cares.DNS_ORDER_IPV6_FIRST);
+  checkParameter(false);
 })().then(common.mustCall());

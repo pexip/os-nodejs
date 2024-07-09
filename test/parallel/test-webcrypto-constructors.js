@@ -1,3 +1,4 @@
+// Flags: --experimental-global-webcrypto
 'use strict';
 
 const common = require('../common');
@@ -6,7 +7,6 @@ if (!common.hasCrypto)
   common.skip('missing crypto');
 
 const assert = require('assert');
-const { subtle } = globalThis.crypto;
 
 // Test CryptoKey constructor
 {
@@ -138,15 +138,15 @@ const notSubtle = Reflect.construct(function() {}, [], SubtleCrypto);
 }
 
 {
-  subtle.importKey(
+  globalThis.crypto.subtle.importKey(
     'raw',
     globalThis.crypto.getRandomValues(new Uint8Array(4)),
     'PBKDF2',
     false,
     ['deriveKey'],
   ).then((key) => {
-    subtle.importKey = common.mustNotCall();
-    return subtle.deriveKey({
+    globalThis.crypto.subtle.importKey = common.mustNotCall();
+    return globalThis.crypto.subtle.deriveKey({
       name: 'PBKDF2',
       hash: 'SHA-512',
       salt: globalThis.crypto.getRandomValues(new Uint8Array()),

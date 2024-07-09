@@ -1,5 +1,4 @@
 import module from 'node:module';
-import { readFileSync } from 'node:fs';
 
 /** @type {string} */
 let GET_BUILTIN;
@@ -26,13 +25,7 @@ export function load(url, context, next) {
     return {
       shortCircuit: true,
       source: generateBuiltinModule(urlObj.pathname),
-      format: 'commonjs',
-    };
-  } else if (context.format === undefined || context.format === null || context.format === 'commonjs') {
-    return {
-      shortCircuit: true,
-      source: readFileSync(new URL(url)),
-      format: 'commonjs',
+      format: 'module',
     };
   }
   return next(url);
@@ -46,13 +39,13 @@ function generateBuiltinModule(builtinName) {
   return `\
 const $builtinInstance = ${GET_BUILTIN}(${JSON.stringify(builtinName)});
 
-module.exports = $builtinInstance;
-module.exports.__fromLoader = true;
+export const __fromLoader = true;
 
-// We need this for CJS-module-lexer can parse the exported names.
+export default $builtinInstance;
+
 ${
   builtinExports
-    .map(name => `exports.${name} = $builtinInstance.${name};`)
+    .map(name => `export const ${name} = $builtinInstance.${name};`)
     .join('\n')
 }
 `;

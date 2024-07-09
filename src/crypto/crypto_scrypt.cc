@@ -104,17 +104,7 @@ Maybe<bool> ScryptTraits::AdditionalConfig(
           params->maxmem,
           nullptr,
           0) != 1) {
-    // Do not use CryptoErrorStore or ThrowCryptoError here in order to maintain
-    // backward compatibility with ERR_CRYPTO_INVALID_SCRYPT_PARAMS.
-    uint32_t err = ERR_peek_last_error();
-    if (err != 0) {
-      char buf[256];
-      ERR_error_string_n(err, buf, sizeof(buf));
-      THROW_ERR_CRYPTO_INVALID_SCRYPT_PARAMS(
-          env, "Invalid scrypt params: %s", buf);
-    } else {
-      THROW_ERR_CRYPTO_INVALID_SCRYPT_PARAMS(env);
-    }
+    THROW_ERR_CRYPTO_INVALID_SCRYPT_PARAMS(env);
     return Nothing<bool>();
   }
 

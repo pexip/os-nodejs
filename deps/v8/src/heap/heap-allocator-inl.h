@@ -30,9 +30,7 @@ OldLargeObjectSpace* HeapAllocator::lo_space() const {
   return static_cast<OldLargeObjectSpace*>(spaces_[LO_SPACE]);
 }
 
-OldLargeObjectSpace* HeapAllocator::shared_lo_space() const {
-  return shared_lo_space_;
-}
+PagedSpace* HeapAllocator::space_for_maps() const { return space_for_maps_; }
 
 NewSpace* HeapAllocator::new_space() const {
   return static_cast<NewSpace*>(spaces_[NEW_SPACE]);
@@ -61,12 +59,12 @@ V8_WARN_UNUSED_RESULT V8_INLINE AllocationResult HeapAllocator::AllocateRaw(
   DCHECK(AllowHandleAllocation::IsAllowed());
   DCHECK(AllowHeapAllocation::IsAllowed());
 
-  if (v8_flags.single_generation.value() && type == AllocationType::kYoung) {
+  if (FLAG_single_generation && type == AllocationType::kYoung) {
     return AllocateRaw(size_in_bytes, AllocationType::kOld, origin, alignment);
   }
 
 #ifdef V8_ENABLE_ALLOCATION_TIMEOUT
-  if (v8_flags.random_gc_interval > 0 || v8_flags.gc_interval >= 0) {
+  if (FLAG_random_gc_interval > 0 || FLAG_gc_interval >= 0) {
     if (!heap_->always_allocate() && allocation_timeout_-- <= 0) {
       return AllocationResult::Failure();
     }
@@ -100,7 +98,6 @@ V8_WARN_UNUSED_RESULT V8_INLINE AllocationResult HeapAllocator::AllocateRaw(
           allocation =
               new_space()->AllocateRaw(size_in_bytes, alignment, origin);
           break;
-        case AllocationType::kMap:
         case AllocationType::kOld:
           allocation =
               old_space()->AllocateRaw(size_in_bytes, alignment, origin);
@@ -108,8 +105,11 @@ V8_WARN_UNUSED_RESULT V8_INLINE AllocationResult HeapAllocator::AllocateRaw(
         case AllocationType::kCode:
           DCHECK_EQ(alignment, AllocationAlignment::kTaggedAligned);
           DCHECK(AllowCodeAllocation::IsAllowed());
-          allocation = code_space()->AllocateRaw(
-              size_in_bytes, AllocationAlignment::kTaggedAligned);
+          allocation = code_space()->AllocateRawUnaligned(size_in_bytes);
+          break;
+        case AllocationType::kMap:
+          DCHECK_EQ(alignment, AllocationAlignment::kTaggedAligned);
+          allocation = space_for_maps()->AllocateRawUnaligned(size_in_bytes);
           break;
         case AllocationType::kReadOnly:
           DCHECK(read_only_space()->writable());
@@ -117,6 +117,9 @@ V8_WARN_UNUSED_RESULT V8_INLINE AllocationResult HeapAllocator::AllocateRaw(
           allocation = read_only_space()->AllocateRaw(size_in_bytes, alignment);
           break;
         case AllocationType::kSharedMap:
+          allocation = shared_map_allocator_->AllocateRaw(size_in_bytes,
+                                                          alignment, origin);
+          break;
         case AllocationType::kSharedOld:
           allocation = shared_old_allocator_->AllocateRaw(size_in_bytes,
                                                           alignment, origin);
@@ -138,6 +141,14 @@ V8_WARN_UNUSED_RESULT V8_INLINE AllocationResult HeapAllocator::AllocateRaw(
             ->RegisterNewlyAllocatedCodeObject(object.address());
       }
     }
+
+#ifdef V8_ENABLE_CONSERVATIVE_STACK_SCANNING
+    if (AllocationType::kReadOnly != type) {
+      DCHECK_TAG_ALIGNED(object.address());
+      Page::FromHeapObject(object)->object_start_bitmap()->SetBit(
+          object.address());
+    }
+#endif  // V8_ENABLE_CONSERVATIVE_STACK_SCANNING
 
     for (auto& tracker : heap_->allocation_trackers_) {
       tracker->AllocationEvent(object.address(), size_in_bytes);
@@ -204,7 +215,6 @@ V8_WARN_UNUSED_RESULT V8_INLINE HeapObject HeapAllocator::AllocateRawWith(
     AllocationAlignment alignment) {
   AllocationResult result;
   HeapObject object;
-  size = ALIGN_TO_ALLOCATION_ALIGNMENT(size);
   if (allocation == AllocationType::kYoung) {
     result = AllocateRaw<AllocationType::kYoung>(size, origin, alignment);
     if (result.To(&object)) {

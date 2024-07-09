@@ -8,20 +8,13 @@ const filepath = fixtures.path('x.txt');
 
 const expected = Buffer.from('xyz\n');
 
-function runTest(defaultBuffer, options, errorCode = false) {
+function runTest(defaultBuffer, options) {
   let fd;
   try {
     fd = fs.openSync(filepath, 'r');
-    if (errorCode) {
-      assert.throws(
-        () => fs.readSync(fd, defaultBuffer, options),
-        { code: errorCode }
-      );
-    } else {
-      const result = fs.readSync(fd, defaultBuffer, options);
-      assert.strictEqual(result, expected.length);
-      assert.deepStrictEqual(defaultBuffer, expected);
-    }
+    const result = fs.readSync(fd, defaultBuffer, options);
+    assert.strictEqual(result, expected.length);
+    assert.deepStrictEqual(defaultBuffer, expected);
   } finally {
     if (fd != null) fs.closeSync(fd);
   }
@@ -38,6 +31,7 @@ for (const options of [
   { length: expected.length, position: 0 },
   { offset: 0, length: expected.length, position: 0 },
 
+  { offset: null },
   { position: null },
   { position: -1 },
   { position: 0n },
@@ -47,27 +41,17 @@ for (const options of [
   null,
   undefined,
 
-  // Test malicious corner case: it works as {length: 4} but not intentionally
-  new String('4444'),
-]) {
-  runTest(Buffer.allocUnsafe(expected.length), options);
-}
-
-for (const options of [
-
-  // Test various invalid options
+  // Test if bad params are interpreted as default (not mandatory)
   false,
   true,
   Infinity,
   42n,
   Symbol(),
-  'amString',
-  [],
-  () => {},
 
-  // Test if arbitrary entity with expected .length is not mistaken for options
+  // Test even more malicious corner cases
   '4'.repeat(expected.length),
+  new String('4444'),
   [4, 4, 4, 4],
 ]) {
-  runTest(Buffer.allocUnsafe(expected.length), mustNotMutateObjectDeep(options), 'ERR_INVALID_ARG_TYPE');
+  runTest(Buffer.allocUnsafe(expected.length), mustNotMutateObjectDeep(options));
 }

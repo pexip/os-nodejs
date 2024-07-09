@@ -49,6 +49,7 @@
 #include "src/base/cpu.h"
 #include "src/codegen/macro-assembler.h"
 #include "src/codegen/s390/assembler-s390-inl.h"
+#include "src/codegen/string-constants.h"
 #include "src/deoptimizer/deoptimizer.h"
 
 namespace v8 {
@@ -327,8 +328,15 @@ Operand Operand::EmbeddedNumber(double value) {
   int32_t smi;
   if (DoubleToSmiInteger(value, &smi)) return Operand(Smi::FromInt(smi));
   Operand result(0, RelocInfo::FULL_EMBEDDED_OBJECT);
-  result.is_heap_number_request_ = true;
-  result.value_.heap_number_request = HeapNumberRequest(value);
+  result.is_heap_object_request_ = true;
+  result.value_.heap_object_request = HeapObjectRequest(value);
+  return result;
+}
+
+Operand Operand::EmbeddedStringConstant(const StringConstantBase* str) {
+  Operand result(0, RelocInfo::FULL_EMBEDDED_OBJECT);
+  result.is_heap_object_request_ = true;
+  result.value_.heap_object_request = HeapObjectRequest(str);
   return result;
 }
 
@@ -338,15 +346,27 @@ MemOperand::MemOperand(Register rn, int32_t offset)
 MemOperand::MemOperand(Register rx, Register rb, int32_t offset)
     : baseRegister(rb), indexRegister(rx), offset_(offset) {}
 
-void Assembler::AllocateAndInstallRequestedHeapNumbers(Isolate* isolate) {
-  DCHECK_IMPLIES(isolate == nullptr, heap_number_requests_.empty());
-  for (auto& request : heap_number_requests_) {
+void Assembler::AllocateAndInstallRequestedHeapObjects(Isolate* isolate) {
+  DCHECK_IMPLIES(isolate == nullptr, heap_object_requests_.empty());
+  for (auto& request : heap_object_requests_) {
+    Handle<HeapObject> object;
     Address pc = reinterpret_cast<Address>(buffer_start_) + request.offset();
-    Handle<HeapObject> object =
-        isolate->factory()->NewHeapNumber<AllocationType::kOld>(
+    switch (request.kind()) {
+      case HeapObjectRequest::kHeapNumber: {
+        object = isolate->factory()->NewHeapNumber<AllocationType::kOld>(
             request.heap_number());
-    set_target_address_at(pc, kNullAddress, object.address(),
-                          SKIP_ICACHE_FLUSH);
+        set_target_address_at(pc, kNullAddress, object.address(),
+                              SKIP_ICACHE_FLUSH);
+        break;
+      }
+      case HeapObjectRequest::kStringConstant: {
+        const StringConstantBase* str = request.string();
+        CHECK_NOT_NULL(str);
+        set_target_address_at(pc, kNullAddress,
+                              str->AllocateStringConstant(isolate).address());
+        break;
+      }
+    }
   }
 }
 
@@ -371,13 +391,13 @@ void Assembler::GetCode(Isolate* isolate, CodeDesc* desc,
   // TODO(jgruber): Consider moving responsibility for proper alignment to
   // metadata table builders (safepoint, handler, constant pool, code
   // comments).
-  DataAlign(InstructionStream::kMetadataAlignment);
+  DataAlign(Code::kMetadataAlignment);
 
   EmitRelocations();
 
   int code_comments_size = WriteCodeComments();
 
-  AllocateAndInstallRequestedHeapNumbers(isolate);
+  AllocateAndInstallRequestedHeapObjects(isolate);
 
   // Set up code descriptor.
   // TODO(jgruber): Reconsider how these offsets and sizes are maintained up to
@@ -510,10 +530,8 @@ void Assembler::target_at_put(int pos, int target_pos, bool* is_branch) {
   } else if (LLILF == opcode) {
     DCHECK(target_pos == kEndOfChain || target_pos >= 0);
     // Emitted label constant, not part of a branch.
-    // Make label relative to InstructionStream pointer of generated
-    // InstructionStream object.
-    int32_t imm32 =
-        target_pos + (InstructionStream::kHeaderSize - kHeapObjectTag);
+    // Make label relative to Code pointer of generated Code object.
+    int32_t imm32 = target_pos + (Code::kHeaderSize - kHeapObjectTag);
     instr &= (~static_cast<uint64_t>(0xFFFFFFFF));
     instr_at_put<SixByteInstr>(pos, instr | imm32);
     return;
@@ -610,7 +628,7 @@ void Assembler::load_label_offset(Register r1, Label* L) {
   int constant;
   if (L->is_bound()) {
     target_pos = L->pos();
-    constant = target_pos + (InstructionStream::kHeaderSize - kHeapObjectTag);
+    constant = target_pos + (Code::kHeaderSize - kHeapObjectTag);
   } else {
     if (L->is_linked()) {
       target_pos = L->pos();  // L's link
@@ -784,7 +802,8 @@ void Assembler::db(uint8_t data) {
 void Assembler::dd(uint32_t data, RelocInfo::Mode rmode) {
   CheckBuffer();
   if (!RelocInfo::IsNoInfo(rmode)) {
-    DCHECK(RelocInfo::IsLiteralConstant(rmode));
+    DCHECK(RelocInfo::IsDataEmbeddedObject(rmode) ||
+           RelocInfo::IsLiteralConstant(rmode));
     RecordRelocInfo(rmode);
   }
   *reinterpret_cast<uint32_t*>(pc_) = data;
@@ -794,7 +813,8 @@ void Assembler::dd(uint32_t data, RelocInfo::Mode rmode) {
 void Assembler::dq(uint64_t value, RelocInfo::Mode rmode) {
   CheckBuffer();
   if (!RelocInfo::IsNoInfo(rmode)) {
-    DCHECK(RelocInfo::IsLiteralConstant(rmode));
+    DCHECK(RelocInfo::IsDataEmbeddedObject(rmode) ||
+           RelocInfo::IsLiteralConstant(rmode));
     RecordRelocInfo(rmode);
   }
   *reinterpret_cast<uint64_t*>(pc_) = value;
@@ -804,7 +824,8 @@ void Assembler::dq(uint64_t value, RelocInfo::Mode rmode) {
 void Assembler::dp(uintptr_t data, RelocInfo::Mode rmode) {
   CheckBuffer();
   if (!RelocInfo::IsNoInfo(rmode)) {
-    DCHECK(RelocInfo::IsLiteralConstant(rmode));
+    DCHECK(RelocInfo::IsDataEmbeddedObject(rmode) ||
+           RelocInfo::IsLiteralConstant(rmode));
     RecordRelocInfo(rmode);
   }
   *reinterpret_cast<uintptr_t*>(pc_) = data;
@@ -833,7 +854,7 @@ void Assembler::EmitRelocations() {
        it != relocations_.end(); it++) {
     RelocInfo::Mode rmode = it->rmode();
     Address pc = reinterpret_cast<Address>(buffer_start_) + it->position();
-    RelocInfo rinfo(pc, rmode, it->data(), Code(), InstructionStream());
+    RelocInfo rinfo(pc, rmode, it->data(), Code());
 
     // Fix up internal references now that they are guaranteed to be bound.
     if (RelocInfo::IsInternalReference(rmode)) {

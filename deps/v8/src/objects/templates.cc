@@ -44,19 +44,16 @@ Handle<SharedFunctionInfo> FunctionTemplateInfo::GetOrCreateSharedFunctionInfo(
   } else {
     function_kind = FunctionKind::kNormalFunction;
   }
-  Handle<SharedFunctionInfo> sfi =
+  Handle<SharedFunctionInfo> result =
       isolate->factory()->NewSharedFunctionInfoForApiFunction(name_string, info,
                                                               function_kind);
-  {
-    DisallowGarbageCollection no_gc;
-    auto raw_sfi = *sfi;
-    auto raw_template = *info;
-    raw_sfi.set_length(raw_template.length());
-    raw_sfi.DontAdaptArguments();
-    DCHECK(raw_sfi.IsApiFunction());
-    raw_template.set_shared_function_info(raw_sfi);
-  }
-  return sfi;
+
+  result->set_length(info->length());
+  result->DontAdaptArguments();
+  DCHECK(result->IsApiFunction());
+
+  info->set_shared_function_info(*result);
+  return result;
 }
 
 bool FunctionTemplateInfo::IsTemplateFor(Map map) const {
@@ -69,7 +66,7 @@ bool FunctionTemplateInfo::IsTemplateFor(Map map) const {
   // There is a constraint on the object; check.
   if (!map.IsJSObjectMap()) return false;
 
-  if (v8_flags.embedder_instance_types) {
+  if (FLAG_embedder_instance_types) {
     DCHECK_IMPLIES(allowed_receiver_instance_type_range_start() == 0,
                    allowed_receiver_instance_type_range_end() == 0);
     if (base::IsInRange(map.instance_type(),
@@ -133,12 +130,7 @@ FunctionTemplateRareData FunctionTemplateInfo::AllocateFunctionTemplateRareData(
 base::Optional<Name> FunctionTemplateInfo::TryGetCachedPropertyName(
     Isolate* isolate, Object getter) {
   DisallowGarbageCollection no_gc;
-  if (!getter.IsFunctionTemplateInfo()) {
-    if (!getter.IsJSFunction()) return {};
-    SharedFunctionInfo info = JSFunction::cast(getter).shared();
-    if (!info.IsApiFunction()) return {};
-    getter = info.get_api_func_data();
-  }
+  if (!getter.IsFunctionTemplateInfo()) return {};
   // Check if the accessor uses a cached property.
   Object maybe_name = FunctionTemplateInfo::cast(getter).cached_property_name();
   if (maybe_name.IsTheHole(isolate)) return {};

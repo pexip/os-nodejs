@@ -19,7 +19,6 @@ server.listen(0, common.mustCall(function() {
       client.write(
         'GET / HTTP/1.1\r\n' +
         'Content-Type: text/te\x08t\r\n' +
-        'Host: example.com' +
         'Connection: close\r\n\r\n');
     }
   );

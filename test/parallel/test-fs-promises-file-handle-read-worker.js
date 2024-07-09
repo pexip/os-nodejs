@@ -2,8 +2,9 @@
 const common = require('../common');
 const fs = require('fs');
 const assert = require('assert');
+const path = require('path');
 const tmpdir = require('../common/tmpdir');
-const file = tmpdir.resolve('read_stream_filehandle_worker.txt');
+const file = path.join(tmpdir.path, 'read_stream_filehandle_worker.txt');
 const input = 'hello world';
 const { Worker, isMainThread, workerData } = require('worker_threads');
 

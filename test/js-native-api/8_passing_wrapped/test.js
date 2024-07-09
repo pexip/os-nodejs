@@ -4,7 +4,6 @@
 const common = require('../../common');
 const assert = require('assert');
 const addon = require(`./build/${common.buildType}/8_passing_wrapped`);
-const { gcUntil } = require('../../common/gc');
 
 async function runTest() {
   let obj1 = addon.createObject(10);
@@ -15,7 +14,7 @@ async function runTest() {
   // Make sure the native destructor gets called.
   obj1 = null;
   obj2 = null;
-  await gcUntil('8_passing_wrapped',
-                () => (addon.finalizeCount() === 2));
+  await common.gcUntil('8_passing_wrapped',
+                       () => (addon.finalizeCount() === 2));
 }
 runTest();

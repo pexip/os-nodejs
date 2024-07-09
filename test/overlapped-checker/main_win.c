@@ -6,6 +6,7 @@
 
 static char buf[256];
 static DWORD read_count;
+static DWORD write_count;
 static HANDLE stdin_h;
 static OVERLAPPED stdin_o;
 
@@ -33,7 +34,7 @@ static void write(const char* buf, size_t buf_size) {
   if (!WriteFile(stdout_h, buf, buf_size, &write_count, NULL)) {
     die("overlapped write failed");
   }
-  fprintf(stderr, "%ld", write_count);
+  fprintf(stderr, "%d", write_count);
   fflush(stderr);
 }
 

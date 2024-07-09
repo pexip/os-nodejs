@@ -21,9 +21,9 @@ struct RealmSerializeInfo {
   friend std::ostream& operator<<(std::ostream& o, const RealmSerializeInfo& i);
 };
 
-using BindingDataStore =
-    std::array<BaseObjectWeakPtr<BaseObject>,
-               static_cast<size_t>(BindingDataType::kBindingDataTypeCount)>;
+using BindingDataStore = std::array<BaseObjectPtr<BaseObject>,
+                     static_cast<size_t>(
+                         BindingDataType::kBindingDataTypeCount)>;
 
 /**
  * node::Realm is a container for a set of JavaScript objects and functions
@@ -43,11 +43,6 @@ using BindingDataStore =
  */
 class Realm : public MemoryRetainer {
  public:
-  enum Kind {
-    kPrincipal,
-    kShadowRealm,
-  };
-
   static inline Realm* GetCurrent(v8::Isolate* isolate);
   static inline Realm* GetCurrent(v8::Local<v8::Context> context);
   static inline Realm* GetCurrent(
@@ -55,13 +50,18 @@ class Realm : public MemoryRetainer {
   template <typename T>
   static inline Realm* GetCurrent(const v8::PropertyCallbackInfo<T>& info);
 
-  Realm(Environment* env, v8::Local<v8::Context> context, Kind kind);
+  Realm(Environment* env,
+        v8::Local<v8::Context> context,
+        const RealmSerializeInfo* realm_info);
+  ~Realm();
 
   Realm(const Realm&) = delete;
   Realm& operator=(const Realm&) = delete;
   Realm(Realm&&) = delete;
   Realm& operator=(Realm&&) = delete;
 
+  SET_MEMORY_INFO_NAME(Realm)
+  SET_SELF_SIZE(Realm)
   void MemoryInfo(MemoryTracker* tracker) const override;
 
   void CreateProperties();
@@ -69,6 +69,7 @@ class Realm : public MemoryRetainer {
   void DeserializeProperties(const RealmSerializeInfo* info);
 
   v8::MaybeLocal<v8::Value> ExecuteBootstrapper(const char* id);
+  v8::MaybeLocal<v8::Value> BootstrapNode();
   v8::MaybeLocal<v8::Value> RunBootstrapping();
 
   inline void AddCleanupHook(CleanupQueue::Callback cb, void* arg);
@@ -85,15 +86,15 @@ class Realm : public MemoryRetainer {
   inline IsolateData* isolate_data() const;
   inline Environment* env() const;
   inline v8::Isolate* isolate() const;
-  inline Kind kind() const;
-  virtual v8::Local<v8::Context> context() const;
+  inline v8::Local<v8::Context> context() const;
   inline bool has_run_bootstrapping_code() const;
 
   // Methods created using SetMethod(), SetPrototypeMethod(), etc. inside
   // this scope can access the created T* object using
   // GetBindingData<T>(args) later.
-  template <typename T, typename... Args>
-  T* AddBindingData(v8::Local<v8::Object> target, Args&&... args);
+  template <typename T>
+  T* AddBindingData(v8::Local<v8::Context> context,
+                    v8::Local<v8::Object> target);
   template <typename T, typename U>
   static inline T* GetBindingData(const v8::PropertyCallbackInfo<U>& info);
   template <typename T>
@@ -101,8 +102,6 @@ class Realm : public MemoryRetainer {
       const v8::FunctionCallbackInfo<v8::Value>& info);
   template <typename T>
   static inline T* GetBindingData(v8::Local<v8::Context> context);
-  template <typename T>
-  inline T* GetBindingData();
   inline BindingDataStore* binding_data_store();
 
   // The BaseObject count is a debugging helper that makes sure that there are
@@ -115,8 +114,8 @@ class Realm : public MemoryRetainer {
   inline int64_t base_object_created_after_bootstrap() const;
 
 #define V(PropertyName, TypeName)                                              \
-  virtual v8::Local<TypeName> PropertyName() const = 0;                        \
-  virtual void set_##PropertyName(v8::Local<TypeName> value) = 0;
+  inline v8::Local<TypeName> PropertyName() const;                             \
+  inline void set_##PropertyName(v8::Local<TypeName> value);
   PER_REALM_STRONG_PERSISTENT_VALUES(V)
 #undef V
 
@@ -127,26 +126,15 @@ class Realm : public MemoryRetainer {
   // it's only used for tests.
   std::vector<std::string> builtins_in_snapshot;
 
- protected:
-  ~Realm();
-
-  virtual v8::MaybeLocal<v8::Value> BootstrapRealm() = 0;
-
-  Environment* env_;
-  // Shorthand for isolate pointer.
-  v8::Isolate* isolate_;
-  v8::Global<v8::Context> context_;
-
-#define V(PropertyName, TypeName) v8::Global<TypeName> PropertyName##_;
-  PER_REALM_STRONG_PERSISTENT_VALUES(V)
-#undef V
-
  private:
   void InitializeContext(v8::Local<v8::Context> context,
                          const RealmSerializeInfo* realm_info);
   void DoneBootstrapping();
 
-  Kind kind_;
+  Environment* env_;
+  // Shorthand for isolate pointer.
+  v8::Isolate* isolate_;
+  v8::Global<v8::Context> context_;
   bool has_run_bootstrapping_code_ = false;
 
   int64_t base_object_count_ = 0;
@@ -155,26 +143,10 @@ class Realm : public MemoryRetainer {
   BindingDataStore binding_data_store_;
 
   CleanupQueue cleanup_queue_;
-};
 
-class PrincipalRealm : public Realm {
- public:
-  PrincipalRealm(Environment* env,
-                 v8::Local<v8::Context> context,
-                 const RealmSerializeInfo* realm_info);
-  ~PrincipalRealm();
-
-  SET_MEMORY_INFO_NAME(PrincipalRealm)
-  SET_SELF_SIZE(PrincipalRealm)
-
-#define V(PropertyName, TypeName)                                              \
-  v8::Local<TypeName> PropertyName() const override;                           \
-  void set_##PropertyName(v8::Local<TypeName> value) override;
+#define V(PropertyName, TypeName) v8::Global<TypeName> PropertyName##_;
   PER_REALM_STRONG_PERSISTENT_VALUES(V)
 #undef V
-
- protected:
-  v8::MaybeLocal<v8::Value> BootstrapRealm() override;
 };
 
 }  // namespace node

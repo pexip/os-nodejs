@@ -4,6 +4,7 @@ const common = require('../common');
 const assert = require('assert');
 const fs = require('fs');
 const promiseFs = require('fs').promises;
+const path = require('path');
 const tmpdir = require('../common/tmpdir');
 const { isDate } = require('util').types;
 const { inspect } = require('util');
@@ -13,7 +14,7 @@ tmpdir.refresh();
 let testIndex = 0;
 
 function getFilename() {
-  const filename = tmpdir.resolve(`test-file-${++testIndex}`);
+  const filename = path.join(tmpdir.path, `test-file-${++testIndex}`);
   fs.writeFileSync(filename, 'test');
   return filename;
 }

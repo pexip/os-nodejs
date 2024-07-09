@@ -34,7 +34,7 @@ class LinearAllocationArea final {
 
   void ResetStart() { start_ = top_; }
 
-  V8_INLINE bool CanIncrementTop(size_t bytes) const {
+  V8_INLINE bool CanIncrementTop(size_t bytes) {
     Verify();
     return (top_ + bytes) <= limit_;
   }
@@ -98,11 +98,7 @@ class LinearAllocationArea final {
 #ifdef DEBUG
     SLOW_DCHECK(start_ <= top_);
     SLOW_DCHECK(top_ <= limit_);
-    if (V8_COMPRESS_POINTERS_8GB_BOOL) {
-      SLOW_DCHECK(IsAligned(top_, kObjectAlignment8GbHeap));
-    } else {
-      SLOW_DCHECK(IsAligned(top_, kObjectAlignment));
-    }
+    SLOW_DCHECK(top_ == kNullAddress || (top_ & kHeapObjectTagMask) == 0);
 #endif  // DEBUG
   }
 

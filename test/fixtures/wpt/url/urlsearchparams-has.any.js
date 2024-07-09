@@ -35,11 +35,3 @@ test(() => {
   params.delete('a', 'b');
   assert_true(params.has('a', 'd'));
 }, "Two-argument has()");
-
-test(() => {
-  const params = new URLSearchParams("a=b&a=d&c&e&");
-  assert_true(params.has('a', 'b'));
-  assert_false(params.has('a', 'c'));
-  assert_true(params.has('a', 'd'));
-  assert_true(params.has('a', undefined));
-}, "Two-argument has() respects undefined as second arg");

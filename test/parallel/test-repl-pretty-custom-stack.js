@@ -24,17 +24,10 @@ function run({ command, expected }) {
   });
 
   r.write(`${command}\n`);
-  if (typeof expected === 'string') {
-    assert.strictEqual(
-      accum.replace(stackRegExp, '$1:*:*'),
-      expected.replace(stackRegExp, '$1:*:*')
-    );
-  } else {
-    assert.match(
-      accum.replace(stackRegExp, '$1:*:*'),
-      expected
-    );
-  }
+  assert.strictEqual(
+    accum.replace(stackRegExp, '$1:*:*'),
+    expected.replace(stackRegExp, '$1:*:*')
+  );
   r.close();
 }
 
@@ -42,9 +35,8 @@ const origPrepareStackTrace = Error.prepareStackTrace;
 Error.prepareStackTrace = (err, stack) => {
   if (err instanceof SyntaxError)
     return err.toString();
-  // Insert the error at the beginning of the stack
-  stack.unshift(err);
-  return stack.join('--->\n');
+  stack.push(err);
+  return stack.reverse().join('--->\n');
 };
 
 process.on('uncaughtException', (e) => {
@@ -61,7 +53,8 @@ const tests = [
   },
   {
     command: 'let x y;',
-    expected: /let x y;\n {6}\^\n\nUncaught SyntaxError: Unexpected identifier.*\n/
+    expected: 'let x y;\n      ^\n\n' +
+              'Uncaught SyntaxError: Unexpected identifier\n'
   },
   {
     command: 'throw new Error(\'Whoops!\')',
@@ -79,10 +72,3 @@ const tests = [
 ];
 
 tests.forEach(run);
-
-// Verify that the stack can be generated when Error.prepareStackTrace is deleted.
-delete Error.prepareStackTrace;
-run({
-  command: 'throw new TypeError(\'Whoops!\')',
-  expected: 'Uncaught TypeError: Whoops!\n'
-});

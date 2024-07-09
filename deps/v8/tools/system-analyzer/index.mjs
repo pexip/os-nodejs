@@ -5,7 +5,9 @@
 import {Script, SourcePosition} from '../profile.mjs';
 
 import {State} from './app-model.mjs';
-import {CodeLogEntry, DeoptLogEntry, SharedLibLogEntry} from './log/code.mjs';
+import {CodeLogEntry} from './log/code.mjs';
+import {DeoptLogEntry} from './log/code.mjs';
+import {SharedLibLogEntry} from './log/code.mjs';
 import {IcLogEntry} from './log/ic.mjs';
 import {LogEntry} from './log/log.mjs';
 import {MapLogEntry} from './log/map.mjs';
@@ -40,7 +42,6 @@ class App {
 
       mapPanel: $('#map-panel'),
       codePanel: $('#code-panel'),
-      profilerPanel: $('#profiler-panel'),
       scriptPanel: $('#script-panel'),
 
       toolTip: $('#tool-tip'),
@@ -72,13 +73,11 @@ class App {
     await Promise.all([
       import('./view/list-panel.mjs'),
       import('./view/timeline-panel.mjs'),
-      import('./view/timeline/timeline-overview.mjs'),
       import('./view/map-panel.mjs'),
       import('./view/script-panel.mjs'),
       import('./view/code-panel.mjs'),
       import('./view/property-link-table.mjs'),
       import('./view/tool-tip.mjs'),
-      import('./view/profiler-panel.mjs'),
     ]);
     this._addEventListeners();
   }
@@ -209,11 +208,7 @@ class App {
     if (focusView) this._view.codePanel.show();
   }
 
-  showTickEntries(entries, focusView = true) {
-    this._view.profilerPanel.selectedLogEntries = entries;
-    if (focusView) this._view.profilerPanel.show();
-  }
-
+  showTickEntries(entries, focusView = true) {}
   showTimerEntries(entries, focusView = true) {}
 
   showSourcePositions(entries, focusView = true) {
@@ -328,11 +323,12 @@ class App {
       throw new Error(
           `Unknown tooltip content type: ${content.constructor?.name}`);
     }
-    this._view.toolTip.data = {
-      content: content,
-      positionOrTargetNode: event.positionOrTargetNode,
-      immediate: event.immediate,
-    };
+    this.setToolTip(content, event.positionOrTargetNode);
+  }
+
+  setToolTip(content, positionOrTargetNode) {
+    this._view.toolTip.positionOrTargetNode = positionOrTargetNode;
+    this._view.toolTip.content = content;
   }
 
   restartApp() {
@@ -376,7 +372,6 @@ class App {
       this._view.scriptPanel.scripts = processor.scripts;
       this._view.codePanel.timeline = codeTimeline;
       this._view.codePanel.timeline = codeTimeline;
-      this._view.profilerPanel.timeline = tickTimeline;
       this.refreshTimelineTrackView();
     } catch (e) {
       this._view.logFileReader.error = 'Log file contains errors!'

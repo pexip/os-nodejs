@@ -5,10 +5,11 @@ const fixtures = require('../common/fixtures');
 const tmpdir = require('../common/tmpdir');
 
 const { access, copyFile, open } = require('fs').promises;
+const path = require('path');
 
 async function validate() {
   tmpdir.refresh();
-  const dest = tmpdir.resolve('baz.js');
+  const dest = path.resolve(tmpdir.path, 'baz.js');
   await assert.rejects(
     copyFile(fixtures.path('baz.js'), dest, 'r'),
     {

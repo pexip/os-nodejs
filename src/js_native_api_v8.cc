@@ -134,38 +134,43 @@ napi_status NewExternalString(napi_env env,
   return status;
 }
 
-class TrackedStringResource : private RefTracker {
+class TrackedStringResource : public Finalizer, RefTracker {
  public:
   TrackedStringResource(napi_env env,
                         napi_finalize finalize_callback,
                         void* data,
                         void* finalize_hint)
-      : RefTracker(), finalizer_(env, finalize_callback, data, finalize_hint) {
+      : Finalizer(env, finalize_callback, data, finalize_hint) {
     Link(finalize_callback == nullptr ? &env->reflist
                                       : &env->finalizing_reflist);
   }
 
  protected:
-  // The only time Finalize() gets called before destructor is if the
+  // The only time Finalize() gets called before Dispose() is if the
   // environment is dying. Finalize() expects that the item will be unlinked,
-  // so we do it here. V8 will still call destructor on us later, so we don't do
-  // any deleting here. We just null out env to avoid passing a stale pointer
-  // to the user's finalizer when V8 does finally call destructor.
+  // so we do it here. V8 will still call Dispose() on us later, so we don't do
+  // any deleting here. We just null out env_ to avoid passing a stale pointer
+  // to the user's finalizer when V8 does finally call Dispose().
   void Finalize() override {
     Unlink();
-    finalizer_.ResetEnv();
+    env_ = nullptr;
   }
 
-  ~TrackedStringResource() override {
-    Unlink();
-    finalizer_.CallFinalizer();
+  ~TrackedStringResource() {
+    if (finalize_callback_ == nullptr) return;
+    if (env_ == nullptr) {
+      // The environment is dead. Call the finalizer directly.
+      finalize_callback_(nullptr, finalize_data_, finalize_hint_);
+    } else {
+      // The environment is still alive. Let's remove ourselves from its list
+      // of references and call the user's finalizer.
+      Unlink();
+      env_->CallFinalizer(finalize_callback_, finalize_data_, finalize_hint_);
+    }
   }
-
- private:
-  Finalizer finalizer_;
 };
 
-class ExternalOneByteStringResource final
+class ExternalOneByteStringResource
     : public v8::String::ExternalOneByteStringResource,
       TrackedStringResource {
  public:
@@ -186,8 +191,8 @@ class ExternalOneByteStringResource final
   const size_t length_;
 };
 
-class ExternalStringResource final : public v8::String::ExternalStringResource,
-                                     TrackedStringResource {
+class ExternalStringResource : public v8::String::ExternalStringResource,
+                               TrackedStringResource {
  public:
   ExternalStringResource(napi_env env,
                          char16_t* string,
@@ -363,7 +368,7 @@ inline napi_status Unwrap(napi_env env,
   if (action == RemoveWrap) {
     CHECK(obj->DeletePrivate(context, NAPI_PRIVATE_KEY(context, wrapper))
               .FromJust());
-    if (reference->ownership() == ReferenceOwnership::kUserland) {
+    if (reference->ownership() == Ownership::kUserland) {
       // When the wrap is been removed, the finalizer should be reset.
       reference->ResetFinalizer();
     } else {
@@ -395,16 +400,10 @@ class CallbackBundle {
     bundle->env = env;
 
     v8::Local<v8::Value> cbdata = v8::External::New(env->isolate, bundle);
-    ReferenceWithFinalizer::New(
-        env, cbdata, 0, ReferenceOwnership::kRuntime, Delete, bundle, nullptr);
+    Reference::New(
+        env, cbdata, 0, Ownership::kRuntime, Delete, bundle, nullptr);
     return cbdata;
   }
-
-  static CallbackBundle* FromCallbackData(v8::Local<v8::Value> data) {
-    return reinterpret_cast<CallbackBundle*>(data.As<v8::External>()->Value());
-  }
-
- public:
   napi_env env;   // Necessary to invoke C++ NAPI callback
   void* cb_data;  // The user provided callback data
   napi_callback cb;
@@ -416,9 +415,71 @@ class CallbackBundle {
   }
 };
 
-// Wraps up v8::FunctionCallbackInfo.
-// The class must be stack allocated.
-class FunctionCallbackWrapper {
+// Base class extended by classes that wrap V8 function and property callback
+// info.
+class CallbackWrapper {
+ public:
+  inline CallbackWrapper(napi_value this_arg, size_t args_length, void* data)
+      : _this(this_arg), _args_length(args_length), _data(data) {}
+
+  virtual napi_value GetNewTarget() = 0;
+  virtual void Args(napi_value* buffer, size_t bufferlength) = 0;
+  virtual void SetReturnValue(napi_value value) = 0;
+
+  napi_value This() { return _this; }
+
+  size_t ArgsLength() { return _args_length; }
+
+  void* Data() { return _data; }
+
+ protected:
+  const napi_value _this;
+  const size_t _args_length;
+  void* _data;
+};
+
+class CallbackWrapperBase : public CallbackWrapper {
+ public:
+  inline CallbackWrapperBase(const v8::FunctionCallbackInfo<v8::Value>& cbinfo,
+                             const size_t args_length)
+      : CallbackWrapper(
+            JsValueFromV8LocalValue(cbinfo.This()), args_length, nullptr),
+        _cbinfo(cbinfo) {
+    _bundle = reinterpret_cast<CallbackBundle*>(
+        cbinfo.Data().As<v8::External>()->Value());
+    _data = _bundle->cb_data;
+  }
+
+ protected:
+  inline void InvokeCallback() {
+    napi_callback_info cbinfo_wrapper = reinterpret_cast<napi_callback_info>(
+        static_cast<CallbackWrapper*>(this));
+
+    // All other pointers we need are stored in `_bundle`
+    napi_env env = _bundle->env;
+    napi_callback cb = _bundle->cb;
+
+    napi_value result = nullptr;
+    bool exceptionOccurred = false;
+    env->CallIntoModule([&](napi_env env) { result = cb(env, cbinfo_wrapper); },
+                        [&](napi_env env, v8::Local<v8::Value> value) {
+                          exceptionOccurred = true;
+                          if (env->terminatedOrTerminating()) {
+                            return;
+                          }
+                          env->isolate->ThrowException(value);
+                        });
+
+    if (!exceptionOccurred && (result != nullptr)) {
+      this->SetReturnValue(result);
+    }
+  }
+
+  const v8::FunctionCallbackInfo<v8::Value>& _cbinfo;
+  CallbackBundle* _bundle;
+};
+
+class FunctionCallbackWrapper : public CallbackWrapperBase {
  public:
   static void Invoke(const v8::FunctionCallbackInfo<v8::Value>& info) {
     FunctionCallbackWrapper cbwrapper(info);
@@ -453,70 +514,41 @@ class FunctionCallbackWrapper {
     return napi_clear_last_error(env);
   }
 
-  napi_value GetNewTarget() {
-    if (cbinfo_.IsConstructCall()) {
-      return v8impl::JsValueFromV8LocalValue(cbinfo_.NewTarget());
+  explicit FunctionCallbackWrapper(
+      const v8::FunctionCallbackInfo<v8::Value>& cbinfo)
+      : CallbackWrapperBase(cbinfo, cbinfo.Length()) {}
+
+  napi_value GetNewTarget() override {
+    if (_cbinfo.IsConstructCall()) {
+      return v8impl::JsValueFromV8LocalValue(_cbinfo.NewTarget());
     } else {
       return nullptr;
     }
   }
 
-  void Args(napi_value* buffer, size_t buffer_length) {
+  /*virtual*/
+  void Args(napi_value* buffer, size_t buffer_length) override {
     size_t i = 0;
-    size_t min_arg_count = std::min(buffer_length, ArgsLength());
+    size_t min = std::min(buffer_length, _args_length);
 
-    for (; i < min_arg_count; ++i) {
-      buffer[i] = JsValueFromV8LocalValue(cbinfo_[i]);
+    for (; i < min; i += 1) {
+      buffer[i] = v8impl::JsValueFromV8LocalValue(_cbinfo[i]);
     }
 
     if (i < buffer_length) {
       napi_value undefined =
-          JsValueFromV8LocalValue(v8::Undefined(cbinfo_.GetIsolate()));
-      for (; i < buffer_length; ++i) {
+          v8impl::JsValueFromV8LocalValue(v8::Undefined(_cbinfo.GetIsolate()));
+      for (; i < buffer_length; i += 1) {
         buffer[i] = undefined;
       }
     }
   }
 
-  napi_value This() { return JsValueFromV8LocalValue(cbinfo_.This()); }
-
-  size_t ArgsLength() { return static_cast<size_t>(cbinfo_.Length()); }
-
-  void* Data() { return bundle_->cb_data; }
-
- private:
-  explicit FunctionCallbackWrapper(
-      const v8::FunctionCallbackInfo<v8::Value>& cbinfo)
-      : cbinfo_(cbinfo),
-        bundle_(CallbackBundle::FromCallbackData(cbinfo.Data())) {}
-
-  void InvokeCallback() {
-    napi_callback_info cbinfo_wrapper =
-        reinterpret_cast<napi_callback_info>(this);
-
-    // All other pointers we need are stored in `_bundle`
-    napi_env env = bundle_->env;
-    napi_callback cb = bundle_->cb;
-
-    napi_value result = nullptr;
-    bool exceptionOccurred = false;
-    env->CallIntoModule([&](napi_env env) { result = cb(env, cbinfo_wrapper); },
-                        [&](napi_env env, v8::Local<v8::Value> value) {
-                          exceptionOccurred = true;
-                          if (env->terminatedOrTerminating()) {
-                            return;
-                          }
-                          env->isolate->ThrowException(value);
-                        });
-
-    if (!exceptionOccurred && (result != nullptr)) {
-      cbinfo_.GetReturnValue().Set(V8LocalValueFromJsValue(result));
-    }
+  /*virtual*/
+  void SetReturnValue(napi_value value) override {
+    v8::Local<v8::Value> val = v8impl::V8LocalValueFromJsValue(value);
+    _cbinfo.GetReturnValue().Set(val);
   }
-
- private:
-  const v8::FunctionCallbackInfo<v8::Value>& cbinfo_;
-  CallbackBundle* bundle_;
 };
 
 inline napi_status Wrap(napi_env env,
@@ -547,29 +579,24 @@ inline napi_status Wrap(napi_env env,
     // before then, then the finalize callback will never be invoked.)
     // Therefore a finalize callback is required when returning a reference.
     CHECK_ARG(env, finalize_cb);
-    reference = v8impl::ReferenceWithFinalizer::New(
-        env,
-        obj,
-        0,
-        v8impl::ReferenceOwnership::kUserland,
-        finalize_cb,
-        native_object,
-        finalize_hint);
+    reference = v8impl::Reference::New(env,
+                                       obj,
+                                       0,
+                                       v8impl::Ownership::kUserland,
+                                       finalize_cb,
+                                       native_object,
+                                       finalize_hint);
     *result = reinterpret_cast<napi_ref>(reference);
-  } else if (finalize_cb != nullptr) {
-    // Create a self-deleting reference.
-    reference = v8impl::ReferenceWithFinalizer::New(
-        env,
-        obj,
-        0,
-        v8impl::ReferenceOwnership::kRuntime,
-        finalize_cb,
-        native_object,
-        finalize_hint);
   } else {
     // Create a self-deleting reference.
-    reference = v8impl::ReferenceWithData::New(
-        env, obj, 0, v8impl::ReferenceOwnership::kRuntime, native_object);
+    reference = v8impl::Reference::New(
+        env,
+        obj,
+        0,
+        v8impl::Ownership::kRuntime,
+        finalize_cb,
+        native_object,
+        finalize_cb == nullptr ? nullptr : finalize_hint);
   }
 
   CHECK(obj->SetPrivate(context,
@@ -594,46 +621,27 @@ inline bool CanBeHeldWeakly(v8::Local<v8::Value> value) {
 
 }  // end of anonymous namespace
 
-void Finalizer::ResetEnv() {
-  env_ = nullptr;
-}
-
 void Finalizer::ResetFinalizer() {
   finalize_callback_ = nullptr;
   finalize_data_ = nullptr;
   finalize_hint_ = nullptr;
 }
 
-void Finalizer::CallFinalizer() {
-  napi_finalize finalize_callback = finalize_callback_;
-  void* finalize_data = finalize_data_;
-  void* finalize_hint = finalize_hint_;
-  ResetFinalizer();
-
-  if (finalize_callback == nullptr) return;
-  if (env_ == nullptr) {
-    // The environment is dead. Call the finalizer directly.
-    finalize_callback(nullptr, finalize_data, finalize_hint);
-  } else {
-    env_->CallFinalizer(finalize_callback, finalize_data, finalize_hint);
-  }
-}
-
 TrackedFinalizer::TrackedFinalizer(napi_env env,
                                    napi_finalize finalize_callback,
                                    void* finalize_data,
                                    void* finalize_hint)
-    : RefTracker(),
-      finalizer_(env, finalize_callback, finalize_data, finalize_hint) {}
+    : Finalizer(env, finalize_callback, finalize_data, finalize_hint),
+      RefTracker() {
+  Link(finalize_callback == nullptr ? &env->reflist : &env->finalizing_reflist);
+}
 
 TrackedFinalizer* TrackedFinalizer::New(napi_env env,
                                         napi_finalize finalize_callback,
                                         void* finalize_data,
                                         void* finalize_hint) {
-  TrackedFinalizer* finalizer = new TrackedFinalizer(
+  return new TrackedFinalizer(
       env, finalize_callback, finalize_data, finalize_hint);
-  finalizer->Link(&env->finalizing_reflist);
-  return finalizer;
 }
 
 // When a TrackedFinalizer is being deleted, it may have been queued to call its
@@ -642,25 +650,92 @@ TrackedFinalizer::~TrackedFinalizer() {
   // Remove from the env's tracked list.
   Unlink();
   // Try to remove the finalizer from the scheduled second pass callback.
-  finalizer_.env()->DequeueFinalizer(this);
+  env_->DequeueFinalizer(this);
 }
 
 void TrackedFinalizer::Finalize() {
-  Unlink();
-  finalizer_.CallFinalizer();
-  delete this;
+  FinalizeCore(/*deleteMe:*/ true);
 }
 
-Reference::Reference(napi_env env,
-                     v8::Local<v8::Value> value,
-                     uint32_t initial_refcount,
-                     ReferenceOwnership ownership)
-    : RefTracker(),
-      persistent_(env->isolate, value),
+void TrackedFinalizer::FinalizeCore(bool deleteMe) {
+  // Swap out the field finalize_callback so that it can not be accidentally
+  // called more than once.
+  napi_finalize finalize_callback = finalize_callback_;
+  void* finalize_data = finalize_data_;
+  void* finalize_hint = finalize_hint_;
+  ResetFinalizer();
+
+  // Either the RefBase is going to be deleted in the finalize_callback or not,
+  // it should be removed from the tracked list.
+  Unlink();
+  // If the finalize_callback is present, it should either delete the
+  // derived RefBase, or the RefBase ownership was set to Ownership::kRuntime
+  // and the deleteMe parameter is true.
+  if (finalize_callback != nullptr) {
+    env_->CallFinalizer(finalize_callback, finalize_data, finalize_hint);
+  }
+
+  if (deleteMe) {
+    delete this;
+  }
+}
+
+// Wrapper around v8impl::Persistent that implements reference counting.
+RefBase::RefBase(napi_env env,
+                 uint32_t initial_refcount,
+                 Ownership ownership,
+                 napi_finalize finalize_callback,
+                 void* finalize_data,
+                 void* finalize_hint)
+    : TrackedFinalizer(env, finalize_callback, finalize_data, finalize_hint),
       refcount_(initial_refcount),
-      ownership_(ownership),
-      can_be_weak_(CanBeHeldWeakly(value)) {
+      ownership_(ownership) {}
+
+RefBase* RefBase::New(napi_env env,
+                      uint32_t initial_refcount,
+                      Ownership ownership,
+                      napi_finalize finalize_callback,
+                      void* finalize_data,
+                      void* finalize_hint) {
+  return new RefBase(env,
+                     initial_refcount,
+                     ownership,
+                     finalize_callback,
+                     finalize_data,
+                     finalize_hint);
+}
+
+void* RefBase::Data() {
+  return finalize_data_;
+}
+
+uint32_t RefBase::Ref() {
+  return ++refcount_;
+}
+
+uint32_t RefBase::Unref() {
   if (refcount_ == 0) {
+    return 0;
+  }
+  return --refcount_;
+}
+
+uint32_t RefBase::RefCount() {
+  return refcount_;
+}
+
+void RefBase::Finalize() {
+  // If the RefBase is not Ownership::kRuntime, userland code should delete it.
+  // Delete it if it is Ownership::kRuntime.
+  FinalizeCore(/*deleteMe:*/ ownership_ == Ownership::kRuntime);
+}
+
+template <typename... Args>
+Reference::Reference(napi_env env, v8::Local<v8::Value> value, Args&&... args)
+    : RefBase(env, std::forward<Args>(args)...),
+      persistent_(env->isolate, value),
+      can_be_weak_(CanBeHeldWeakly(value)) {
+  if (RefCount() == 0) {
     SetWeak();
   }
 }
@@ -668,18 +743,22 @@ Reference::Reference(napi_env env,
 Reference::~Reference() {
   // Reset the handle. And no weak callback will be invoked.
   persistent_.Reset();
-
-  // Remove from the env's tracked list.
-  Unlink();
 }
 
 Reference* Reference::New(napi_env env,
                           v8::Local<v8::Value> value,
                           uint32_t initial_refcount,
-                          ReferenceOwnership ownership) {
-  Reference* reference = new Reference(env, value, initial_refcount, ownership);
-  reference->Link(&env->reflist);
-  return reference;
+                          Ownership ownership,
+                          napi_finalize finalize_callback,
+                          void* finalize_data,
+                          void* finalize_hint) {
+  return new Reference(env,
+                       value,
+                       initial_refcount,
+                       ownership,
+                       finalize_callback,
+                       finalize_data,
+                       finalize_hint);
 }
 
 uint32_t Reference::Ref() {
@@ -688,29 +767,32 @@ uint32_t Reference::Ref() {
   if (persistent_.IsEmpty()) {
     return 0;
   }
-  if (++refcount_ == 1 && can_be_weak_) {
+  uint32_t refcount = RefBase::Ref();
+  if (refcount == 1 && can_be_weak_) {
     persistent_.ClearWeak();
   }
-  return refcount_;
+  return refcount;
 }
 
 uint32_t Reference::Unref() {
   // When the persistent_ is cleared in the WeakCallback, and a second pass
   // callback is pending, return 0 unconditionally.
-  if (persistent_.IsEmpty() || refcount_ == 0) {
+  if (persistent_.IsEmpty()) {
     return 0;
   }
-  if (--refcount_ == 0) {
+  uint32_t old_refcount = RefCount();
+  uint32_t refcount = RefBase::Unref();
+  if (old_refcount == 1 && refcount == 0) {
     SetWeak();
   }
-  return refcount_;
+  return refcount;
 }
 
-v8::Local<v8::Value> Reference::Get(napi_env env) {
+v8::Local<v8::Value> Reference::Get() {
   if (persistent_.IsEmpty()) {
     return v8::Local<v8::Value>();
   } else {
-    return v8::Local<v8::Value>::New(env->isolate, persistent_);
+    return v8::Local<v8::Value>::New(env_->isolate, persistent_);
   }
 }
 
@@ -719,30 +801,12 @@ void Reference::Finalize() {
   // be invoked again.
   persistent_.Reset();
 
-  // If the Reference is not ReferenceOwnership::kRuntime, userland code should
-  // delete it. Delete it if it is ReferenceOwnership::kRuntime.
-  bool deleteMe = ownership_ == ReferenceOwnership::kRuntime;
-
-  // Whether the Reference is going to be deleted in the finalize_callback
-  // or not, it should be removed from the tracked list.
-  Unlink();
-
-  // If the finalize_callback is present, it should either delete the
-  // derived Reference, or the Reference ownership was set to
-  // ReferenceOwnership::kRuntime and the deleteMe parameter is true.
-  CallUserFinalizer();
-
-  if (deleteMe) {
-    delete this;
-  }
+  // Chain up to perform the rest of the finalization.
+  RefBase::Finalize();
 }
 
-// Call the Finalize immediately since there is no user finalizer to call.
-void Reference::InvokeFinalizerFromGC() {
-  Finalize();
-}
-
-// Mark the reference as weak and eligible for collection by the GC.
+// Mark the reference as weak and eligible for collection
+// by the gc.
 void Reference::SetWeak() {
   if (can_be_weak_) {
     persistent_.SetWeak(this, WeakCallback, v8::WeakCallbackType::kParameter);
@@ -751,130 +815,15 @@ void Reference::SetWeak() {
   }
 }
 
-// Static function called by GC. Delegate the call to the reference instance.
-void Reference::WeakCallback(const v8::WeakCallbackInfo<Reference>& data) {
-  Reference* reference = data.GetParameter();
-  // The reference must be reset during the weak callback per V8 API protocol.
-  reference->persistent_.Reset();
-  reference->InvokeFinalizerFromGC();
-}
-
-ReferenceWithData* ReferenceWithData::New(napi_env env,
-                                          v8::Local<v8::Value> value,
-                                          uint32_t initial_refcount,
-                                          ReferenceOwnership ownership,
-                                          void* data) {
-  ReferenceWithData* reference =
-      new ReferenceWithData(env, value, initial_refcount, ownership, data);
-  reference->Link(&env->reflist);
-  return reference;
-}
-
-ReferenceWithData::ReferenceWithData(napi_env env,
-                                     v8::Local<v8::Value> value,
-                                     uint32_t initial_refcount,
-                                     ReferenceOwnership ownership,
-                                     void* data)
-    : Reference(env, value, initial_refcount, ownership), data_(data) {}
-
-ReferenceWithFinalizer* ReferenceWithFinalizer::New(
-    napi_env env,
-    v8::Local<v8::Value> value,
-    uint32_t initial_refcount,
-    ReferenceOwnership ownership,
-    napi_finalize finalize_callback,
-    void* finalize_data,
-    void* finalize_hint) {
-  ReferenceWithFinalizer* reference =
-      new ReferenceWithFinalizer(env,
-                                 value,
-                                 initial_refcount,
-                                 ownership,
-                                 finalize_callback,
-                                 finalize_data,
-                                 finalize_hint);
-  reference->Link(&env->finalizing_reflist);
-  return reference;
-}
-
-ReferenceWithFinalizer::ReferenceWithFinalizer(napi_env env,
-                                               v8::Local<v8::Value> value,
-                                               uint32_t initial_refcount,
-                                               ReferenceOwnership ownership,
-                                               napi_finalize finalize_callback,
-                                               void* finalize_data,
-                                               void* finalize_hint)
-    : Reference(env, value, initial_refcount, ownership),
-      finalizer_(env, finalize_callback, finalize_data, finalize_hint) {}
-
-ReferenceWithFinalizer::~ReferenceWithFinalizer() {
-  // Try to remove the finalizer from the scheduled second pass callback.
-  finalizer_.env()->DequeueFinalizer(this);
-}
-
-void ReferenceWithFinalizer::CallUserFinalizer() {
-  finalizer_.CallFinalizer();
-}
-
-// The Node-API finalizer callback may make calls into the engine. V8's heap is
+// The N-API finalizer callback may make calls into the engine. V8's heap is
 // not in a consistent state during the weak callback, and therefore it does
 // not support calls back into it. Enqueue the invocation of the finalizer.
-void ReferenceWithFinalizer::InvokeFinalizerFromGC() {
-  finalizer_.env()->InvokeFinalizerFromGC(this);
+void Reference::WeakCallback(const v8::WeakCallbackInfo<Reference>& data) {
+  Reference* reference = data.GetParameter();
+  // The reference must be reset during the weak callback as the API protocol.
+  reference->persistent_.Reset();
+  reference->env_->InvokeFinalizerFromGC(reference);
 }
-
-/**
- * A wrapper for `v8::External` to support type-tagging. `v8::External` doesn't
- * support defining any properties and private properties on it, even though it
- * is an object. This wrapper is used to store the type tag and the data of the
- * external value.
- */
-class ExternalWrapper {
- private:
-  explicit ExternalWrapper(void* data) : data_(data), type_tag_{0, 0} {}
-
-  static void WeakCallback(const v8::WeakCallbackInfo<ExternalWrapper>& data) {
-    ExternalWrapper* wrapper = data.GetParameter();
-    delete wrapper;
-  }
-
- public:
-  static v8::Local<v8::External> New(napi_env env, void* data) {
-    ExternalWrapper* wrapper = new ExternalWrapper(data);
-    v8::Local<v8::External> external = v8::External::New(env->isolate, wrapper);
-    wrapper->persistent_.Reset(env->isolate, external);
-    wrapper->persistent_.SetWeak(
-        wrapper, WeakCallback, v8::WeakCallbackType::kParameter);
-
-    return external;
-  }
-
-  static ExternalWrapper* From(v8::Local<v8::External> external) {
-    return static_cast<ExternalWrapper*>(external->Value());
-  }
-
-  void* Data() { return data_; }
-
-  bool TypeTag(const napi_type_tag* type_tag) {
-    if (has_tag_) {
-      return false;
-    }
-    type_tag_ = *type_tag;
-    has_tag_ = true;
-    return true;
-  }
-
-  bool CheckTypeTag(const napi_type_tag* type_tag) {
-    return has_tag_ && type_tag->lower == type_tag_.lower &&
-           type_tag->upper == type_tag_.upper;
-  }
-
- private:
-  v8impl::Persistent<v8::Value> persistent_;
-  void* data_;
-  napi_type_tag type_tag_;
-  bool has_tag_ = false;
-};
 
 }  // end of namespace v8impl
 
@@ -907,8 +856,8 @@ static const char* error_messages[] = {
 };
 
 napi_status NAPI_CDECL napi_get_last_error_info(
-    node_api_basic_env basic_env, const napi_extended_error_info** result) {
-  napi_env env = const_cast<napi_env>(basic_env);
+    node_api_nogc_env nogc_env, const napi_extended_error_info** result) {
+  napi_env env = const_cast<napi_env>(nogc_env);
   CHECK_ENV(env);
   CHECK_ARG(env, result);
 
@@ -1020,8 +969,11 @@ napi_define_class(napi_env env,
             env, p->setter, p->data, &setter_tpl));
       }
 
-      tpl->PrototypeTemplate()->SetAccessorProperty(
-          property_name, getter_tpl, setter_tpl, attributes);
+      tpl->PrototypeTemplate()->SetAccessorProperty(property_name,
+                                                    getter_tpl,
+                                                    setter_tpl,
+                                                    attributes,
+                                                    v8::AccessControl::DEFAULT);
     } else if (p->method != nullptr) {
       v8::Local<v8::FunctionTemplate> t;
       STATUS_CALL(v8impl::FunctionCallbackWrapper::NewTemplate(
@@ -1653,12 +1605,12 @@ napi_status NAPI_CDECL node_api_create_external_string_latin1(
     napi_env env,
     char* str,
     size_t length,
-    node_api_basic_finalize basic_finalize_callback,
+    node_api_nogc_finalize nogc_finalize_callback,
     void* finalize_hint,
     napi_value* result,
     bool* copied) {
   napi_finalize finalize_callback =
-      reinterpret_cast<napi_finalize>(basic_finalize_callback);
+      reinterpret_cast<napi_finalize>(nogc_finalize_callback);
   return v8impl::NewExternalString(
       env,
       str,
@@ -1682,12 +1634,12 @@ napi_status NAPI_CDECL node_api_create_external_string_utf16(
     napi_env env,
     char16_t* str,
     size_t length,
-    node_api_basic_finalize basic_finalize_callback,
+    node_api_nogc_finalize nogc_finalize_callback,
     void* finalize_hint,
     napi_value* result,
     bool* copied) {
   napi_finalize finalize_callback =
-      reinterpret_cast<napi_finalize>(basic_finalize_callback);
+      reinterpret_cast<napi_finalize>(nogc_finalize_callback);
   return v8impl::NewExternalString(
       env,
       str,
@@ -1705,42 +1657,6 @@ napi_status NAPI_CDECL node_api_create_external_string_utf16(
             env, str, length, finalize_callback, finalize_hint);
         return v8::String::NewExternalTwoByte(isolate, resource);
       });
-}
-
-napi_status node_api_create_property_key_latin1(napi_env env,
-                                                const char* str,
-                                                size_t length,
-                                                napi_value* result) {
-  return v8impl::NewString(env, str, length, result, [&](v8::Isolate* isolate) {
-    return v8::String::NewFromOneByte(isolate,
-                                      reinterpret_cast<const uint8_t*>(str),
-                                      v8::NewStringType::kInternalized,
-                                      length);
-  });
-}
-
-napi_status node_api_create_property_key_utf8(napi_env env,
-                                              const char* str,
-                                              size_t length,
-                                              napi_value* result) {
-  return v8impl::NewString(env, str, length, result, [&](v8::Isolate* isolate) {
-    return v8::String::NewFromUtf8(isolate,
-                                   str,
-                                   v8::NewStringType::kInternalized,
-                                   static_cast<int>(length));
-  });
-}
-
-napi_status NAPI_CDECL node_api_create_property_key_utf16(napi_env env,
-                                                          const char16_t* str,
-                                                          size_t length,
-                                                          napi_value* result) {
-  return v8impl::NewString(env, str, length, result, [&](v8::Isolate* isolate) {
-    return v8::String::NewFromTwoByte(isolate,
-                                      reinterpret_cast<const uint16_t*>(str),
-                                      v8::NewStringType::kInternalized,
-                                      static_cast<int>(length));
-  });
 }
 
 napi_status NAPI_CDECL napi_create_double(napi_env env,
@@ -2073,8 +1989,8 @@ napi_status NAPI_CDECL napi_get_cb_info(
   CHECK_ENV(env);
   CHECK_ARG(env, cbinfo);
 
-  v8impl::FunctionCallbackWrapper* info =
-      reinterpret_cast<v8impl::FunctionCallbackWrapper*>(cbinfo);
+  v8impl::CallbackWrapper* info =
+      reinterpret_cast<v8impl::CallbackWrapper*>(cbinfo);
 
   if (argv != nullptr) {
     CHECK_ARG(env, argc);
@@ -2100,8 +2016,8 @@ napi_status NAPI_CDECL napi_get_new_target(napi_env env,
   CHECK_ARG(env, cbinfo);
   CHECK_ARG(env, result);
 
-  v8impl::FunctionCallbackWrapper* info =
-      reinterpret_cast<v8impl::FunctionCallbackWrapper*>(cbinfo);
+  v8impl::CallbackWrapper* info =
+      reinterpret_cast<v8impl::CallbackWrapper*>(cbinfo);
 
   *result = info->GetNewTarget();
   return napi_clear_last_error(env);
@@ -2589,11 +2505,10 @@ GEN_COERCE_FUNCTION(STRING, String, string)
 napi_status NAPI_CDECL napi_wrap(napi_env env,
                                  napi_value js_object,
                                  void* native_object,
-                                 node_api_basic_finalize basic_finalize_cb,
+                                 node_api_nogc_finalize nogc_finalize_cb,
                                  void* finalize_hint,
                                  napi_ref* result) {
-  napi_finalize finalize_cb =
-      reinterpret_cast<napi_finalize>(basic_finalize_cb);
+  napi_finalize finalize_cb = reinterpret_cast<napi_finalize>(nogc_finalize_cb);
   return v8impl::Wrap(
       env, js_object, native_object, finalize_cb, finalize_hint, result);
 }
@@ -2613,27 +2528,27 @@ napi_status NAPI_CDECL napi_remove_wrap(napi_env env,
 napi_status NAPI_CDECL
 napi_create_external(napi_env env,
                      void* data,
-                     node_api_basic_finalize basic_finalize_cb,
+                     node_api_nogc_finalize nogc_finalize_cb,
                      void* finalize_hint,
                      napi_value* result) {
-  napi_finalize finalize_cb =
-      reinterpret_cast<napi_finalize>(basic_finalize_cb);
+  napi_finalize finalize_cb = reinterpret_cast<napi_finalize>(nogc_finalize_cb);
   NAPI_PREAMBLE(env);
   CHECK_ARG(env, result);
 
-  v8::Local<v8::External> external_value =
-      v8impl::ExternalWrapper::New(env, data);
+  v8::Isolate* isolate = env->isolate;
+
+  v8::Local<v8::Value> external_value = v8::External::New(isolate, data);
 
   if (finalize_cb) {
     // The Reference object will delete itself after invoking the finalizer
     // callback.
-    v8impl::ReferenceWithFinalizer::New(env,
-                                        external_value,
-                                        0,
-                                        v8impl::ReferenceOwnership::kRuntime,
-                                        finalize_cb,
-                                        data,
-                                        finalize_hint);
+    v8impl::Reference::New(env,
+                           external_value,
+                           0,
+                           v8impl::Ownership::kRuntime,
+                           finalize_cb,
+                           data,
+                           finalize_hint);
   }
 
   *result = v8impl::JsValueFromV8LocalValue(external_value);
@@ -2642,24 +2557,12 @@ napi_create_external(napi_env env,
 }
 
 napi_status NAPI_CDECL napi_type_tag_object(napi_env env,
-                                            napi_value object_or_external,
+                                            napi_value object,
                                             const napi_type_tag* type_tag) {
   NAPI_PREAMBLE(env);
   v8::Local<v8::Context> context = env->context();
-
-  CHECK_ARG(env, object_or_external);
-  v8::Local<v8::Value> val =
-      v8impl::V8LocalValueFromJsValue(object_or_external);
-  if (val->IsExternal()) {
-    v8impl::ExternalWrapper* wrapper =
-        v8impl::ExternalWrapper::From(val.As<v8::External>());
-    RETURN_STATUS_IF_FALSE_WITH_PREAMBLE(
-        env, wrapper->TypeTag(type_tag), napi_invalid_arg);
-    return GET_RETURN_STATUS(env);
-  }
-
   v8::Local<v8::Object> obj;
-  CHECK_TO_OBJECT_WITH_PREAMBLE(env, context, obj, object_or_external);
+  CHECK_TO_OBJECT_WITH_PREAMBLE(env, context, obj, object);
   CHECK_ARG_WITH_PREAMBLE(env, type_tag);
 
   auto key = NAPI_PRIVATE_KEY(context, type_tag);
@@ -2681,24 +2584,13 @@ napi_status NAPI_CDECL napi_type_tag_object(napi_env env,
 }
 
 napi_status NAPI_CDECL napi_check_object_type_tag(napi_env env,
-                                                  napi_value object_or_external,
+                                                  napi_value object,
                                                   const napi_type_tag* type_tag,
                                                   bool* result) {
   NAPI_PREAMBLE(env);
   v8::Local<v8::Context> context = env->context();
-
-  CHECK_ARG(env, object_or_external);
-  v8::Local<v8::Value> obj_val =
-      v8impl::V8LocalValueFromJsValue(object_or_external);
-  if (obj_val->IsExternal()) {
-    v8impl::ExternalWrapper* wrapper =
-        v8impl::ExternalWrapper::From(obj_val.As<v8::External>());
-    *result = wrapper->CheckTypeTag(type_tag);
-    return GET_RETURN_STATUS(env);
-  }
-
   v8::Local<v8::Object> obj;
-  CHECK_TO_OBJECT_WITH_PREAMBLE(env, context, obj, object_or_external);
+  CHECK_TO_OBJECT_WITH_PREAMBLE(env, context, obj, object);
   CHECK_ARG_WITH_PREAMBLE(env, type_tag);
   CHECK_ARG_WITH_PREAMBLE(env, result);
 
@@ -2743,7 +2635,7 @@ napi_status NAPI_CDECL napi_get_value_external(napi_env env,
   RETURN_STATUS_IF_FALSE(env, val->IsExternal(), napi_invalid_arg);
 
   v8::Local<v8::External> external_value = val.As<v8::External>();
-  *result = v8impl::ExternalWrapper::From(external_value)->Data();
+  *result = external_value->Value();
 
   return napi_clear_last_error(env);
 }
@@ -2768,7 +2660,7 @@ napi_status NAPI_CDECL napi_create_reference(napi_env env,
   }
 
   v8impl::Reference* reference = v8impl::Reference::New(
-      env, v8_value, initial_refcount, v8impl::ReferenceOwnership::kUserland);
+      env, v8_value, initial_refcount, v8impl::Ownership::kUserland);
 
   *result = reinterpret_cast<napi_ref>(reference);
   return napi_clear_last_error(env);
@@ -2776,12 +2668,10 @@ napi_status NAPI_CDECL napi_create_reference(napi_env env,
 
 // Deletes a reference. The referenced value is released, and may be GC'd unless
 // there are other references to it.
-// For a napi_reference returned from `napi_wrap`, this must be called in the
-// finalizer.
 napi_status NAPI_CDECL napi_delete_reference(napi_env env, napi_ref ref) {
   // Omit NAPI_PREAMBLE and GET_RETURN_STATUS because V8 calls here cannot throw
   // JS exceptions.
-  CHECK_ENV(env);
+  CHECK_ENV_NOT_IN_GC(env);
   CHECK_ARG(env, ref);
 
   delete reinterpret_cast<v8impl::Reference*>(ref);
@@ -2826,7 +2716,7 @@ napi_status NAPI_CDECL napi_reference_unref(napi_env env,
 
   v8impl::Reference* reference = reinterpret_cast<v8impl::Reference*>(ref);
 
-  if (reference->refcount() == 0) {
+  if (reference->RefCount() == 0) {
     return napi_set_last_error(env, napi_generic_failure);
   }
 
@@ -2852,7 +2742,7 @@ napi_status NAPI_CDECL napi_get_reference_value(napi_env env,
   CHECK_ARG(env, result);
 
   v8impl::Reference* reference = reinterpret_cast<v8impl::Reference*>(ref);
-  *result = v8impl::JsValueFromV8LocalValue(reference->Get(env));
+  *result = v8impl::JsValueFromV8LocalValue(reference->Get());
 
   return napi_clear_last_error(env);
 }
@@ -3060,7 +2950,7 @@ napi_status NAPI_CDECL
 napi_create_external_arraybuffer(napi_env env,
                                  void* external_data,
                                  size_t byte_length,
-                                 node_api_basic_finalize finalize_cb,
+                                 node_api_nogc_finalize finalize_cb,
                                  void* finalize_hint,
                                  napi_value* result) {
   // The API contract here is that the cleanup function runs on the JS thread,
@@ -3325,7 +3215,7 @@ napi_status NAPI_CDECL napi_get_dataview_info(napi_env env,
   return napi_clear_last_error(env);
 }
 
-napi_status NAPI_CDECL napi_get_version(node_api_basic_env env,
+napi_status NAPI_CDECL napi_get_version(node_api_nogc_env env,
                                         uint32_t* result) {
   CHECK_ENV(env);
   CHECK_ARG(env, result);
@@ -3447,13 +3337,12 @@ napi_status NAPI_CDECL
 napi_add_finalizer(napi_env env,
                    napi_value js_object,
                    void* finalize_data,
-                   node_api_basic_finalize basic_finalize_cb,
+                   node_api_nogc_finalize nogc_finalize_cb,
                    void* finalize_hint,
                    napi_ref* result) {
   // Omit NAPI_PREAMBLE and GET_RETURN_STATUS because V8 calls here cannot throw
   // JS exceptions.
-  napi_finalize finalize_cb =
-      reinterpret_cast<napi_finalize>(basic_finalize_cb);
+  napi_finalize finalize_cb = reinterpret_cast<napi_finalize>(nogc_finalize_cb);
   CHECK_ENV_NOT_IN_GC(env);
   CHECK_ARG(env, js_object);
   CHECK_ARG(env, finalize_cb);
@@ -3463,10 +3352,10 @@ napi_add_finalizer(napi_env env,
 
   // Create a self-deleting reference if the optional out-param result is not
   // set.
-  v8impl::ReferenceOwnership ownership =
-      result == nullptr ? v8impl::ReferenceOwnership::kRuntime
-                        : v8impl::ReferenceOwnership::kUserland;
-  v8impl::Reference* reference = v8impl::ReferenceWithFinalizer::New(
+  v8impl::Ownership ownership = result == nullptr
+                                    ? v8impl::Ownership::kRuntime
+                                    : v8impl::Ownership::kUserland;
+  v8impl::Reference* reference = v8impl::Reference::New(
       env, v8_value, 0, ownership, finalize_cb, finalize_data, finalize_hint);
 
   if (result != nullptr) {
@@ -3477,11 +3366,11 @@ napi_add_finalizer(napi_env env,
 
 #ifdef NAPI_EXPERIMENTAL
 
-napi_status NAPI_CDECL node_api_post_finalizer(node_api_basic_env basic_env,
+napi_status NAPI_CDECL node_api_post_finalizer(node_api_nogc_env nogc_env,
                                                napi_finalize finalize_cb,
                                                void* finalize_data,
                                                void* finalize_hint) {
-  napi_env env = const_cast<napi_env>(basic_env);
+  napi_env env = const_cast<napi_env>(nogc_env);
   CHECK_ENV(env);
   env->EnqueueFinalizer(v8impl::TrackedFinalizer::New(
       env, finalize_cb, finalize_data, finalize_hint));
@@ -3490,7 +3379,7 @@ napi_status NAPI_CDECL node_api_post_finalizer(node_api_basic_env basic_env,
 
 #endif
 
-napi_status NAPI_CDECL napi_adjust_external_memory(node_api_basic_env env,
+napi_status NAPI_CDECL napi_adjust_external_memory(node_api_nogc_env env,
                                                    int64_t change_in_bytes,
                                                    int64_t* adjusted_value) {
   CHECK_ENV(env);
@@ -3502,36 +3391,34 @@ napi_status NAPI_CDECL napi_adjust_external_memory(node_api_basic_env env,
   return napi_clear_last_error(env);
 }
 
-napi_status NAPI_CDECL napi_set_instance_data(node_api_basic_env basic_env,
+napi_status NAPI_CDECL napi_set_instance_data(node_api_nogc_env nogc_env,
                                               void* data,
                                               napi_finalize finalize_cb,
                                               void* finalize_hint) {
-  napi_env env = const_cast<napi_env>(basic_env);
+  napi_env env = const_cast<napi_env>(nogc_env);
   CHECK_ENV(env);
 
-  v8impl::TrackedFinalizer* old_data =
-      static_cast<v8impl::TrackedFinalizer*>(env->instance_data);
+  v8impl::RefBase* old_data = static_cast<v8impl::RefBase*>(env->instance_data);
   if (old_data != nullptr) {
     // Our contract so far has been to not finalize any old data there may be.
     // So we simply delete it.
     delete old_data;
   }
 
-  env->instance_data =
-      v8impl::TrackedFinalizer::New(env, finalize_cb, data, finalize_hint);
+  env->instance_data = v8impl::RefBase::New(
+      env, 0, v8impl::Ownership::kRuntime, finalize_cb, data, finalize_hint);
 
   return napi_clear_last_error(env);
 }
 
-napi_status NAPI_CDECL napi_get_instance_data(node_api_basic_env env,
+napi_status NAPI_CDECL napi_get_instance_data(node_api_nogc_env env,
                                               void** data) {
   CHECK_ENV(env);
   CHECK_ARG(env, data);
 
-  v8impl::TrackedFinalizer* idata =
-      static_cast<v8impl::TrackedFinalizer*>(env->instance_data);
+  v8impl::RefBase* idata = static_cast<v8impl::RefBase*>(env->instance_data);
 
-  *data = (idata == nullptr ? nullptr : idata->data());
+  *data = (idata == nullptr ? nullptr : idata->Data());
 
   return napi_clear_last_error(env);
 }
@@ -3549,7 +3436,7 @@ napi_status NAPI_CDECL napi_detach_arraybuffer(napi_env env,
   RETURN_STATUS_IF_FALSE(
       env, it->IsDetachable(), napi_detachable_arraybuffer_expected);
 
-  it->Detach(v8::Local<v8::Value>()).Check();
+  it->Detach();
 
   return napi_clear_last_error(env);
 }

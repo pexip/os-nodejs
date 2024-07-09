@@ -250,8 +250,7 @@ napi_value NapiLinkedWithInstanceData(napi_env env, napi_value exports) {
   napi_value key, value;
   CHECK_EQ(napi_create_string_utf8(env, "hello", NAPI_AUTO_LENGTH, &key),
            napi_ok);
-  CHECK_EQ(napi_create_external_arraybuffer(
-               env, instance_data, 1, nullptr, nullptr, &value),
+  CHECK_EQ(napi_create_external(env, instance_data, nullptr, nullptr, &value),
            napi_ok);
   CHECK_EQ(napi_set_property(env, exports, key, value), napi_ok);
   return nullptr;
@@ -290,9 +289,9 @@ TEST_F(LinkedBindingTest, LocallyDefinedLinkedBindingNapiInstanceDataTest) {
             .ToLocalChecked();
     v8::Local<v8::Value> completion_value =
         script->Run(context).ToLocalChecked();
-    CHECK(completion_value->IsArrayBuffer());
+    CHECK(completion_value->IsExternal());
     instance_data =
-        static_cast<int*>(completion_value.As<v8::ArrayBuffer>()->Data());
+        static_cast<int*>(completion_value.As<v8::External>()->Value());
     CHECK_NE(instance_data, nullptr);
     CHECK_EQ(*instance_data, 0);
   }
@@ -328,9 +327,9 @@ TEST_F(LinkedBindingTest,
             .ToLocalChecked();
     v8::Local<v8::Value> completion_value =
         script->Run(context).ToLocalChecked();
-    CHECK(completion_value->IsArrayBuffer());
+    CHECK(completion_value->IsExternal());
     instance_data =
-        static_cast<int*>(completion_value.As<v8::ArrayBuffer>()->Data());
+        static_cast<int*>(completion_value.As<v8::External>()->Value());
     CHECK_NE(instance_data, nullptr);
     CHECK_EQ(*instance_data, 0);
   }

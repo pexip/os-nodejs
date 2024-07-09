@@ -1,4 +1,4 @@
-'use strict';
+/* eslint-disable strict */
 require('../common');
 const assert = require('assert');
 
@@ -9,17 +9,27 @@ assert.strictEqual(zlib.constants.Z_OK, 0,
                      'Expected Z_OK to be 0;',
                      `got ${zlib.constants.Z_OK}`,
                    ].join(' '));
-
-assert.throws(() => { zlib.constants.Z_OK = 1; },
-              TypeError, 'zlib.constants.Z_OK should be immutable');
+zlib.constants.Z_OK = 1;
+assert.strictEqual(zlib.constants.Z_OK, 0,
+                   [
+                     'Z_OK should be immutable.',
+                     `Expected to get 0, got ${zlib.constants.Z_OK}`,
+                   ].join(' '));
 
 assert.strictEqual(zlib.codes.Z_OK, 0,
                    `Expected Z_OK to be 0; got ${zlib.codes.Z_OK}`);
-assert.throws(() => { zlib.codes.Z_OK = 1; },
-              TypeError, 'zlib.codes.Z_OK should be immutable');
-
-assert.throws(() => { zlib.codes = { Z_OK: 1 }; },
-              TypeError, 'zlib.codes should be immutable');
+zlib.codes.Z_OK = 1;
+assert.strictEqual(zlib.codes.Z_OK, 0,
+                   [
+                     'Z_OK should be immutable.',
+                     `Expected to get 0, got ${zlib.codes.Z_OK}`,
+                   ].join(' '));
+zlib.codes = { Z_OK: 1 };
+assert.strictEqual(zlib.codes.Z_OK, 0,
+                   [
+                     'Z_OK should be immutable.',
+                     `Expected to get 0, got ${zlib.codes.Z_OK}`,
+                   ].join(' '));
 
 assert.ok(Object.isFrozen(zlib.codes),
           [

@@ -52,7 +52,7 @@ void Histogram::AddSample(int sample) {
   }
 }
 
-void* Histogram::CreateHistogram() const {
+V8_EXPORT_PRIVATE void* Histogram::CreateHistogram() const {
   return counters_->CreateHistogram(name_, min_, max_, num_buckets_);
 }
 
@@ -82,8 +82,7 @@ void TimedHistogram::RecordAbandon(base::ElapsedTimer* timer,
     AddSample(static_cast<int>(sample));
   }
   if (isolate != nullptr) {
-    V8FileLogger::CallEventLogger(isolate, name(), v8::LogEventStatus::kEnd,
-                                  true);
+    Logger::CallEventLogger(isolate, name(), v8::LogEventStatus::kEnd, true);
   }
 }
 
@@ -220,7 +219,8 @@ Counters::Counters(Isolate* isolate)
 #define FIXED_ARRAY_INSTANCE_TYPE_SC(name) COUNT_AND_SIZE_SC(FIXED_ARRAY_##name)
 
       // clang-format off
-  STATS_COUNTER_LIST(BARE_SC)
+  STATS_COUNTER_LIST_1(BARE_SC)
+  STATS_COUNTER_LIST_2(BARE_SC)
   STATS_COUNTER_NATIVE_CODE_LIST(BARE_SC)
   INSTANCE_TYPE_LIST(COUNT_AND_SIZE_SC)
   CODE_KIND_LIST(CODE_KIND_SC)
@@ -242,7 +242,8 @@ void Counters::ResetCounterFunction(CounterLookupCallback f) {
   stats_table_.SetCounterFunction(f);
 
 #define SC(name, caption) name##_.Reset();
-  STATS_COUNTER_LIST(SC)
+  STATS_COUNTER_LIST_1(SC)
+  STATS_COUNTER_LIST_2(SC)
   STATS_COUNTER_NATIVE_CODE_LIST(SC)
 #undef SC
 

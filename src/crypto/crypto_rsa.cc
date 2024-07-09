@@ -19,7 +19,6 @@ using v8::BackingStore;
 using v8::FunctionCallbackInfo;
 using v8::Int32;
 using v8::Just;
-using v8::JustVoid;
 using v8::Local;
 using v8::Maybe;
 using v8::Nothing;
@@ -322,7 +321,7 @@ Maybe<bool> RSACipherTraits::AdditionalConfig(
         return Nothing<bool>();
       }
 
-      if (IsAnyBufferSource(args[offset + 2])) {
+      if (IsAnyByteSource(args[offset + 2])) {
         ArrayBufferOrViewContents<char> label(args[offset + 2]);
         if (UNLIKELY(!label.CheckSizeInt32())) {
           THROW_ERR_OUT_OF_RANGE(env, "label is too big");
@@ -360,9 +359,10 @@ WebCryptoCipherStatus RSACipherTraits::DoCipher(
   return WebCryptoCipherStatus::FAILED;
 }
 
-Maybe<void> ExportJWKRsaKey(Environment* env,
-                            std::shared_ptr<KeyObjectData> key,
-                            Local<Object> target) {
+Maybe<bool> ExportJWKRsaKey(
+    Environment* env,
+    std::shared_ptr<KeyObjectData> key,
+    Local<Object> target) {
   ManagedEVPPKey m_pkey = key->GetAsymmetricKey();
   Mutex::ScopedLock lock(*m_pkey.mutex());
   int type = EVP_PKEY_id(m_pkey.get());
@@ -392,12 +392,12 @@ Maybe<void> ExportJWKRsaKey(Environment* env,
           env->context(),
           env->jwk_kty_string(),
           env->jwk_rsa_string()).IsNothing()) {
-    return Nothing<void>();
+    return Nothing<bool>();
   }
 
   if (SetEncodedValue(env, target, env->jwk_n_string(), n).IsNothing() ||
       SetEncodedValue(env, target, env->jwk_e_string(), e).IsNothing()) {
-    return Nothing<void>();
+    return Nothing<bool>();
   }
 
   if (key->GetKeyType() == kKeyTypePrivate) {
@@ -409,11 +409,11 @@ Maybe<void> ExportJWKRsaKey(Environment* env,
         SetEncodedValue(env, target, env->jwk_dp_string(), dp).IsNothing() ||
         SetEncodedValue(env, target, env->jwk_dq_string(), dq).IsNothing() ||
         SetEncodedValue(env, target, env->jwk_qi_string(), qi).IsNothing()) {
-      return Nothing<void>();
+      return Nothing<bool>();
     }
   }
 
-  return JustVoid();
+  return Just(true);
 }
 
 std::shared_ptr<KeyObjectData> ImportJWKRsaKey(
@@ -577,9 +577,7 @@ Maybe<bool> GetRsaKeyDetail(
       int64_t salt_length = 20;
 
       if (params->hashAlgorithm != nullptr) {
-        const ASN1_OBJECT* hash_obj;
-        X509_ALGOR_get0(&hash_obj, nullptr, nullptr, params->hashAlgorithm);
-        hash_nid = OBJ_obj2nid(hash_obj);
+        hash_nid = OBJ_obj2nid(params->hashAlgorithm->algorithm);
       }
 
       if (target
@@ -592,13 +590,9 @@ Maybe<bool> GetRsaKeyDetail(
       }
 
       if (params->maskGenAlgorithm != nullptr) {
-        const ASN1_OBJECT* mgf_obj;
-        X509_ALGOR_get0(&mgf_obj, nullptr, nullptr, params->maskGenAlgorithm);
-        mgf_nid = OBJ_obj2nid(mgf_obj);
+        mgf_nid = OBJ_obj2nid(params->maskGenAlgorithm->algorithm);
         if (mgf_nid == NID_mgf1) {
-          const ASN1_OBJECT* mgf1_hash_obj;
-          X509_ALGOR_get0(&mgf1_hash_obj, nullptr, nullptr, params->maskHash);
-          mgf1_hash_nid = OBJ_obj2nid(mgf1_hash_obj);
+          mgf1_hash_nid = OBJ_obj2nid(params->maskHash->algorithm);
         }
       }
 

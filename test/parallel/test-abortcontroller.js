@@ -103,16 +103,16 @@ const { setTimeout: sleep } = require('timers/promises');
     NaN,
     true,
     'AbortController',
-    { __proto__: AbortController.prototype },
+    Object.create(AbortController.prototype),
   ];
   for (const badController of badAbortControllers) {
     throws(
       () => acSignalGet.call(badController),
-      { name: 'TypeError' }
+      { code: 'ERR_INVALID_THIS', name: 'TypeError' }
     );
     throws(
       () => acAbort.call(badController),
-      { name: 'TypeError' }
+      { code: 'ERR_INVALID_THIS', name: 'TypeError' }
     );
   }
 }
@@ -134,12 +134,12 @@ const { setTimeout: sleep } = require('timers/promises');
     NaN,
     true,
     'AbortSignal',
-    { __proto__: AbortSignal.prototype },
+    Object.create(AbortSignal.prototype),
   ];
   for (const badSignal of badAbortSignals) {
     throws(
       () => signalAbortedGet.call(badSignal),
-      { name: 'TypeError' }
+      { code: 'ERR_INVALID_THIS', name: 'TypeError' }
     );
   }
 }

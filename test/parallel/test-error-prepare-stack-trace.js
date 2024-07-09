@@ -1,13 +1,10 @@
+// Flags: --enable-source-maps
 'use strict';
 
 require('../common');
-const { spawnSyncAndExitWithoutError } = require('../common/child_process');
 const assert = require('assert');
 
-// Verify that the default Error.prepareStackTrace is present.
-assert.strictEqual(typeof Error.prepareStackTrace, 'function');
-
-// Error.prepareStackTrace() can be overridden.
+// Error.prepareStackTrace() can be overridden with source maps enabled.
 {
   let prepareCalled = false;
   Error.prepareStackTrace = (_error, trace) => {
@@ -19,12 +16,4 @@ assert.strictEqual(typeof Error.prepareStackTrace, 'function');
     err.stack; // eslint-disable-line no-unused-expressions
   }
   assert(prepareCalled);
-}
-
-if (process.argv[2] !== 'child') {
-  // Verify that the above test still passes when source-maps support is
-  // enabled.
-  spawnSyncAndExitWithoutError(
-    process.execPath,
-    ['--enable-source-maps', __filename, 'child']);
 }

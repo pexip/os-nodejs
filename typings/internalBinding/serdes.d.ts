@@ -30,7 +30,7 @@ declare namespace InternalSerdesBinding {
   }
 }
 
-export interface SerdesBinding {
+declare function InternalBinding(binding: 'serdes'): {
   Serializer: typeof InternalSerdesBinding.Serializer;
   Deserializer: typeof InternalSerdesBinding.Deserializer;
-}
+};

@@ -31,11 +31,7 @@ describe('console output', { concurrency: true }, () => {
     .transform(snapshot.replaceWindowsLineEndings, snapshot.replaceWindowsPaths, replaceStackTrace);
   for (const { name, transform, env } of tests) {
     it(name, async () => {
-      await snapshot.spawnAndAssert(
-        fixtures.path(name),
-        transform ?? defaultTransform,
-        { env: { ...env, ...process.env } },
-      );
+      await snapshot.spawnAndAssert(fixtures.path(name), transform ?? defaultTransform, { env });
     });
   }
 });

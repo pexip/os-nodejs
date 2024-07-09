@@ -4,7 +4,7 @@ if (!common.hasCrypto)
   common.skip('missing crypto');
 const assert = require('assert');
 const fixtures = require('../common/fixtures');
-const { duplexPair } = require('stream');
+const makeDuplexPair = require('../common/duplexpair');
 const tls = require('tls');
 const net = require('net');
 
@@ -15,7 +15,7 @@ const net = require('net');
   const iter = 10;
 
   function createDuplex(port) {
-    const [ clientSide, serverSide ] = duplexPair();
+    const { clientSide, serverSide } = makeDuplexPair();
 
     return new Promise((resolve, reject) => {
       const socket = net.connect({

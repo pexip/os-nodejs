@@ -2,9 +2,10 @@
 
 const common = require('../common');
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 const tmpdir = require('../common/tmpdir');
-const d = tmpdir.resolve('dir');
+const d = path.join(tmpdir.path, 'dir');
 
 tmpdir.refresh();
 

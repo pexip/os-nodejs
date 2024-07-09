@@ -27,7 +27,7 @@ server.on('stream', common.mustNotCall());
 server.listen(0, common.mustCall(() => {
   const client = http2.connect(`http://localhost:${server.address().port}`);
 
-  for (const i of singles) {
+  singles.forEach((i) => {
     assert.throws(
       () => client.request({ [i]: 'abc', [i.toUpperCase()]: 'xyz' }),
       {
@@ -45,7 +45,7 @@ server.listen(0, common.mustCall(() => {
         message: `Header field "${i}" must only have a single value`
       }
     );
-  }
+  });
 
   server.close();
   client.close();

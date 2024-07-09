@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "src/ast/scopes.h"
 #include "src/builtins/accessors.h"
 #include "src/common/message-template.h"
 #include "src/deoptimizer/deoptimizer.h"
@@ -12,7 +13,11 @@
 #include "src/execution/isolate-inl.h"
 #include "src/execution/isolate.h"
 #include "src/heap/heap-inl.h"  // For ToBoolean. TODO(jkummerow): Drop.
+#include "src/init/bootstrapper.h"
+#include "src/logging/counters.h"
 #include "src/objects/arguments-inl.h"
+#include "src/objects/heap-object-inl.h"
+#include "src/objects/module-inl.h"
 #include "src/objects/smi.h"
 #include "src/runtime/runtime-utils.h"
 
@@ -234,17 +239,10 @@ Object DeclareEvalHelper(Isolate* isolate, Handle<String> name,
   // context and not the declaration context.
   Handle<Context> context(isolate->context().declaration_context(), isolate);
 
-  // For debug-evaluate we always use sloppy eval, in which case context could
-  // also be a module context. As module contexts re-use the extension slot
-  // we need to check for this.
-  const bool is_debug_evaluate_in_module =
-      isolate->context().IsDebugEvaluateContext() && context->IsModuleContext();
-
   DCHECK(context->IsFunctionContext() || context->IsNativeContext() ||
          context->IsScriptContext() || context->IsEvalContext() ||
          (context->IsBlockContext() &&
-          context->scope_info().is_declaration_scope()) ||
-         is_debug_evaluate_in_module);
+          context->scope_info().is_declaration_scope()));
 
   bool is_var = value->IsUndefined(isolate);
   DCHECK_IMPLIES(!is_var, value->IsJSFunction());
@@ -295,11 +293,10 @@ Object DeclareEvalHelper(Isolate* isolate, Handle<String> name,
 
     object = Handle<JSObject>::cast(holder);
 
-  } else if (context->has_extension() && !is_debug_evaluate_in_module) {
+  } else if (context->has_extension()) {
     object = handle(context->extension_object(), isolate);
     DCHECK(object->IsJSContextExtensionObject());
-  } else if (context->scope_info().HasContextExtensionSlot() &&
-             !is_debug_evaluate_in_module) {
+  } else if (context->scope_info().HasContextExtensionSlot()) {
     // Sloppy varblock and function contexts might not have an extension object
     // yet. Sloppy eval will never have an extension object, as vars are hoisted
     // out, and lets are known statically.
@@ -347,7 +344,7 @@ namespace {
 std::unique_ptr<Handle<Object>[]> GetCallerArguments(Isolate* isolate,
                                                      int* total_argc) {
   // Find frame containing arguments passed to the caller.
-  JavaScriptStackFrameIterator it(isolate);
+  JavaScriptFrameIterator it(isolate);
   JavaScriptFrame* frame = it.frame();
   std::vector<SharedFunctionInfo> functions;
   frame->GetFunctions(&functions);

@@ -9,10 +9,11 @@ const assert = require('assert');
 const { spawnSync } = require('child_process');
 const tmpdir = require('../common/tmpdir');
 const fixtures = require('../common/fixtures');
+const path = require('path');
 const fs = require('fs');
 
 tmpdir.refresh();
-const blobPath = tmpdir.resolve('snapshot.blob');
+const blobPath = path.join(tmpdir.path, 'snapshot.blob');
 const entry = fixtures.path('snapshot', 'console.js');
 
 {
@@ -31,7 +32,7 @@ const entry = fixtures.path('snapshot', 'console.js');
     assert.strictEqual(child.status, 0);
   }
   assert.deepStrictEqual(Object.keys(console), JSON.parse(stdout));
-  const stats = fs.statSync(tmpdir.resolve('snapshot.blob'));
+  const stats = fs.statSync(path.join(tmpdir.path, 'snapshot.blob'));
   assert(stats.isFile());
 }
 

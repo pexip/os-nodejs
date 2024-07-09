@@ -4,7 +4,6 @@ require('../common');
 
 const {
   strictEqual,
-  throws,
 } = require('assert');
 
 // Manually ported from: wpt@dom/events/AddEventListenerOptions-signal.any.js
@@ -157,12 +156,4 @@ const {
     et.dispatchEvent(new Event('foo'));
   }, { once: true });
   et.dispatchEvent(new Event('foo'));
-}
-{
-  const et = new EventTarget();
-  [1, 1n, {}, [], null, true, 'hi', Symbol(), () => {}].forEach((signal) => {
-    throws(() => et.addEventListener('foo', () => {}, { signal }), {
-      name: 'TypeError',
-    });
-  });
 }

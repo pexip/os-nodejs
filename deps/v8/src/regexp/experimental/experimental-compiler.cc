@@ -40,7 +40,7 @@ class CanBeHandledVisitor final : private RegExpVisitor {
         RegExpFlag::kGlobal | RegExpFlag::kSticky | RegExpFlag::kMultiline |
         RegExpFlag::kDotAll | RegExpFlag::kLinear;
     // We support Unicode iff kUnicode is among the supported flags.
-    static_assert(ExperimentalRegExp::kSupportsUnicode ==
+    STATIC_ASSERT(ExperimentalRegExp::kSupportsUnicode ==
                   IsUnicode(kAllowedFlags));
     return (flags & ~kAllowedFlags) == 0;
   }
@@ -65,18 +65,7 @@ class CanBeHandledVisitor final : private RegExpVisitor {
     return nullptr;
   }
 
-  void* VisitClassRanges(RegExpClassRanges* node, void*) override {
-    return nullptr;
-  }
-
-  void* VisitClassSetOperand(RegExpClassSetOperand* node, void*) override {
-    result_ = !node->has_strings();
-    return nullptr;
-  }
-
-  void* VisitClassSetExpression(RegExpClassSetExpression* node,
-                                void*) override {
-    result_ = false;
+  void* VisitCharacterClass(RegExpCharacterClass* node, void*) override {
     return nullptr;
   }
 
@@ -396,10 +385,11 @@ class CompileVisitor : private RegExpVisitor {
     return nullptr;
   }
 
-  void CompileCharacterRanges(ZoneList<CharacterRange>* ranges, bool negated) {
+  void* VisitCharacterClass(RegExpCharacterClass* node, void*) override {
     // A character class is compiled as Disjunction over its `CharacterRange`s.
+    ZoneList<CharacterRange>* ranges = node->ranges(zone_);
     CharacterRange::Canonicalize(ranges);
-    if (negated) {
+    if (node->is_negated()) {
       // The complement of a disjoint, non-adjacent (i.e. `Canonicalize`d)
       // union of k intervals is a union of at most k + 1 intervals.
       ZoneList<CharacterRange>* negated =
@@ -412,7 +402,7 @@ class CompileVisitor : private RegExpVisitor {
     CompileDisjunction(ranges->length(), [&](int i) {
       // We don't support utf16 for now, so only ranges that can be specified
       // by (complements of) ranges with base::uc16 bounds.
-      static_assert(kMaxSupportedCodepoint <=
+      STATIC_ASSERT(kMaxSupportedCodepoint <=
                     std::numeric_limits<base::uc16>::max());
 
       base::uc32 from = (*ranges)[i].from();
@@ -426,24 +416,7 @@ class CompileVisitor : private RegExpVisitor {
 
       assembler_.ConsumeRange(from_uc16, to_uc16);
     });
-  }
-
-  void* VisitClassRanges(RegExpClassRanges* node, void*) override {
-    CompileCharacterRanges(node->ranges(zone_), node->is_negated());
     return nullptr;
-  }
-
-  void* VisitClassSetOperand(RegExpClassSetOperand* node, void*) override {
-    // TODO(v8:11935): Support strings.
-    DCHECK(!node->has_strings());
-    CompileCharacterRanges(node->ranges(), false);
-    return nullptr;
-  }
-
-  void* VisitClassSetExpression(RegExpClassSetExpression* node,
-                                void*) override {
-    // TODO(v8:11935): Add support.
-    UNREACHABLE();
   }
 
   void* VisitAtom(RegExpAtom* node, void*) override {

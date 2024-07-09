@@ -14,36 +14,46 @@
 
 namespace v8_inspector {
 
-namespace {
 using protocol::Response;
-std::unique_ptr<protocol::Value> SerializeRecursively(
-    v8::Local<v8::Value> value, v8::Local<v8::Context> context, int max_depth) {
+// private
+protocol::Response _serializeRecursively(
+    v8::Local<v8::Value> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Value>* result) {
   std::unique_ptr<ValueMirror> mirror = ValueMirror::create(context, value);
-  std::unique_ptr<protocol::Runtime::WebDriverValue> web_driver_value =
-      mirror->buildWebDriverValue(context, max_depth - 1);
-  DCHECK(web_driver_value);
+  std::unique_ptr<protocol::Runtime::WebDriverValue> webDriver_value;
+  Response response =
+      mirror->buildWebDriverValue(context, max_depth - 1, &webDriver_value);
+  if (!response.IsSuccess()) return response;
+  if (!webDriver_value) return Response::InternalError();
 
   std::unique_ptr<protocol::DictionaryValue> result_dict =
       protocol::DictionaryValue::create();
 
   result_dict->setValue(
       protocol::String("type"),
-      protocol::StringValue::create(web_driver_value->getType()));
-  if (web_driver_value->hasValue()) {
+      protocol::StringValue::create(webDriver_value->getType()));
+  if (webDriver_value->hasValue())
     result_dict->setValue(protocol::String("value"),
-                          web_driver_value->getValue(nullptr)->clone());
-  }
-  return result_dict;
+                          webDriver_value->getValue(nullptr)->clone());
+
+  (*result) = std::move(result_dict);
+  return Response::Success();
 }
 
-std::unique_ptr<protocol::Value> DescriptionForDate(
-    v8::Local<v8::Context> context, v8::Local<v8::Date> date) {
+String16 descriptionForObject(v8::Isolate* isolate,
+                              v8::Local<v8::Object> object) {
+  return toProtocolString(isolate, object->GetConstructorName());
+}
+
+String16 descriptionForDate(v8::Local<v8::Context> context,
+                            v8::Local<v8::Date> date) {
   v8::Isolate* isolate = context->GetIsolate();
   v8::TryCatch tryCatch(isolate);
-
-  v8::Local<v8::String> dateISOString = date->ToISOString();
-  return protocol::StringValue::create(
-      toProtocolString(isolate, dateISOString));
+  v8::Local<v8::String> description;
+  if (!date->ToString(context).ToLocal(&description)) {
+    return descriptionForObject(isolate, date);
+  }
+  return toProtocolString(isolate, description);
 }
 
 String16 _descriptionForRegExpFlags(v8::Local<v8::RegExp> value) {
@@ -56,19 +66,16 @@ String16 _descriptionForRegExpFlags(v8::Local<v8::RegExp> value) {
   if (flags & v8::RegExp::Flags::kMultiline) result_string_builder.append('m');
   if (flags & v8::RegExp::Flags::kDotAll) result_string_builder.append('s');
   if (flags & v8::RegExp::Flags::kUnicode) result_string_builder.append('u');
-  if (flags & v8::RegExp::Flags::kUnicodeSets) {
-    result_string_builder.append('v');
-  }
   if (flags & v8::RegExp::Flags::kSticky) result_string_builder.append('y');
   return result_string_builder.toString();
 }
 
-std::unique_ptr<protocol::Runtime::WebDriverValue> SerializeRegexp(
-    v8::Local<v8::RegExp> value, v8::Local<v8::Context> context) {
-  std::unique_ptr<protocol::Runtime::WebDriverValue> result =
-      protocol::Runtime::WebDriverValue::create()
-          .setType(protocol::Runtime::WebDriverValue::TypeEnum::Regexp)
-          .build();
+protocol::Response _serializeRegexp(
+    v8::Local<v8::RegExp> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Runtime::WebDriverValue>* result) {
+  *result = protocol::Runtime::WebDriverValue::create()
+                .setType(protocol::Runtime::WebDriverValue::TypeEnum::Regexp)
+                .build();
 
   std::unique_ptr<protocol::DictionaryValue> result_value =
       protocol::DictionaryValue::create();
@@ -78,255 +85,291 @@ std::unique_ptr<protocol::Runtime::WebDriverValue> SerializeRegexp(
                              context->GetIsolate(), value->GetSource())));
 
   String16 flags = _descriptionForRegExpFlags(value);
-  if (!flags.isEmpty()) {
+  if (!flags.isEmpty())
     result_value->setValue(protocol::String("flags"),
                            protocol::StringValue::create(flags));
-  }
-  result->setValue(std::move(result_value));
-  return result;
+
+  (*result)->setValue(std::move(result_value));
+  return Response::Success();
 }
 
-std::unique_ptr<protocol::Runtime::WebDriverValue> SerializeDate(
-    v8::Local<v8::Date> value, v8::Local<v8::Context> context) {
-  std::unique_ptr<protocol::Runtime::WebDriverValue> result =
-      protocol::Runtime::WebDriverValue::create()
-          .setType(protocol::Runtime::WebDriverValue::TypeEnum::Date)
-          .build();
+protocol::Response _serializeDate(
+    v8::Local<v8::Date> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Runtime::WebDriverValue>* result) {
+  *result = protocol::Runtime::WebDriverValue::create()
+                .setType(protocol::Runtime::WebDriverValue::TypeEnum::Date)
+                .build();
 
-  std::unique_ptr<protocol::Value> date_description =
-      DescriptionForDate(context, value.As<v8::Date>());
-
-  result->setValue(std::move(date_description));
-  return result;
+  (*result)->setValue(protocol::StringValue::create(
+      descriptionForDate(context, value.As<v8::Date>())));
+  return Response::Success();
 }
 
-std::unique_ptr<protocol::Value> SerializeArrayValue(
-    v8::Local<v8::Array> value, v8::Local<v8::Context> context, int max_depth) {
-  std::unique_ptr<protocol::ListValue> result = protocol::ListValue::create();
+protocol::Response _serializeArrayValue(
+    v8::Local<v8::Array> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Value>* result) {
+  std::unique_ptr<protocol::ListValue> result_value =
+      protocol::ListValue::create();
   uint32_t length = value->Length();
-  result->reserve(length);
   for (uint32_t i = 0; i < length; i++) {
     v8::Local<v8::Value> element_value;
-    bool success = value->Get(context, i).ToLocal(&element_value);
-    DCHECK(success);
-    USE(success);
+    std::unique_ptr<protocol::Value> element_protocol_value;
+    if (!value->Get(context, i).ToLocal(&element_value))
+      return Response::InternalError();
 
-    std::unique_ptr<protocol::Value> element_protocol_value =
-        SerializeRecursively(element_value, context, max_depth);
+    Response response = _serializeRecursively(element_value, context, max_depth,
+                                              &element_protocol_value);
+    if (!response.IsSuccess()) return response;
 
-    result->pushValue(std::move(element_protocol_value));
+    result_value->pushValue(std::move(element_protocol_value));
   }
-  return result;
+  *result = std::move(result_value);
+  return Response::Success();
 }
 
-std::unique_ptr<protocol::Runtime::WebDriverValue> SerializeArray(
-    v8::Local<v8::Array> value, v8::Local<v8::Context> context, int max_depth) {
-  std::unique_ptr<protocol::Runtime::WebDriverValue> result =
-      protocol::Runtime::WebDriverValue::create()
-          .setType(protocol::Runtime::WebDriverValue::TypeEnum::Array)
-          .build();
-  if (max_depth > 0) {
-    result->setValue(SerializeArrayValue(value, context, max_depth));
-  }
+protocol::Response _serializeArray(
+    v8::Local<v8::Array> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Runtime::WebDriverValue>* result) {
+  *result = protocol::Runtime::WebDriverValue::create()
+                .setType(protocol::Runtime::WebDriverValue::TypeEnum::Array)
+                .build();
 
-  return result;
+  if (max_depth <= 0) return Response::Success();
+
+  std::unique_ptr<protocol::Value> result_value;
+  Response response =
+      _serializeArrayValue(value, context, max_depth, &result_value);
+  if (!response.IsSuccess()) return response;
+
+  (*result)->setValue(std::move(result_value));
+  return Response::Success();
 }
 
-std::unique_ptr<protocol::Runtime::WebDriverValue> SerializeMap(
-    v8::Local<v8::Map> value, v8::Local<v8::Context> context, int max_depth) {
-  std::unique_ptr<protocol::Runtime::WebDriverValue> result =
-      protocol::Runtime::WebDriverValue::create()
-          .setType(protocol::Runtime::WebDriverValue::TypeEnum::Map)
-          .build();
+protocol::Response _serializeMap(
+    v8::Local<v8::Map> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Runtime::WebDriverValue>* result) {
+  *result = protocol::Runtime::WebDriverValue::create()
+                .setType(protocol::Runtime::WebDriverValue::TypeEnum::Map)
+                .build();
 
-  if (max_depth > 0) {
-    std::unique_ptr<protocol::ListValue> result_value =
+  if (max_depth <= 0) return Response::Success();
+
+  std::unique_ptr<protocol::ListValue> result_value =
+      protocol::ListValue::create();
+
+  v8::Local<v8::Array> properties_and_values = value->AsArray();
+
+  uint32_t length = properties_and_values->Length();
+  for (uint32_t i = 0; i < length; i += 2) {
+    v8::Local<v8::Value> key_value, property_value;
+    std::unique_ptr<protocol::Value> key_protocol_value,
+        property_protocol_value;
+
+    if (!properties_and_values->Get(context, i).ToLocal(&key_value))
+      return Response::InternalError();
+    if (!properties_and_values->Get(context, i + 1).ToLocal(&property_value))
+      return Response::InternalError();
+    if (property_value->IsUndefined()) continue;
+
+    if (key_value->IsString()) {
+      key_protocol_value = protocol::StringValue::create(
+          toProtocolString(context->GetIsolate(), key_value.As<v8::String>()));
+    } else {
+      Response response = _serializeRecursively(key_value, context, max_depth,
+                                                &key_protocol_value);
+      if (!response.IsSuccess()) return response;
+    }
+
+    Response response = _serializeRecursively(
+        property_value, context, max_depth, &property_protocol_value);
+    if (!response.IsSuccess()) return response;
+
+    std::unique_ptr<protocol::ListValue> value_list =
         protocol::ListValue::create();
 
-    v8::Local<v8::Array> properties_and_values = value->AsArray();
+    // command->pushValue(protocol::StringValue::create(method));
+    value_list->pushValue(std::move(key_protocol_value));
+    value_list->pushValue(std::move(property_protocol_value));
 
-    uint32_t length = properties_and_values->Length();
-    result_value->reserve(length);
-    for (uint32_t i = 0; i < length; i += 2) {
-      v8::Local<v8::Value> key_value, property_value;
-      std::unique_ptr<protocol::Value> key_protocol_value,
-          property_protocol_value;
-
-      bool success = properties_and_values->Get(context, i).ToLocal(&key_value);
-      DCHECK(success);
-      success =
-          properties_and_values->Get(context, i + 1).ToLocal(&property_value);
-      DCHECK(success);
-      USE(success);
-
-      if (key_value->IsString()) {
-        key_protocol_value = protocol::StringValue::create(toProtocolString(
-            context->GetIsolate(), key_value.As<v8::String>()));
-      } else {
-        key_protocol_value =
-            SerializeRecursively(key_value, context, max_depth);
-      }
-
-      property_protocol_value =
-          SerializeRecursively(property_value, context, max_depth);
-
-      std::unique_ptr<protocol::ListValue> key_value_list =
-          protocol::ListValue::create();
-
-      key_value_list->pushValue(std::move(key_protocol_value));
-      key_value_list->pushValue(std::move(property_protocol_value));
-
-      result_value->pushValue(std::move(key_value_list));
-    }
-    result->setValue(std::move(result_value));
+    result_value->pushValue(std::move(value_list));
   }
 
-  return result;
+  (*result)->setValue(std::move(result_value));
+  return Response::Success();
 }
 
-std::unique_ptr<protocol::Runtime::WebDriverValue> SerializeSet(
-    v8::Local<v8::Set> value, v8::Local<v8::Context> context, int max_depth) {
-  std::unique_ptr<protocol::Runtime::WebDriverValue> result =
-      protocol::Runtime::WebDriverValue::create()
-          .setType(protocol::Runtime::WebDriverValue::TypeEnum::Set)
-          .build();
+protocol::Response _serializeSet(
+    v8::Local<v8::Set> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Runtime::WebDriverValue>* result) {
+  *result = protocol::Runtime::WebDriverValue::create()
+                .setType(protocol::Runtime::WebDriverValue::TypeEnum::Set)
+                .build();
 
-  if (max_depth > 0) {
-    result->setValue(SerializeArrayValue(value->AsArray(), context, max_depth));
-  }
-  return result;
+  if (max_depth <= 0) return Response::Success();
+
+  std::unique_ptr<protocol::Value> result_value;
+  Response response =
+      _serializeArrayValue(value->AsArray(), context, max_depth, &result_value);
+  if (!response.IsSuccess()) return response;
+
+  (*result)->setValue(std::move(result_value));
+  return Response::Success();
 }
 
-std::unique_ptr<protocol::Value> SerializeObjectValue(
-    v8::Local<v8::Object> value, v8::Local<v8::Context> context,
-    int max_depth) {
-  std::unique_ptr<protocol::ListValue> result = protocol::ListValue::create();
+protocol::Response _serializeObjectValue(
+    v8::Local<v8::Object> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Value>* result) {
+  std::unique_ptr<protocol::ListValue> result_list =
+      protocol::ListValue::create();
   // Iterate through object's properties.
   v8::Local<v8::Array> property_names;
-  bool success = value->GetOwnPropertyNames(context).ToLocal(&property_names);
-  DCHECK(success);
-
+  if (!value->GetOwnPropertyNames(context).ToLocal(&property_names))
+    return Response::InternalError();
   uint32_t length = property_names->Length();
-  result->reserve(length);
   for (uint32_t i = 0; i < length; i++) {
     v8::Local<v8::Value> key_value, property_value;
     std::unique_ptr<protocol::Value> key_protocol_value,
         property_protocol_value;
 
-    success = property_names->Get(context, i).ToLocal(&key_value);
-    DCHECK(success);
+    if (!property_names->Get(context, i).ToLocal(&key_value))
+      return Response::InternalError();
 
     if (key_value->IsString()) {
       v8::Maybe<bool> hasRealNamedProperty =
           value->HasRealNamedProperty(context, key_value.As<v8::String>());
       // Don't access properties with interceptors.
-      if (hasRealNamedProperty.IsNothing() ||
-          !hasRealNamedProperty.FromJust()) {
+      if (hasRealNamedProperty.IsNothing() || !hasRealNamedProperty.FromJust())
         continue;
-      }
       key_protocol_value = protocol::StringValue::create(
           toProtocolString(context->GetIsolate(), key_value.As<v8::String>()));
     } else {
-      key_protocol_value = SerializeRecursively(key_value, context, max_depth);
+      Response response = _serializeRecursively(key_value, context, max_depth,
+                                                &key_protocol_value);
+      if (!response.IsSuccess()) return response;
     }
 
-    success = value->Get(context, key_value).ToLocal(&property_value);
-    DCHECK(success);
-    USE(success);
+    if (!value->Get(context, key_value).ToLocal(&property_value))
+      return Response::InternalError();
+    if (property_value->IsUndefined()) continue;
 
-    property_protocol_value =
-        SerializeRecursively(property_value, context, max_depth);
+    Response response = _serializeRecursively(
+        property_value, context, max_depth, &property_protocol_value);
+    if (!response.IsSuccess()) return response;
 
-    std::unique_ptr<protocol::ListValue> key_value_list =
+    std::unique_ptr<protocol::ListValue> value_list =
         protocol::ListValue::create();
 
-    key_value_list->pushValue(std::move(key_protocol_value));
-    key_value_list->pushValue(std::move(property_protocol_value));
+    value_list->pushValue(std::move(key_protocol_value));
+    value_list->pushValue(std::move(property_protocol_value));
 
-    result->pushValue(std::move(key_value_list));
+    result_list->pushValue(std::move(value_list));
   }
-
-  return result;
+  (*result) = std::move(result_list);
+  return Response::Success();
 }
 
-std::unique_ptr<protocol::Runtime::WebDriverValue> SerializeObject(
-    v8::Local<v8::Object> value, v8::Local<v8::Context> context,
-    int max_depth) {
-  std::unique_ptr<protocol::Runtime::WebDriverValue> result =
-      protocol::Runtime::WebDriverValue::create()
-          .setType(protocol::Runtime::WebDriverValue::TypeEnum::Object)
-          .build();
+protocol::Response _serializeObject(
+    v8::Local<v8::Object> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Runtime::WebDriverValue>* result) {
+  *result = protocol::Runtime::WebDriverValue::create()
+                .setType(protocol::Runtime::WebDriverValue::TypeEnum::Object)
+                .build();
 
-  if (max_depth > 0) {
-    result->setValue(
-        SerializeObjectValue(value.As<v8::Object>(), context, max_depth));
-  }
-  return result;
+  if (max_depth <= 0) return Response::Success();
+
+  std::unique_ptr<protocol::Value> result_value;
+  Response response = _serializeObjectValue(value.As<v8::Object>(), context,
+                                            max_depth, &result_value);
+  if (!response.IsSuccess()) return response;
+
+  (*result)->setValue(std::move(result_value));
+  return Response::Success();
 }
-}  // namespace
 
-std::unique_ptr<protocol::Runtime::WebDriverValue>
-V8WebDriverSerializer::serializeV8Value(v8::Local<v8::Object> value,
-                                        v8::Local<v8::Context> context,
-                                        int max_depth) {
+protocol::Response V8WebDriverSerializer::serializeV8Value(
+    v8::Local<v8::Object> value, v8::Local<v8::Context> context, int max_depth,
+    std::unique_ptr<protocol::Runtime::WebDriverValue>* result) {
   if (value->IsArray()) {
-    return SerializeArray(value.As<v8::Array>(), context, max_depth);
+    Response response =
+        _serializeArray(value.As<v8::Array>(), context, max_depth, result);
+    return response;
   }
   if (value->IsRegExp()) {
-    return SerializeRegexp(value.As<v8::RegExp>(), context);
+    Response response =
+        _serializeRegexp(value.As<v8::RegExp>(), context, max_depth, result);
+    return response;
   }
   if (value->IsDate()) {
-    return SerializeDate(value.As<v8::Date>(), context);
+    Response response =
+        _serializeDate(value.As<v8::Date>(), context, max_depth, result);
+    return response;
   }
   if (value->IsMap()) {
-    return SerializeMap(value.As<v8::Map>(), context, max_depth);
+    Response response =
+        _serializeMap(value.As<v8::Map>(), context, max_depth, result);
+    return response;
   }
   if (value->IsSet()) {
-    return SerializeSet(value.As<v8::Set>(), context, max_depth);
+    Response response =
+        _serializeSet(value.As<v8::Set>(), context, max_depth, result);
+    return response;
   }
   if (value->IsWeakMap()) {
-    return protocol::Runtime::WebDriverValue::create()
-        .setType(protocol::Runtime::WebDriverValue::TypeEnum::Weakmap)
-        .build();
+    *result = protocol::Runtime::WebDriverValue::create()
+                  .setType(protocol::Runtime::WebDriverValue::TypeEnum::Weakmap)
+                  .build();
+    return Response::Success();
   }
   if (value->IsWeakSet()) {
-    return protocol::Runtime::WebDriverValue::create()
-        .setType(protocol::Runtime::WebDriverValue::TypeEnum::Weakset)
-        .build();
+    *result = protocol::Runtime::WebDriverValue::create()
+                  .setType(protocol::Runtime::WebDriverValue::TypeEnum::Weakset)
+                  .build();
+    return Response::Success();
   }
   if (value->IsNativeError()) {
-    return protocol::Runtime::WebDriverValue::create()
-        .setType(protocol::Runtime::WebDriverValue::TypeEnum::Error)
-        .build();
+    *result = protocol::Runtime::WebDriverValue::create()
+                  .setType(protocol::Runtime::WebDriverValue::TypeEnum::Error)
+                  .build();
+    return Response::Success();
   }
   if (value->IsProxy()) {
-    return protocol::Runtime::WebDriverValue::create()
-        .setType(protocol::Runtime::WebDriverValue::TypeEnum::Proxy)
-        .build();
+    *result = protocol::Runtime::WebDriverValue::create()
+                  .setType(protocol::Runtime::WebDriverValue::TypeEnum::Proxy)
+                  .build();
+    return Response::Success();
   }
   if (value->IsPromise()) {
-    return protocol::Runtime::WebDriverValue::create()
-        .setType(protocol::Runtime::WebDriverValue::TypeEnum::Promise)
-        .build();
+    *result = protocol::Runtime::WebDriverValue::create()
+                  .setType(protocol::Runtime::WebDriverValue::TypeEnum::Promise)
+                  .build();
+    return Response::Success();
   }
   if (value->IsTypedArray()) {
-    return protocol::Runtime::WebDriverValue::create()
-        .setType(protocol::Runtime::WebDriverValue::TypeEnum::Typedarray)
-        .build();
+    *result =
+        protocol::Runtime::WebDriverValue::create()
+            .setType(protocol::Runtime::WebDriverValue::TypeEnum::Typedarray)
+            .build();
+    return Response::Success();
   }
   if (value->IsArrayBuffer()) {
-    return protocol::Runtime::WebDriverValue::create()
-        .setType(protocol::Runtime::WebDriverValue::TypeEnum::Arraybuffer)
-        .build();
+    *result =
+        protocol::Runtime::WebDriverValue::create()
+            .setType(protocol::Runtime::WebDriverValue::TypeEnum::Arraybuffer)
+            .build();
+    return Response::Success();
   }
   if (value->IsFunction()) {
-    return protocol::Runtime::WebDriverValue::create()
-        .setType(protocol::Runtime::WebDriverValue::TypeEnum::Function)
-        .build();
+    *result =
+        protocol::Runtime::WebDriverValue::create()
+            .setType(protocol::Runtime::WebDriverValue::TypeEnum::Function)
+            .build();
+    return Response::Success();
   }
 
   // Serialize as an Object.
-  return SerializeObject(value.As<v8::Object>(), context, max_depth);
+  Response response =
+      _serializeObject(value.As<v8::Object>(), context, max_depth, result);
+  return response;
 }
 
 }  // namespace v8_inspector

@@ -5,7 +5,6 @@
 const common = require('../common');
 
 common.skipIfInspectorDisabled();
-common.skipIfDumbTerminal();
 
 if (process.argv[2] === 'child') {
   const stream = require('stream');

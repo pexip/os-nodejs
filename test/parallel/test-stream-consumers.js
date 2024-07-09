@@ -114,7 +114,7 @@ const kArrayBuffer =
     writer.close();
   }, 10);
 
-  assert.rejects(blob(readable), { code: 'ERR_INVALID_STATE' }).then(common.mustCall());
+  assert.rejects(blob(readable), { code: 'ERR_INVALID_STATE' });
 }
 
 {
@@ -132,7 +132,7 @@ const kArrayBuffer =
     writer.close();
   }, 10);
 
-  assert.rejects(arrayBuffer(readable), { code: 'ERR_INVALID_STATE' }).then(common.mustCall());
+  assert.rejects(arrayBuffer(readable), { code: 'ERR_INVALID_STATE' });
 }
 
 {
@@ -150,7 +150,7 @@ const kArrayBuffer =
     writer.close();
   }, 10);
 
-  assert.rejects(text(readable), { code: 'ERR_INVALID_STATE' }).then(common.mustCall());
+  assert.rejects(text(readable), { code: 'ERR_INVALID_STATE' });
 }
 
 {
@@ -168,7 +168,7 @@ const kArrayBuffer =
     writer.close();
   }, 10);
 
-  assert.rejects(json(readable), { code: 'ERR_INVALID_STATE' }).then(common.mustCall());
+  assert.rejects(json(readable), { code: 'ERR_INVALID_STATE' });
 }
 
 {
@@ -227,7 +227,7 @@ const kArrayBuffer =
 
   assert.rejects(text(stream), {
     code: 'ERR_INVALID_ARG_TYPE',
-  }).then(common.mustCall());
+  });
 
   stream.write({});
   stream.end({});
@@ -241,7 +241,7 @@ const kArrayBuffer =
 
   assert.rejects(json(stream), {
     code: 'ERR_INVALID_ARG_TYPE',
-  }).then(common.mustCall());
+  });
 
   stream.write({});
   stream.end({});

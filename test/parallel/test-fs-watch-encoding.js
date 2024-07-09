@@ -19,16 +19,14 @@ const common = require('../common');
 if (common.isAIX)
   common.skip('folder watch capability is limited in AIX.');
 
-if (common.isIBMi)
-  common.skip('IBMi does not support `fs.watch()`');
-
 const fs = require('fs');
+const path = require('path');
 
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
 const fn = '新建文夹件.txt';
-const a = tmpdir.resolve(fn);
+const a = path.join(tmpdir.path, fn);
 
 const watchers = new Set();
 

@@ -28,8 +28,7 @@ namespace internal {
 // - kAllocationGranularity
 //
 // ObjectStartBitmap supports concurrent reads from multiple threads but
-// only a single mutator thread can write to it. ObjectStartBitmap relies on
-// being allocated inside the same normal page.
+// only a single mutator thread can write to it.
 class V8_EXPORT_PRIVATE ObjectStartBitmap {
  public:
   // Granularity of addresses added to the bitmap.
@@ -40,7 +39,7 @@ class V8_EXPORT_PRIVATE ObjectStartBitmap {
     return kReservedForBitmap * kBitsPerCell;
   }
 
-  inline ObjectStartBitmap();
+  explicit inline ObjectStartBitmap(Address offset);
 
   // Finds an object header based on a
   // address_maybe_pointing_to_the_middle_of_object. Will search for an object
@@ -88,7 +87,8 @@ class V8_EXPORT_PRIVATE ObjectStartBitmap {
 
   inline void ObjectStartIndexAndBit(ConstAddress, size_t*, size_t*) const;
 
-  // `fully_populated_` is used to denote that the bitmap is populated with all
+  const Address offset_;
+  // `fully_populated_` is used to denote that the bitmap is popluated with all
   // currently allocated objects on the page and is in a consistent state. It is
   // used to guard against using the bitmap for finding headers during
   // concurrent sweeping.
@@ -104,7 +104,7 @@ class V8_EXPORT_PRIVATE ObjectStartBitmap {
   std::array<uint8_t, kReservedForBitmap> object_start_bit_map_;
 };
 
-ObjectStartBitmap::ObjectStartBitmap() {
+ObjectStartBitmap::ObjectStartBitmap(Address offset) : offset_(offset) {
   Clear();
   MarkAsFullyPopulated();
 }
@@ -113,13 +113,9 @@ template <AccessMode mode>
 HeapObjectHeader* ObjectStartBitmap::FindHeader(
     ConstAddress address_maybe_pointing_to_the_middle_of_object) const {
   DCHECK(fully_populated_);
-  const size_t page_base = reinterpret_cast<uintptr_t>(
-                               address_maybe_pointing_to_the_middle_of_object) &
-                           kPageBaseMask;
-  DCHECK_EQ(page_base, reinterpret_cast<uintptr_t>(this) & kPageBaseMask);
-  size_t object_offset = reinterpret_cast<uintptr_t>(
-                             address_maybe_pointing_to_the_middle_of_object) &
-                         kPageOffsetMask;
+  DCHECK_LE(offset_, address_maybe_pointing_to_the_middle_of_object);
+  size_t object_offset =
+      address_maybe_pointing_to_the_middle_of_object - offset_;
   size_t object_start_number = object_offset / kAllocationGranularity;
   size_t cell_index = object_start_number / kBitsPerCell;
   DCHECK_GT(object_start_bit_map_.size(), cell_index);
@@ -133,7 +129,7 @@ HeapObjectHeader* ObjectStartBitmap::FindHeader(
   object_start_number =
       (cell_index * kBitsPerCell) + (kBitsPerCell - 1) - leading_zeroes;
   object_offset = object_start_number * kAllocationGranularity;
-  return reinterpret_cast<HeapObjectHeader*>(page_base + object_offset);
+  return reinterpret_cast<HeapObjectHeader*>(object_offset + offset_);
 }
 
 template <AccessMode mode>
@@ -182,8 +178,7 @@ uint8_t ObjectStartBitmap::load(size_t cell_index) const {
 void ObjectStartBitmap::ObjectStartIndexAndBit(ConstAddress header_address,
                                                size_t* cell_index,
                                                size_t* bit) const {
-  const size_t object_offset =
-      reinterpret_cast<size_t>(header_address) & kPageOffsetMask;
+  const size_t object_offset = header_address - offset_;
   DCHECK(!(object_offset & kAllocationMask));
   const size_t object_start_number = object_offset / kAllocationGranularity;
   *cell_index = object_start_number / kBitsPerCell;
@@ -193,8 +188,6 @@ void ObjectStartBitmap::ObjectStartIndexAndBit(ConstAddress header_address,
 
 template <typename Callback>
 inline void ObjectStartBitmap::Iterate(Callback callback) const {
-  const Address page_base = reinterpret_cast<Address>(
-      reinterpret_cast<uintptr_t>(this) & kPageBaseMask);
   for (size_t cell_index = 0; cell_index < kReservedForBitmap; cell_index++) {
     if (!object_start_bit_map_[cell_index]) continue;
 
@@ -204,7 +197,7 @@ inline void ObjectStartBitmap::Iterate(Callback callback) const {
       const size_t object_start_number =
           (cell_index * kBitsPerCell) + trailing_zeroes;
       const Address object_address =
-          page_base + (kAllocationGranularity * object_start_number);
+          offset_ + (kAllocationGranularity * object_start_number);
       callback(object_address);
       // Clear current object bit in temporary value to advance iteration.
       value &= ~(1 << (object_start_number & kCellMask));
@@ -227,6 +220,8 @@ void ObjectStartBitmap::Clear() {
 class V8_EXPORT_PRIVATE PlatformAwareObjectStartBitmap
     : public ObjectStartBitmap {
  public:
+  explicit inline PlatformAwareObjectStartBitmap(Address offset);
+
   template <AccessMode = AccessMode::kNonAtomic>
   inline void SetBit(ConstAddress);
   template <AccessMode = AccessMode::kNonAtomic>
@@ -237,13 +232,17 @@ class V8_EXPORT_PRIVATE PlatformAwareObjectStartBitmap
   static bool ShouldForceNonAtomic();
 };
 
+PlatformAwareObjectStartBitmap::PlatformAwareObjectStartBitmap(Address offset)
+    : ObjectStartBitmap(offset) {}
+
 // static
 template <AccessMode mode>
 bool PlatformAwareObjectStartBitmap::ShouldForceNonAtomic() {
 #if defined(V8_TARGET_ARCH_ARM)
   // Use non-atomic accesses on ARMv7 when marking is not active.
   if (mode == AccessMode::kAtomic) {
-    if (V8_LIKELY(!WriteBarrier::IsEnabled())) return true;
+    if (V8_LIKELY(!WriteBarrier::IsAnyIncrementalOrConcurrentMarking()))
+      return true;
   }
 #endif  // defined(V8_TARGET_ARCH_ARM)
   return false;

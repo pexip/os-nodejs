@@ -23,6 +23,7 @@ const list = [
   'path',
   'perf_hooks',
   'process',
+  'punycode',
   'querystring',
   'readline',
   'repl',

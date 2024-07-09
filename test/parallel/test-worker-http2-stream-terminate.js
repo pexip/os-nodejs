@@ -4,7 +4,7 @@ if (!common.hasCrypto)
   common.skip('missing crypto');
 const assert = require('assert');
 const http2 = require('http2');
-const { duplexPair } = require('stream');
+const makeDuplexPair = require('../common/duplexpair');
 const { parentPort, Worker } = require('worker_threads');
 
 // This test ensures that workers can be terminated without error while
@@ -46,7 +46,7 @@ if (!process.env.HAS_STARTED_WORKER) {
     stream.end('');
   });
 
-  const [ clientSide, serverSide ] = duplexPair();
+  const { clientSide, serverSide } = makeDuplexPair();
   server.emit('connection', serverSide);
 
   const client = http2.connect('http://localhost:80', {

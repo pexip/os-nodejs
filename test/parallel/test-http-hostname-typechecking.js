@@ -36,8 +36,7 @@ vals.forEach((v) => {
 // These values are OK and should not throw synchronously.
 // Only testing for 'hostname' validation so ignore connection errors.
 const dontCare = () => {};
-const values = ['', undefined, null];
-for (const v of values) {
+['', undefined, null].forEach((v) => {
   http.request({ hostname: v }).on('error', dontCare).end();
   http.request({ host: v }).on('error', dontCare).end();
-}
+});

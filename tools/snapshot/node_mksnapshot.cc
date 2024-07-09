@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -50,6 +51,8 @@ int main(int argc, char* argv[]) {
   setvbuf(stderr, nullptr, _IONBF, 0);
 #endif  // _WIN32
 
+  v8::V8::SetFlagsFromString("--random_seed=42");
+  v8::V8::SetFlagsFromString("--harmony-import-assertions");
   return BuildSnapshot(argc, argv);
 }
 
@@ -63,43 +66,36 @@ int BuildSnapshot(int argc, char* argv[]) {
 
   std::unique_ptr<node::InitializationResult> result =
       node::InitializeOncePerProcess(
-          std::vector<std::string>(argv, argv + argc),
-          node::ProcessInitializationFlags::kGeneratePredictableSnapshot);
+          std::vector<std::string>(argv, argv + argc));
 
   CHECK(!result->early_return());
   CHECK_EQ(result->exit_code(), 0);
 
   std::string out_path;
-  std::optional<std::string_view> builder_script_path = std::nullopt;
-  if (node::per_process::cli_options->per_isolate->build_snapshot) {
-    builder_script_path = result->args()[1];
+  if (node::per_process::cli_options->build_snapshot) {
     out_path = result->args()[2];
   } else {
     out_path = result->args()[1];
   }
 
-#ifdef NODE_MKSNAPSHOT_USE_ARRAY_LITERALS
-  bool use_array_literals = true;
-#else
-  bool use_array_literals = false;
-#endif
+  std::ofstream out(out_path, std::ios::out | std::ios::binary);
+  if (!out) {
+    std::cerr << "Cannot open " << out_path << "\n";
+    return 1;
+  }
 
-  node::SnapshotConfig snapshot_config;
-  snapshot_config.builder_script_path = builder_script_path;
-
-#ifdef NODE_USE_NODE_CODE_CACHE
-  snapshot_config.flags = node::SnapshotFlags::kDefault;
-#else
-  snapshot_config.flags = node::SnapshotFlags::kWithoutCodeCache;
-#endif
-
-  node::ExitCode exit_code =
-      node::SnapshotBuilder::GenerateAsSource(out_path.c_str(),
-                                              result->args(),
-                                              result->exec_args(),
-                                              snapshot_config,
-                                              use_array_literals);
+  int exit_code = 0;
+  {
+    exit_code = node::SnapshotBuilder::Generate(
+        out, result->args(), result->exec_args());
+    if (exit_code == 0) {
+      if (!out) {
+        std::cerr << "Failed to write " << out_path << "\n";
+        exit_code = 1;
+      }
+    }
+  }
 
   node::TearDownOncePerProcess();
-  return static_cast<int>(exit_code);
+  return exit_code;
 }

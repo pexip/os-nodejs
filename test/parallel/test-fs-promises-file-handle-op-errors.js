@@ -7,6 +7,7 @@ const tmpdir = require('../common/tmpdir');
 // The following tests validate aggregate errors are thrown correctly
 // when both an operation and close throw.
 
+const path = require('path');
 const {
   readFile,
   writeFile,
@@ -22,7 +23,7 @@ const originalFd = Object.getOwnPropertyDescriptor(FileHandle.prototype, 'fd');
 
 let count = 0;
 async function createFile() {
-  const filePath = tmpdir.resolve(`op_errors_${++count}.txt`);
+  const filePath = path.join(tmpdir.path, `op_errors_${++count}.txt`);
   await writeFile(filePath, 'content');
   return filePath;
 }
@@ -54,7 +55,7 @@ async function checkOperationError(op) {
   await checkOperationError((filePath) => truncate(filePath));
   await checkOperationError((filePath) => readFile(filePath));
   await checkOperationError((filePath) => writeFile(filePath, '123'));
-  if (common.isMacOS) {
+  if (common.isOSX) {
     await checkOperationError((filePath) => lchmod(filePath, 0o777));
   }
 })().then(common.mustCall());

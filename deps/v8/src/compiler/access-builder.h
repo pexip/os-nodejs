@@ -6,7 +6,6 @@
 #define V8_COMPILER_ACCESS_BUILDER_H_
 
 #include "src/base/compiler-specific.h"
-#include "src/compiler/js-operator.h"
 #include "src/compiler/simplified-operator.h"
 #include "src/compiler/write-barrier-kind.h"
 #include "src/objects/elements-kind.h"
@@ -74,15 +73,6 @@ class V8_EXPORT_PRIVATE AccessBuilder final
   // Provides access to JSCollectionIterator::index() field.
   static FieldAccess ForJSCollectionIteratorIndex();
 
-  // Provides access to an ExternalPointer through the JSExternalObject::value()
-  // field.
-  static FieldAccess ForJSExternalObjectValue();
-
-#ifdef V8_ENABLE_SANDBOX
-  // Provides access to JSExternalObject::value() field.
-  static FieldAccess ForJSExternalObjectPointerHandle();
-#endif
-
   // Provides access to JSFunction::prototype_or_initial_map() field.
   static FieldAccess ForJSFunctionPrototypeOrInitialMap();
 
@@ -143,9 +133,6 @@ class V8_EXPORT_PRIVATE AccessBuilder final
   // Provides access to JSArrayBuffer::bit_field() field.
   static FieldAccess ForJSArrayBufferBitField();
 
-  // Provides access to JSArrayBuffer::byteLength() field.
-  static FieldAccess ForJSArrayBufferByteLength();
-
   // Provides access to JSArrayBufferView::buffer() field.
   static FieldAccess ForJSArrayBufferViewBuffer();
 
@@ -154,9 +141,6 @@ class V8_EXPORT_PRIVATE AccessBuilder final
 
   // Provides access to JSArrayBufferView::byteOffset() field.
   static FieldAccess ForJSArrayBufferViewByteOffset();
-
-  // Provides access to JSArrayBufferView::bitfield() field
-  static FieldAccess ForJSArrayBufferViewBitField();
 
   // Provides access to JSTypedArray::length() field.
   static FieldAccess ForJSTypedArrayLength();
@@ -241,9 +225,6 @@ class V8_EXPORT_PRIVATE AccessBuilder final
 
   // Provides access to Name::raw_hash_field() field.
   static FieldAccess ForNameRawHashField();
-
-  // Provides access to FreeSpace::size() field
-  static FieldAccess ForFreeSpaceSize();
 
   // Provides access to String::length() field.
   static FieldAccess ForStringLength();
@@ -339,9 +320,6 @@ class V8_EXPORT_PRIVATE AccessBuilder final
   static ElementAccess ForTypedArrayElement(ExternalArrayType type,
                                             bool is_external);
 
-  // Provides access to the for-in cache array.
-  static ElementAccess ForJSForInCacheArrayElement(ForInMode mode);
-
   // Provides access to HashTable fields.
   static FieldAccess ForHashTableBaseNumberOfElements();
   static FieldAccess ForHashTableBaseNumberOfDeletedElement();
@@ -359,9 +337,6 @@ class V8_EXPORT_PRIVATE AccessBuilder final
   // Provides access to Dictionary fields.
   static FieldAccess ForDictionaryNextEnumerationIndex();
   static FieldAccess ForDictionaryObjectHashIndex();
-
-  // Provides access to NameDictionary fields.
-  static FieldAccess ForNameDictionaryFlagsIndex();
 
   // Provides access to FeedbackCell fields.
   static FieldAccess ForFeedbackCellInterruptBudget();

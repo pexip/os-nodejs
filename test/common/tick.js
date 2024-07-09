@@ -1,4 +1,5 @@
 'use strict';
+require('../common');
 
 module.exports = function tick(x, cb) {
   function ontick() {

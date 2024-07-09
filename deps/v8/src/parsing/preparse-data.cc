@@ -9,6 +9,7 @@
 #include "src/ast/scopes.h"
 #include "src/ast/variables.h"
 #include "src/base/logging.h"
+#include "src/base/platform/wrappers.h"
 #include "src/handles/handles.h"
 #include "src/objects/objects-inl.h"
 #include "src/objects/shared-function-info.h"
@@ -40,7 +41,7 @@ using NumberOfParametersField = LengthEqualsParametersField::Next<uint16_t, 16>;
 
 using LanguageField = base::BitField8<LanguageMode, 0, 1>;
 using UsesSuperField = LanguageField::Next<bool, 1>;
-static_assert(LanguageModeSize <= LanguageField::kNumValues);
+STATIC_ASSERT(LanguageModeSize <= LanguageField::kNumValues);
 
 }  // namespace
 

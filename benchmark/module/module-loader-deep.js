@@ -1,9 +1,10 @@
 'use strict';
 const fs = require('fs');
+const path = require('path');
 const common = require('../common.js');
 
 const tmpdir = require('../../test/common/tmpdir');
-const benchmarkDirectory = tmpdir.resolve('nodejs-benchmark-module');
+const benchmarkDirectory = path.join(tmpdir.path, 'nodejs-benchmark-module');
 
 const bench = common.createBenchmark(main, {
   ext: ['', '.js'],

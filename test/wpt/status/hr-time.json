@@ -1,13 +1,6 @@
 {
   "idlharness.any.js": {
-    "fail": {
-      "expected": [
-        "Window interface: attribute performance"
-      ]
-    }
-  },
-  "idlharness-shadowrealm.window.js": {
-    "skip": "ShadowRealm support is not enabled"
+    "skip": "TODO: update IDL parser"
   },
   "window-worker-timeOrigin.window.js": {
     "skip": "depends on URL.createObjectURL(blob)"

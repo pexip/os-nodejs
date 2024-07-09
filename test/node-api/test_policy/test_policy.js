@@ -8,6 +8,7 @@ const tmpdir = require('../../common/tmpdir');
 const { spawnSync } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
+const path = require('path');
 const { pathToFileURL } = require('url');
 
 tmpdir.refresh();
@@ -18,7 +19,7 @@ function hash(algo, body) {
   return h.digest('base64');
 }
 
-const policyFilepath = tmpdir.resolve('policy');
+const policyFilepath = path.join(tmpdir.path, 'policy');
 
 const depFilepath = require.resolve(`./build/${common.buildType}/binding.node`);
 const depURL = pathToFileURL(depFilepath);

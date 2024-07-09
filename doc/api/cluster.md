@@ -317,7 +317,6 @@ if (cluster.isPrimary) {
 ```cjs
 const cluster = require('node:cluster');
 const http = require('node:http');
-const numCPUs = require('node:os').availableParallelism();
 const process = require('node:process');
 
 if (cluster.isPrimary) {
@@ -336,6 +335,7 @@ if (cluster.isPrimary) {
   }
 
   // Start workers and listen for messages containing notifyRequest
+  const numCPUs = require('node:os').availableParallelism();
   for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
   }

@@ -10,7 +10,6 @@ assert.deepStrictEqual(keys, new Set([
   'debug',
   'uv',
   'ipv6',
-  'require_module',
   'tls_alpn',
   'tls_sni',
   'tls_ocsp',

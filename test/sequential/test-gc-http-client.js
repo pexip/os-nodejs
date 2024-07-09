@@ -3,7 +3,7 @@
 // just a simple http server and client.
 
 const common = require('../common');
-const { onGC } = require('../common/gc');
+const onGC = require('../common/ongc');
 
 const cpus = require('os').availableParallelism();
 

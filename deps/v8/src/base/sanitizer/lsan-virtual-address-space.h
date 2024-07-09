@@ -47,11 +47,6 @@ class V8_BASE_EXPORT LsanVirtualAddressSpace final
     return vas_->SetPagePermissions(address, size, permissions);
   }
 
-  bool RecommitPages(Address address, size_t size,
-                     PagePermissions permissions) override {
-    return vas_->RecommitPages(address, size, permissions);
-  }
-
   bool AllocateGuardRegion(Address address, size_t size) override {
     return vas_->AllocateGuardRegion(address, size);
   }

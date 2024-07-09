@@ -21,7 +21,7 @@ const inputs = [
 
 const bench = common.createBenchmark(main, {
   input: inputs.concat(Object.keys(groupedInputs)),
-  n: [1e6],
+  n: [1e5],
 }, {
   flags: '--expose-internals',
 });

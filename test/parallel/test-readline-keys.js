@@ -34,9 +34,9 @@ function addTest(sequences, expectedKeys) {
 
   keys = [];
 
-  for (const sequence of sequences) {
+  sequences.forEach((sequence) => {
     fi.write(sequence);
-  }
+  });
   assert.deepStrictEqual(keys, expectedKeys);
 }
 

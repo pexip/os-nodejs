@@ -14,11 +14,7 @@
 #include "src/base/logging.h"
 #include "src/base/platform/platform.h"
 #include "src/base/platform/wrappers.h"
-#include "src/utils/allocation.h"
-
-#ifdef V8_CC_MSVC
-#include <intrin.h>  // _AddressOfReturnAddress()
-#endif
+#include "src/base/strings.h"
 
 namespace v8 {
 namespace internal {

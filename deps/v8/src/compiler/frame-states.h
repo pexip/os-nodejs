@@ -68,7 +68,7 @@ class OutputFrameStateCombine {
 // The type of stack frame that a FrameState node represents.
 enum class FrameStateType {
   kUnoptimizedFunction,            // Represents an UnoptimizedFrame.
-  kInlinedExtraArguments,          // Represents inlined extra arguments.
+  kArgumentsAdaptor,               // Represents an ArgumentsAdaptorFrame.
   kConstructStub,                  // Represents a ConstructStubFrame.
   kBuiltinContinuation,            // Represents a continuation to a stub.
 #if V8_ENABLE_WEBASSEMBLY          // ↓ WebAssembly only
@@ -154,9 +154,6 @@ class FrameStateInfo final {
   int local_count() const {
     return info_ == nullptr ? 0 : info_->local_count();
   }
-  int stack_count() const {
-    return type() == FrameStateType::kUnoptimizedFunction ? 1 : 0;
-  }
   const FrameStateFunctionInfo* function_info() const { return info_; }
 
  private:
@@ -197,11 +194,6 @@ FrameState CreateJavaScriptBuiltinContinuationFrameState(
 FrameState CreateGenericLazyDeoptContinuationFrameState(
     JSGraph* graph, const SharedFunctionInfoRef& shared, Node* target,
     Node* context, Node* receiver, Node* outer_frame_state);
-
-// Creates a FrameState otherwise identical to `frame_state` except the
-// OutputFrameStateCombine is changed.
-FrameState CloneFrameState(JSGraph* jsgraph, FrameState frame_state,
-                           OutputFrameStateCombine changed_state_combine);
 
 }  // namespace compiler
 }  // namespace internal

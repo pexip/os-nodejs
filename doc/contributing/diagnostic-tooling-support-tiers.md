@@ -26,7 +26,7 @@ the following tiers.
     organization or website;
   * The tool must be working on all supported platforms;
   * The tool must only be using APIs exposed by Node.js as opposed to
-    its dependencies;
+    its dependencies; and
   * The tool must be open source.
 
 * Tier 2 - Must be working (CI tests passing) for all

@@ -42,7 +42,7 @@ calling `require('node:crypto')` will result in an error being thrown.
 
 When using CommonJS, the error thrown can be caught using try/catch:
 
-<!-- eslint-disable no-global-assign -->
+<!-- eslint-skip -->
 
 ```cjs
 let crypto;
@@ -52,8 +52,6 @@ try {
   console.error('crypto support is disabled!');
 }
 ```
-
-<!-- eslint-enable no-global-assign -->
 
 When using the lexical ESM `import` keyword, the error can only be
 caught if a handler for `process.on('uncaughtException')` is registered
@@ -570,7 +568,7 @@ added: v1.0.0
 * `options` {Object} [`stream.transform` options][]
   * `plaintextLength` {number}
   * `encoding` {string} The string encoding to use when `buffer` is a string.
-* Returns: {Cipher} The same `Cipher` instance for method chaining.
+* Returns: {Cipher} for method chaining.
 
 When using an authenticated encryption mode (`GCM`, `CCM`, `OCB`, and
 `chacha20-poly1305` are
@@ -590,7 +588,7 @@ added: v0.7.1
 -->
 
 * `autoPadding` {boolean} **Default:** `true`
-* Returns: {Cipher} The same `Cipher` instance for method chaining.
+* Returns: {Cipher} for method chaining.
 
 When using block encryption algorithms, the `Cipher` class will automatically
 add padding to the input data to the appropriate block size. To disable the
@@ -870,7 +868,7 @@ changes:
 * `options` {Object} [`stream.transform` options][]
   * `plaintextLength` {number}
   * `encoding` {string} String encoding to use when `buffer` is a string.
-* Returns: {Decipher} The same Decipher for method chaining.
+* Returns: {Decipher} for method chaining.
 
 When using an authenticated encryption mode (`GCM`, `CCM`, `OCB`, and
 `chacha20-poly1305` are
@@ -891,11 +889,6 @@ When passing a string as the `buffer`, please consider
 <!-- YAML
 added: v1.0.0
 changes:
-  - version: v20.13.0
-    pr-url: https://github.com/nodejs/node/pull/52345
-    description: Using GCM tag lengths other than 128 bits without specifying
-                 the `authTagLength` option when creating `decipher` is
-                 deprecated.
   - version: v15.0.0
     pr-url: https://github.com/nodejs/node/pull/35093
     description: The buffer argument can be a string or ArrayBuffer and is
@@ -910,7 +903,7 @@ changes:
 
 * `buffer` {string|Buffer|ArrayBuffer|TypedArray|DataView}
 * `encoding` {string} String encoding to use when `buffer` is a string.
-* Returns: {Decipher} The same Decipher for method chaining.
+* Returns: {Decipher} for method chaining.
 
 When using an authenticated encryption mode (`GCM`, `CCM`, `OCB`, and
 `chacha20-poly1305` are
@@ -936,7 +929,7 @@ added: v0.7.1
 -->
 
 * `autoPadding` {boolean} **Default:** `true`
-* Returns: {Decipher} The same Decipher for method chaining.
+* Returns: {Decipher} for method chaining.
 
 When data has been encrypted without standard block padding, calling
 `decipher.setAutoPadding(false)` will disable automatic padding to prevent
@@ -977,11 +970,6 @@ is specified, a string using the specified encoding is returned. If no
 The `decipher.update()` method can be called multiple times with new data until
 [`decipher.final()`][] is called. Calling `decipher.update()` after
 [`decipher.final()`][] will result in an error being thrown.
-
-Even if the underlying cipher implements authentication, the authenticity and
-integrity of the plaintext returned from this function may be uncertain at this
-time. For authenticated encryption algorithms, authenticity is generally only
-established when the application calls [`decipher.final()`][].
 
 ## Class: `DiffieHellman`
 
@@ -1951,8 +1939,8 @@ added: v15.0.0
 Example: Converting a `CryptoKey` instance to a `KeyObject`:
 
 ```mjs
-const { KeyObject } = await import('node:crypto');
-const { subtle } = globalThis.crypto;
+const { webcrypto, KeyObject } = await import('node:crypto');
+const { subtle } = webcrypto;
 
 const key = await subtle.generateKey({
   name: 'HMAC',
@@ -1966,8 +1954,12 @@ console.log(keyObject.symmetricKeySize);
 ```
 
 ```cjs
-const { KeyObject } = require('node:crypto');
-const { subtle } = globalThis.crypto;
+const {
+  webcrypto: {
+    subtle,
+  },
+  KeyObject,
+} = require('node:crypto');
 
 (async function() {
   const key = await subtle.generateKey({
@@ -2110,9 +2102,7 @@ PKCS#1 and SEC1 encryption.
 ### `keyObject.equals(otherKeyObject)`
 
 <!-- YAML
-added:
-  - v17.7.0
-  - v16.15.0
+added: v17.7.0
 -->
 
 * `otherKeyObject`: {KeyObject} A `KeyObject` with which to
@@ -2525,9 +2515,7 @@ changes:
     description: The `wildcards`, `partialWildcards`, `multiLabelWildcards`, and
                  `singleLabelSubdomains` options have been removed since they
                  had no effect.
-  - version:
-    - v17.5.0
-    - v16.15.0
+  - version: v17.5.0
     pr-url: https://github.com/nodejs/node/pull/41569
     description: The subject option can now be set to `'default'`.
 -->
@@ -2560,9 +2548,7 @@ changes:
   - version: v18.0.0
     pr-url: https://github.com/nodejs/node/pull/41600
     description: The subject option now defaults to `'default'`.
-  - version:
-    - v17.5.0
-    - v16.15.0
+  - version: v17.5.0
     pr-url: https://github.com/nodejs/node/pull/41569
     description: The subject option can now be set to `'default'`.
 -->
@@ -2734,7 +2720,7 @@ added: v15.9.0
 The issuer certificate or `undefined` if the issuer certificate is not
 available.
 
-### `x509.extKeyUsage`
+### `x509.keyUsage`
 
 <!-- YAML
 added: v15.6.0
@@ -2742,7 +2728,7 @@ added: v15.6.0
 
 * Type: {string\[]}
 
-An array detailing the key extended usages for this certificate.
+An array detailing the key usages for this certificate.
 
 ### `x509.publicKey`
 
@@ -2861,7 +2847,7 @@ added: v15.6.0
 
 * Type: {string}
 
-The date/time from which this certificate is valid.
+The date/time from which this certificate is considered valid.
 
 ### `x509.validTo`
 
@@ -2871,7 +2857,7 @@ added: v15.6.0
 
 * Type: {string}
 
-The date/time until which this certificate is valid.
+The date/time until which this certificate is considered valid.
 
 ### `x509.verify(publicKey)`
 
@@ -2898,6 +2884,26 @@ added: v6.3.0
 An object containing commonly used constants for crypto and security related
 operations. The specific constants currently defined are described in
 [Crypto constants][].
+
+### `crypto.DEFAULT_ENCODING`
+
+<!-- YAML
+added: v0.9.3
+deprecated: v10.0.0
+-->
+
+> Stability: 0 - Deprecated
+
+The default encoding to use for functions that can take either strings
+or [buffers][`Buffer`]. The default value is `'buffer'`, which makes methods
+default to [`Buffer`][] objects.
+
+The `crypto.DEFAULT_ENCODING` mechanism is provided for backward compatibility
+with legacy programs that expect `'latin1'` to be the default encoding.
+
+New applications should expect the default to be `'buffer'`.
+
+This property is deprecated.
 
 ### `crypto.fips`
 
@@ -2970,9 +2976,7 @@ Checks the primality of the `candidate`.
 added: v0.1.94
 deprecated: v10.0.0
 changes:
-  - version:
-    - v17.9.0
-    - v16.17.0
+  - version: v17.9.0
     pr-url: https://github.com/nodejs/node/pull/42427
     description: The `authTagLength` option is now optional when using the
                  `chacha20-poly1305` cipher and defaults to 16 bytes.
@@ -3040,9 +3044,7 @@ Adversaries][] for details.
 <!-- YAML
 added: v0.1.94
 changes:
-  - version:
-    - v17.9.0
-    - v16.17.0
+  - version: v17.9.0
     pr-url: https://github.com/nodejs/node/pull/42427
     description: The `authTagLength` option is now optional when using the
                  `chacha20-poly1305` cipher and defaults to 16 bytes.
@@ -3115,9 +3117,7 @@ given IV will be.
 added: v0.1.94
 deprecated: v10.0.0
 changes:
-  - version:
-    - v17.9.0
-    - v16.17.0
+  - version: v17.9.0
     pr-url: https://github.com/nodejs/node/pull/42427
     description: The `authTagLength` option is now optional when using the
                  `chacha20-poly1305` cipher and defaults to 16 bytes.
@@ -3163,9 +3163,7 @@ to create the `Decipher` object.
 <!-- YAML
 added: v0.1.94
 changes:
-  - version:
-    - v17.9.0
-    - v16.17.0
+  - version: v17.9.0
     pr-url: https://github.com/nodejs/node/pull/42427
     description: The `authTagLength` option is now optional when using the
                  `chacha20-poly1305` cipher and defaults to 16 bytes.
@@ -3563,9 +3561,7 @@ and it will be impossible to extract the private key from the returned object.
 <!-- YAML
 added: v11.6.0
 changes:
-  - version:
-    - v18.8.0
-    - v16.18.0
+  - version: v18.8.0
     pr-url: https://github.com/nodejs/node/pull/44201
     description: The key can now be zero-length.
   - version: v15.0.0
@@ -3638,70 +3634,7 @@ added:
 
 Computes the Diffie-Hellman secret based on a `privateKey` and a `publicKey`.
 Both keys must have the same `asymmetricKeyType`, which must be one of `'dh'`
-(for Diffie-Hellman), `'ec'`, `'x448'`, or `'x25519'` (for ECDH).
-
-### `crypto.hash(algorithm, data[, outputEncoding])`
-
-<!-- YAML
-added:
- - v20.12.0
--->
-
-> Stability: 1.2 - Release candidate
-
-* `algorithm` {string|undefined}
-* `data` {string|Buffer|TypedArray|DataView} When `data` is a
-  string, it will be encoded as UTF-8 before being hashed. If a different
-  input encoding is desired for a string input, user could encode the string
-  into a `TypedArray` using either `TextEncoder` or `Buffer.from()` and passing
-  the encoded `TypedArray` into this API instead.
-* `outputEncoding` {string|undefined}  [Encoding][encoding] used to encode the
-  returned digest. **Default:** `'hex'`.
-* Returns: {string|Buffer}
-
-A utility for creating one-shot hash digests of data. It can be faster than
-the object-based `crypto.createHash()` when hashing a smaller amount of data
-(<= 5MB) that's readily available. If the data can be big or if it is streamed,
-it's still recommended to use `crypto.createHash()` instead.
-
-The `algorithm` is dependent on the available algorithms supported by the
-version of OpenSSL on the platform. Examples are `'sha256'`, `'sha512'`, etc.
-On recent releases of OpenSSL, `openssl list -digest-algorithms` will
-display the available digest algorithms.
-
-Example:
-
-```cjs
-const crypto = require('node:crypto');
-const { Buffer } = require('node:buffer');
-
-// Hashing a string and return the result as a hex-encoded string.
-const string = 'Node.js';
-// 10b3493287f831e81a438811a1ffba01f8cec4b7
-console.log(crypto.hash('sha1', string));
-
-// Encode a base64-encoded string into a Buffer, hash it and return
-// the result as a buffer.
-const base64 = 'Tm9kZS5qcw==';
-// <Buffer 10 b3 49 32 87 f8 31 e8 1a 43 88 11 a1 ff ba 01 f8 ce c4 b7>
-console.log(crypto.hash('sha1', Buffer.from(base64, 'base64'), 'buffer'));
-```
-
-```mjs
-import crypto from 'node:crypto';
-import { Buffer } from 'node:buffer';
-
-// Hashing a string and return the result as a hex-encoded string.
-const string = 'Node.js';
-// 10b3493287f831e81a438811a1ffba01f8cec4b7
-console.log(crypto.hash('sha1', string));
-
-// Encode a base64-encoded string into a Buffer, hash it and return
-// the result as a buffer.
-const base64 = 'Tm9kZS5qcw==';
-// <Buffer 10 b3 49 32 87 f8 31 e8 1a 43 88 11 a1 ff ba 01 f8 ce c4 b7>
-console.log(crypto.hash('sha1', Buffer.from(base64, 'base64'), 'buffer'));
-```
+(for Diffie-Hellman), `'ec'` (for ECDH), `'x448'`, or `'x25519'` (for ECDH-ES).
 
 ### `crypto.generateKey(type, options, callback)`
 
@@ -4307,9 +4240,7 @@ web-compatible code use [`crypto.webcrypto.getRandomValues()`][] instead.
 <!-- YAML
 added: v15.0.0
 changes:
-  - version:
-    - v18.8.0
-    - v16.18.0
+  - version: v18.8.0
     pr-url: https://github.com/nodejs/node/pull/44201
     description: The input keying material can now be zero-length.
   - version: v18.0.0
@@ -4372,9 +4303,7 @@ hkdf('sha512', 'key', 'salt', 'info', 64, (err, derivedKey) => {
 <!-- YAML
 added: v15.0.0
 changes:
-  - version:
-    - v18.8.0
-    - v16.18.0
+  - version: v18.8.0
     pr-url: https://github.com/nodejs/node/pull/44201
     description: The input keying material can now be zero-length.
 -->
@@ -5394,17 +5323,12 @@ added: v15.6.0
 
 <!-- YAML
 added: v0.11.11
-changes:
-  - version: v20.16.0
-    pr-url: https://github.com/nodejs/node/pull/53329
-    description: Custom engine support in OpenSSL 3 is deprecated.
 -->
 
 * `engine` {string}
 * `flags` {crypto.constants} **Default:** `crypto.constants.ENGINE_METHOD_ALL`
 
 Load and set the `engine` for some or all OpenSSL functions (selected by flags).
-Support for custom engines in OpenSSL is deprecated from OpenSSL 3.
 
 `engine` could be either an id or a path to the engine's shared library.
 
@@ -6101,6 +6025,10 @@ See the [list of SSL OP Flags][] for details.
   </tr>
   <tr>
     <td><code>DH_NOT_SUITABLE_GENERATOR</code></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><code>ALPN_ENABLED</code></td>
     <td></td>
   </tr>
   <tr>

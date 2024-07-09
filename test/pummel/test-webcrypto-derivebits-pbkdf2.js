@@ -11,7 +11,7 @@ if (common.isPi) {
 }
 
 const assert = require('assert');
-const { subtle } = globalThis.crypto;
+const { subtle } = require('crypto').webcrypto;
 
 function getDeriveKeyInfo(name, length, hash, ...usages) {
   return [{ name, length, hash }, usages];
@@ -456,11 +456,6 @@ async function testDeriveBitsBadLengths(
       }),
     assert.rejects(
       subtle.deriveBits(algorithm, baseKeys[size], null), {
-        message: 'length cannot be null',
-        name: 'OperationError',
-      }),
-    assert.rejects(
-      subtle.deriveBits(algorithm, baseKeys[size]), {
         message: 'length cannot be null',
         name: 'OperationError',
       }),

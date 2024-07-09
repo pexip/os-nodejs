@@ -11,6 +11,7 @@
 // Do not include anything from src/compiler here!
 #include "src/common/globals.h"
 #include "src/objects/code.h"
+#include "src/objects/objects.h"
 
 namespace v8 {
 namespace internal {
@@ -20,11 +21,15 @@ class OptimizedCompilationInfo;
 class TurbofanCompilationJob;
 class ProfileDataFromFile;
 class RegisterConfiguration;
-struct WasmInliningPosition;
 
 namespace wasm {
 struct CompilationEnv;
+struct FunctionBody;
+class NativeModule;
 struct WasmCompilationResult;
+class WasmEngine;
+struct WasmModule;
+class WireBytesStorage;
 }  // namespace wasm
 
 namespace compiler {
@@ -35,9 +40,10 @@ class InstructionSequence;
 class JSGraph;
 class JSHeapBroker;
 class MachineGraph;
+class NodeOriginTable;
 class Schedule;
 class SourcePositionTable;
-struct WasmCompilationData;
+struct WasmLoopInfo;
 
 class Pipeline : public AllStatic {
  public:
@@ -45,14 +51,17 @@ class Pipeline : public AllStatic {
   static V8_EXPORT_PRIVATE std::unique_ptr<TurbofanCompilationJob>
   NewCompilationJob(Isolate* isolate, Handle<JSFunction> function,
                     CodeKind code_kind, bool has_script,
-                    BytecodeOffset osr_offset = BytecodeOffset::None());
+                    BytecodeOffset osr_offset = BytecodeOffset::None(),
+                    JavaScriptFrame* osr_frame = nullptr);
 
   // Run the pipeline for the WebAssembly compilation info.
   static void GenerateCodeForWasmFunction(
       OptimizedCompilationInfo* info, wasm::CompilationEnv* env,
-      WasmCompilationData& compilation_data, MachineGraph* mcgraph,
-      CallDescriptor* call_descriptor,
-      ZoneVector<WasmInliningPosition>* inlining_positions);
+      const wasm::WireBytesStorage* wire_bytes_storage, MachineGraph* mcgraph,
+      CallDescriptor* call_descriptor, SourcePositionTable* source_positions,
+      NodeOriginTable* node_origins, wasm::FunctionBody function_body,
+      const wasm::WasmModule* module, int function_index,
+      std::vector<compiler::WasmLoopInfo>* loop_infos);
 
   // Run the pipeline on a machine graph and generate code.
   static wasm::WasmCompilationResult GenerateCodeForWasmNativeStub(
@@ -64,7 +73,8 @@ class Pipeline : public AllStatic {
   static std::unique_ptr<TurbofanCompilationJob> NewWasmHeapStubCompilationJob(
       Isolate* isolate, CallDescriptor* call_descriptor,
       std::unique_ptr<Zone> zone, Graph* graph, CodeKind kind,
-      std::unique_ptr<char[]> debug_name, const AssemblerOptions& options);
+      std::unique_ptr<char[]> debug_name, const AssemblerOptions& options,
+      SourcePositionTable* source_positions = nullptr);
 
   // Run the pipeline on a machine graph and generate code.
   static MaybeHandle<Code> GenerateCodeForCodeStub(
@@ -92,7 +102,7 @@ class Pipeline : public AllStatic {
       const AssemblerOptions& options, Schedule* schedule = nullptr);
 
   // Run just the register allocator phases.
-  V8_EXPORT_PRIVATE static void AllocateRegistersForTesting(
+  V8_EXPORT_PRIVATE static bool AllocateRegistersForTesting(
       const RegisterConfiguration* config, InstructionSequence* sequence,
       bool use_fast_register_allocator, bool run_verifier);
 

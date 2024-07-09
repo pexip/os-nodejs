@@ -1,8 +1,6 @@
-importScripts("/common/gc.js");
-
 var c;
 
-async function handler(e, reply) {
+function handler(e, reply) {
   if (e.data.ping) {
     c.postMessage(e.data.ping);
     return;
@@ -11,7 +9,9 @@ async function handler(e, reply) {
     (() => {
       c.postMessage({blob: new Blob(e.data.blob)});
     })();
-    await garbageCollect();
+    // TODO(https://github.com/web-platform-tests/wpt/issues/7899): Change to
+    // some sort of cross-browser GC trigger.
+    if (self.gc) self.gc();
   }
   c = new BroadcastChannel(e.data.channel);
   let messages = [];

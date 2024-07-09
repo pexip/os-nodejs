@@ -225,7 +225,7 @@ class StreamResource {
   // These need to be implemented on the readable side of this stream:
 
   // Start reading from the underlying resource. This is called by the consumer
-  // when more data is desired. Use `EmitAlloc()` and `EmitRead()` to
+  // when more data is desired. Use `EmitAlloc()` and `EmitData()` to
   // pass data along to the consumer.
   virtual int ReadStart() = 0;
   // Stop reading from the underlying resource. This is called by the
@@ -244,8 +244,6 @@ class StreamResource {
   // `*bufs` and `*count` accordingly. This is a no-op by default.
   // Return 0 for success and a libuv error code for failures.
   virtual int DoTryWrite(uv_buf_t** bufs, size_t* count);
-  // Indicates whether this subclass overrides the DoTryWrite
-  virtual inline bool HasDoTryWrite() const { return false; }
   // Initiate a write of data.
   // Upon an immediate failure, a libuv error code is returned,
   // w->Done() will never be called and caller should free `bufs`.
@@ -315,8 +313,6 @@ class StreamBase : public StreamResource {
     kInternalFieldCount
   };
 
-  static void AddMethods(IsolateData* isolate_data,
-                         v8::Local<v8::FunctionTemplate> target);
   static void AddMethods(Environment* env,
                          v8::Local<v8::FunctionTemplate> target);
   static void RegisterExternalReferences(ExternalReferenceRegistry* registry);
@@ -413,7 +409,7 @@ class StreamBase : public StreamResource {
   EmitToJSStreamListener default_listener_;
 
   void SetWriteResult(const StreamWriteResult& res);
-  static void AddMethod(v8::Isolate* isolate,
+  static void AddMethod(Environment* env,
                         v8::Local<v8::Signature> sig,
                         enum v8::PropertyAttribute attributes,
                         v8::Local<v8::FunctionTemplate> t,

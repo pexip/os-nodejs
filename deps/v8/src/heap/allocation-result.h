@@ -66,7 +66,7 @@ class AllocationResult final {
   HeapObject object_;
 };
 
-static_assert(sizeof(AllocationResult) == kSystemPointerSize);
+STATIC_ASSERT(sizeof(AllocationResult) == kSystemPointerSize);
 
 }  // namespace internal
 }  // namespace v8

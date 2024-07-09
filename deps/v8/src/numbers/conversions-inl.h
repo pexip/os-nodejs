@@ -17,6 +17,7 @@
 #include "src/base/bits.h"
 #include "src/base/numbers/double.h"
 #include "src/base/platform/platform.h"
+#include "src/base/platform/wrappers.h"
 #include "src/numbers/conversions.h"
 #include "src/objects/heap-number-inl.h"
 #include "src/objects/objects-inl.h"
@@ -79,13 +80,12 @@ inline float DoubleToFloat32(double x) {
   return static_cast<float>(x);
 }
 
-// #sec-tointegerorinfinity
 inline double DoubleToInteger(double x) {
-  // ToIntegerOrInfinity normalizes -0 to +0. Special case 0 for performance.
-  if (std::isnan(x) || x == 0.0) return 0;
+  if (std::isnan(x)) return 0;
   if (!std::isfinite(x)) return x;
-  // Add 0.0 in the truncation case to ensure this doesn't return -0.
-  return ((x > 0) ? std::floor(x) : std::ceil(x)) + 0.0;
+  // ToInteger normalizes -0 to +0.
+  if (x == 0.0) return 0;
+  return (x >= 0) ? std::floor(x) : std::ceil(x);
 }
 
 // Implements most of https://tc39.github.io/ecma262/#sec-toint32.
@@ -183,7 +183,7 @@ bool DoubleToUint32IfEqualToSelf(double value, uint32_t* uint32_value) {
   // exponent and remaining significand bits are valid, and only then check the
   // value in the bottom 32 bits.
 
-  uint64_t result = base::bit_cast<uint64_t>(shifted_value);
+  uint64_t result = bit_cast<uint64_t>(shifted_value);
   if ((result >> 32) == kValidTopBits) {
     *uint32_value = result & kBottomBitMask;
     return FastUI2D(result & kBottomBitMask) == value;

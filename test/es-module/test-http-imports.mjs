@@ -70,11 +70,6 @@ for (const { protocol, createServer } of [
     const server = createServer(function(_req, res) {
       const url = new URL(_req.url, host);
       const redirect = url.searchParams.get('redirect');
-
-      if (url.pathname === 'json') {
-        common.mustCall(() => assert.strictEqual(_req.header.content, 'application/json,*/*;charset=utf-8;q=0.5'));
-      }
-
       if (url.pathname === '/not-found') {
         res.writeHead(404);
         res.end();

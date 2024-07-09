@@ -5,11 +5,12 @@
 const common = require('../common');
 const assert = require('assert');
 const fs = require('fs');
+const path = require('path');
 const Module = require('module');
 const tmpdir = require('../common/tmpdir');
-const file = tmpdir.resolve('test-extensions.foo.bar');
-const dotfile = tmpdir.resolve('.bar');
-const dotfileWithExtension = tmpdir.resolve('.foo.bar');
+const file = path.join(tmpdir.path, 'test-extensions.foo.bar');
+const dotfile = path.join(tmpdir.path, '.bar');
+const dotfileWithExtension = path.join(tmpdir.path, '.foo.bar');
 
 tmpdir.refresh();
 fs.writeFileSync(file, 'console.log(__filename);', 'utf8');
@@ -19,18 +20,18 @@ fs.writeFileSync(dotfileWithExtension, 'console.log(__filename);', 'utf8');
 {
   require.extensions['.bar'] = common.mustNotCall();
   require.extensions['.foo.bar'] = common.mustCall();
-  const modulePath = tmpdir.resolve('test-extensions');
+  const modulePath = path.join(tmpdir.path, 'test-extensions');
   require(modulePath);
   require(file);
   delete require.cache[file];
   delete require.extensions['.bar'];
   delete require.extensions['.foo.bar'];
-  Module._pathCache = { __proto__: null };
+  Module._pathCache = Object.create(null);
 }
 
 {
   require.extensions['.foo.bar'] = common.mustCall();
-  const modulePath = tmpdir.resolve('test-extensions');
+  const modulePath = path.join(tmpdir.path, 'test-extensions');
   require(modulePath);
   assert.throws(
     () => require(`${modulePath}.foo`),
@@ -39,39 +40,39 @@ fs.writeFileSync(dotfileWithExtension, 'console.log(__filename);', 'utf8');
   require(`${modulePath}.foo.bar`);
   delete require.cache[file];
   delete require.extensions['.foo.bar'];
-  Module._pathCache = { __proto__: null };
+  Module._pathCache = Object.create(null);
 }
 
 {
-  const modulePath = tmpdir.resolve('test-extensions');
+  const modulePath = path.join(tmpdir.path, 'test-extensions');
   assert.throws(
     () => require(modulePath),
     (err) => err.message.startsWith(`Cannot find module '${modulePath}'`)
   );
   delete require.cache[file];
-  Module._pathCache = { __proto__: null };
+  Module._pathCache = Object.create(null);
 }
 
 {
   require.extensions['.bar'] = common.mustNotCall();
   require.extensions['.foo.bar'] = common.mustCall();
-  const modulePath = tmpdir.resolve('test-extensions.foo');
+  const modulePath = path.join(tmpdir.path, 'test-extensions.foo');
   require(modulePath);
   delete require.cache[file];
   delete require.extensions['.bar'];
   delete require.extensions['.foo.bar'];
-  Module._pathCache = { __proto__: null };
+  Module._pathCache = Object.create(null);
 }
 
 {
   require.extensions['.foo.bar'] = common.mustNotCall();
-  const modulePath = tmpdir.resolve('test-extensions.foo');
+  const modulePath = path.join(tmpdir.path, 'test-extensions.foo');
   assert.throws(
     () => require(modulePath),
     (err) => err.message.startsWith(`Cannot find module '${modulePath}'`)
   );
   delete require.extensions['.foo.bar'];
-  Module._pathCache = { __proto__: null };
+  Module._pathCache = Object.create(null);
 }
 
 {
@@ -79,7 +80,7 @@ fs.writeFileSync(dotfileWithExtension, 'console.log(__filename);', 'utf8');
   require(dotfile);
   delete require.cache[dotfile];
   delete require.extensions['.bar'];
-  Module._pathCache = { __proto__: null };
+  Module._pathCache = Object.create(null);
 }
 
 {
@@ -89,5 +90,5 @@ fs.writeFileSync(dotfileWithExtension, 'console.log(__filename);', 'utf8');
   delete require.cache[dotfileWithExtension];
   delete require.extensions['.bar'];
   delete require.extensions['.foo.bar'];
-  Module._pathCache = { __proto__: null };
+  Module._pathCache = Object.create(null);
 }

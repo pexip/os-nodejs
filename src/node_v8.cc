@@ -92,57 +92,35 @@ static const size_t kHeapCodeStatisticsPropertiesCount =
     HEAP_CODE_STATISTICS_PROPERTIES(V);
 #undef V
 
-BindingData::BindingData(Realm* realm,
-                         Local<Object> obj,
-                         InternalFieldInfo* info)
+BindingData::BindingData(Realm* realm, Local<Object> obj)
     : SnapshotableObject(realm, obj, type_int),
-      heap_statistics_buffer(realm->isolate(),
-                             kHeapStatisticsPropertiesCount,
-                             MAYBE_FIELD_PTR(info, heap_statistics_buffer)),
-      heap_space_statistics_buffer(
-          realm->isolate(),
-          kHeapSpaceStatisticsPropertiesCount,
-          MAYBE_FIELD_PTR(info, heap_space_statistics_buffer)),
-      heap_code_statistics_buffer(
-          realm->isolate(),
-          kHeapCodeStatisticsPropertiesCount,
-          MAYBE_FIELD_PTR(info, heap_code_statistics_buffer)) {
+      heap_statistics_buffer(realm->isolate(), kHeapStatisticsPropertiesCount),
+      heap_space_statistics_buffer(realm->isolate(),
+                                   kHeapSpaceStatisticsPropertiesCount),
+      heap_code_statistics_buffer(realm->isolate(),
+                                  kHeapCodeStatisticsPropertiesCount) {
   Local<Context> context = realm->context();
-  if (info == nullptr) {
-    obj->Set(context,
-             FIXED_ONE_BYTE_STRING(realm->isolate(), "heapStatisticsBuffer"),
-             heap_statistics_buffer.GetJSArray())
-        .Check();
-    obj->Set(
-           context,
+  obj->Set(context,
+           FIXED_ONE_BYTE_STRING(realm->isolate(), "heapStatisticsBuffer"),
+           heap_statistics_buffer.GetJSArray())
+      .Check();
+  obj->Set(context,
            FIXED_ONE_BYTE_STRING(realm->isolate(), "heapCodeStatisticsBuffer"),
            heap_code_statistics_buffer.GetJSArray())
-        .Check();
-    obj->Set(
-           context,
+      .Check();
+  obj->Set(context,
            FIXED_ONE_BYTE_STRING(realm->isolate(), "heapSpaceStatisticsBuffer"),
            heap_space_statistics_buffer.GetJSArray())
-        .Check();
-  } else {
-    heap_statistics_buffer.Deserialize(realm->context());
-    heap_code_statistics_buffer.Deserialize(realm->context());
-    heap_space_statistics_buffer.Deserialize(realm->context());
-  }
-  heap_statistics_buffer.MakeWeak();
-  heap_space_statistics_buffer.MakeWeak();
-  heap_code_statistics_buffer.MakeWeak();
+      .Check();
 }
 
 bool BindingData::PrepareForSerialization(Local<Context> context,
                                           v8::SnapshotCreator* creator) {
-  DCHECK_NULL(internal_field_info_);
-  internal_field_info_ = InternalFieldInfoBase::New<InternalFieldInfo>(type());
-  internal_field_info_->heap_statistics_buffer =
-      heap_statistics_buffer.Serialize(context, creator);
-  internal_field_info_->heap_space_statistics_buffer =
-      heap_space_statistics_buffer.Serialize(context, creator);
-  internal_field_info_->heap_code_statistics_buffer =
-      heap_code_statistics_buffer.Serialize(context, creator);
+  // We'll just re-initialize the buffers in the constructor since their
+  // contents can be thrown away once consumed in the previous call.
+  heap_statistics_buffer.Release();
+  heap_space_statistics_buffer.Release();
+  heap_code_statistics_buffer.Release();
   // Return true because we need to maintain the reference to the binding from
   // JS land.
   return true;
@@ -152,20 +130,17 @@ void BindingData::Deserialize(Local<Context> context,
                               Local<Object> holder,
                               int index,
                               InternalFieldInfoBase* info) {
-  DCHECK_IS_SNAPSHOT_SLOT(index);
+  DCHECK_EQ(index, BaseObject::kEmbedderType);
   HandleScope scope(context->GetIsolate());
   Realm* realm = Realm::GetCurrent(context);
-  // Recreate the buffer in the constructor.
-  InternalFieldInfo* casted_info = static_cast<InternalFieldInfo*>(info);
-  BindingData* binding =
-      realm->AddBindingData<BindingData>(holder, casted_info);
+  BindingData* binding = realm->AddBindingData<BindingData>(context, holder);
   CHECK_NOT_NULL(binding);
 }
 
 InternalFieldInfoBase* BindingData::Serialize(int index) {
-  DCHECK_IS_SNAPSHOT_SLOT(index);
-  InternalFieldInfo* info = internal_field_info_;
-  internal_field_info_ = nullptr;
+  DCHECK_EQ(index, BaseObject::kEmbedderType);
+  InternalFieldInfo* info =
+      InternalFieldInfoBase::New<InternalFieldInfo>(type());
   return info;
 }
 
@@ -369,7 +344,7 @@ void GCProfiler::New(const FunctionCallbackInfo<Value>& args) {
 void GCProfiler::Start(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   GCProfiler* profiler;
-  ASSIGN_OR_RETURN_UNWRAP(&profiler, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&profiler, args.Holder());
   if (profiler->state != GCProfiler::GCProfilerState::kInitialized) {
     return;
   }
@@ -394,7 +369,7 @@ void GCProfiler::Start(const FunctionCallbackInfo<Value>& args) {
 void GCProfiler::Stop(const FunctionCallbackInfo<v8::Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   GCProfiler* profiler;
-  ASSIGN_OR_RETURN_UNWRAP(&profiler, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&profiler, args.Holder());
   if (profiler->state != GCProfiler::GCProfilerState::kStarted) {
     return;
   }
@@ -422,7 +397,8 @@ void Initialize(Local<Object> target,
                 void* priv) {
   Realm* realm = Realm::GetCurrent(context);
   Environment* env = realm->env();
-  BindingData* const binding_data = realm->AddBindingData<BindingData>(target);
+  BindingData* const binding_data =
+      realm->AddBindingData<BindingData>(context, target);
   if (binding_data == nullptr) return;
 
   SetMethodNoSideEffect(

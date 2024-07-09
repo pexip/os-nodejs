@@ -248,7 +248,8 @@ MaybeLocal<Value> MakeCallback(Isolate* isolate,
                                Local<Value> argv[],
                                async_context asyncContext) {
   // Check can_call_into_js() first because calling Get() might do so.
-  Environment* env = Environment::GetCurrent(recv->GetCreationContextChecked());
+  Environment* env =
+      Environment::GetCurrent(recv->GetCreationContext().ToLocalChecked());
   CHECK_NOT_NULL(env);
   if (!env->can_call_into_js()) return Local<Value>();
 
@@ -278,7 +279,7 @@ MaybeLocal<Value> MakeCallback(Isolate* isolate,
   // Because of the AssignToContext() call in src/node_contextify.cc,
   // the two contexts need not be the same.
   Environment* env =
-      Environment::GetCurrent(callback->GetCreationContextChecked());
+      Environment::GetCurrent(callback->GetCreationContext().ToLocalChecked());
   CHECK_NOT_NULL(env);
   Context::Scope context_scope(env->context());
   MaybeLocal<Value> ret =
@@ -301,7 +302,7 @@ MaybeLocal<Value> MakeSyncCallback(Isolate* isolate,
                                    int argc,
                                    Local<Value> argv[]) {
   Environment* env =
-      Environment::GetCurrent(callback->GetCreationContextChecked());
+      Environment::GetCurrent(callback->GetCreationContext().ToLocalChecked());
   CHECK_NOT_NULL(env);
   if (!env->can_call_into_js()) return Local<Value>();
 

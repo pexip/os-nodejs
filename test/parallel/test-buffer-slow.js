@@ -52,8 +52,9 @@ assert.throws(() => SlowBuffer(true), bufferInvalidTypeMsg);
 
 // Should throw with invalid length value
 const bufferMaxSizeMsg = {
-  code: 'ERR_OUT_OF_RANGE',
+  code: 'ERR_INVALID_ARG_VALUE',
   name: 'RangeError',
+  message: /^The argument 'size' is invalid\. Received [^"]*$/
 };
 assert.throws(() => SlowBuffer(NaN), bufferMaxSizeMsg);
 assert.throws(() => SlowBuffer(Infinity), bufferMaxSizeMsg);

@@ -7,19 +7,20 @@
 require('../common');
 
 const assert = require('assert');
+const { spawnSync } = require('child_process');
 const tmpdir = require('../common/tmpdir');
 const fixtures = require('../common/fixtures');
-const { spawnSyncAndAssert, spawnSyncAndExitWithoutError } = require('../common/child_process');
+const path = require('path');
 const fs = require('fs');
 
 const warningScript = fixtures.path('snapshot', 'warning.js');
-const blobPath = tmpdir.resolve('snapshot.blob');
+const blobPath = path.join(tmpdir.path, 'snapshot.blob');
 const empty = fixtures.path('empty.js');
 
 tmpdir.refresh();
 {
   console.log('\n# Check snapshot scripts that do not emit warnings.');
-  spawnSyncAndExitWithoutError(process.execPath, [
+  let child = spawnSync(process.execPath, [
     '--snapshot-blob',
     blobPath,
     '--build-snapshot',
@@ -27,72 +28,84 @@ tmpdir.refresh();
   ], {
     cwd: tmpdir.path
   });
+  console.log('[stderr]:', child.stderr.toString());
+  console.log('[stdout]:', child.stdout.toString());
+  if (child.status !== 0) {
+    console.log(child.signal);
+    assert.strictEqual(child.status, 0);
+  }
   const stats = fs.statSync(blobPath);
   assert(stats.isFile());
 
-  spawnSyncAndAssert(process.execPath, [
+  child = spawnSync(process.execPath, [
     '--snapshot-blob',
     blobPath,
     warningScript,
   ], {
     cwd: tmpdir.path
-  }, {
-    stderr(output) {
-      const match = output.match(/Warning: test warning/g);
-      assert.strictEqual(match.length, 1);
-      return true;
-    }
   });
+  console.log('[stderr]:', child.stderr.toString());
+  console.log('[stdout]:', child.stdout.toString());
+  if (child.status !== 0) {
+    console.log(child.signal);
+    assert.strictEqual(child.status, 0);
+  }
+  const match = child.stderr.toString().match(/Warning: test warning/g);
+  assert.strictEqual(match.length, 1);
 }
 
 tmpdir.refresh();
 {
   console.log('\n# Check snapshot scripts that emit ' +
               'warnings and --trace-warnings hint.');
-  spawnSyncAndAssert(process.execPath, [
+  let child = spawnSync(process.execPath, [
     '--snapshot-blob',
     blobPath,
     '--build-snapshot',
     warningScript,
   ], {
     cwd: tmpdir.path
-  }, {
-    stderr(output) {
-      let match = output.match(/Warning: test warning/g);
-      assert.strictEqual(match.length, 1);
-      match = output.match(/Use `node --trace-warnings/g);
-      assert.strictEqual(match.length, 1);
-      return true;
-    }
   });
+  console.log('[stderr]:', child.stderr.toString());
+  console.log('[stdout]:', child.stdout.toString());
+  if (child.status !== 0) {
+    console.log(child.signal);
+    assert.strictEqual(child.status, 0);
+  }
   const stats = fs.statSync(blobPath);
   assert(stats.isFile());
+  let match = child.stderr.toString().match(/Warning: test warning/g);
+  assert.strictEqual(match.length, 1);
+  match = child.stderr.toString().match(/Use `node --trace-warnings/g);
+  assert.strictEqual(match.length, 1);
 
-  spawnSyncAndAssert(process.execPath, [
+  child = spawnSync(process.execPath, [
     '--snapshot-blob',
     blobPath,
     warningScript,
   ], {
     cwd: tmpdir.path
-  }, {
-    stderr(output) {
-      // Warnings should not be handled more than once.
-      let match = output.match(/Warning: test warning/g);
-      assert.strictEqual(match.length, 1);
-      match = output.match(/Use `node --trace-warnings/g);
-      assert.strictEqual(match.length, 1);
-      return true;
-    }
   });
+  console.log('[stderr]:', child.stderr.toString());
+  console.log('[stdout]:', child.stdout.toString());
+  if (child.status !== 0) {
+    console.log(child.signal);
+    assert.strictEqual(child.status, 0);
+  }
+  // Warnings should not be handled more than once.
+  match = child.stderr.toString().match(/Warning: test warning/g);
+  assert.strictEqual(match.length, 1);
+  match = child.stderr.toString().match(/Use `node --trace-warnings/g);
+  assert.strictEqual(match.length, 1);
 }
 
 tmpdir.refresh();
 {
   console.log('\n# Check --redirect-warnings');
-  const warningFile1 = tmpdir.resolve('warnings.txt');
-  const warningFile2 = tmpdir.resolve('warnings2.txt');
+  const warningFile1 = path.join(tmpdir.path, 'warnings.txt');
+  const warningFile2 = path.join(tmpdir.path, 'warnings2.txt');
 
-  spawnSyncAndAssert(process.execPath, [
+  let child = spawnSync(process.execPath, [
     '--snapshot-blob',
     blobPath,
     '--redirect-warnings',
@@ -101,26 +114,27 @@ tmpdir.refresh();
     warningScript,
   ], {
     cwd: tmpdir.path
-  }, {
-    stderr(output) {
-      assert.doesNotMatch(output, /Warning: test warning/);
-    }
   });
-
+  console.log('[stderr]:', child.stderr.toString());
+  console.log('[stdout]:', child.stdout.toString());
+  if (child.status !== 0) {
+    console.log(child.signal);
+    assert.strictEqual(child.status, 0);
+  }
   const stats = fs.statSync(blobPath);
   assert(stats.isFile());
-
   const warnings1 = fs.readFileSync(warningFile1, 'utf8');
   console.log(warningFile1, ':', warnings1);
   let match = warnings1.match(/Warning: test warning/g);
   assert.strictEqual(match.length, 1);
   match = warnings1.match(/Use `node --trace-warnings/g);
   assert.strictEqual(match.length, 1);
+  assert.doesNotMatch(child.stderr.toString(), /Warning: test warning/);
+
   fs.rmSync(warningFile1, {
     maxRetries: 3, recursive: false, force: true
   });
-
-  spawnSyncAndAssert(process.execPath, [
+  child = spawnSync(process.execPath, [
     '--snapshot-blob',
     blobPath,
     '--redirect-warnings',
@@ -128,12 +142,13 @@ tmpdir.refresh();
     warningScript,
   ], {
     cwd: tmpdir.path
-  }, {
-    stderr(output) {
-      assert.doesNotMatch(output, /Warning: test warning/);
-      return true;
-    }
   });
+  console.log('[stderr]:', child.stderr.toString());
+  console.log('[stdout]:', child.stdout.toString());
+  if (child.status !== 0) {
+    console.log(child.signal);
+    assert.strictEqual(child.status, 0);
+  }
   assert(!fs.existsSync(warningFile1));
 
   const warnings2 = fs.readFileSync(warningFile2, 'utf8');
@@ -142,4 +157,5 @@ tmpdir.refresh();
   assert.strictEqual(match.length, 1);
   match = warnings2.match(/Use `node --trace-warnings/g);
   assert.strictEqual(match.length, 1);
+  assert.doesNotMatch(child.stderr.toString(), /Warning: test warning/);
 }

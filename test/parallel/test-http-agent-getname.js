@@ -3,6 +3,7 @@
 require('../common');
 const assert = require('assert');
 const http = require('http');
+const path = require('path');
 
 const tmpdir = require('../common/tmpdir');
 
@@ -40,7 +41,7 @@ assert.strictEqual(
 );
 
 // unix socket
-const socketPath = tmpdir.resolve('foo', 'bar');
+const socketPath = path.join(tmpdir.path, 'foo', 'bar');
 assert.strictEqual(
   agent.getName({
     socketPath

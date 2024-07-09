@@ -10,16 +10,17 @@
 
 #include "include/libplatform/libplatform.h"
 #include "include/v8-initialization.h"
-#include "src/base/platform/elapsed-timer.h"
 #include "src/base/platform/platform.h"
 #include "src/base/platform/wrappers.h"
+#include "src/base/sanitizer/msan.h"
 #include "src/base/vector.h"
-#include "src/codegen/cpu-features.h"
-#include "src/common/globals.h"
+#include "src/codegen/assembler-arch.h"
+#include "src/codegen/source-position-table.h"
 #include "src/flags/flags.h"
+#include "src/snapshot/context-serializer.h"
 #include "src/snapshot/embedded/embedded-file-writer.h"
 #include "src/snapshot/snapshot.h"
-#include "src/snapshot/static-roots-gen.h"
+#include "src/snapshot/startup-serializer.h"
 
 namespace {
 
@@ -84,13 +85,7 @@ class SnapshotFileWriter {
   static void WriteSnapshotFileSuffix(FILE* fp) {
     fprintf(fp, "const v8::StartupData* Snapshot::DefaultSnapshotBlob() {\n");
     fprintf(fp, "  return &blob;\n");
-    fprintf(fp, "}\n");
-    fprintf(fp, "\n");
-    fprintf(
-        fp,
-        "bool Snapshot::ShouldVerifyChecksum(const v8::StartupData* data) {\n");
-    fprintf(fp, "  return true;\n");
-    fprintf(fp, "}\n");
+    fprintf(fp, "}\n\n");
     fprintf(fp, "}  // namespace internal\n");
     fprintf(fp, "}  // namespace v8\n");
   }
@@ -163,7 +158,7 @@ v8::StartupData CreateSnapshotDataBlob(v8::Isolate* isolate,
       v8::SnapshotCreator::FunctionCodeHandling::kClear, embedded_source,
       isolate);
 
-  if (i::v8_flags.profile_deserialization) {
+  if (i::FLAG_profile_deserialization) {
     i::PrintF("[Creating snapshot took %0.3f ms]\n",
               timer.Elapsed().InMillisecondsF());
   }
@@ -180,7 +175,7 @@ v8::StartupData WarmUpSnapshotDataBlob(v8::StartupData cold_snapshot_blob,
   v8::StartupData result =
       i::WarmUpSnapshotDataBlobInternal(cold_snapshot_blob, warmup_source);
 
-  if (i::v8_flags.profile_deserialization) {
+  if (i::FLAG_profile_deserialization) {
     i::PrintF("Warming up snapshot took %0.3f ms\n",
               timer.Elapsed().InMillisecondsF());
   }
@@ -206,7 +201,7 @@ void MaybeSetCounterFunction(v8::Isolate* isolate) {
   // distinguish between them. In theory it should be okay to just return an
   // incremented int value each time this function is called, but we play it
   // safe and return a real distinct memory location tied to every counter name.
-  if (i::v8_flags.native_code_counters) {
+  if (i::FLAG_native_code_counters) {
     counter_map_ = new CounterMap();
     isolate->SetCounterFunction([](const char* name) -> int* {
       auto map_entry = counter_map_->find(name);
@@ -224,7 +219,7 @@ int main(int argc, char** argv) {
   v8::base::EnsureConsoleOutput();
 
   // Make mksnapshot runs predictable to create reproducible snapshots.
-  i::v8_flags.predictable = true;
+  i::FLAG_predictable = true;
 
   // Print the usage if an error occurs when parsing the command line
   // flags or if the help flag is set.
@@ -232,7 +227,7 @@ int main(int argc, char** argv) {
   std::string usage = "Usage: " + std::string(argv[0]) +
                       " [--startup-src=file]" + " [--startup-blob=file]" +
                       " [--embedded-src=file]" + " [--embedded-variant=label]" +
-                      " [--static-roots-src=file]" + " [--target-arch=arch]" +
+                      " [--target-arch=arch]" +
                       " [--target-os=os] [extras]\n\n";
   int result = i::FlagList::SetFlagsFromCommandLine(
       &argc, argv, true, HelpOptions(HelpOptions::kExit, usage.c_str()));
@@ -245,18 +240,23 @@ int main(int argc, char** argv) {
   v8::V8::InitializeICUDefaultLocation(argv[0]);
   std::unique_ptr<v8::Platform> platform = v8::platform::NewDefaultPlatform();
   v8::V8::InitializePlatform(platform.get());
+#ifdef V8_SANDBOX
+  if (!v8::V8::InitializeSandbox()) {
+    FATAL("Could not initialize the sandbox");
+  }
+#endif
   v8::V8::Initialize();
 
   {
     SnapshotFileWriter snapshot_writer;
-    snapshot_writer.SetSnapshotFile(i::v8_flags.startup_src);
-    snapshot_writer.SetStartupBlobFile(i::v8_flags.startup_blob);
+    snapshot_writer.SetSnapshotFile(i::FLAG_startup_src);
+    snapshot_writer.SetStartupBlobFile(i::FLAG_startup_blob);
 
     i::EmbeddedFileWriter embedded_writer;
-    embedded_writer.SetEmbeddedFile(i::v8_flags.embedded_src);
-    embedded_writer.SetEmbeddedVariant(i::v8_flags.embedded_variant);
-    embedded_writer.SetTargetArch(i::v8_flags.target_arch);
-    embedded_writer.SetTargetOs(i::v8_flags.target_os);
+    embedded_writer.SetEmbeddedFile(i::FLAG_embedded_src);
+    embedded_writer.SetEmbeddedVariant(i::FLAG_embedded_variant);
+    embedded_writer.SetTargetArch(i::FLAG_target_arch);
+    embedded_writer.SetTargetOs(i::FLAG_target_os);
 
     std::unique_ptr<char> embed_script(
         GetExtraCode(argc >= 2 ? argv[1] : nullptr, "embedding"));
@@ -291,10 +291,6 @@ int main(int argc, char** argv) {
       // is still alive (we called DisableEmbeddedBlobRefcounting above).
       // That's fine as far as the embedded file writer is concerned.
       WriteEmbeddedFile(&embedded_writer);
-
-      if (i::v8_flags.static_roots_src) {
-        i::StaticRootsTableGen::write(i_isolate, i::v8_flags.static_roots_src);
-      }
     }
 
     if (warmup_script) {

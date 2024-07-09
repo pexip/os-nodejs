@@ -1,4 +1,4 @@
-// Copyright 2012 The Chromium Authors
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,10 +7,10 @@
 #include <algorithm>
 #include <utility>
 
+#include "base/bind.h"
 #include "base/check.h"
 #include "base/files/file.h"
 #include "base/files/file_util.h"
-#include "base/functional/bind.h"
 #include "base/i18n/icu_string_conversions.h"
 #include "base/logging.h"
 #include "base/numerics/safe_conversions.h"
@@ -18,7 +18,7 @@
 #include "base/strings/string_piece.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
-#include "base/task/sequenced_task_runner.h"
+#include "base/threading/sequenced_task_runner_handle.h"
 #include "build/build_config.h"
 #include "third_party/zlib/google/redact.h"
 #include "third_party/zlib/google/zip_internal.h"
@@ -237,12 +237,6 @@ bool ZipReader::OpenEntry() {
 
   // The file content of this entry is encrypted if flag bit 0 is set.
   entry_.is_encrypted = info.flag & 1;
-  if (entry_.is_encrypted) {
-    // Is the entry AES encrypted.
-    entry_.uses_aes_encryption = info.compression_method == 99;
-  } else {
-    entry_.uses_aes_encryption = false;
-  }
 
   // Construct the last modified time. The timezone info is not present in ZIP
   // archives, so we construct the time as UTC.
@@ -334,21 +328,7 @@ void ZipReader::Normalize(base::StringPiece16 in) {
   DCHECK(!entry_.path.IsAbsolute()) << entry_.path;
 }
 
-void ZipReader::ReportProgress(ListenerCallback listener_callback,
-                               uint64_t bytes) const {
-  delta_bytes_read_ += bytes;
-
-  const base::TimeTicks now = base::TimeTicks::Now();
-  if (next_progress_report_time_ > now)
-    return;
-
-  next_progress_report_time_ = now + progress_period_;
-  listener_callback.Run(delta_bytes_read_);
-  delta_bytes_read_ = 0;
-}
-
 bool ZipReader::ExtractCurrentEntry(WriterDelegate* delegate,
-                                    ListenerCallback listener_callback,
                                     uint64_t num_bytes_to_extract) const {
   DCHECK(zip_file_);
   DCHECK_LT(0, next_index_);
@@ -389,10 +369,6 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate* delegate,
       break;
     }
 
-    if (listener_callback) {
-      ReportProgress(listener_callback, num_bytes_read);
-    }
-
     DCHECK_LT(0, num_bytes_read);
     CHECK_LE(num_bytes_read, internal::kZipBufSize);
 
@@ -428,24 +404,7 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate* delegate,
     delegate->OnError();
   }
 
-  if (listener_callback) {
-    listener_callback.Run(delta_bytes_read_);
-    delta_bytes_read_ = 0;
-  }
-
   return entire_file_extracted;
-}
-
-bool ZipReader::ExtractCurrentEntry(WriterDelegate* delegate,
-                                    uint64_t num_bytes_to_extract) const {
-  return ExtractCurrentEntry(delegate, ListenerCallback(),
-                             num_bytes_to_extract);
-}
-
-bool ZipReader::ExtractCurrentEntryWithListener(
-    WriterDelegate* delegate,
-    ListenerCallback listener_callback) const {
-  return ExtractCurrentEntry(delegate, listener_callback);
 }
 
 void ZipReader::ExtractCurrentEntryToFilePathAsync(
@@ -461,11 +420,11 @@ void ZipReader::ExtractCurrentEntryToFilePathAsync(
   // If this is a directory, just create it and return.
   if (entry_.is_directory) {
     if (base::CreateDirectory(output_file_path)) {
-      base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+      base::SequencedTaskRunnerHandle::Get()->PostTask(
           FROM_HERE, std::move(success_callback));
     } else {
       LOG(ERROR) << "Cannot create directory " << Redact(output_file_path);
-      base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+      base::SequencedTaskRunnerHandle::Get()->PostTask(
           FROM_HERE, std::move(failure_callback));
     }
     return;
@@ -479,7 +438,7 @@ void ZipReader::ExtractCurrentEntryToFilePathAsync(
       err != UNZ_OK) {
     LOG(ERROR) << "Cannot open file " << Redact(entry_.path)
                << " from ZIP: " << err;
-    base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+    base::SequencedTaskRunnerHandle::Get()->PostTask(
         FROM_HERE, std::move(failure_callback));
     return;
   }
@@ -487,7 +446,7 @@ void ZipReader::ExtractCurrentEntryToFilePathAsync(
   base::FilePath output_dir_path = output_file_path.DirName();
   if (!base::CreateDirectory(output_dir_path)) {
     LOG(ERROR) << "Cannot create directory " << Redact(output_dir_path);
-    base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+    base::SequencedTaskRunnerHandle::Get()->PostTask(
         FROM_HERE, std::move(failure_callback));
     return;
   }
@@ -497,12 +456,12 @@ void ZipReader::ExtractCurrentEntryToFilePathAsync(
 
   if (!output_file.IsValid()) {
     LOG(ERROR) << "Cannot create file " << Redact(output_file_path);
-    base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+    base::SequencedTaskRunnerHandle::Get()->PostTask(
         FROM_HERE, std::move(failure_callback));
     return;
   }
 
-  base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+  base::SequencedTaskRunnerHandle::Get()->PostTask(
       FROM_HERE,
       base::BindOnce(&ZipReader::ExtractChunk, weak_ptr_factory_.GetWeakPtr(),
                      std::move(output_file), std::move(success_callback),
@@ -559,7 +518,6 @@ void ZipReader::Reset() {
   next_index_ = 0;
   reached_end_ = true;
   ok_ = false;
-  delta_bytes_read_ = 0;
   entry_ = {};
 }
 
@@ -602,7 +560,7 @@ void ZipReader::ExtractChunk(base::File output_file,
   offset += num_bytes_read;
   progress_callback.Run(offset);
 
-  base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+  base::SequencedTaskRunnerHandle::Get()->PostTask(
       FROM_HERE,
       base::BindOnce(&ZipReader::ExtractChunk, weak_ptr_factory_.GetWeakPtr(),
                      std::move(output_file), std::move(success_callback),

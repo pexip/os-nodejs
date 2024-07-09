@@ -45,12 +45,12 @@ const server = http.createServer(common.mustCall((req, res) => {
          `${req.method} was an unexpected method`);
 
   const requestHeaders = Object.keys(req.headers);
-  for (const header of requestHeaders) {
+  requestHeaders.forEach((header) => {
     assert.ok(
       expectedHeaders[req.method].includes(header.toLowerCase()),
       `${header} should not exist for method ${req.method}`
     );
-  }
+  });
 
   assert.strictEqual(
     requestHeaders.length,

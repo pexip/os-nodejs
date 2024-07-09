@@ -1,14 +1,17 @@
 'use strict';
 
 const common = require('../common.js');
-const { createHash } = require('crypto');
-const { subtle } = globalThis.crypto;
+const {
+  createHash,
+  webcrypto,
+} = require('crypto');
+const { subtle } = webcrypto;
 
 const bench = common.createBenchmark(main, {
   sync: ['createHash', 'subtle'],
   data: [10, 20, 50, 100],
   method: ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'],
-  n: [1e5],
+  n: [1e3],
 });
 
 const kMethods = {
@@ -45,7 +48,7 @@ function measureSubtle(n, data, method) {
 }
 
 function main({ n, sync, data, method }) {
-  data = globalThis.crypto.getRandomValues(Buffer.alloc(data));
+  data = webcrypto.getRandomValues(Buffer.alloc(data));
   switch (sync) {
     case 'createHash': return measureLegacy(n, data, method);
     case 'subtle': return measureSubtle(n, data, method);

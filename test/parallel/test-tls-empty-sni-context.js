@@ -26,8 +26,6 @@ const server = tls.createServer(options, (c) => {
   }, common.mustNotCall());
 
   c.on('error', common.mustCall((err) => {
-    const expectedErr = common.hasOpenSSL(3, 2) ?
-      'ERR_SSL_SSL/TLS_ALERT_HANDSHAKE_FAILURE' : 'ERR_SSL_SSLV3_ALERT_HANDSHAKE_FAILURE';
-    assert.strictEqual(err.code, expectedErr);
+    assert.strictEqual(err.code, 'ERR_SSL_SSLV3_ALERT_HANDSHAKE_FAILURE');
   }));
 }));

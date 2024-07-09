@@ -43,12 +43,9 @@ const dheCipher = 'DHE-RSA-AES128-SHA256';
 const ecdheCipher = 'ECDHE-RSA-AES128-SHA256';
 const ciphers = `${dheCipher}:${ecdheCipher}`;
 
-if (!common.hasOpenSSL(3, 2)) {
-  // Test will emit a warning because the DH parameter size is < 2048 bits
-  // when the test is run on versions lower than OpenSSL32
-  common.expectWarning('SecurityWarning',
-                       'DH parameter is less than 2048 bits');
-}
+// Test will emit a warning because the DH parameter size is < 2048 bits
+common.expectWarning('SecurityWarning',
+                     'DH parameter is less than 2048 bits');
 
 function loadDHParam(n) {
   const keyname = `dh${n}.pem`;
@@ -107,11 +104,7 @@ function testCustomParam(keylen, expectedCipher) {
   }, /DH parameter is less than 1024 bits/);
 
   // Custom DHE parameters are supported (but discouraged).
-  if (!common.hasOpenSSL(3, 2)) {
-    await testCustomParam(1024, dheCipher);
-  } else {
-    await testCustomParam(3072, dheCipher);
-  }
+  await testCustomParam(1024, dheCipher);
   await testCustomParam(2048, dheCipher);
 
   // Invalid DHE parameters are discarded. ECDHE remains enabled.

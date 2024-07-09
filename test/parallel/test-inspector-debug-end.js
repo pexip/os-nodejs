@@ -30,8 +30,6 @@ async function testSessionNoCrash() {
 
   const instance = new NodeInstance('--inspect-brk=0', script);
   const session = await instance.connectInspectorSession();
-  await session.send({ method: 'NodeRuntime.enable' });
-  await session.waitForNotification('NodeRuntime.waitingForDebugger');
   await session.send({ 'method': 'Runtime.runIfWaitingForDebugger' });
   await session.waitForServerDisconnect();
   strictEqual((await instance.expectShutdown()).exitCode, 42);

@@ -44,7 +44,6 @@
 //     - JSReceiver  (suitable for property access)
 //       - JSObject
 //         - JSArray
-//           - TemplateLiteralObject
 //         - JSArrayBuffer
 //         - JSArrayBufferView
 //           - JSTypedArray
@@ -87,7 +86,6 @@
 //         - JSCollator            // If V8_INTL_SUPPORT enabled.
 //         - JSDateTimeFormat      // If V8_INTL_SUPPORT enabled.
 //         - JSDisplayNames        // If V8_INTL_SUPPORT enabled.
-//         - JSDurationFormat      // If V8_INTL_SUPPORT enabled.
 //         - JSListFormat          // If V8_INTL_SUPPORT enabled.
 //         - JSLocale              // If V8_INTL_SUPPORT enabled.
 //         - JSNumberFormat        // If V8_INTL_SUPPORT enabled.
@@ -97,7 +95,6 @@
 //         - JSSegments            // If V8_INTL_SUPPORT enabled.
 //         - JSSegmentIterator     // If V8_INTL_SUPPORT enabled.
 //         - JSV8BreakIterator     // If V8_INTL_SUPPORT enabled.
-//         - WasmExceptionPackage
 //         - WasmTagObject
 //         - WasmGlobalObject
 //         - WasmInstanceObject
@@ -157,9 +154,8 @@
 //     - DescriptorArray
 //     - PropertyCell
 //     - PropertyArray
-//     - InstructionStream
+//     - Code
 //     - AbstractCode, a wrapper around Code or BytecodeArray
-//     - GcSafeCode, a wrapper around Code
 //     - Map
 //     - Foreign
 //     - SmallOrderedHashTable
@@ -183,6 +179,7 @@
 //       - DebugInfo
 //       - BreakPoint
 //       - BreakPointInfo
+//       - CachedTemplateObject
 //       - CallSiteInfo
 //       - CodeCache
 //       - PropertyDescriptorObject
@@ -221,10 +218,13 @@ class PropertyDescriptorObject;
 // UNSAFE_SKIP_WRITE_BARRIER skips the write barrier.
 // SKIP_WRITE_BARRIER skips the write barrier and asserts that this is safe in
 // the MemoryOptimizer
+// UPDATE_WEAK_WRITE_BARRIER skips the marking part of the write barrier and
+// only performs the generational part.
 // UPDATE_WRITE_BARRIER is doing the full barrier, marking and generational.
 enum WriteBarrierMode {
   SKIP_WRITE_BARRIER,
   UNSAFE_SKIP_WRITE_BARRIER,
+  UPDATE_WEAK_WRITE_BARRIER,
   UPDATE_EPHEMERON_KEY_WRITE_BARRIER,
   UPDATE_WRITE_BARRIER
 };
@@ -263,10 +263,10 @@ const int kStubMinorKeyBits = kSmiValueSize - kStubMajorKeyBits - 1;
 // Result of an abstract relational comparison of x and y, implemented according
 // to ES6 section 7.2.11 Abstract Relational Comparison.
 enum class ComparisonResult {
-  kLessThan = -1,    // x < y
-  kEqual = 0,        // x = y
-  kGreaterThan = 1,  // x > y
-  kUndefined = 2     // at least one of x or y was undefined or NaN
+  kLessThan,     // x < y
+  kEqual,        // x = y
+  kGreaterThan,  // x > y
+  kUndefined     // at least one of x or y was undefined or NaN
 };
 
 // (Returns false whenever {result} is kUndefined.)
@@ -308,7 +308,7 @@ class Object : public TaggedImpl<HeapObjectReferenceType::STRONG, Address> {
   // writable shared heap.
   V8_INLINE bool InSharedHeap() const;
 
-  V8_INLINE bool InWritableSharedSpace() const;
+  V8_INLINE bool InSharedWritableHeap() const;
 
 #define IS_TYPE_FUNCTION_DECL(Type) \
   V8_INLINE bool Is##Type() const;  \
@@ -317,31 +317,25 @@ class Object : public TaggedImpl<HeapObjectReferenceType::STRONG, Address> {
   HEAP_OBJECT_TYPE_LIST(IS_TYPE_FUNCTION_DECL)
   IS_TYPE_FUNCTION_DECL(HashTableBase)
   IS_TYPE_FUNCTION_DECL(SmallOrderedHashTable)
+  IS_TYPE_FUNCTION_DECL(CodeT)
 #undef IS_TYPE_FUNCTION_DECL
   V8_INLINE bool IsNumber(ReadOnlyRoots roots) const;
 
 // Oddball checks are faster when they are raw pointer comparisons, so the
 // isolate/read-only roots overloads should be preferred where possible.
-#define IS_TYPE_FUNCTION_DECL(Type, Value, _)           \
+#define IS_TYPE_FUNCTION_DECL(Type, Value)              \
   V8_INLINE bool Is##Type(Isolate* isolate) const;      \
   V8_INLINE bool Is##Type(LocalIsolate* isolate) const; \
   V8_INLINE bool Is##Type(ReadOnlyRoots roots) const;   \
   V8_INLINE bool Is##Type() const;
   ODDBALL_LIST(IS_TYPE_FUNCTION_DECL)
-  IS_TYPE_FUNCTION_DECL(NullOrUndefined, , /* unused */)
+  IS_TYPE_FUNCTION_DECL(NullOrUndefined, /* unused */)
 #undef IS_TYPE_FUNCTION_DECL
 
   V8_INLINE bool IsZero() const;
   V8_INLINE bool IsNoSharedNameSentinel() const;
   V8_INLINE bool IsPrivateSymbol() const;
   V8_INLINE bool IsPublicSymbol() const;
-
-#if !V8_ENABLE_WEBASSEMBLY
-  // Dummy implementation on builds without WebAssembly.
-  bool IsWasmObject(Isolate* = nullptr) const { return false; }
-#endif
-
-  V8_INLINE bool IsJSObjectThatCanBeTrackedAsPrototype() const;
 
   enum class Conversion { kToNumber, kToNumeric };
 
@@ -390,8 +384,7 @@ class Object : public TaggedImpl<HeapObjectReferenceType::STRONG, Address> {
   inline bool HasValidElements();
 
   // ECMA-262 9.2.
-  template <typename IsolateT>
-  V8_EXPORT_PRIVATE bool BooleanValue(IsolateT* isolate);
+  V8_EXPORT_PRIVATE bool BooleanValue(Isolate* isolate);
   Object ToBoolean(Isolate* isolate);
 
   // ES6 section 7.2.11 Abstract Relational Comparison
@@ -555,7 +548,7 @@ class Object : public TaggedImpl<HeapObjectReferenceType::STRONG, Address> {
       Maybe<ShouldThrow> should_throw);
   V8_WARN_UNUSED_RESULT static Maybe<bool> SetDataProperty(
       LookupIterator* it, Handle<Object> value);
-  V8_EXPORT_PRIVATE V8_WARN_UNUSED_RESULT static Maybe<bool> AddDataProperty(
+  V8_WARN_UNUSED_RESULT static Maybe<bool> AddDataProperty(
       LookupIterator* it, Handle<Object> value, PropertyAttributes attributes,
       Maybe<ShouldThrow> should_throw, StoreOrigin store_origin,
       EnforceDefineSemantics semantics = EnforceDefineSemantics::kSet);
@@ -647,19 +640,15 @@ class Object : public TaggedImpl<HeapObjectReferenceType::STRONG, Address> {
   EXPORT_DECL_VERIFIER(Object)
 
 #ifdef VERIFY_HEAP
-  // Verify a pointer is a valid (non-InstructionStream) object pointer.
-  // When V8_EXTERNAL_CODE_SPACE is enabled InstructionStream objects are not
-  // allowed.
+  // Verify a pointer is a valid (non-Code) object pointer.
+  // When V8_EXTERNAL_CODE_SPACE is enabled Code objects are not allowed.
   static void VerifyPointer(Isolate* isolate, Object p);
   // Verify a pointer is a valid object pointer.
-  // InstructionStream objects are allowed regardless of the
-  // V8_EXTERNAL_CODE_SPACE mode.
+  // Code objects are allowed regardless of the V8_EXTERNAL_CODE_SPACE mode.
   static void VerifyAnyTagged(Isolate* isolate, Object p);
 #endif
 
-#ifdef DEBUG
-  inline bool IsApiCallResultType() const;
-#endif  // DEBUG
+  inline void VerifyApiCallResultType();
 
   // Prints this object without details.
   V8_EXPORT_PRIVATE void ShortPrint(FILE* out = stdout) const;
@@ -690,14 +679,6 @@ class Object : public TaggedImpl<HeapObjectReferenceType::STRONG, Address> {
   struct Hasher {
     size_t operator()(const Object o) const {
       return std::hash<v8::internal::Address>{}(static_cast<Tagged_t>(o.ptr()));
-    }
-  };
-
-  // For use with std::unordered_set/unordered_map when using both
-  // InstructionStream and non-InstructionStream objects as keys.
-  struct KeyEqualSafe {
-    bool operator()(const Object a, const Object b) const {
-      return a.SafeEquals(b);
     }
   };
 
@@ -750,23 +731,16 @@ class Object : public TaggedImpl<HeapObjectReferenceType::STRONG, Address> {
                                          Address value);
 
   //
-  // BoundedSize field accessors.
-  //
-  inline size_t ReadBoundedSizeField(size_t offset) const;
-  inline void WriteBoundedSizeField(size_t offset, size_t value);
-
-  //
   // ExternalPointer_t field accessors.
   //
-  template <ExternalPointerTag tag>
   inline void InitExternalPointerField(size_t offset, Isolate* isolate,
-                                       Address value);
-  template <ExternalPointerTag tag>
-  inline Address ReadExternalPointerField(size_t offset,
-                                          Isolate* isolate) const;
-  template <ExternalPointerTag tag>
+                                       ExternalPointerTag tag);
+  inline void InitExternalPointerField(size_t offset, Isolate* isolate,
+                                       Address value, ExternalPointerTag tag);
+  inline Address ReadExternalPointerField(size_t offset, Isolate* isolate,
+                                          ExternalPointerTag tag) const;
   inline void WriteExternalPointerField(size_t offset, Isolate* isolate,
-                                        Address value);
+                                        Address value, ExternalPointerTag tag);
 
   // If the receiver is the JSGlobalObject, the store was contextual. In case
   // the property did not exist yet on the global object itself, we have to
@@ -784,7 +758,6 @@ class Object : public TaggedImpl<HeapObjectReferenceType::STRONG, Address> {
   // - HeapNumbers in the shared old space
   // - Strings for which String::IsShared() is true
   // - JSSharedStructs
-  // - JSSharedArrays
   inline bool IsShared() const;
 
   // Returns an equivalent value that's safe to share across Isolates if
@@ -875,16 +848,6 @@ V8_INLINE static bool HasWeakHeapObjectTag(const Object value) {
 // during GC other data (e.g. mark bits, forwarding addresses) is sometimes
 // encoded in the first word.  The class MapWord is an abstraction of the
 // value in a heap object's first word.
-//
-// When external code space is enabled forwarding pointers are encoded as
-// Smi values representing a diff from the source or map word host object
-// address in kObjectAlignment chunks. Such a representation has the following
-// properties:
-// a) it can hold both positive an negative diffs for full pointer compression
-//    cage size (HeapObject address has only valuable 30 bits while Smis have
-//    31 bits),
-// b) it's independent of the pointer compression base and pointer compression
-//    scheme.
 class MapWord {
  public:
   // Normal state: the map word contains a map pointer.
@@ -904,23 +867,18 @@ class MapWord {
   inline bool IsForwardingAddress() const;
 
   // Create a map word from a forwarding address.
-  static inline MapWord FromForwardingAddress(HeapObject map_word_host,
-                                              HeapObject object);
+  static inline MapWord FromForwardingAddress(HeapObject object);
 
-  // View this map word as a forwarding address.
-  inline HeapObject ToForwardingAddress(HeapObject map_word_host);
+  // View this map word as a forwarding address. The parameterless version
+  // is allowed to be used for objects allocated in the main pointer compression
+  // cage, while the second variant uses the value of the cage base explicitly
+  // and thus can be used in situations where one has to deal with both cases.
+  // Note, that the parameterless version is preferred because it avoids
+  // unnecessary recompressions.
+  inline HeapObject ToForwardingAddress();
+  inline HeapObject ToForwardingAddress(PtrComprCageBase host_cage_base);
 
-  constexpr inline Address ptr() const { return value_; }
-
-  // When pointer compression is enabled, MapWord is uniquely identified by
-  // the lower 32 bits. On the other hand full-value comparison is not correct
-  // because map word in a forwarding state might have corrupted upper part.
-  constexpr bool operator==(MapWord other) const {
-    return static_cast<Tagged_t>(ptr()) == static_cast<Tagged_t>(other.ptr());
-  }
-  constexpr bool operator!=(MapWord other) const {
-    return static_cast<Tagged_t>(ptr()) != static_cast<Tagged_t>(other.ptr());
-  }
+  inline Address ptr() { return value_; }
 
 #ifdef V8_MAP_PACKING
   static constexpr Address Pack(Address map) {
@@ -942,10 +900,10 @@ class MapWord {
  private:
   // HeapObject calls the private constructor and directly reads the value.
   friend class HeapObject;
-  template <typename TFieldType, int kFieldOffset, typename CompressionScheme>
+  template <typename TFieldType, int kFieldOffset>
   friend class TaggedField;
 
-  explicit constexpr MapWord(Address value) : value_(value) {}
+  explicit MapWord(Address value) : value_(value) {}
 
   Address value_;
 };
@@ -1008,40 +966,6 @@ class BooleanBit : public AllStatic {
       value &= ~(1 << bit_position);
     }
     return value;
-  }
-};
-
-// This is an RAII helper class to emit a store-store memory barrier when
-// publishing objects allocated in the shared heap.
-//
-// This helper must be used in every Factory method that allocates a shared
-// JSObject visible user JS code. This is also used in Object::ShareSlow when
-// publishing newly shared JS primitives.
-//
-// While there is no default ordering guarantee for shared JS objects
-// (e.g. without the use of Atomics methods or postMessage, data races on
-// fields are observable), the internal VM state of a JS object must be safe
-// for publishing so that other threads do not crash.
-//
-// This barrier does not provide synchronization for publishing JS shared
-// objects. It only ensures the weaker "do not crash the VM" guarantee.
-//
-// In particular, note that memory barriers are invisible to TSAN. When
-// concurrent marking is active, field accesses are performed with relaxed
-// atomics, and TSAN is unable to detect data races in shared JS objects. When
-// concurrent marking is inactive, unordered publishes of shared JS objects in
-// JS code are reported as data race warnings by TSAN.
-class V8_NODISCARD SharedObjectSafePublishGuard final {
- public:
-  ~SharedObjectSafePublishGuard() {
-    // A release fence is used to prevent store-store reorderings of stores to
-    // VM-internal state of shared objects past any subsequent stores (i.e. the
-    // publish).
-    //
-    // On the loading side, we rely on neither the compiler nor the CPU
-    // reordering loads that are dependent on observing the address of the
-    // published shared object, like fields of the shared object.
-    std::atomic_thread_fence(std::memory_order_release);
   }
 };
 

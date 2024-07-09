@@ -3,6 +3,7 @@ const common = require('../common');
 const assert = require('assert');
 const cp = require('child_process');
 const fs = require('fs');
+const path = require('path');
 const tmpdir = require('../common/tmpdir');
 
 const names = [
@@ -26,16 +27,16 @@ if (process.argv[2] === 'child') {
                        });
 
   proc.once('exit', common.mustCall(() => {
-    const file = tmpdir.resolve('node_trace.1.log');
+    const file = path.join(tmpdir.path, 'node_trace.1.log');
 
     assert(fs.existsSync(file));
     fs.readFile(file, common.mustCall((err, data) => {
       const traces = JSON.parse(data.toString()).traceEvents
         .filter((trace) => trace.cat !== '__metadata');
-      for (const trace of traces) {
+      traces.forEach((trace) => {
         assert.strictEqual(trace.pid, proc.pid);
         assert(names.includes(trace.name));
-      }
+      });
     }));
   }));
 }

@@ -50,7 +50,7 @@ function createTimingInfo({
 }
 
 const bench = common.createBenchmark(main, {
-  n: [1e6],
+  n: [1e5],
   observe: ['resource'],
 });
 
@@ -72,6 +72,6 @@ function main({ n, observe }) {
   obs.observe({ entryTypes: [observe], buffered: true });
 
   bench.start();
-  for (let i = 0; i < n; i++)
+  for (let i = 0; i < 1e5; i++)
     test();
 }

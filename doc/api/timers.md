@@ -66,7 +66,7 @@ invoked. Calling `immediate.unref()` multiple times will have no effect.
 ### `immediate[Symbol.dispose]()`
 
 <!-- YAML
-added: v20.5.0
+added: v18.18.0
 -->
 
 > Stability: 1 - Experimental
@@ -170,7 +170,7 @@ thread. This allows enhanced compatibility with browser
 ### `timeout[Symbol.dispose]()`
 
 <!-- YAML
-added: v20.5.0
+added: v18.18.0
 -->
 
 > Stability: 1 - Experimental
@@ -288,24 +288,7 @@ returned Promises will be rejected with an `'AbortError'`.
 
 For `setImmediate()`:
 
-```mjs
-import { setImmediate as setImmediatePromise } from 'node:timers/promises';
-
-const ac = new AbortController();
-const signal = ac.signal;
-
-// We do not `await` the promise so `ac.abort()` is called concurrently.
-setImmediatePromise('foobar', { signal })
-  .then(console.log)
-  .catch((err) => {
-    if (err.name === 'AbortError')
-      console.error('The immediate was aborted');
-  });
-
-ac.abort();
-```
-
-```cjs
+```js
 const { setImmediate: setImmediatePromise } = require('node:timers/promises');
 
 const ac = new AbortController();
@@ -323,24 +306,7 @@ ac.abort();
 
 For `setTimeout()`:
 
-```mjs
-import { setTimeout as setTimeoutPromise } from 'node:timers/promises';
-
-const ac = new AbortController();
-const signal = ac.signal;
-
-// We do not `await` the promise so `ac.abort()` is called concurrently.
-setTimeoutPromise(1000, 'foobar', { signal })
-  .then(console.log)
-  .catch((err) => {
-    if (err.name === 'AbortError')
-      console.error('The timeout was aborted');
-  });
-
-ac.abort();
-```
-
-```cjs
+```js
 const { setTimeout: setTimeoutPromise } = require('node:timers/promises');
 
 const ac = new AbortController();
@@ -408,7 +374,7 @@ import {
   setTimeout,
   setImmediate,
   setInterval,
-} from 'node:timers/promises';
+} from 'timers/promises';
 ```
 
 ```cjs
@@ -438,7 +404,7 @@ added: v15.0.0
 ```mjs
 import {
   setTimeout,
-} from 'node:timers/promises';
+} from 'timers/promises';
 
 const res = await setTimeout(100, 'result');
 
@@ -472,7 +438,7 @@ added: v15.0.0
 ```mjs
 import {
   setImmediate,
-} from 'node:timers/promises';
+} from 'timers/promises';
 
 const res = await setImmediate('result');
 
@@ -513,7 +479,7 @@ or implicitly to keep the event loop alive.
 ```mjs
 import {
   setInterval,
-} from 'node:timers/promises';
+} from 'timers/promises';
 
 const interval = 100;
 for await (const startTime of setInterval(interval, Date.now())) {
@@ -555,9 +521,6 @@ added:
 * `delay` {number} The number of milliseconds to wait before resolving the
   promise.
 * `options` {Object}
-  * `ref` {boolean} Set to `false` to indicate that the scheduled `Timeout`
-    should not require the Node.js event loop to remain active.
-    **Default:** `true`.
   * `signal` {AbortSignal} An optional `AbortSignal` that can be used to
     cancel waiting.
 * Returns: {Promise}
@@ -565,8 +528,9 @@ added:
 An experimental API defined by the [Scheduling APIs][] draft specification
 being developed as a standard Web Platform API.
 
-Calling `timersPromises.scheduler.wait(delay, options)` is equivalent
-to calling `timersPromises.setTimeout(delay, undefined, options)`.
+Calling `timersPromises.scheduler.wait(delay, options)` is roughly equivalent
+to calling `timersPromises.setTimeout(delay, undefined, options)` except that
+the `ref` option is not supported.
 
 ```mjs
 import { scheduler } from 'node:timers/promises';

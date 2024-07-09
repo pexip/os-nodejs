@@ -19,7 +19,7 @@ fs.readdirSync(apilinks).forEach((fixture) => {
   const input = path.join(apilinks, fixture);
 
   const expectedContent = fs.readFileSync(`${input}on`, 'utf8');
-  const outputPath = tmpdir.resolve(`${fixture}on`);
+  const outputPath = path.join(tmpdir.path, `${fixture}on`);
   execFileSync(
     process.execPath,
     [script, outputPath, input],

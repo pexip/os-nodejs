@@ -8,18 +8,17 @@
 #include "src/base/macros.h"
 #include "src/base/sanitizer/asan.h"
 #include "src/heap/cppgc/gc-info-table.h"
-#include "src/heap/cppgc/heap-base.h"
 #include "src/heap/cppgc/heap-page.h"
 
 namespace cppgc {
 namespace internal {
 
-static_assert((kAllocationGranularity % sizeof(HeapObjectHeader)) == 0);
+STATIC_ASSERT((kAllocationGranularity % sizeof(HeapObjectHeader)) == 0);
 
 void HeapObjectHeader::CheckApiConstants() {
-  static_assert(api_constants::kFullyConstructedBitMask ==
+  STATIC_ASSERT(api_constants::kFullyConstructedBitMask ==
                 FullyConstructedField::kMask);
-  static_assert(api_constants::kFullyConstructedBitFieldOffsetFromPayload ==
+  STATIC_ASSERT(api_constants::kFullyConstructedBitFieldOffsetFromPayload ==
                 (sizeof(encoded_high_) + sizeof(encoded_low_)));
 }
 
@@ -39,9 +38,7 @@ void HeapObjectHeader::Finalize() {
 
 HeapObjectName HeapObjectHeader::GetName() const {
   const GCInfo& gc_info = GlobalGCInfoTable::GCInfoFromIndex(GetGCInfoIndex());
-  return gc_info.name(
-      ObjectStart(),
-      BasePage::FromPayload(this)->heap().name_of_unnamed_object());
+  return gc_info.name(ObjectStart());
 }
 
 }  // namespace internal

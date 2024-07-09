@@ -2,7 +2,7 @@
 const common = require('../common');
 const assert = require('assert');
 const http = require('http');
-const { duplexPair } = require('stream');
+const MakeDuplexPair = require('../common/duplexpair');
 
 // Test 1: Simple HTTP test, no keep-alive.
 {
@@ -13,7 +13,7 @@ const { duplexPair } = require('stream');
     res.end(testData);
   }));
 
-  const [ clientSide, serverSide ] = duplexPair();
+  const { clientSide, serverSide } = MakeDuplexPair();
   server.emit('connection', serverSide);
 
   const req = http.request({
@@ -37,7 +37,7 @@ const { duplexPair } = require('stream');
     res.end(testData);
   }, 2));
 
-  const [ clientSide, serverSide ] = duplexPair();
+  const { clientSide, serverSide } = MakeDuplexPair();
   server.emit('connection', serverSide);
 
   function doRequest(cb) {
@@ -77,7 +77,7 @@ const { duplexPair } = require('stream');
     });
   }));
 
-  const [ clientSide, serverSide ] = duplexPair();
+  const { clientSide, serverSide } = MakeDuplexPair();
   server.emit('connection', serverSide);
   clientSide.on('end', common.mustCall());
   serverSide.on('end', common.mustCall());
@@ -117,7 +117,7 @@ const { duplexPair } = require('stream');
 
   }));
 
-  const [ clientSide, serverSide ] = duplexPair();
+  const { clientSide, serverSide } = MakeDuplexPair();
   server.emit('connection', serverSide);
   clientSide.on('end', common.mustCall());
   serverSide.on('end', common.mustCall());
@@ -143,7 +143,7 @@ const { duplexPair } = require('stream');
 {
   const server = http.createServer(common.mustNotCall());
 
-  const [ clientSide, serverSide ] = duplexPair();
+  const { clientSide, serverSide } = MakeDuplexPair();
   server.emit('connection', serverSide);
 
   server.on('clientError', common.mustCall());

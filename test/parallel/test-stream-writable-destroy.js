@@ -487,15 +487,3 @@ const assert = require('assert');
   }));
   s.destroy(_err);
 }
-
-{
-  const write = new Writable({
-    write(chunk, enc, cb) { cb(); }
-  });
-
-  write.on('error', common.mustCall((e) => {
-    assert.strictEqual(e.name, 'AbortError');
-    assert.strictEqual(write.destroyed, true);
-  }));
-  write[Symbol.asyncDispose]().then(common.mustCall());
-}

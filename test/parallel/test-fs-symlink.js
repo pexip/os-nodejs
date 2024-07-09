@@ -26,6 +26,7 @@ if (!common.canCreateSymLink())
   common.skip('insufficient privileges');
 
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 
 let linkTime;
@@ -36,7 +37,7 @@ tmpdir.refresh();
 
 // Test creating and reading symbolic link
 const linkData = fixtures.path('/cycles/root.js');
-const linkPath = tmpdir.resolve('symlink1.js');
+const linkPath = path.join(tmpdir.path, 'symlink1.js');
 
 fs.symlink(linkData, linkPath, common.mustSucceed(() => {
   fs.lstat(linkPath, common.mustSucceed((stats) => {
@@ -55,7 +56,7 @@ fs.symlink(linkData, linkPath, common.mustSucceed(() => {
 // Test invalid symlink
 {
   const linkData = fixtures.path('/not/exists/file');
-  const linkPath = tmpdir.resolve('symlink2.js');
+  const linkPath = path.join(tmpdir.path, 'symlink2.js');
 
   fs.symlink(linkData, linkPath, common.mustSucceed(() => {
     assert(!fs.existsSync(linkPath));

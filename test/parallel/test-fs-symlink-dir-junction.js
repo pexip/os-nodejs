@@ -23,13 +23,14 @@
 const common = require('../common');
 const fixtures = require('../common/fixtures');
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 
 const tmpdir = require('../common/tmpdir');
 
 // Test creating and reading symbolic link
 const linkData = fixtures.path('cycles/');
-const linkPath = tmpdir.resolve('cycles_link');
+const linkPath = path.join(tmpdir.path, 'cycles_link');
 
 tmpdir.refresh();
 
@@ -51,7 +52,7 @@ fs.symlink(linkData, linkPath, 'junction', common.mustSucceed(() => {
 // Test invalid symlink
 {
   const linkData = fixtures.path('/not/exists/dir');
-  const linkPath = tmpdir.resolve('invalid_junction_link');
+  const linkPath = path.join(tmpdir.path, 'invalid_junction_link');
 
   fs.symlink(linkData, linkPath, 'junction', common.mustSucceed(() => {
     assert(!fs.existsSync(linkPath));

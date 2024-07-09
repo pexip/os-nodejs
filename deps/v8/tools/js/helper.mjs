@@ -23,21 +23,16 @@ export function formatMicroSeconds(micro) {
   return (micro * kMicro2Milli).toFixed(1) + 'ms';
 }
 
-export function formatDurationMicros(micros, digits = 3) {
-  return formatDurationMillis(micros * kMicro2Milli, digits);
+export function formatDurationMicros(micros, secondsDigits = 3) {
+  return formatDurationMillis(micros * kMicro2Milli, secondsDigits);
 }
 
-export function formatMillis(millis, digits = 3) {
-  return formatDurationMillis(millis, digits);
-}
-
-export function formatDurationMillis(millis, digits = 3) {
+export function formatDurationMillis(millis, secondsDigits = 3) {
   if (millis < 1000) {
     if (millis < 1) {
-      if (millis == 0) return (0).toFixed(digits) + 's';
-      return (millis / kMicro2Milli).toFixed(digits) + 'ns';
+      return (millis / kMicro2Milli).toFixed(1) + 'ns';
     }
-    return millis.toFixed(digits) + 'ms';
+    return millis.toFixed(2) + 'ms';
   }
   let seconds = millis / 1000;
   const hours = Math.floor(seconds / 3600);
@@ -46,7 +41,7 @@ export function formatDurationMillis(millis, digits = 3) {
   let buffer = '';
   if (hours > 0) buffer += hours + 'h ';
   if (hours > 0 || minutes > 0) buffer += minutes + 'm ';
-  buffer += seconds.toFixed(digits) + 's';
+  buffer += seconds.toFixed(secondsDigits) + 's';
   return buffer;
 }
 
@@ -70,13 +65,4 @@ export function defer() {
   p.resolve = resolve_func;
   p.reject = reject_func;
   return p;
-}
-
-const kSimpleHtmlEscapeRegexp = /[\&\n><]/g;
-function escaperFn(char) {
-  return `&#${char.charCodeAt(0)};`;
-}
-
-export function simpleHtmlEscape(string) {
-  return string.replace(kSimpleHtmlEscapeRegexp, escaperFn);
 }

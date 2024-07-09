@@ -60,7 +60,6 @@ class V8_EXPORT_PRIVATE LookupIterator final {
     INTEGER_INDEXED_EXOTIC,
     INTERCEPTOR,
     JSPROXY,
-    WASM_OBJECT,
     NOT_FOUND,
     ACCESSOR,
     DATA,
@@ -115,8 +114,6 @@ class V8_EXPORT_PRIVATE LookupIterator final {
   // element for the given object (up to kMaxArrayIndex for JSArrays,
   // any integer for JSTypedArrays).
   inline bool IsElement(JSReceiver object) const;
-
-  inline bool IsPrivateName() const;
 
   bool IsFound() const { return state_ != NOT_FOUND; }
   void Next();
@@ -198,6 +195,13 @@ class V8_EXPORT_PRIVATE LookupIterator final {
   static inline void UpdateProtector(Isolate* isolate, Handle<Object> receiver,
                                      Handle<Name> name);
 
+#if V8_ENABLE_WEBASSEMBLY
+  // Fetches type of WasmStruct's field or WasmArray's elements, it
+  // is used for preparing the value for storing into WasmObjects.
+  wasm::ValueType wasm_value_type() const;
+  void WriteDataValueToWasmObject(Handle<Object> value);
+#endif  // V8_ENABLE_WEBASSEMBLY
+
   // Lookup a 'cached' private property for an accessor.
   // If not found returns false and leaves the LookupIterator unmodified.
   bool TryLookupCachedProperty(Handle<AccessorPair> accessor);
@@ -257,8 +261,8 @@ class V8_EXPORT_PRIVATE LookupIterator final {
   void RestartInternal(InterceptorState interceptor_state);
   Handle<Object> FetchValue(AllocationPolicy allocation_policy =
                                 AllocationPolicy::kAllocationAllowed) const;
-  bool CanStayConst(Object value) const;
-  bool DictCanStayConst(Object value) const;
+  bool IsConstFieldValueEqualTo(Object value) const;
+  bool IsConstDictValueEqualTo(Object value) const;
 
   template <bool is_element>
   void ReloadPropertyInformation();

@@ -7,6 +7,7 @@
 
 #include "src/snapshot/deserializer.h"
 #include "src/snapshot/snapshot-data.h"
+#include "src/snapshot/snapshot.h"
 
 namespace v8 {
 namespace internal {

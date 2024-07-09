@@ -27,6 +27,7 @@ const tmpdir = require('../common/tmpdir');
 const assert = require('assert');
 const { execFile } = require('child_process');
 const { writeFileSync, existsSync } = require('fs');
+const { join } = require('path');
 
 // Test for leaked global detection
 {
@@ -133,7 +134,7 @@ const HIJACK_TEST_ARRAY = [ 'foo\n', 'bar\n', 'baz\n' ];
 {
   tmpdir.refresh();
   assert.match(tmpdir.path, /\.tmp\.\d+/);
-  const sentinelPath = tmpdir.resolve('gaga');
+  const sentinelPath = join(tmpdir.path, 'gaga');
   writeFileSync(sentinelPath, 'googoo');
   tmpdir.refresh();
   assert.strictEqual(existsSync(tmpdir.path), true);

@@ -6,10 +6,11 @@ const common = require('../common');
 const tmpdir = require('../common/tmpdir');
 const fs = require('fs');
 const assert = require('assert');
+const path = require('path');
 
 tmpdir.refresh();
 
-const file = tmpdir.resolve('read_stream_pos_test.txt');
+const file = path.join(tmpdir.path, '/read_stream_pos_test.txt');
 
 fs.writeFileSync(file, '');
 

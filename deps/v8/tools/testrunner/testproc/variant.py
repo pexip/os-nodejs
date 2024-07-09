@@ -3,6 +3,8 @@
 # found in the LICENSE file.
 
 from . import base
+from ..local.variants import ALL_VARIANTS, ALL_VARIANT_FLAGS
+from .result import GroupedResult
 
 
 STANDARD_VARIANT = set(["default"])
@@ -23,13 +25,16 @@ class VariantProc(base.TestProcProducer):
 
   def __init__(self, variants):
     super(VariantProc, self).__init__('VariantProc')
-    self._requirement = base.DROP_RESULT
     self._next_variant = {}
     self._variant_gens = {}
     self._variants = variants
 
-  def test_suffix(self, test):
-    return test.variant
+  def setup(self, requirement=base.DROP_RESULT):
+    super(VariantProc, self).setup(requirement)
+
+    # VariantProc is optimized for dropping the result and it should be placed
+    # in the chain where it's possible.
+    assert requirement == base.DROP_RESULT
 
   def _next_test(self, test):
     gen = self._variants_gen(test)
@@ -46,8 +51,8 @@ class VariantProc(base.TestProcProducer):
 
   def _try_send_new_subtest(self, test, variants_gen):
     for variant, flags, suffix in variants_gen:
-      subtest = test.create_subtest(
-          self, '%s-%s' % (variant, suffix), variant=variant, flags=flags)
+      subtest = self._create_subtest(test, '%s-%s' % (variant, suffix),
+                                     variant=variant, flags=flags)
       if self._send_test(subtest):
         return True
 

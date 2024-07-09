@@ -13,7 +13,6 @@ namespace v8 {
 namespace internal {
 
 class PersistentHandles;
-class BackgroundMergeTask;
 
 class V8_EXPORT_PRIVATE AlignedCachedData {
  public:
@@ -63,10 +62,6 @@ enum class SerializedCodeSanityCheckResult {
 class CodeSerializer : public Serializer {
  public:
   struct OffThreadDeserializeData {
-   public:
-    bool HasResult() const { return !maybe_result.is_null(); }
-    Handle<Script> GetOnlyScript(LocalHeap* heap);
-
    private:
     friend class CodeSerializer;
     MaybeHandle<SharedFunctionInfo> maybe_result;
@@ -78,26 +73,24 @@ class CodeSerializer : public Serializer {
   CodeSerializer(const CodeSerializer&) = delete;
   CodeSerializer& operator=(const CodeSerializer&) = delete;
   V8_EXPORT_PRIVATE static ScriptCompiler::CachedData* Serialize(
-      Isolate* isolate, Handle<SharedFunctionInfo> info);
+      Handle<SharedFunctionInfo> info);
 
   AlignedCachedData* SerializeSharedFunctionInfo(
       Handle<SharedFunctionInfo> info);
 
   V8_WARN_UNUSED_RESULT static MaybeHandle<SharedFunctionInfo> Deserialize(
       Isolate* isolate, AlignedCachedData* cached_data, Handle<String> source,
-      ScriptOriginOptions origin_options,
-      MaybeHandle<Script> maybe_cached_script = {});
+      ScriptOriginOptions origin_options);
 
   V8_WARN_UNUSED_RESULT static OffThreadDeserializeData
   StartDeserializeOffThread(LocalIsolate* isolate,
                             AlignedCachedData* cached_data);
 
   V8_WARN_UNUSED_RESULT static MaybeHandle<SharedFunctionInfo>
-  FinishOffThreadDeserialize(
-      Isolate* isolate, OffThreadDeserializeData&& data,
-      AlignedCachedData* cached_data, Handle<String> source,
-      ScriptOriginOptions origin_options,
-      BackgroundMergeTask* background_merge_task = nullptr);
+  FinishOffThreadDeserialize(Isolate* isolate, OffThreadDeserializeData&& data,
+                             AlignedCachedData* cached_data,
+                             Handle<String> source,
+                             ScriptOriginOptions origin_options);
 
   uint32_t source_hash() const { return source_hash_; }
 
@@ -110,6 +103,9 @@ class CodeSerializer : public Serializer {
 
  private:
   void SerializeObjectImpl(Handle<HeapObject> o) override;
+
+  bool SerializeReadOnlyObject(HeapObject obj,
+                               const DisallowGarbageCollection& no_gc);
 
   DISALLOW_GARBAGE_COLLECTION(no_gc_)
   uint32_t source_hash_;

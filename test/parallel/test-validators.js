@@ -9,9 +9,6 @@ const {
   validateInteger,
   validateNumber,
   validateObject,
-  kValidateObjectAllowNullable,
-  kValidateObjectAllowArray,
-  kValidateObjectAllowFunction,
   validateString,
   validateInt32,
   validateUint32,
@@ -109,6 +106,10 @@ const invalidArgValueError = {
 
 {
   // validateObject tests.
+  Object.prototype.nullable = true;
+  Object.prototype.allowArray = true;
+  Object.prototype.allowFunction = true;
+
   validateObject({}, 'foo');
   validateObject({ a: 42, b: 'foo' }, 'foo');
 
@@ -120,14 +121,18 @@ const invalidArgValueError = {
     });
 
   // validateObject options tests:
-  validateObject(null, 'foo', kValidateObjectAllowNullable);
-  validateObject([], 'foo', kValidateObjectAllowArray);
-  validateObject(() => {}, 'foo', kValidateObjectAllowFunction);
+  validateObject(null, 'foo', { nullable: true });
+  validateObject([], 'foo', { allowArray: true });
+  validateObject(() => {}, 'foo', { allowFunction: true });
 
   // validateObject should not be affected by Object.prototype tampering.
-  assert.throws(() => validateObject(null, 'foo', kValidateObjectAllowArray), invalidArgTypeError);
-  assert.throws(() => validateObject([], 'foo', kValidateObjectAllowNullable), invalidArgTypeError);
-  assert.throws(() => validateObject(() => {}, 'foo', kValidateObjectAllowNullable), invalidArgTypeError);
+  assert.throws(() => validateObject(null, 'foo', { allowArray: true }), invalidArgTypeError);
+  assert.throws(() => validateObject([], 'foo', { nullable: true }), invalidArgTypeError);
+  assert.throws(() => validateObject(() => {}, 'foo', { nullable: true }), invalidArgTypeError);
+
+  delete Object.prototype.nullable;
+  delete Object.prototype.allowArray;
+  delete Object.prototype.allowFunction;
 }
 
 {

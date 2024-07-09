@@ -104,9 +104,8 @@ TypedArrayFrom(js-implicit context: NativeContext, receiver: JSAny)(
             finalSource = source;
           }
           case (sourceTypedArray: JSTypedArray): {
-            finalLength =
-                LoadJSTypedArrayLengthAndCheckDetached(sourceTypedArray)
-                otherwise UseUserProvidedIterator;
+            const sourceBuffer = sourceTypedArray.buffer;
+            if (IsDetachedBuffer(sourceBuffer)) goto UseUserProvidedIterator;
 
             // Check that the iterator function is exactly
             // Builtin::kTypedArrayPrototypeValues.
@@ -118,6 +117,7 @@ TypedArrayFrom(js-implicit context: NativeContext, receiver: JSAny)(
             // Source is a TypedArray with unmodified iterator behavior. Use the
             // source object directly, taking advantage of the special-case code
             // in TypedArrayCopyElements
+            finalLength = sourceTypedArray.length;
             finalSource = source;
           }
           case (Object): {
@@ -151,9 +151,7 @@ TypedArrayFrom(js-implicit context: NativeContext, receiver: JSAny)(
         ThrowRangeError(MessageTemplate::kInvalidTypedArrayLength, length);
       }
     } label IteratorNotCallable(_value: JSAny) deferred {
-      ThrowTypeError(
-          MessageTemplate::kFirstArgumentIteratorSymbolNonCallable,
-          kBuiltinNameFrom);
+      ThrowTypeError(MessageTemplate::kIteratorSymbolNonCallable);
     }
 
     const finalLengthNum = Convert<Number>(finalLength);
@@ -197,18 +195,16 @@ TypedArrayFrom(js-implicit context: NativeContext, receiver: JSAny)(
       }
 
       // 12e. Perform ? Set(targetObj, Pk, mappedValue, true).
-      // The buffer may be detached or the target TypedArray may go out of
-      // bounds during executing ToNumber/ToBigInt or when we executed the
-      // mapper function above.
+      // Buffer may be detached during executing ToNumber/ToBigInt.
       accessor.StoreJSAny(context, targetObj, k, mappedValue)
-          otherwise IfDetachedOrOutOfBounds;
+          otherwise IfDetached;
 
       // 12f. Set k to k + 1. (done by the loop).
     }
     return targetObj;
   } label NotConstructor deferred {
     ThrowTypeError(MessageTemplate::kNotConstructor, receiver);
-  } label IfDetachedOrOutOfBounds deferred {
+  } label IfDetached deferred {
     ThrowTypeError(MessageTemplate::kDetachedOperation, kBuiltinNameFrom);
   }
 }

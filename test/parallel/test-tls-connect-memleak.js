@@ -26,7 +26,7 @@ const common = require('../common');
 if (!common.hasCrypto)
   common.skip('missing crypto');
 
-const { onGC } = require('../common/gc');
+const onGC = require('../common/ongc');
 const assert = require('assert');
 const tls = require('tls');
 const fixtures = require('../common/fixtures');

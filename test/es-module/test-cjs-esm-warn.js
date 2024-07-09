@@ -1,6 +1,3 @@
-// Previously, this tested that require(esm) throws ERR_REQUIRE_ESM, which is no longer applicable
-// since require(esm) is now supported. The test has been repurposed to ensure that the old behavior
-// is preserved when the --no-experimental-require-module flag is used.
 'use strict';
 
 const { spawnPromisified } = require('../common');
@@ -25,9 +22,7 @@ describe('CJS ↔︎ ESM interop warnings', { concurrency: true }, () => {
       fixtures.path('/es-modules/package-type-module/cjs.js')
     );
     const basename = 'cjs.js';
-    const { code, signal, stderr } = await spawnPromisified(execPath, [
-      '--no-experimental-require-module', requiringCjsAsEsm,
-    ]);
+    const { code, signal, stderr } = await spawnPromisified(execPath, [requiringCjsAsEsm]);
 
     assert.ok(
       stderr.replaceAll('\r', '').includes(
@@ -53,9 +48,7 @@ describe('CJS ↔︎ ESM interop warnings', { concurrency: true }, () => {
       fixtures.path('/es-modules/package-type-module/esm.js')
     );
     const basename = 'esm.js';
-    const { code, signal, stderr } = await spawnPromisified(execPath, [
-      '--no-experimental-require-module', requiringEsm,
-    ]);
+    const { code, signal, stderr } = await spawnPromisified(execPath, [requiringEsm]);
 
     assert.ok(
       stderr.replace(/\r/g, '').includes(

@@ -38,6 +38,12 @@ BaseObject::BaseObject(Environment* env, v8::Local<v8::Object> object)
   // while allowing to create a BaseObject in a vm context.
 }
 
+// static
+v8::Local<v8::FunctionTemplate> BaseObject::GetConstructorTemplate(
+    Environment* env) {
+  return BaseObject::GetConstructorTemplate(env->isolate_data());
+}
+
 void BaseObject::Detach() {
   CHECK_GT(pointer_data()->strong_ptr_count, 0);
   pointer_data()->is_detached = true;
@@ -55,7 +61,8 @@ v8::Local<v8::Object> BaseObject::object() const {
 v8::Local<v8::Object> BaseObject::object(v8::Isolate* isolate) const {
   v8::Local<v8::Object> handle = object();
 
-  DCHECK_EQ(handle->GetCreationContextChecked()->GetIsolate(), isolate);
+  DCHECK_EQ(handle->GetCreationContext().ToLocalChecked()->GetIsolate(),
+            isolate);
   DCHECK_EQ(env()->isolate(), isolate);
 
   return handle;
@@ -69,28 +76,14 @@ Realm* BaseObject::realm() const {
   return realm_;
 }
 
-bool BaseObject::IsBaseObject(IsolateData* isolate_data,
-                              v8::Local<v8::Object> obj) {
-  if (obj->InternalFieldCount() < BaseObject::kInternalFieldCount) {
-    return false;
-  }
-
-  uint16_t* ptr = static_cast<uint16_t*>(
-      obj->GetAlignedPointerFromInternalField(BaseObject::kEmbedderType));
-  return ptr == isolate_data->embedder_id_for_non_cppgc();
-}
-
-void BaseObject::TagBaseObject(IsolateData* isolate_data,
-                               v8::Local<v8::Object> object) {
+void BaseObject::TagNodeObject(v8::Local<v8::Object> object) {
   DCHECK_GE(object->InternalFieldCount(), BaseObject::kInternalFieldCount);
-  object->SetAlignedPointerInInternalField(
-      BaseObject::kEmbedderType, isolate_data->embedder_id_for_non_cppgc());
+  object->SetAlignedPointerInInternalField(BaseObject::kEmbedderType,
+                                           &kNodeEmbedderId);
 }
 
-void BaseObject::SetInternalFields(IsolateData* isolate_data,
-                                   v8::Local<v8::Object> object,
-                                   void* slot) {
-  TagBaseObject(isolate_data, object);
+void BaseObject::SetInternalFields(v8::Local<v8::Object> object, void* slot) {
+  TagNodeObject(object);
   object->SetAlignedPointerInInternalField(BaseObject::kSlot, slot);
 }
 
@@ -293,12 +286,6 @@ bool BaseObjectPtrImpl<T, kIsWeak>::operator !=(
 template <typename T, typename... Args>
 BaseObjectPtr<T> MakeBaseObject(Args&&... args) {
   return BaseObjectPtr<T>(new T(std::forward<Args>(args)...));
-}
-template <typename T, typename... Args>
-BaseObjectWeakPtr<T> MakeWeakBaseObject(Args&&... args) {
-  T* target = new T(std::forward<Args>(args)...);
-  target->MakeWeak();
-  return BaseObjectWeakPtr<T>(target);
 }
 
 template <typename T, typename... Args>

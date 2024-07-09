@@ -4,10 +4,8 @@
 
 export class LogEntry {
   constructor(type, time) {
-    /** @type {number} */
     this._time = time;
     this._type = type;
-    /** @type {?SourcePosition} */
     this.sourcePosition = undefined;
   }
 
@@ -46,13 +44,11 @@ export class LogEntry {
   }
 
   // Returns an Array of all possible #type values.
-  /**  @return {string[]} */
   static get allTypes() {
     throw new Error('Not implemented.');
   }
 
   // Returns an array of public property names.
-  /**  @return {string[]} */
   static get propertyNames() {
     throw new Error('Not implemented.');
   }

@@ -18,17 +18,17 @@ namespace v8 {
 namespace internal {
 
 void PendingCompilationErrorHandler::MessageDetails::SetString(
-    int index, Handle<String> string, Isolate* isolate) {
-  DCHECK_NE(args_[index].type, kMainThreadHandle);
-  args_[index].type = kMainThreadHandle;
-  args_[index].js_string = string;
+    Handle<String> string, Isolate* isolate) {
+  DCHECK_NE(args_[0].type, kMainThreadHandle);
+  args_[0].type = kMainThreadHandle;
+  args_[0].js_string = string;
 }
 
 void PendingCompilationErrorHandler::MessageDetails::SetString(
-    int index, Handle<String> string, LocalIsolate* isolate) {
-  DCHECK_NE(args_[index].type, kMainThreadHandle);
-  args_[index].type = kMainThreadHandle;
-  args_[index].js_string = isolate->heap()->NewPersistentHandle(string);
+    Handle<String> string, LocalIsolate* isolate) {
+  DCHECK_NE(args_[0].type, kMainThreadHandle);
+  args_[0].type = kMainThreadHandle;
+  args_[0].js_string = isolate->heap()->NewPersistentHandle(string);
 }
 
 template <typename IsolateT>
@@ -37,17 +37,17 @@ void PendingCompilationErrorHandler::MessageDetails::Prepare(
   for (int i = 0; i < kMaxArgumentCount; i++) {
     switch (args_[i].type) {
       case kAstRawString:
-        SetString(i, args_[i].ast_string->string(), isolate);
-        break;
+        return SetString(args_[i].ast_string->string(), isolate);
+
       case kNone:
       case kConstCharString:
         // We can delay allocation until ArgString(isolate).
-        break;
+        return;
 
       case kMainThreadHandle:
         // The message details might already be prepared, so skip them if this
         // is the case.
-        break;
+        return;
     }
   }
 }
@@ -81,8 +81,7 @@ void PendingCompilationErrorHandler::ReportMessageAt(int start_position,
                                                      int end_position,
                                                      MessageTemplate message,
                                                      const char* arg) {
-  if (has_pending_error_ && end_position >= error_details_.start_pos()) return;
-
+  if (has_pending_error_) return;
   has_pending_error_ = true;
 
   error_details_ = MessageDetails(start_position, end_position, message, arg);
@@ -92,8 +91,7 @@ void PendingCompilationErrorHandler::ReportMessageAt(int start_position,
                                                      int end_position,
                                                      MessageTemplate message,
                                                      const AstRawString* arg) {
-  if (has_pending_error_ && end_position >= error_details_.start_pos()) return;
-
+  if (has_pending_error_) return;
   has_pending_error_ = true;
 
   error_details_ = MessageDetails(start_position, end_position, message, arg);
@@ -104,21 +102,10 @@ void PendingCompilationErrorHandler::ReportMessageAt(int start_position,
                                                      MessageTemplate message,
                                                      const AstRawString* arg0,
                                                      const char* arg1) {
-  if (has_pending_error_ && end_position >= error_details_.start_pos()) return;
-
+  if (has_pending_error_) return;
   has_pending_error_ = true;
   error_details_ =
       MessageDetails(start_position, end_position, message, arg0, arg1);
-}
-
-void PendingCompilationErrorHandler::ReportMessageAt(
-    int start_position, int end_position, MessageTemplate message,
-    const AstRawString* arg0, const AstRawString* arg1, const char* arg2) {
-  if (has_pending_error_ && end_position >= error_details_.start_pos()) return;
-
-  has_pending_error_ = true;
-  error_details_ =
-      MessageDetails(start_position, end_position, message, arg0, arg1, arg2);
 }
 
 void PendingCompilationErrorHandler::ReportWarningAt(int start_position,
@@ -191,12 +178,11 @@ void PendingCompilationErrorHandler::ThrowPendingError(
   MessageLocation location = error_details_.GetLocation(script);
   Handle<String> arg0 = error_details_.ArgString(isolate, 0);
   Handle<String> arg1 = error_details_.ArgString(isolate, 1);
-  Handle<String> arg2 = error_details_.ArgString(isolate, 2);
   isolate->debug()->OnCompileError(script);
 
   Factory* factory = isolate->factory();
   Handle<JSObject> error =
-      factory->NewSyntaxError(error_details_.message(), arg0, arg1, arg2);
+      factory->NewSyntaxError(error_details_.message(), arg0, arg1);
   isolate->ThrowAt(error, &location);
 }
 
@@ -205,8 +191,7 @@ Handle<String> PendingCompilationErrorHandler::FormatErrorMessageForTest(
   error_details_.Prepare(isolate);
   return MessageFormatter::Format(isolate, error_details_.message(),
                                   error_details_.ArgString(isolate, 0),
-                                  error_details_.ArgString(isolate, 1),
-                                  error_details_.ArgString(isolate, 2));
+                                  error_details_.ArgString(isolate, 1));
 }
 
 }  // namespace internal

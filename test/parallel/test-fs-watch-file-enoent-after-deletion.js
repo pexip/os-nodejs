@@ -32,12 +32,13 @@ const common = require('../common');
 // stopped it from getting emitted.
 // https://github.com/nodejs/node-v0.x-archive/issues/4027
 
+const path = require('path');
 const fs = require('fs');
 
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
-const filename = tmpdir.resolve('watched');
+const filename = path.join(tmpdir.path, 'watched');
 fs.writeFileSync(filename, 'quis custodiet ipsos custodes');
 
 fs.watchFile(filename, { interval: 50 }, common.mustCall(function(curr, prev) {

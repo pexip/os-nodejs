@@ -56,7 +56,7 @@ template <const EVP_MD* (*algo)()>
 void Fingerprint(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
   Local<Value> ret;
   if (GetFingerprintDigest(env, algo(), cert->get()).ToLocal(&ret))
     args.GetReturnValue().Set(ret);
@@ -71,6 +71,7 @@ Local<FunctionTemplate> X509Certificate::GetConstructorTemplate(
     tmpl = NewFunctionTemplate(isolate, nullptr);
     tmpl->InstanceTemplate()->SetInternalFieldCount(
         BaseObject::kInternalFieldCount);
+    tmpl->Inherit(BaseObject::GetConstructorTemplate(env));
     tmpl->SetClassName(
         FIXED_ONE_BYTE_STRING(env->isolate(), "X509Certificate"));
     SetProtoMethod(isolate, tmpl, "subject", Subject);
@@ -208,7 +209,7 @@ template <MaybeLocal<Value> Property(
 static void ReturnPropertyThroughBIO(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
   BIOPointer bio(BIO_new(BIO_s_mem()));
   CHECK(bio);
   Local<Value> ret;
@@ -244,7 +245,7 @@ template <MaybeLocal<Value> Property(Environment* env, X509* cert)>
 static void ReturnProperty(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
   Local<Value> ret;
   if (Property(env, cert->get()).ToLocal(&ret)) args.GetReturnValue().Set(ret);
 }
@@ -264,7 +265,7 @@ void X509Certificate::Raw(const FunctionCallbackInfo<Value>& args) {
 void X509Certificate::PublicKey(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
 
   // TODO(tniessen): consider checking X509_get_pubkey() when the
   // X509Certificate object is being created.
@@ -283,7 +284,7 @@ void X509Certificate::PublicKey(const FunctionCallbackInfo<Value>& args) {
 void X509Certificate::Pem(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
   BIOPointer bio(BIO_new(BIO_s_mem()));
   CHECK(bio);
   if (PEM_write_bio_X509(bio.get(), cert->get()))
@@ -293,14 +294,14 @@ void X509Certificate::Pem(const FunctionCallbackInfo<Value>& args) {
 void X509Certificate::CheckCA(const FunctionCallbackInfo<Value>& args) {
   X509Certificate* cert;
   ClearErrorOnReturn clear_error_on_return;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
   args.GetReturnValue().Set(X509_check_ca(cert->get()) == 1);
 }
 
 void X509Certificate::CheckHost(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
 
   CHECK(args[0]->IsString());  // name
   CHECK(args[1]->IsUint32());  // flags
@@ -335,7 +336,7 @@ void X509Certificate::CheckHost(const FunctionCallbackInfo<Value>& args) {
 void X509Certificate::CheckEmail(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
 
   CHECK(args[0]->IsString());  // name
   CHECK(args[1]->IsUint32());  // flags
@@ -362,7 +363,7 @@ void X509Certificate::CheckEmail(const FunctionCallbackInfo<Value>& args) {
 void X509Certificate::CheckIP(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
 
   CHECK(args[0]->IsString());  // IP
   CHECK(args[1]->IsUint32());  // flags
@@ -385,7 +386,7 @@ void X509Certificate::CheckIP(const FunctionCallbackInfo<Value>& args) {
 void X509Certificate::CheckIssued(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
 
   CHECK(args[0]->IsObject());
   CHECK(X509Certificate::HasInstance(env, args[0].As<Object>()));
@@ -401,7 +402,7 @@ void X509Certificate::CheckIssued(const FunctionCallbackInfo<Value>& args) {
 
 void X509Certificate::CheckPrivateKey(const FunctionCallbackInfo<Value>& args) {
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
 
   CHECK(args[0]->IsObject());
   KeyObjectHandle* key;
@@ -418,7 +419,7 @@ void X509Certificate::CheckPrivateKey(const FunctionCallbackInfo<Value>& args) {
 
 void X509Certificate::Verify(const FunctionCallbackInfo<Value>& args) {
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
 
   CHECK(args[0]->IsObject());
   KeyObjectHandle* key;
@@ -436,7 +437,7 @@ void X509Certificate::Verify(const FunctionCallbackInfo<Value>& args) {
 void X509Certificate::ToLegacy(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
   ClearErrorOnReturn clear_error_on_return;
   Local<Value> ret;
   if (X509ToObject(env, cert->get()).ToLocal(&ret))
@@ -445,7 +446,7 @@ void X509Certificate::ToLegacy(const FunctionCallbackInfo<Value>& args) {
 
 void X509Certificate::GetIssuerCert(const FunctionCallbackInfo<Value>& args) {
   X509Certificate* cert;
-  ASSIGN_OR_RETURN_UNWRAP(&cert, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cert, args.Holder());
   if (cert->issuer_cert_)
     args.GetReturnValue().Set(cert->issuer_cert_->object());
 }

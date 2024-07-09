@@ -1,6 +1,7 @@
 'use strict';
 const common = require('../common');
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 
 const tmpdir = require('../common/tmpdir');
@@ -19,7 +20,7 @@ try {
   common.skip('skipped due to memory requirements');
 }
 
-const filename = tmpdir.resolve('write9.txt');
+const filename = path.join(tmpdir.path, 'write9.txt');
 fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
   assert.throws(() => {
     fs.write(fd,

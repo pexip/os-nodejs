@@ -1,11 +1,12 @@
 'use strict';
 const common = require('../common');
 const assert = require('assert');
+const path = require('path');
 const { Worker } = require('worker_threads');
 
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
-const missing = tmpdir.resolve('does-not-exist.js');
+const missing = path.join(tmpdir.path, 'does-not-exist.js');
 
 const worker = new Worker(missing);
 

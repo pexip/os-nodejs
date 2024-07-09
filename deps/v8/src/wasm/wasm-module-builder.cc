@@ -4,7 +4,11 @@
 
 #include "src/wasm/wasm-module-builder.h"
 
+#include "src/base/memory.h"
 #include "src/codegen/signature.h"
+#include "src/handles/handles.h"
+#include "src/init/v8.h"
+#include "src/objects/objects-inl.h"
 #include "src/wasm/function-body-decoder.h"
 #include "src/wasm/leb-helper.h"
 #include "src/wasm/wasm-constants.h"
@@ -57,7 +61,7 @@ void WasmFunctionBuilder::EmitU32V(uint32_t val) { body_.write_u32v(val); }
 void WasmFunctionBuilder::SetSignature(const FunctionSig* sig) {
   DCHECK(!locals_.has_sig());
   locals_.set_sig(sig);
-  signature_index_ = builder_->AddSignature(sig, true);
+  signature_index_ = builder_->AddSignature(sig);
 }
 
 void WasmFunctionBuilder::SetSignature(uint32_t sig_index) {
@@ -88,20 +92,16 @@ void WasmFunctionBuilder::EmitCode(const byte* code, uint32_t code_size) {
   body_.write(code, code_size);
 }
 
-void WasmFunctionBuilder::Emit(WasmOpcode opcode) {
-  DCHECK_LE(opcode, 0xFF);
-  body_.write_u8(opcode);
-}
+void WasmFunctionBuilder::Emit(WasmOpcode opcode) { body_.write_u8(opcode); }
 
 void WasmFunctionBuilder::EmitWithPrefix(WasmOpcode opcode) {
-  DCHECK_GT(opcode, 0xFF);
-  if (opcode > 0xFFFF) {
-    DCHECK_EQ(kSimdPrefix, opcode >> 12);
-    body_.write_u8(kSimdPrefix);
-    body_.write_u32v(opcode & 0xFFF);
+  DCHECK_NE(0, opcode & 0xff00);
+  body_.write_u8(opcode >> 8);
+  if ((opcode >> 8) == WasmOpcode::kSimdPrefix) {
+    // SIMD opcodes are LEB encoded
+    body_.write_u32v(opcode & 0xff);
   } else {
-    body_.write_u8(opcode >> 8);      // Prefix.
-    body_.write_u32v(opcode & 0xff);  // LEB encoded tail.
+    body_.write_u8(opcode);
   }
 }
 
@@ -305,40 +305,38 @@ void WasmModuleBuilder::AddDataSegment(const byte* data, uint32_t size,
 }
 
 uint32_t WasmModuleBuilder::ForceAddSignature(const FunctionSig* sig,
-                                              bool is_final,
                                               uint32_t supertype) {
   uint32_t index = static_cast<uint32_t>(types_.size());
   signature_map_.emplace(*sig, index);
-  types_.emplace_back(sig, supertype, is_final);
+  types_.emplace_back(sig, supertype);
   return index;
 }
 
-uint32_t WasmModuleBuilder::AddSignature(const FunctionSig* sig, bool is_final,
+uint32_t WasmModuleBuilder::AddSignature(const FunctionSig* sig,
                                          uint32_t supertype) {
   auto sig_entry = signature_map_.find(*sig);
   if (sig_entry != signature_map_.end()) return sig_entry->second;
-  return ForceAddSignature(sig, is_final, supertype);
+  return ForceAddSignature(sig, supertype);
 }
 
 uint32_t WasmModuleBuilder::AddException(const FunctionSig* type) {
   DCHECK_EQ(0, type->return_count());
-  int type_index = AddSignature(type, true);
+  int type_index = AddSignature(type);
   uint32_t except_index = static_cast<uint32_t>(exceptions_.size());
   exceptions_.push_back(type_index);
   return except_index;
 }
 
-uint32_t WasmModuleBuilder::AddStructType(StructType* type, bool is_final,
+uint32_t WasmModuleBuilder::AddStructType(StructType* type,
                                           uint32_t supertype) {
   uint32_t index = static_cast<uint32_t>(types_.size());
-  types_.emplace_back(type, supertype, is_final);
+  types_.emplace_back(type, supertype);
   return index;
 }
 
-uint32_t WasmModuleBuilder::AddArrayType(ArrayType* type, bool is_final,
-                                         uint32_t supertype) {
+uint32_t WasmModuleBuilder::AddArrayType(ArrayType* type, uint32_t supertype) {
   uint32_t index = static_cast<uint32_t>(types_.size());
-  types_.emplace_back(type, supertype, is_final);
+  types_.emplace_back(type, supertype);
   return index;
 }
 
@@ -346,7 +344,7 @@ uint32_t WasmModuleBuilder::IncreaseTableMinSize(uint32_t table_index,
                                                  uint32_t count) {
   DCHECK_LT(table_index, tables_.size());
   uint32_t old_min_size = tables_[table_index].min_size;
-  if (count > v8_flags.wasm_max_table_size - old_min_size) {
+  if (count > FLAG_wasm_max_table_size - old_min_size) {
     return std::numeric_limits<uint32_t>::max();
   }
   tables_[table_index].min_size = old_min_size + count;
@@ -392,7 +390,7 @@ uint32_t WasmModuleBuilder::AddImport(base::Vector<const char> name,
                                       FunctionSig* sig,
                                       base::Vector<const char> module) {
   DCHECK(adding_imports_allowed_);
-  function_imports_.push_back({module, name, AddSignature(sig, true)});
+  function_imports_.push_back({module, name, AddSignature(sig)});
   return static_cast<uint32_t>(function_imports_.size() - 1);
 }
 
@@ -475,48 +473,6 @@ void WriteInitializerExpressionWithEnd(ZoneBuffer* buffer,
       buffer->write_u8(kExprS128Const & 0xFF);
       buffer->write(init.immediate().s128_const.data(), kSimd128Size);
       break;
-    case WasmInitExpr::kI32Add:
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[0],
-                                        kWasmI32);
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[1],
-                                        kWasmI32);
-      buffer->write_u8(kExprI32Add);
-      break;
-    case WasmInitExpr::kI32Sub:
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[0],
-                                        kWasmI32);
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[1],
-                                        kWasmI32);
-      buffer->write_u8(kExprI32Sub);
-      break;
-    case WasmInitExpr::kI32Mul:
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[0],
-                                        kWasmI32);
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[1],
-                                        kWasmI32);
-      buffer->write_u8(kExprI32Mul);
-      break;
-    case WasmInitExpr::kI64Add:
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[0],
-                                        kWasmI64);
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[1],
-                                        kWasmI64);
-      buffer->write_u8(kExprI64Add);
-      break;
-    case WasmInitExpr::kI64Sub:
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[0],
-                                        kWasmI64);
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[1],
-                                        kWasmI64);
-      buffer->write_u8(kExprI64Sub);
-      break;
-    case WasmInitExpr::kI64Mul:
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[0],
-                                        kWasmI64);
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[1],
-                                        kWasmI64);
-      buffer->write_u8(kExprI64Mul);
-      break;
     case WasmInitExpr::kGlobalGet:
       buffer->write_u8(kExprGlobalGet);
       buffer->write_u32v(init.immediate().index);
@@ -550,7 +506,7 @@ void WriteInitializerExpressionWithEnd(ZoneBuffer* buffer,
           buffer->write_u8(kExprF64Const);
           buffer->write_f64(0.);
           break;
-        case kRefNull:
+        case kOptRef:
           buffer->write_u8(kExprRefNull);
           buffer->write_i32v(type.heap_type().code());
           break;
@@ -570,19 +526,27 @@ void WriteInitializerExpressionWithEnd(ZoneBuffer* buffer,
       break;
     }
     case WasmInitExpr::kStructNew:
+    case WasmInitExpr::kStructNewWithRtt:
     case WasmInitExpr::kStructNewDefault:
-      static_assert((kExprStructNew >> 8) == kGCPrefix);
-      static_assert((kExprStructNewDefault >> 8) == kGCPrefix);
-      static_assert((kExprStructNew & 0x80) == 0);
-      static_assert((kExprStructNewDefault & 0x80) == 0);
+    case WasmInitExpr::kStructNewDefaultWithRtt:
+      STATIC_ASSERT((kExprStructNew >> 8) == kGCPrefix);
+      STATIC_ASSERT((kExprStructNewWithRtt >> 8) == kGCPrefix);
+      STATIC_ASSERT((kExprStructNewDefault >> 8) == kGCPrefix);
+      STATIC_ASSERT((kExprStructNewDefaultWithRtt >> 8) == kGCPrefix);
       for (const WasmInitExpr& operand : *init.operands()) {
         WriteInitializerExpressionWithEnd(buffer, operand, kWasmBottom);
       }
       buffer->write_u8(kGCPrefix);
       WasmOpcode opcode;
       switch (init.kind()) {
+        case WasmInitExpr::kStructNewWithRtt:
+          opcode = kExprStructNewWithRtt;
+          break;
         case WasmInitExpr::kStructNew:
           opcode = kExprStructNew;
+          break;
+        case WasmInitExpr::kStructNewDefaultWithRtt:
+          opcode = kExprStructNewDefaultWithRtt;
           break;
         case WasmInitExpr::kStructNewDefault:
           opcode = kExprStructNewDefault;
@@ -593,32 +557,25 @@ void WriteInitializerExpressionWithEnd(ZoneBuffer* buffer,
       buffer->write_u8(static_cast<uint8_t>(opcode));
       buffer->write_u32v(init.immediate().index);
       break;
-    case WasmInitExpr::kArrayNewFixed: {
-      static_assert((kExprArrayNewFixed >> 8) == kGCPrefix);
-      static_assert((kExprArrayNewFixed & 0x80) == 0);
+    case WasmInitExpr::kArrayInit:
+    case WasmInitExpr::kArrayInitStatic:
+      STATIC_ASSERT((kExprArrayInit >> 8) == kGCPrefix);
+      STATIC_ASSERT((kExprArrayInitStatic >> 8) == kGCPrefix);
       for (const WasmInitExpr& operand : *init.operands()) {
         WriteInitializerExpressionWithEnd(buffer, operand, kWasmBottom);
       }
       buffer->write_u8(kGCPrefix);
-      buffer->write_u8(static_cast<uint8_t>(kExprArrayNewFixed));
+      buffer->write_u8(static_cast<uint8_t>(
+          init.kind() == WasmInitExpr::kArrayInit ? kExprArrayInit
+                                                  : kExprArrayInitStatic));
       buffer->write_u32v(init.immediate().index);
-      buffer->write_u32v(static_cast<uint32_t>(init.operands()->size()));
+      buffer->write_u32v(static_cast<uint32_t>(init.operands()->size() - 1));
       break;
-    }
-    case WasmInitExpr::kI31New:
-      WriteInitializerExpressionWithEnd(buffer, (*init.operands())[0],
-                                        kWasmI32);
-      static_assert((kExprI31New >> 8) == kGCPrefix);
-      static_assert((kExprI31New & 0x80) == 0);
-
+    case WasmInitExpr::kRttCanon:
+      STATIC_ASSERT((kExprRttCanon >> 8) == kGCPrefix);
       buffer->write_u8(kGCPrefix);
-      buffer->write_u8(static_cast<uint8_t>(kExprI31New));
-
-      break;
-    case WasmInitExpr::kStringConst:
-      buffer->write_u8(kGCPrefix);
-      buffer->write_u32v(kExprStringConst & 0xFF);
-      buffer->write_u32v(init.immediate().index);
+      buffer->write_u8(static_cast<uint8_t>(kExprRttCanon));
+      buffer->write_i32v(static_cast<int32_t>(init.immediate().index));
       break;
   }
 }
@@ -657,13 +614,9 @@ void WasmModuleBuilder::WriteTo(ZoneBuffer* buffer) const {
       const TypeDefinition& type = types_[i];
 
       if (type.supertype != kNoSuperType) {
-        buffer->write_u8(type.is_final ? kWasmSubtypeFinalCode
-                                       : kWasmSubtypeCode);
-        buffer->write_u8(1);
-        buffer->write_u32v(type.supertype);
-      } else if (!type.is_final) {
         buffer->write_u8(kWasmSubtypeCode);
-        buffer->write_u8(0);
+        buffer->write_u8(1);  // The supertype count is always 1.
+        buffer->write_u32v(type.supertype);
       }
       switch (type.kind) {
         case TypeDefinition::kFunction: {
@@ -912,7 +865,7 @@ void WasmModuleBuilder::WriteTo(ZoneBuffer* buffer) const {
 
     for (auto segment : data_segments_) {
       buffer->write_u8(0);              // linear memory segment
-      buffer->write_u8(kExprI32Const);  // constant expression for dest
+      buffer->write_u8(kExprI32Const);  // initializer expression for dest
       buffer->write_u32v(segment.dest);
       buffer->write_u8(kExprEnd);
       buffer->write_u32v(static_cast<uint32_t>(segment.data.size()));

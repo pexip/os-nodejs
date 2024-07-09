@@ -30,7 +30,7 @@ function makeUrl(headers) {
 const server = http2.createServer();
 server.on('stream', common.mustCall((stream, headers) => {
 
-  const obj = { __proto__: null };
+  const obj = Object.create(null);
   switch (remaining--) {
     case 3: {
       const url = new URL(makeUrl(headers));

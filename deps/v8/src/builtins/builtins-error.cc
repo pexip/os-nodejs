@@ -18,7 +18,9 @@ namespace internal {
 // ES6 section 19.5.1.1 Error ( message )
 BUILTIN(ErrorConstructor) {
   HandleScope scope(isolate);
-  Handle<Object> options = args.atOrUndefined(isolate, 2);
+  Handle<Object> options = FLAG_harmony_error_cause
+                               ? args.atOrUndefined(isolate, 2)
+                               : isolate->factory()->undefined_value();
   RETURN_RESULT_OR_FAILURE(
       isolate, ErrorUtils::Construct(isolate, args.target(), args.new_target(),
                                      args.atOrUndefined(isolate, 1), options));
@@ -34,9 +36,6 @@ BUILTIN(ErrorCaptureStackTrace) {
   if (!object_obj->IsJSObject()) {
     THROW_NEW_ERROR_RETURN_FAILURE(
         isolate, NewTypeError(MessageTemplate::kInvalidArgument, object_obj));
-  }
-  if (object_obj->IsJSGlobalProxy()) {
-    return ReadOnlyRoots(isolate).undefined_value();
   }
 
   Handle<JSObject> object = Handle<JSObject>::cast(object_obj);
@@ -55,7 +54,7 @@ BUILTIN(ErrorCaptureStackTrace) {
 
   // Explicitly check for frozen objects. Other access checks are performed by
   // the LookupIterator in SetAccessor below.
-  if (!JSObject::IsExtensible(isolate, object)) {
+  if (!JSObject::IsExtensible(object)) {
     return isolate->Throw(*isolate->factory()->NewTypeError(
         MessageTemplate::kDefineDisallowed, name));
   }

@@ -194,8 +194,7 @@ for (let i = 0; i < chunks.length; i++) {
 {
   // Verify write callbacks
   const callbacks = chunks.map(function(chunk, i) {
-    return [i, function(err) {
-      assert.strictEqual(err, null);
+    return [i, function() {
       callbacks._called[i] = chunk;
     }];
   }).reduce(function(set, x) {
@@ -226,9 +225,7 @@ for (let i = 0; i < chunks.length; i++) {
 {
   // Verify end() callback
   const tw = new TestWriter();
-  tw.end(common.mustCall(function(err) {
-    assert.strictEqual(err, null);
-  }));
+  tw.end(common.mustCall());
 }
 
 const helloWorldBuffer = Buffer.from('hello world');
@@ -236,9 +233,7 @@ const helloWorldBuffer = Buffer.from('hello world');
 {
   // Verify end() callback with chunk
   const tw = new TestWriter();
-  tw.end(helloWorldBuffer, common.mustCall(function(err) {
-    assert.strictEqual(err, null);
-  }));
+  tw.end(helloWorldBuffer, common.mustCall());
 }
 
 {

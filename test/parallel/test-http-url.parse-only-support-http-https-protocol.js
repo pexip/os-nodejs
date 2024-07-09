@@ -34,7 +34,7 @@ const invalidUrls = [
   'f://some.host/path',
 ];
 
-for (const invalid of invalidUrls) {
+invalidUrls.forEach((invalid) => {
   assert.throws(
     () => { http.request(url.parse(invalid)); },
     {
@@ -42,4 +42,4 @@ for (const invalid of invalidUrls) {
       name: 'TypeError'
     }
   );
-}
+});

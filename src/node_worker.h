@@ -5,7 +5,6 @@
 
 #include <optional>
 #include <unordered_map>
-#include "node_exit_code.h"
 #include "node_messaging.h"
 #include "uv.h"
 
@@ -43,7 +42,7 @@ class Worker : public AsyncWrap {
   // Forcibly exit the thread with a specified exit code. This may be called
   // from any thread. `error_code` and `error_message` can be used to create
   // a custom `'error'` event before emitting `'exit'`.
-  void Exit(ExitCode code,
+  void Exit(int code,
             const char* error_code = nullptr,
             const char* error_message = nullptr);
 
@@ -97,7 +96,7 @@ class Worker : public AsyncWrap {
 
   const char* custom_error_ = nullptr;
   std::string custom_error_str_;
-  ExitCode exit_code_ = ExitCode::kNoFailure;
+  int exit_code_ = 0;
   ThreadId thread_id_;
   uintptr_t stack_base_ = 0;
   // Optional name used for debugging in inspector and trace events.
@@ -114,7 +113,6 @@ class Worker : public AsyncWrap {
 
   std::unique_ptr<MessagePortData> child_port_data_;
   std::shared_ptr<KVStore> env_vars_;
-  EmbedderPreloadCallback embedder_preload_;
 
   // A raw flag that is used by creator and worker threads to
   // sync up on pre-mature termination of worker  - while in the

@@ -33,12 +33,8 @@ class SortState extends HeapObject {
     }
   }
 
-  macro ResetToGenericAccessor(isToSorted: constexpr bool): void {
-    if constexpr (isToSorted) {
-      this.loadFn = LoadNoHasPropertyCheck<GenericElementsAccessor>;
-    } else {
-      this.loadFn = Load<GenericElementsAccessor>;
-    }
+  macro ResetToGenericAccessor(): void {
+    this.loadFn = Load<GenericElementsAccessor>;
     this.storeFn = Store<GenericElementsAccessor>;
     this.deleteFn = Delete<GenericElementsAccessor>;
   }
@@ -144,7 +140,7 @@ macro CalculateWorkArrayLength(
 
 transitioning macro NewSortState(implicit context: Context)(
     receiver: JSReceiver, comparefn: Undefined|Callable,
-    initialReceiverLength: Number, isToSorted: constexpr bool): SortState {
+    initialReceiverLength: Number): SortState {
   const sortComparePtr =
       comparefn != Undefined ? SortCompareUserFn : SortCompareDefault;
   const map = receiver.map;
@@ -156,12 +152,8 @@ transitioning macro NewSortState(implicit context: Context)(
   try {
     const a: FastJSArray = Cast<FastJSArray>(receiver) otherwise Slow;
 
-    if constexpr (!isToSorted) {
-      // Copy copy-on-write (COW) arrays if we're doing Array.prototype.sort,
-      // which sorts in place, instead of Array.prototype.toSorted, which sorts
-      // by copy.
-      array::EnsureWriteableFastElements(a);
-    }
+    // Copy copy-on-write (COW) arrays.
+    array::EnsureWriteableFastElements(a);
 
     const elementsKind: ElementsKind = map.elements_kind;
     if (IsDoubleElementsKind(elementsKind)) {
@@ -181,11 +173,7 @@ transitioning macro NewSortState(implicit context: Context)(
       canUseSameAccessorFn = CanUseSameAccessor<FastObjectElements>;
     }
   } label Slow {
-    if constexpr (isToSorted) {
-      loadFn = LoadNoHasPropertyCheck<GenericElementsAccessor>;
-    } else {
-      loadFn = Load<GenericElementsAccessor>;
-    }
+    loadFn = Load<GenericElementsAccessor>;
     storeFn = Store<GenericElementsAccessor>;
     deleteFn = Delete<GenericElementsAccessor>;
     canUseSameAccessorFn = CanUseSameAccessor<GenericElementsAccessor>;
@@ -248,13 +236,6 @@ transitioning builtin Load<ElementsAccessor : type extends ElementsKind>(
     context: Context, sortState: SortState, index: Smi): JSAny|TheHole {
   const receiver = sortState.receiver;
   if (!HasProperty_Inline(receiver, index)) return TheHole;
-  return GetProperty(receiver, index);
-}
-
-transitioning builtin
-LoadNoHasPropertyCheck<ElementsAccessor : type extends ElementsKind>(
-    context: Context, sortState: SortState, index: Smi): JSAny|TheHole {
-  const receiver = sortState.receiver;
   return GetProperty(receiver, index);
 }
 
@@ -371,11 +352,15 @@ transitioning builtin SortCompareDefault(
   // 7. Let xSmaller be the result of performing
   //    Abstract Relational Comparison xString < yString.
   // 8. If xSmaller is true, return -1.
+  if (StringLessThan(context, xString, yString) == True) return -1;
+
   // 9. Let ySmaller be the result of performing
   //    Abstract Relational Comparison yString < xString.
   // 10. If ySmaller is true, return 1.
+  if (StringLessThan(context, yString, xString) == True) return 1;
+
   // 11. Return +0.
-  return StringCompare(xString, yString);
+  return 0;
 }
 
 transitioning builtin SortCompareUserFn(
@@ -1294,8 +1279,7 @@ ArrayTimSortImpl(context: Context, sortState: SortState, length: Smi): void {
 
 transitioning macro
 CompactReceiverElementsIntoWorkArray(
-    implicit context: Context,
-    sortState: SortState)(isToSorted: constexpr bool): Smi {
+    implicit context: Context, sortState: SortState)(): Smi {
   let growableWorkArray = growable_fixed_array::GrowableFixedArray{
     array: sortState.workArray,
     capacity: Convert<intptr>(sortState.workArray.length),
@@ -1320,22 +1304,8 @@ CompactReceiverElementsIntoWorkArray(
     const element: JSAny|TheHole = loadFn(context, sortState, i);
 
     if (element == TheHole) {
-      if constexpr (isToSorted) {
-        // Array.prototype.toSorted does not have the HasProperty check that
-        // Array.prototype.sort has and unconditionally performs a GetProperty
-        // for each element.
-        //
-        // Only fast JSArray accessors return TheHole, and fast JSArrays are
-        // protected by the NoElements protector which ensures that objects on
-        // the prototype chain do not have indexed properties. So if a fast
-        // JSArray accessor returns TheHole, we know the prototype walk will
-        // return Undefined.
-
-        numberOfUndefined++;
-      } else {
-        // Do nothing for holes for Array.prototype.sort. The result
-        // is that elements are compacted at the front of the work array.
-      }
+      // Do nothing for holes. The result is that elements are
+      // compacted at the front of the work array.
     } else if (element == Undefined) {
       numberOfUndefined++;
     } else {
@@ -1388,9 +1358,7 @@ CopyWorkArrayToReceiver(implicit context: Context, sortState: SortState)(
 
 transitioning builtin
 ArrayTimSort(context: Context, sortState: SortState): JSAny {
-  const isToSorted: constexpr bool = false;
-  const numberOfNonUndefined: Smi =
-      CompactReceiverElementsIntoWorkArray(isToSorted);
+  const numberOfNonUndefined: Smi = CompactReceiverElementsIntoWorkArray();
   ArrayTimSortImpl(context, sortState, numberOfNonUndefined);
 
   try {
@@ -1398,7 +1366,7 @@ ArrayTimSort(context: Context, sortState: SortState): JSAny {
     // receiver, if that is the case, we switch to the slow path.
     sortState.CheckAccessor() otherwise Slow;
   } label Slow deferred {
-    sortState.ResetToGenericAccessor(isToSorted);
+    sortState.ResetToGenericAccessor();
   }
 
   CopyWorkArrayToReceiver(numberOfNonUndefined);
@@ -1423,8 +1391,7 @@ ArrayPrototypeSort(
 
   if (len < 2) return obj;
 
-  const isToSorted: constexpr bool = false;
-  const sortState: SortState = NewSortState(obj, comparefn, len, isToSorted);
+  const sortState: SortState = NewSortState(obj, comparefn, len);
   ArrayTimSort(context, sortState);
 
   return obj;

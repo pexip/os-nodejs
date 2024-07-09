@@ -10,8 +10,6 @@ const os = require('os');
 const { inspect } = require('util');
 const { Worker } = require('worker_threads');
 
-const workerPath = path.join(__dirname, 'wpt/worker.js');
-
 function getBrowserProperties() {
   const { node: version } = process.versions; // e.g. 18.13.0, 20.0.0-nightly202302078e6e215481
   const release = /^\d+\.\d+\.\d+$/.test(version);
@@ -58,88 +56,66 @@ function codeUnitStr(char) {
   return 'U+' + char.charCodeAt(0).toString(16);
 }
 
-class ReportResult {
-  #startTime;
-
-  constructor(name) {
-    this.test = name;
-    this.status = 'OK';
-    this.subtests = [];
-    this.#startTime = Date.now();
-  }
-
-  addSubtest(name, status, message) {
-    const subtest = {
-      status,
-      // https://github.com/web-platform-tests/wpt/blob/b24eedd/resources/testharness.js#L3722
-      name: sanitizeUnpairedSurrogates(name),
-    };
-    if (message) {
-      // https://github.com/web-platform-tests/wpt/blob/b24eedd/resources/testharness.js#L4506
-      subtest.message = sanitizeUnpairedSurrogates(message);
-    }
-    this.subtests.push(subtest);
-    return subtest;
-  }
-
-  finish(status) {
-    this.status = status ?? 'OK';
-    this.duration = Date.now() - this.#startTime;
-  }
-}
-
-// Generates a report that can be uploaded to wpt.fyi.
-// Checkout https://github.com/web-platform-tests/wpt.fyi/tree/main/api#results-creation
-// for more details.
 class WPTReport {
-  constructor(path) {
-    this.filename = `report-${path.replaceAll('/', '-')}.json`;
-    /** @type {Map<string, ReportResult>} */
-    this.results = new Map();
+  constructor() {
+    this.results = [];
     this.time_start = Date.now();
   }
 
-  /**
-   * Get or create a ReportResult for a test spec.
-   * @param {WPTTestSpec} spec
-   */
-  getResult(spec) {
-    const name = `/${spec.getRelativePath()}${spec.variant}`;
-    if (this.results.has(name)) {
-      return this.results.get(name);
-    }
-    const result = new ReportResult(name);
-    this.results.set(name, result);
+  addResult(name, status) {
+    const result = {
+      test: name,
+      status,
+      subtests: [],
+      addSubtest(name, status, message) {
+        const subtest = {
+          status,
+          // https://github.com/web-platform-tests/wpt/blob/b24eedd/resources/testharness.js#L3722
+          name: sanitizeUnpairedSurrogates(name),
+        };
+        if (message) {
+          // https://github.com/web-platform-tests/wpt/blob/b24eedd/resources/testharness.js#L4506
+          subtest.message = sanitizeUnpairedSurrogates(message);
+        }
+        this.subtests.push(subtest);
+        return subtest;
+      },
+    };
+    this.results.push(result);
     return result;
   }
 
   write() {
     this.time_end = Date.now();
-    const results = Array.from(this.results.values())
-      .map((result) => {
-        const url = new URL(result.test, 'http://wpt');
-        url.pathname = url.pathname.replace(/\.js$/, '.html');
-        result.test = url.href.slice(url.origin.length);
-        return result;
-      });
+    this.results = this.results.filter((result) => {
+      return result.status === 'SKIP' || result.subtests.length !== 0;
+    }).map((result) => {
+      const url = new URL(result.test, 'http://wpt');
+      url.pathname = url.pathname.replace(/\.js$/, '.html');
+      result.test = url.href.slice(url.origin.length);
+      return result;
+    });
 
-    /**
-     * Return required and some optional properties
-     * https://github.com/web-platform-tests/wpt.fyi/blob/60da175/api/README.md?plain=1#L331-L335
-     */
-    this.run_info = {
-      product: 'node.js',
-      ...getBrowserProperties(),
-      revision: process.env.WPT_REVISION || 'unknown',
-      os: getOs(),
-    };
+    if (fs.existsSync('out/wpt/wptreport.json')) {
+      const prev = JSON.parse(fs.readFileSync('out/wpt/wptreport.json'));
+      this.results = [...prev.results, ...this.results];
+      this.time_start = prev.time_start;
+      this.time_end = Math.max(this.time_end, prev.time_end);
+      this.run_info = prev.run_info;
+    } else {
+      /**
+       * Return required and some optional properties
+       * https://github.com/web-platform-tests/wpt.fyi/blob/60da175/api/README.md?plain=1#L331-L335
+       */
+      this.run_info = {
+        product: 'node.js',
+        ...getBrowserProperties(),
+        revision: process.env.WPT_REVISION || 'unknown',
+        os: getOs(),
+      };
+    }
 
-    fs.writeFileSync(`out/wpt/${this.filename}`, JSON.stringify({
-      time_start: this.time_start,
-      time_end: this.time_end,
-      run_info: this.run_info,
-      results: results,
-    }));
+    fs.writeFileSync('out/wpt/wptreport.json', JSON.stringify(this));
   }
 }
 
@@ -193,26 +169,22 @@ class ResourceLoader {
    * @param {string} from the path of the file loading this resource,
    *                      relative to the WPT folder.
    * @param {string} url the url of the resource being loaded.
+   * @param {boolean} asFetch if true, return the resource in a
+   *                          pseudo-Response object.
    */
-  read(from, url) {
+  read(from, url, asFetch = true) {
     const file = this.toRealFilePath(from, url);
+    if (asFetch) {
+      return fsPromises.readFile(file)
+        .then((data) => {
+          return {
+            ok: true,
+            json() { return JSON.parse(data.toString()); },
+            text() { return data.toString(); },
+          };
+        });
+    }
     return fs.readFileSync(file, 'utf8');
-  }
-
-  /**
-   * Load a resource in test/fixtures/wpt specified with a URL
-   * @param {string} from the path of the file loading this resource,
-   *                      relative to the WPT folder.
-   * @param {string} url the url of the resource being loaded.
-   */
-  async readAsFetch(from, url) {
-    const file = this.toRealFilePath(from, url);
-    const data = await fsPromises.readFile(file);
-    return {
-      ok: true,
-      json() { return JSON.parse(data.toString()); },
-      text() { return data.toString(); },
-    };
   }
 }
 
@@ -279,20 +251,16 @@ class StatusRuleSet {
 
 // A specification of WPT test
 class WPTTestSpec {
-  #content;
-
   /**
    * @param {string} mod name of the WPT module, e.g.
    *                     'html/webappapis/microtask-queuing'
    * @param {string} filename path of the test, relative to mod, e.g.
    *                          'test.any.js'
    * @param {StatusRule[]} rules
-   * @param {string} variant test file variant
    */
-  constructor(mod, filename, rules, variant = '') {
+  constructor(mod, filename, rules) {
     this.module = mod;
     this.filename = filename;
-    this.variant = variant;
 
     this.requires = new Set();
     this.failedTests = [];
@@ -321,17 +289,6 @@ class WPTTestSpec {
     this.skipReasons = [...new Set(this.skipReasons)];
   }
 
-  /**
-   * @param {string} mod
-   * @param {string} filename
-   * @param {StatusRule[]} rules
-   */
-  static from(mod, filename, rules) {
-    const spec = new WPTTestSpec(mod, filename, rules);
-    const meta = spec.getMeta();
-    return meta.variant?.map((variant) => new WPTTestSpec(mod, filename, rules, variant)) || [spec];
-  }
-
   getRelativePath() {
     return path.join(this.module, this.filename);
   }
@@ -340,38 +297,8 @@ class WPTTestSpec {
     return fixtures.path('wpt', this.getRelativePath());
   }
 
-  /**
-   * @returns {string}
-   */
   getContent() {
-    this.#content ||= fs.readFileSync(this.getAbsolutePath(), 'utf8');
-    return this.#content;
-  }
-
-  /**
-   * @returns {{ script?: string[]; variant?: string[]; [key: string]: string }} parsed META tags of a spec file
-   */
-  getMeta() {
-    const matches = this.getContent().match(/\/\/ META: .+/g);
-    if (!matches) {
-      return {};
-    }
-    const result = {};
-    for (const match of matches) {
-      const parts = match.match(/\/\/ META: ([^=]+?)=(.+)/);
-      const key = parts[1];
-      const value = parts[2];
-      if (key === 'script' || key === 'variant') {
-        if (result[key]) {
-          result[key].push(value);
-        } else {
-          result[key] = [value];
-        }
-      } else {
-        result[key] = value;
-      }
-    }
-    return result;
+    return fs.readFileSync(this.getAbsolutePath(), 'utf8');
   }
 }
 
@@ -421,6 +348,7 @@ class StatusLoader {
    */
   constructor(path) {
     this.path = path;
+    this.loaded = false;
     this.rules = new StatusRuleSet();
     /** @type {WPTTestSpec[]} */
     this.specs = [];
@@ -460,8 +388,9 @@ class StatusLoader {
     for (const file of list) {
       const relativePath = path.relative(subDir, file);
       const match = this.rules.match(relativePath);
-      this.specs.push(...WPTTestSpec.from(this.path, relativePath, match));
+      this.specs.push(new WPTTestSpec(this.path, relativePath, match));
     }
+    this.loaded = true;
   }
 }
 
@@ -473,34 +402,10 @@ const kIncomplete = 'incomplete';
 const kUncaught = 'uncaught';
 const NODE_UNCAUGHT = 100;
 
-const limit = (concurrency) => {
-  let running = 0;
-  const queue = [];
-
-  const execute = async (fn) => {
-    if (running < concurrency) {
-      running++;
-      try {
-        await fn();
-      } finally {
-        running--;
-        if (queue.length > 0) {
-          execute(queue.shift());
-        }
-      }
-    } else {
-      queue.push(fn);
-    }
-  };
-
-  return execute;
-};
-
 class WPTRunner {
-  constructor(path, { concurrency = os.availableParallelism() - 1 || 1 } = {}) {
+  constructor(path) {
     this.path = path;
     this.resource = new ResourceLoader(path);
-    this.concurrency = concurrency;
 
     this.flags = [];
     this.globalThisInitScripts = [];
@@ -508,21 +413,25 @@ class WPTRunner {
 
     this.status = new StatusLoader(path);
     this.status.load();
-    this.specs = new Set(this.status.specs);
+    this.specMap = new Map(
+      this.status.specs.map((item) => [item.filename, item]),
+    );
 
     this.results = {};
     this.inProgress = new Set();
     this.workers = new Map();
     this.unexpectedFailures = [];
 
+    this.scriptsModifier = null;
+
     if (process.env.WPT_REPORT != null) {
-      this.report = new WPTReport(path);
+      this.report = new WPTReport();
     }
   }
 
   /**
    * Sets the Node.js flags passed to the worker.
-   * @param {string[]} flags
+   * @param {Array<string>} flags
    */
   setFlags(flags) {
     this.flags = flags;
@@ -544,18 +453,14 @@ class WPTRunner {
     this.scriptsModifier = modifier;
   }
 
-  /**
-   * @param {WPTTestSpec} spec
-   */
-  fullInitScript(spec) {
-    const url = new URL(`/${spec.getRelativePath().replace(/\.js$/, '.html')}${spec.variant}`, 'http://wpt');
-    const title = spec.getMeta().title;
+  fullInitScript(hasSubsetScript, locationSearchString) {
     let { initScript } = this;
+    if (hasSubsetScript || locationSearchString) {
+      initScript = `${initScript}\n\n//===\nglobalThis.location ||= {};`;
+    }
 
-    initScript = `${initScript}\n\n//===\nglobalThis.location = new URL("${url.href}");`;
-
-    if (title) {
-      initScript = `${initScript}\n\n//===\nglobalThis.META_TITLE = "${title}";`;
+    if (locationSearchString) {
+      initScript = `${initScript}\n\n//===\nglobalThis.location.search = "${locationSearchString}";`;
     }
 
     if (this.globalThisInitScripts.length === null) {
@@ -579,7 +484,9 @@ class WPTRunner {
   pretendGlobalThisAs(name) {
     switch (name) {
       case 'Window': {
-        this.globalThisInitScripts.push('globalThis.Window = Object.getPrototypeOf(globalThis).constructor;');
+        this.globalThisInitScripts.push(
+          `global.Window = Object.getPrototypeOf(globalThis).constructor;
+          self.GLOBAL.isWorker = () => false;`);
         this.loadLazyGlobals();
         break;
       }
@@ -610,11 +517,11 @@ class WPTRunner {
       'ReadableStreamBYOBReader', 'ReadableStreamBYOBRequest',
       'ReadableByteStreamController', 'ReadableStreamDefaultController',
       'ByteLengthQueuingStrategy', 'CountQueuingStrategy',
-      'TextEncoder', 'TextDecoder', 'TextEncoderStream', 'TextDecoderStream',
+      'TextEncoderStream', 'TextDecoderStream',
       'CompressionStream', 'DecompressionStream',
     ];
     if (Boolean(process.versions.openssl) && !process.env.NODE_SKIP_CRYPTO) {
-      lazyProperties.push('crypto', 'Crypto', 'CryptoKey', 'SubtleCrypto');
+      lazyProperties.push('crypto');
     }
     const script = lazyProperties.map((name) => `globalThis.${name};`).join('\n');
     this.globalThisInitScripts.push(script);
@@ -623,27 +530,47 @@ class WPTRunner {
   // TODO(joyeecheung): work with the upstream to port more tests in .html
   // to .js.
   async runJsTests() {
-    const queue = this.buildQueue();
+    let queue = [];
 
-    const run = limit(this.concurrency);
+    // If the tests are run as `node test/wpt/test-something.js subset.any.js`,
+    // only `subset.any.js` will be run by the runner.
+    if (process.argv[2]) {
+      const filename = process.argv[2];
+      if (!this.specMap.has(filename)) {
+        throw new Error(`${filename} not found!`);
+      }
+      queue.push(this.specMap.get(filename));
+    } else {
+      queue = this.buildQueue();
+    }
+
+    this.inProgress = new Set(queue.map((spec) => spec.filename));
 
     for (const spec of queue) {
+      const testFileName = spec.filename;
       const content = spec.getContent();
-      const meta = spec.getMeta(content);
+      const meta = spec.meta = this.getMeta(content);
 
       const absolutePath = spec.getAbsolutePath();
       const relativePath = spec.getRelativePath();
       const harnessPath = fixtures.path('wpt', 'resources', 'testharness.js');
+      const scriptsToRun = [];
+      let hasSubsetScript = false;
 
       // Scripts specified with the `// META: script=` header
-      const scriptsToRun = meta.script?.map((script) => {
-        const obj = {
-          filename: this.resource.toRealFilePath(relativePath, script),
-          code: this.resource.read(relativePath, script),
-        };
-        this.scriptsModifier?.(obj);
-        return obj;
-      }) ?? [];
+      if (meta.script) {
+        for (const script of meta.script) {
+          if (script === '/common/subset-tests.js' || script === '/common/subset-tests-by-key.js') {
+            hasSubsetScript = true;
+          }
+          const obj = {
+            filename: this.resource.toRealFilePath(relativePath, script),
+            code: this.resource.read(relativePath, script, false),
+          };
+          this.scriptsModifier?.(obj);
+          scriptsToRun.push(obj);
+        }
+      }
       // The actual test
       const obj = {
         code: content,
@@ -652,47 +579,52 @@ class WPTRunner {
       this.scriptsModifier?.(obj);
       scriptsToRun.push(obj);
 
-      run(async () => {
+      /**
+       * Example test with no META variant
+       * https://github.com/nodejs/node/blob/03854f6/test/fixtures/wpt/WebCryptoAPI/sign_verify/hmac.https.any.js#L1-L4
+       *
+       * Example test with multiple META variants
+       * https://github.com/nodejs/node/blob/03854f6/test/fixtures/wpt/WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.https.any.js#L1-L9
+       */
+      for (const variant of meta.variant || ['']) {
+        const workerPath = path.join(__dirname, 'wpt/worker.js');
         const worker = new Worker(workerPath, {
           execArgv: this.flags,
           workerData: {
             testRelativePath: relativePath,
             wptRunner: __filename,
             wptPath: this.path,
-            initScript: this.fullInitScript(spec),
+            initScript: this.fullInitScript(hasSubsetScript, variant),
             harness: {
               code: fs.readFileSync(harnessPath, 'utf8'),
               filename: harnessPath,
             },
             scriptsToRun,
-            needsGc: !!meta.script?.find((script) => script === '/common/gc.js'),
           },
         });
-        this.inProgress.add(spec);
-        this.workers.set(spec, worker);
+        this.workers.set(testFileName, worker);
 
-        const reportResult = this.report?.getResult(spec);
+        let reportResult;
         worker.on('message', (message) => {
           switch (message.type) {
             case 'result':
-              return this.resultCallback(spec, message.result, reportResult);
+              reportResult ||= this.report?.addResult(`/${relativePath}${variant}`, 'OK');
+              return this.resultCallback(testFileName, message.result, reportResult);
             case 'completion':
-              return this.completionCallback(spec, message.status, reportResult);
+              return this.completionCallback(testFileName, message.status);
             default:
               throw new Error(`Unexpected message from worker: ${message.type}`);
           }
         });
 
         worker.on('error', (err) => {
-          if (!this.inProgress.has(spec)) {
+          if (!this.inProgress.has(testFileName)) {
             // The test is already finished. Ignore errors that occur after it.
             // This can happen normally, for example in timers tests.
             return;
           }
-          // Generate a subtest failure for visibility.
-          // No need to record this synthetic failure with wpt.fyi.
           this.fail(
-            spec,
+            testFileName,
             {
               status: NODE_UNCAUGHT,
               name: 'evaluation in WPTRunner.runJsTests()',
@@ -701,26 +633,19 @@ class WPTRunner {
             },
             kUncaught,
           );
-          // Mark the whole test as failed in wpt.fyi report.
-          reportResult?.finish('ERROR');
-          this.inProgress.delete(spec);
+          this.inProgress.delete(testFileName);
         });
 
         await events.once(worker, 'exit').catch(() => {});
-      });
+      }
     }
 
     process.on('exit', () => {
       for (const spec of this.inProgress) {
-        // No need to record this synthetic failure with wpt.fyi.
         this.fail(spec, { name: 'Incomplete' }, kIncomplete);
-        // Mark the whole test as failed in wpt.fyi report.
-        const reportResult = this.report?.getResult(spec);
-        reportResult?.finish('ERROR');
       }
       inspect.defaultOptions.depth = Infinity;
       // Sorts the rules to have consistent output
-      console.log('');
       console.log(JSON.stringify(Object.keys(this.results).sort().reduce(
         (obj, key) => {
           obj[key] = this.results[key];
@@ -745,11 +670,11 @@ class WPTRunner {
       }
 
       const unexpectedPasses = [];
-      for (const specs of queue) {
-        const key = specs.filename;
+      for (const specMap of queue) {
+        const key = specMap.filename;
 
         // File has no expected failures
-        if (!specs.failedTests.length) {
+        if (!specMap.failedTests.length) {
           continue;
         }
 
@@ -759,8 +684,8 @@ class WPTRunner {
         }
 
         // Full check: every expected to fail test is present
-        if (specs.failedTests.some((expectedToFail) => {
-          if (specs.flakyTests.includes(expectedToFail)) {
+        if (specMap.failedTests.some((expectedToFail) => {
+          if (specMap.flakyTests.includes(expectedToFail)) {
             return false;
           }
           return this.results[key]?.fail?.expected?.includes(expectedToFail) !== true;
@@ -775,7 +700,6 @@ class WPTRunner {
       const ran = queue.length;
       const total = ran + skipped;
       const passed = ran - expectedFailures - failures.length;
-      console.log('');
       console.log(`Ran ${ran}/${total} tests, ${skipped} skipped,`,
                   `${passed} passed, ${expectedFailures} expected failures,`,
                   `${failures.length} unexpected failures,`,
@@ -793,6 +717,11 @@ class WPTRunner {
           `Consider updating ${file} for these files:\n${unexpectedPasses.join('\n')}`);
       }
     });
+  }
+
+  getTestTitle(filename) {
+    const spec = this.specMap.get(filename);
+    return spec.meta?.title || filename.split('.')[0];
   }
 
   // Map WPT test status to strings
@@ -814,57 +743,45 @@ class WPTRunner {
   /**
    * Report the status of each specific test case (there could be multiple
    * in one test file).
-   * @param {WPTTestSpec} spec
+   * @param {string} filename
    * @param {Test} test  The Test object returned by WPT harness
-   * @param {ReportResult} reportResult The report result object
    */
-  resultCallback(spec, test, reportResult) {
+  resultCallback(filename, test, reportResult) {
     const status = this.getTestStatus(test.status);
+    const title = this.getTestTitle(filename);
+    if (/^Untitled( \d+)?$/.test(test.name)) {
+      test.name = `${title}${test.name.slice(8)}`;
+    }
+    console.log(`---- ${title} ----`);
     if (status !== kPass) {
-      this.fail(spec, test, status, reportResult);
+      this.fail(filename, test, status, reportResult);
     } else {
-      this.succeed(test, status, reportResult);
+      this.succeed(filename, test, status, reportResult);
     }
   }
 
   /**
    * Report the status of each WPT test (one per file)
-   * @param {WPTTestSpec} spec
+   * @param {string} filename
    * @param {object} harnessStatus - The status object returned by WPT harness.
-   * @param {ReportResult} reportResult The report result object
    */
-  completionCallback(spec, harnessStatus, reportResult) {
+  completionCallback(filename, harnessStatus) {
     const status = this.getTestStatus(harnessStatus.status);
 
     // Treat it like a test case failure
     if (status === kTimeout) {
-      // No need to record this synthetic failure with wpt.fyi.
-      this.fail(spec, { name: 'WPT testharness timeout' }, kTimeout);
-      // Mark the whole test as TIMEOUT in wpt.fyi report.
-      reportResult?.finish('TIMEOUT');
-    } else if (status !== kPass) {
-      // No need to record this synthetic failure with wpt.fyi.
-      this.fail(spec, {
-        status: status,
-        name: 'WPT test harness error',
-        message: harnessStatus.message,
-        stack: harnessStatus.stack,
-      }, status);
-      // Mark the whole test as ERROR in wpt.fyi report.
-      reportResult?.finish('ERROR');
-    } else {
-      reportResult?.finish();
+      this.fail(filename, { name: 'WPT testharness timeout' }, kTimeout);
     }
-    this.inProgress.delete(spec);
+    this.inProgress.delete(filename);
     // Always force termination of the worker. Some tests allocate resources
     // that would otherwise keep it alive.
-    this.workers.get(spec).terminate();
+    this.workers.get(filename).terminate();
   }
 
-  addTestResult(spec, item) {
-    let result = this.results[spec.filename];
+  addTestResult(filename, item) {
+    let result = this.results[filename];
     if (!result) {
-      result = this.results[spec.filename] = {};
+      result = this.results[filename] = {};
     }
     if (item.status === kSkip) {
       // { filename: { skip: 'reason' } }
@@ -886,15 +803,17 @@ class WPTRunner {
     }
   }
 
-  succeed(test, status, reportResult) {
+  succeed(filename, test, status, reportResult) {
     console.log(`[${status.toUpperCase()}] ${test.name}`);
     reportResult?.addSubtest(test.name, 'PASS');
   }
 
-  fail(spec, test, status, reportResult) {
+  fail(filename, test, status, reportResult) {
+    const spec = this.specMap.get(filename);
     const expected = spec.failedTests.includes(test.name);
     if (expected) {
       console.log(`[EXPECTED_FAILURE][${status.toUpperCase()}] ${test.name}`);
+      console.log(test.message || status);
     } else {
       console.log(`[UNEXPECTED_FAILURE][${status.toUpperCase()}] ${test.name}`);
     }
@@ -903,12 +822,12 @@ class WPTRunner {
       console.log(test.stack);
     }
     const command = `${process.execPath} ${process.execArgv}` +
-                    ` ${require.main.filename} '${spec.filename}${spec.variant}'`;
+                    ` ${require.main.filename} ${filename}`;
     console.log(`Command: ${command}\n`);
 
     reportResult?.addSubtest(test.name, 'FAIL', test.message);
 
-    this.addTestResult(spec, {
+    this.addTestResult(filename, {
       name: test.name,
       expected,
       status: kFail,
@@ -916,52 +835,57 @@ class WPTRunner {
     });
   }
 
-  skip(spec, reasons) {
+  skip(filename, reasons) {
+    const title = this.getTestTitle(filename);
+    console.log(`---- ${title} ----`);
     const joinedReasons = reasons.join('; ');
-    console.log(`[SKIPPED] ${spec.filename}${spec.variant}: ${joinedReasons}`);
-    this.addTestResult(spec, {
+    console.log(`[SKIPPED] ${joinedReasons}`);
+    this.addTestResult(filename, {
       status: kSkip,
       reason: joinedReasons,
     });
   }
 
+  getMeta(code) {
+    const matches = code.match(/\/\/ META: .+/g);
+    if (!matches) {
+      return {};
+    }
+    const result = {};
+    for (const match of matches) {
+      const parts = match.match(/\/\/ META: ([^=]+?)=(.+)/);
+      const key = parts[1];
+      const value = parts[2];
+      if (key === 'script' || key === 'variant') {
+        if (result[key]) {
+          result[key].push(value);
+        } else {
+          result[key] = [value];
+        }
+      } else {
+        result[key] = value;
+      }
+    }
+    return result;
+  }
+
   buildQueue() {
     const queue = [];
-    let argFilename;
-    let argVariant;
-    if (process.argv[2]) {
-      ([argFilename, argVariant = ''] = process.argv[2].split('?'));
-    }
-    for (const spec of this.specs) {
-      if (argFilename) {
-        if (spec.filename === argFilename && (!argVariant || spec.variant.substring(1) === argVariant)) {
-          queue.push(spec);
-        }
-        continue;
-      }
-
+    for (const spec of this.specMap.values()) {
+      const filename = spec.filename;
       if (spec.skipReasons.length > 0) {
-        this.skip(spec, spec.skipReasons);
+        this.skip(filename, spec.skipReasons);
         continue;
       }
 
       const lackingIntl = intlRequirements.isLacking(spec.requires);
       if (lackingIntl) {
-        this.skip(spec, [ `requires ${lackingIntl}` ]);
+        this.skip(filename, [ `requires ${lackingIntl}` ]);
         continue;
       }
 
       queue.push(spec);
     }
-
-    // If the tests are run as `node test/wpt/test-something.js subset.any.js`,
-    // only `subset.any.js` (all variants) will be run by the runner.
-    // If the tests are run as `node test/wpt/test-something.js 'subset.any.js?1-10'`,
-    // only the `?1-10` variant of `subset.any.js` will be run by the runner.
-    if (argFilename && queue.length === 0) {
-      throw new Error(`${process.argv[2]} not found!`);
-    }
-
     return queue;
   }
 }

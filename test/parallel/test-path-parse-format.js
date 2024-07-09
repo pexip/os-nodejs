@@ -148,11 +148,13 @@ const trailingTests = [
   ],
 ];
 const failures = [];
-for (const [parse, testList] of trailingTests) {
+trailingTests.forEach((test) => {
+  const parse = test[0];
   const os = parse === path.win32.parse ? 'win32' : 'posix';
-  for (const [input, expected] of testList) {
-    const actual = parse(input);
-    const message = `path.${os}.parse(${JSON.stringify(input)})\n  expect=${
+  test[1].forEach((test) => {
+    const actual = parse(test[0]);
+    const expected = test[1];
+    const message = `path.${os}.parse(${JSON.stringify(test[0])})\n  expect=${
       JSON.stringify(expected)}\n  actual=${JSON.stringify(actual)}`;
     const actualKeys = Object.keys(actual);
     const expectedKeys = Object.keys(expected);
@@ -168,8 +170,8 @@ for (const [parse, testList] of trailingTests) {
     }
     if (failed)
       failures.push(`\n${message}`);
-  }
-}
+  });
+});
 assert.strictEqual(failures.length, 0, failures.join(''));
 
 function checkErrors(path) {
@@ -222,7 +224,3 @@ function checkFormat(path, testCases) {
     });
   });
 }
-
-// See https://github.com/nodejs/node/issues/44343
-assert.strictEqual(path.format({ name: 'x', ext: 'png' }), 'x.png');
-assert.strictEqual(path.format({ name: 'x', ext: '.png' }), 'x.png');

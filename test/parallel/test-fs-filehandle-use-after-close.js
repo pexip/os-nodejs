@@ -16,7 +16,7 @@ const fs = require('fs').promises;
   // See https://github.com/nodejs/node/issues/31361 for more details.
   const otherFilehandle = await fs.open(process.execPath);
 
-  await assert.rejects(() => filehandle.stat(), {
+  assert.rejects(() => filehandle.stat(), {
     code: 'EBADF',
     syscall: 'fstat'
   });

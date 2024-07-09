@@ -2,9 +2,10 @@
 
 const common = require('../common');
 const fs = require('fs');
+const path = require('path');
 const assert = require('assert');
 const tmpdir = require('../common/tmpdir');
-const writeFile = tmpdir.resolve('write-autoClose.txt');
+const writeFile = path.join(tmpdir.path, 'write-autoClose.txt');
 tmpdir.refresh();
 
 const file = fs.createWriteStream(writeFile, { autoClose: true });

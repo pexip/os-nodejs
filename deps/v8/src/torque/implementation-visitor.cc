@@ -1171,28 +1171,19 @@ const Type* ImplementationVisitor::Visit(BlockStatement* block) {
 }
 
 const Type* ImplementationVisitor::Visit(DebugStatement* stmt) {
-  std::string reason;
-  const Type* return_type;
-  AbortInstruction::Kind kind;
-  switch (stmt->kind) {
-    case DebugStatement::Kind::kUnreachable:
-      // Use the same string as in C++ to simplify fuzzer pattern-matching.
-      reason = base::kUnreachableCodeMessage;
-      return_type = TypeOracle::GetNeverType();
-      kind = AbortInstruction::Kind::kUnreachable;
-      break;
-    case DebugStatement::Kind::kDebug:
-      reason = "debug break";
-      return_type = TypeOracle::GetVoidType();
-      kind = AbortInstruction::Kind::kDebugBreak;
-      break;
-  }
 #if defined(DEBUG)
-  assembler().Emit(PrintErrorInstruction{"halting because of " + reason +
-                                         " at " + PositionAsString(stmt->pos)});
+  assembler().Emit(PrintConstantStringInstruction{"halting because of '" +
+                                                  stmt->reason + "' at " +
+                                                  PositionAsString(stmt->pos)});
 #endif
-  assembler().Emit(AbortInstruction{kind});
-  return return_type;
+  assembler().Emit(AbortInstruction{stmt->never_continues
+                                        ? AbortInstruction::Kind::kUnreachable
+                                        : AbortInstruction::Kind::kDebugBreak});
+  if (stmt->never_continues) {
+    return TypeOracle::GetNeverType();
+  } else {
+    return TypeOracle::GetVoidType();
+  }
 }
 
 namespace {
@@ -1487,9 +1478,7 @@ void ImplementationVisitor::InitializeClass(
     InitializeClass(super, allocate_result, initializer_results, layout);
   }
 
-  for (const Field& f : class_type->fields()) {
-    // Support optional padding fields.
-    if (f.name_and_type.type->IsVoid()) continue;
+  for (Field f : class_type->fields()) {
     VisitResult initializer_value =
         initializer_results.field_value_map.at(f.name_and_type.name);
     LocationReference field =
@@ -1547,7 +1536,7 @@ VisitResult ImplementationVisitor::GenerateArrayLength(VisitResult object,
         {f.name_and_type.name,
          f.const_qualified
              ? (before_current
-                    ? LocalValue{[this, object, f, class_type]() {
+                    ? LocalValue{[=]() {
                         return GenerateFieldReference(object, f, class_type);
                       }}
                     : LocalValue("Array lengths may only refer to fields "
@@ -1693,8 +1682,6 @@ VisitResult ImplementationVisitor::Visit(NewExpression* expr) {
   allocate_arguments.parameters.push_back(object_map);
   allocate_arguments.parameters.push_back(
       GenerateBoolConstant(expr->pretenured));
-  allocate_arguments.parameters.push_back(
-      GenerateBoolConstant(expr->clear_padding));
   VisitResult allocate_result = GenerateCall(
       QualifiedName({TORQUE_INTERNAL_NAMESPACE_STRING}, "AllocateFromNew"),
       allocate_arguments, {class_type}, false);
@@ -3416,6 +3403,12 @@ std::string ImplementationVisitor::ExternalParameterName(
   return std::string("p_") + name;
 }
 
+DEFINE_CONTEXTUAL_VARIABLE(ImplementationVisitor::ValueBindingsManager)
+DEFINE_CONTEXTUAL_VARIABLE(ImplementationVisitor::LabelBindingsManager)
+DEFINE_CONTEXTUAL_VARIABLE(ImplementationVisitor::CurrentCallable)
+DEFINE_CONTEXTUAL_VARIABLE(ImplementationVisitor::CurrentFileStreams)
+DEFINE_CONTEXTUAL_VARIABLE(ImplementationVisitor::CurrentReturnValue)
+
 bool IsCompatibleSignature(const Signature& sig, const TypeVector& types,
                            size_t label_count) {
   auto i = sig.parameter_types.types.begin() + sig.implicit_count;
@@ -3577,47 +3570,43 @@ void ImplementationVisitor::GenerateBuiltinDefinitionsAndInterfaceDescriptors(
       if (builtin->IsStub()) {
         builtin_definitions << "TFC(" << builtin->ExternalName() << ", "
                             << builtin->ExternalName();
-        if (!builtin->HasCustomInterfaceDescriptor()) {
-          std::string descriptor_name = builtin->ExternalName() + "Descriptor";
-          bool has_context_parameter =
-              builtin->signature().HasContextParameter();
-          size_t kFirstNonContextParameter = has_context_parameter ? 1 : 0;
-          TypeVector return_types = LowerType(builtin->signature().return_type);
+        std::string descriptor_name = builtin->ExternalName() + "Descriptor";
+        bool has_context_parameter = builtin->signature().HasContextParameter();
+        size_t kFirstNonContextParameter = has_context_parameter ? 1 : 0;
+        TypeVector return_types = LowerType(builtin->signature().return_type);
 
-          interface_descriptors << "class " << descriptor_name
-                                << " : public StaticCallInterfaceDescriptor<"
-                                << descriptor_name << "> {\n";
+        interface_descriptors << "class " << descriptor_name
+                              << " : public StaticCallInterfaceDescriptor<"
+                              << descriptor_name << "> {\n";
 
-          interface_descriptors << " public:\n";
+        interface_descriptors << " public:\n";
 
-          if (has_context_parameter) {
-            interface_descriptors << "  DEFINE_RESULT_AND_PARAMETERS(";
-          } else {
-            interface_descriptors
-                << "  DEFINE_RESULT_AND_PARAMETERS_NO_CONTEXT(";
-          }
-          interface_descriptors << return_types.size();
-          for (size_t i = kFirstNonContextParameter;
-               i < builtin->parameter_names().size(); ++i) {
-            Identifier* parameter = builtin->parameter_names()[i];
-            interface_descriptors << ", k" << CamelifyString(parameter->value);
-          }
-          interface_descriptors << ")\n";
-
-          interface_descriptors << "  DEFINE_RESULT_AND_PARAMETER_TYPES(";
-          PrintCommaSeparatedList(interface_descriptors, return_types,
-                                  MachineTypeString);
-          for (size_t i = kFirstNonContextParameter;
-               i < builtin->parameter_names().size(); ++i) {
-            const Type* type = builtin->signature().parameter_types.types[i];
-            interface_descriptors << ", " << MachineTypeString(type);
-          }
-          interface_descriptors << ")\n";
-
-          interface_descriptors << "  DECLARE_DEFAULT_DESCRIPTOR("
-                                << descriptor_name << ")\n";
-          interface_descriptors << "};\n\n";
+        if (has_context_parameter) {
+          interface_descriptors << "  DEFINE_RESULT_AND_PARAMETERS(";
+        } else {
+          interface_descriptors << "  DEFINE_RESULT_AND_PARAMETERS_NO_CONTEXT(";
         }
+        interface_descriptors << return_types.size();
+        for (size_t i = kFirstNonContextParameter;
+             i < builtin->parameter_names().size(); ++i) {
+          Identifier* parameter = builtin->parameter_names()[i];
+          interface_descriptors << ", k" << CamelifyString(parameter->value);
+        }
+        interface_descriptors << ")\n";
+
+        interface_descriptors << "  DEFINE_RESULT_AND_PARAMETER_TYPES(";
+        PrintCommaSeparatedList(interface_descriptors, return_types,
+                                MachineTypeString);
+        for (size_t i = kFirstNonContextParameter;
+             i < builtin->parameter_names().size(); ++i) {
+          const Type* type = builtin->signature().parameter_types.types[i];
+          interface_descriptors << ", " << MachineTypeString(type);
+        }
+        interface_descriptors << ")\n";
+
+        interface_descriptors << "  DECLARE_DEFAULT_DESCRIPTOR("
+                              << descriptor_name << ")\n";
+        interface_descriptors << "};\n\n";
       } else {
         builtin_definitions << "TFJ(" << builtin->ExternalName();
         if (builtin->IsVarArgsJavaScript()) {
@@ -3895,7 +3884,7 @@ void ImplementationVisitor::GenerateBitFields(
 
     for (const auto& type : TypeOracle::GetBitFieldStructTypes()) {
       bool all_single_bits = true;  // Track whether every field is one bit.
-      header << "// " << type->GetPosition() << "\n";
+
       header << "#define DEFINE_TORQUE_GENERATED_"
              << CapifyStringWithUnderscores(type->name()) << "() \\\n";
       std::string type_name = type->GetConstexprGeneratedTypeName();
@@ -4297,7 +4286,7 @@ void CppClassGenerator::GenerateClassCasts() {
   // V8_INLINE static D unchecked_cast(Object)
   f.SetName("unchecked_cast");
   f.PrintInlineDefinition(hdr_, [](std::ostream& stream) {
-    stream << "    return base::bit_cast<D>(object);\n";
+    stream << "    return bit_cast<D>(object);\n";
   });
 }
 

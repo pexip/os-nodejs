@@ -17,7 +17,7 @@ declare namespace InternalMessagingBinding {
 }
 
 
-export interface MessagingBinding {
+declare function InternalBinding(binding: 'messaging'): {
   DOMException: typeof import('internal/per_context/domexception').DOMException;
   MessageChannel: typeof InternalMessagingBinding.MessageChannel;
   MessagePort: typeof InternalMessagingBinding.MessagePort;
@@ -29,4 +29,4 @@ export interface MessagingBinding {
   moveMessagePortToContext(port: typeof InternalMessagingBinding.MessagePort, context: any): typeof InternalMessagingBinding.MessagePort;
   setDeserializerCreateObjectFunction(func: (deserializeInfo: string) => any): void;
   broadcastChannel(name: string): typeof InternalMessagingBinding.MessagePort;
-}
+};

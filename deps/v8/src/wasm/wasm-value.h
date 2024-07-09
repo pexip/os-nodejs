@@ -13,6 +13,7 @@
 #include "src/handles/handles.h"
 #include "src/utils/boxed-float.h"
 #include "src/wasm/value-type.h"
+#include "src/zone/zone-containers.h"
 
 namespace v8 {
 namespace internal {
@@ -113,8 +114,7 @@ class WasmValue {
   FOREACH_PRIMITIVE_WASMVAL_TYPE(DEFINE_TYPE_SPECIFIC_METHODS)
 #undef DEFINE_TYPE_SPECIFIC_METHODS
 
-  WasmValue(const uint8_t* raw_bytes, ValueType type)
-      : type_(type), bit_pattern_{} {
+  WasmValue(byte* raw_bytes, ValueType type) : type_(type), bit_pattern_{} {
     DCHECK(type_.is_numeric());
     memcpy(bit_pattern_, raw_bytes, type.value_kind_size());
   }
@@ -144,8 +144,8 @@ class WasmValue {
   }
 
   void CopyTo(byte* to) const {
-    static_assert(sizeof(float) == sizeof(Float32));
-    static_assert(sizeof(double) == sizeof(Float64));
+    STATIC_ASSERT(sizeof(float) == sizeof(Float32));
+    STATIC_ASSERT(sizeof(double) == sizeof(Float64));
     DCHECK(type_.is_numeric());
     memcpy(to, bit_pattern_, type_.value_kind_size());
   }
@@ -199,7 +199,7 @@ class WasmValue {
         }
         return stream.str();
       }
-      case kRefNull:
+      case kOptRef:
       case kRef:
       case kRtt:
         return "Handle [" + std::to_string(to_ref().address()) + "]";
@@ -207,13 +207,6 @@ class WasmValue {
       case kBottom:
         UNREACHABLE();
     }
-  }
-
-  bool zero_byte_representation() {
-    DCHECK(type().is_numeric());
-    uint32_t byte_count = type().value_kind_size();
-    return static_cast<uint32_t>(std::count(
-               bit_pattern_, bit_pattern_ + byte_count, 0)) == byte_count;
   }
 
  private:

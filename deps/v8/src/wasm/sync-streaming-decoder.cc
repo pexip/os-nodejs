@@ -49,8 +49,7 @@ class V8_EXPORT_PRIVATE SyncStreamingDecoder : public StreamingDecoder {
 
       MaybeHandle<WasmModuleObject> module_object = DeserializeNativeModule(
           isolate_, compiled_module_bytes_,
-          base::Vector<const uint8_t>(bytes.get(), buffer_size_),
-          base::VectorOf(url()));
+          base::Vector<const uint8_t>(bytes.get(), buffer_size_), url());
 
       if (!module_object.is_null()) {
         Handle<WasmModuleObject> module = module_object.ToHandleChecked();
@@ -69,6 +68,9 @@ class V8_EXPORT_PRIVATE SyncStreamingDecoder : public StreamingDecoder {
       return;
     }
     Handle<WasmModuleObject> module = module_object.ToHandleChecked();
+    if (module_compiled_callback_) {
+      module_compiled_callback_(module->shared_native_module());
+    }
     resolver_->OnCompilationSucceeded(module);
   }
 
@@ -77,7 +79,7 @@ class V8_EXPORT_PRIVATE SyncStreamingDecoder : public StreamingDecoder {
     buffer_.clear();
   }
 
-  void NotifyCompilationDiscarded() override { buffer_.clear(); }
+  void NotifyCompilationEnded() override { buffer_.clear(); }
 
   void NotifyNativeModuleCreated(
       const std::shared_ptr<NativeModule>&) override {

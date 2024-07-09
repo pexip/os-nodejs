@@ -35,7 +35,6 @@ namespace interpreter {
 
 #define UNSIGNED_FIXED_SCALAR_OPERAND_TYPE_LIST(V)    \
   V(Flag8, OperandTypeInfo::kFixedUnsignedByte)       \
-  V(Flag16, OperandTypeInfo::kFixedUnsignedShort)     \
   V(IntrinsicId, OperandTypeInfo::kFixedUnsignedByte) \
   V(RuntimeId, OperandTypeInfo::kFixedUnsignedShort)  \
   V(NativeContextIndex, OperandTypeInfo::kFixedUnsignedByte)
@@ -114,10 +113,8 @@ enum class ImplicitRegisterUse : uint8_t {
   kNone = 0,
   kReadAccumulator = 1 << 0,
   kWriteAccumulator = 1 << 1,
-  kClobberAccumulator = 1 << 2,
-  kWriteShortStar = 1 << 3,
+  kWriteShortStar = 1 << 2,
   kReadWriteAccumulator = kReadAccumulator | kWriteAccumulator,
-  kReadAndClobberAccumulator = kReadAccumulator | kClobberAccumulator,
   kReadAccumulatorWriteShortStar = kReadAccumulator | kWriteShortStar
 };
 
@@ -187,24 +184,6 @@ class BytecodeOperands : public AllStatic {
       ImplicitRegisterUse implicit_register_use) {
     return (implicit_register_use & ImplicitRegisterUse::kWriteAccumulator) ==
            ImplicitRegisterUse::kWriteAccumulator;
-  }
-
-  // Returns true if |implicit_register_use| clobbers the
-  // accumulator.
-  static constexpr bool ClobbersAccumulator(
-      ImplicitRegisterUse implicit_register_use) {
-    return (implicit_register_use & ImplicitRegisterUse::kClobberAccumulator) ==
-           ImplicitRegisterUse::kClobberAccumulator;
-  }
-
-  // Returns true if |implicit_register_use| writes or clobbers the
-  // accumulator.
-  static constexpr bool WritesOrClobbersAccumulator(
-      ImplicitRegisterUse implicit_register_use) {
-    return (implicit_register_use &
-            (ImplicitRegisterUse::kWriteAccumulator |
-             ImplicitRegisterUse::kClobberAccumulator)) !=
-           ImplicitRegisterUse::kNone;
   }
 
   // Returns true if |implicit_register_use| writes to a

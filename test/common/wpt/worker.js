@@ -1,30 +1,23 @@
 'use strict';
 
-const { runInNewContext, runInThisContext } = require('vm');
-const { setFlagsFromString } = require('v8');
+const { runInThisContext } = require('vm');
 const { parentPort, workerData } = require('worker_threads');
 
 const { ResourceLoader } = require(workerData.wptRunner);
 const resource = new ResourceLoader(workerData.wptPath);
 
-if (workerData.needsGc) {
-  // See https://github.com/nodejs/node/issues/16595#issuecomment-340288680
-  setFlagsFromString('--expose-gc');
-  globalThis.gc = runInNewContext('gc');
-}
-
-globalThis.self = global;
-globalThis.GLOBAL = {
+global.self = global;
+global.GLOBAL = {
   isWindow() { return false; },
   isShadowRealm() { return false; },
 };
-globalThis.require = require;
+global.require = require;
 
-// This is a mock for non-fetch tests that use fetch to resolve
-// a relative fixture file.
-// Actual Fetch API WPTs are executed in nodejs/undici.
-globalThis.fetch = function fetch(file) {
-  return resource.readAsFetch(workerData.testRelativePath, file);
+// This is a mock, because at the moment fetch is not implemented
+// in Node.js, but some tests and harness depend on this to pull
+// resources.
+global.fetch = function fetch(file) {
+  return resource.read(workerData.testRelativePath, file, true);
 };
 
 if (workerData.initScript) {

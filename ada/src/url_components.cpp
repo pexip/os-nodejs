@@ -77,6 +77,7 @@ namespace ada {
     if (hash_start < index) {
       return false;
     }
+    index = hash_start;
   }
 
   return true;

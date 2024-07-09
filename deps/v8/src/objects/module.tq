@@ -17,9 +17,7 @@ extern class Module extends HeapObject {
   top_level_capability: JSPromise|Undefined;
 }
 
-extern class JSModuleNamespace extends JSSpecialObject {
-  module: Module;
-}
+extern class JSModuleNamespace extends JSSpecialObject { module: Module; }
 
 extern class ScriptOrModule extends Struct {
   resource_name: Object;

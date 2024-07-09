@@ -2,11 +2,11 @@
 
 {
   function setupTheme() {
-    const storedTheme = localStorage.getItem('theme');
+    const kCustomPreference = 'customDarkTheme';
+    const userSettings = sessionStorage.getItem(kCustomPreference);
     const themeToggleButton = document.getElementById('theme-toggle-btn');
 
-    // Follow operating system theme preference
-    if (storedTheme === null && window.matchMedia) {
+    if (userSettings === null && window.matchMedia) {
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
 
       if ('onchange' in mq) {
@@ -24,14 +24,20 @@
           );
         }
       }
+
+      if (mq.matches) {
+        document.documentElement.classList.add('dark-mode');
+      }
+    } else if (userSettings === 'true') {
+      document.documentElement.classList.add('dark-mode');
     }
 
     if (themeToggleButton) {
       themeToggleButton.hidden = false;
       themeToggleButton.addEventListener('click', function() {
-        localStorage.setItem(
-          'theme',
-          document.documentElement.classList.toggle('dark-mode') ? 'dark' : 'light',
+        sessionStorage.setItem(
+          kCustomPreference,
+          document.documentElement.classList.toggle('dark-mode'),
         );
       });
     }
@@ -41,7 +47,6 @@
     function closeAllPickers() {
       for (const picker of pickers) {
         picker.parentNode.classList.remove('expanded');
-        picker.ariaExpanded = false;
       }
 
       window.removeEventListener('click', closeAllPickers);
@@ -59,7 +64,6 @@
     for (const picker of pickers) {
       const parentNode = picker.parentNode;
 
-      picker.ariaExpanded = parentNode.classList.contains('expanded');
       picker.addEventListener('click', function(e) {
         e.preventDefault();
 
@@ -67,7 +71,7 @@
           closeAllPickers as window event trigger already closed all the pickers,
           if it already closed there is nothing else to do here
         */
-        if (picker.ariaExpanded === 'true') {
+        if (parentNode.classList.contains('expanded')) {
           return;
         }
 
@@ -77,11 +81,9 @@
         */
 
         requestAnimationFrame(function() {
-          picker.ariaExpanded = true;
           parentNode.classList.add('expanded');
           window.addEventListener('click', closeAllPickers);
           window.addEventListener('keydown', onKeyDown);
-          parentNode.querySelector('.picker a').focus();
         });
       });
     }
@@ -134,41 +136,18 @@
     updateHashes();
   }
 
-  function setupFlavorToggles() {
-    const kFlavorPreference = 'customFlavor';
-    const flavorSetting = localStorage.getItem(kFlavorPreference) === 'true';
-    const flavorToggles = document.querySelectorAll('.js-flavor-toggle');
-
-    flavorToggles.forEach((toggleElement) => {
-      toggleElement.checked = flavorSetting;
-      toggleElement.addEventListener('change', (e) => {
-        const checked = e.target.checked;
-
-        if (checked) {
-          localStorage.setItem(kFlavorPreference, true);
-        } else {
-          localStorage.removeItem(kFlavorPreference);
-        }
-
-        flavorToggles.forEach((el) => {
-          el.checked = checked;
-        });
-      });
-    });
-  }
-
   function setupCopyButton() {
     const buttons = document.querySelectorAll('.copy-button');
     buttons.forEach((button) => {
       button.addEventListener('click', (el) => {
         const parentNode = el.target.parentNode;
 
-        const flavorToggle = parentNode.querySelector('.js-flavor-toggle');
+        const flavorSelector = parentNode.querySelector('.js-flavor-selector');
 
         let code = '';
 
-        if (flavorToggle) {
-          if (flavorToggle.checked) {
+        if (flavorSelector) {
+          if (flavorSelector.checked) {
             code = parentNode.querySelector('.mjs').textContent;
           } else {
             code = parentNode.querySelector('.cjs').textContent;
@@ -202,8 +181,6 @@
 
     // Make link to other versions of the doc open to the same hash target (if it exists).
     setupAltDocsLink();
-
-    setupFlavorToggles();
 
     setupCopyButton();
   }

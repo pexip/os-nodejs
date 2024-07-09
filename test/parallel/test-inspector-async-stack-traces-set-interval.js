@@ -26,8 +26,6 @@ async function checkAsyncStackTrace(session) {
 async function runTests() {
   const instance = new NodeInstance(undefined, script);
   const session = await instance.connectInspectorSession();
-  await session.send({ method: 'NodeRuntime.enable' });
-  await session.waitForNotification('NodeRuntime.waitingForDebugger');
   await session.send([
     { 'method': 'Runtime.enable' },
     { 'method': 'Debugger.enable' },
@@ -37,7 +35,6 @@ async function runTests() {
       'params': { 'patterns': [] } },
     { 'method': 'Runtime.runIfWaitingForDebugger' },
   ]);
-  await session.send({ method: 'NodeRuntime.disable' });
 
   await skipFirstBreakpoint(session);
   await checkAsyncStackTrace(session);

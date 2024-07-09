@@ -1,27 +1,42 @@
 'use strict';
 
 const common = require('../common.js');
-const assert = require('assert');
+const { throws, doesNotThrow } = require('assert');
 
 const bench = common.createBenchmark(main, {
-  n: [25, 2e5],
-  method: ['throws', 'doesNotThrow'],
+  n: [1e4],
+  method: [ 'doesNotThrow', 'throws_TypeError', 'throws_RegExp' ],
 });
 
 function main({ n, method }) {
-  const fn = assert[method];
-  const shouldThrow = method === 'throws';
+  const throwError = () => { throw new TypeError('foobar'); };
+  const doNotThrowError = () => { return 'foobar'; };
+  const regExp = /foobar/;
+  const message = 'failure';
 
-  bench.start();
-  for (let i = 0; i < n; ++i) {
-    fn(() => {
-      const err = new Error(`assert.${method}`);
-      if (shouldThrow) {
-        throw err;
-      } else {
-        return err;
+  switch (method) {
+    case 'doesNotThrow':
+      bench.start();
+      for (let i = 0; i < n; ++i) {
+        doesNotThrow(doNotThrowError);
       }
-    });
+      bench.end(n);
+      break;
+    case 'throws_TypeError':
+      bench.start();
+      for (let i = 0; i < n; ++i) {
+        throws(throwError, TypeError, message);
+      }
+      bench.end(n);
+      break;
+    case 'throws_RegExp':
+      bench.start();
+      for (let i = 0; i < n; ++i) {
+        throws(throwError, regExp, message);
+      }
+      bench.end(n);
+      break;
+    default:
+      throw new Error(`Unsupported method ${method}`);
   }
-  bench.end(n);
 }

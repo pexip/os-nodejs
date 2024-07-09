@@ -8,7 +8,7 @@ const {
 } = require('perf_hooks');
 
 const bench = common.createBenchmark(main, {
-  n: [1e6],
+  n: [1e5],
   observe: ['all', 'measure'],
 });
 

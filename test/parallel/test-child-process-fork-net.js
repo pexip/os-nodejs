@@ -19,9 +19,6 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// This tests that a socket sent to the forked process works.
-// See https://github.com/nodejs/node/commit/dceebbfa
-
 'use strict';
 const {
   mustCall,
@@ -68,7 +65,7 @@ if (process.argv[2] === 'child') {
     socket.on('finish', mustCall(() => {
       debug(`[${id}] socket finished ${m}`);
     }));
-  }, 4));
+  }));
 
   process.on('message', mustCall((m) => {
     if (m !== 'close') return;
@@ -77,7 +74,7 @@ if (process.argv[2] === 'child') {
       debug(`[${id}] ending ${i}/${needEnd.length}`);
       endMe.end('end');
     });
-  }, 4));
+  }));
 
   process.on('disconnect', mustCall(() => {
     debug(`[${id}] process disconnect, ending`);
@@ -149,22 +146,9 @@ if (process.argv[2] === 'child') {
   server.on('close', mustCall(function() {
     closeEmitted = true;
 
-    // Clean up child processes.
-    try {
-      child1.kill();
-    } catch {
-      debug('child process already terminated');
-    }
-    try {
-      child2.kill();
-    } catch {
-      debug('child process already terminated');
-    }
-    try {
-      child3.kill();
-    } catch {
-      debug('child process already terminated');
-    }
+    child1.kill();
+    child2.kill();
+    child3.kill();
   }));
 
   server.listen(0, '127.0.0.1');

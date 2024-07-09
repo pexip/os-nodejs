@@ -21,7 +21,9 @@ namespace internal {
 class V8_EXPORT_PRIVATE CodeObjectRegistry {
  public:
   void RegisterNewlyAllocatedCodeObject(Address code);
-  void ReinitializeFrom(std::vector<Address>&& code_objects);
+  void RegisterAlreadyExistingCodeObject(Address code);
+  void Clear();
+  void Finalize();
   bool Contains(Address code) const;
   Address GetCodeObjectStartFromInnerAddress(Address address) const;
 
@@ -30,11 +32,7 @@ class V8_EXPORT_PRIVATE CodeObjectRegistry {
   // that it can be lazily sorted during GetCodeObjectStartFromInnerAddress.
   mutable std::vector<Address> code_object_registry_;
   mutable bool is_sorted_ = true;
-  // The mutex has to be recursive because profiler tick might happen while
-  // holding this lock, then the profiler will try to iterate the call stack
-  // which might end up calling GetCodeObjectStartFromInnerAddress() and thus
-  // trying to lock the mutex for a second time.
-  mutable base::RecursiveMutex code_object_registry_mutex_;
+  mutable base::Mutex code_object_registry_mutex_;
 };
 
 }  // namespace internal

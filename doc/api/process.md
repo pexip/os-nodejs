@@ -180,9 +180,7 @@ See [Advanced serialization for `child_process`][] for more details.
 
 <!-- YAML
 added: v10.12.0
-deprecated:
-  - v17.6.0
-  - v16.15.0
+deprecated: v17.6.0
 -->
 
 > Stability: 0 - Deprecated
@@ -327,18 +325,6 @@ possible to record such errors in an error log, either periodically (which is
 likely best for long-running application) or upon process exit (which is likely
 most convenient for scripts).
 
-### Event: `'workerMessage'`
-
-<!-- YAML
-added: v20.19.0
--->
-
-* `value` {any} A value transmitted using [`postMessageToThread()`][].
-* `source` {number} The transmitting worker thread ID or `0` for the main thread.
-
-The `'workerMessage'` event is emitted for any incoming message send by the other
-party by using [`postMessageToThread()`][].
-
 ### Event: `'uncaughtException'`
 
 <!-- YAML
@@ -372,13 +358,12 @@ exit with 0.
 
 ```mjs
 import process from 'node:process';
-import fs from 'node:fs';
 
 process.on('uncaughtException', (err, origin) => {
   fs.writeSync(
     process.stderr.fd,
     `Caught exception: ${err}\n` +
-    `Exception origin: ${origin}\n`,
+    `Exception origin: ${origin}`,
   );
 });
 
@@ -393,13 +378,12 @@ console.log('This will not run.');
 
 ```cjs
 const process = require('node:process');
-const fs = require('node:fs');
 
 process.on('uncaughtException', (err, origin) => {
   fs.writeSync(
     process.stderr.fd,
     `Caught exception: ${err}\n` +
-    `Exception origin: ${origin}\n`,
+    `Exception origin: ${origin}`,
   );
 });
 
@@ -620,10 +604,7 @@ process.on('warning', (warning) => {
 
 By default, Node.js will print process warnings to `stderr`. The `--no-warnings`
 command-line option can be used to suppress the default console output but the
-`'warning'` event will still be emitted by the `process` object. Currently, it
-is not possible to suppress specific warning types other than deprecation
-warnings. To suppress deprecation warnings, check out the [`--no-deprecation`][]
-flag.
+`'warning'` event will still be emitted by the `process` object.
 
 The following example illustrates the warning that is printed to `stderr` when
 too many listeners have been added to an event:
@@ -664,6 +645,18 @@ of the custom deprecation.
 The `*-deprecation` command-line flags only affect warnings that use the name
 `'DeprecationWarning'`.
 
+### Event: `'worker'`
+
+<!-- YAML
+added:
+  - v16.2.0
+  - v14.18.0
+-->
+
+* `worker` {Worker} The {Worker} that was created.
+
+The `'worker'` event is emitted after a new {Worker} thread has been created.
+
 #### Emitting custom warnings
 
 See the [`process.emitWarning()`][process_emit_warning] method for issuing
@@ -691,18 +684,6 @@ A few of the warning types that are most common include:
 * `'UnsupportedWarning'` - Indicates use of an unsupported option or feature
   that will be ignored rather than treated as an error. One example is use of
   the HTTP response status message when using the HTTP/2 compatibility API.
-
-### Event: `'worker'`
-
-<!-- YAML
-added:
-  - v16.2.0
-  - v14.18.0
--->
-
-* `worker` {Worker} The {Worker} that was created.
-
-The `'worker'` event is emitted after a new {Worker} thread has been created.
 
 ### Signal events
 
@@ -887,8 +868,8 @@ added: v0.5.0
 * {string}
 
 The operating system CPU architecture for which the Node.js binary was compiled.
-Possible values are: `'arm'`, `'arm64'`, `'ia32'`, `'loong64'`, `'mips'`,
-`'mipsel'`, `'ppc'`, `'ppc64'`, `'riscv64'`, `'s390'`, `'s390x'`, and `'x64'`.
+Possible values are: `'arm'`, `'arm64'`, `'ia32'`, `'mips'`,`'mipsel'`, `'ppc'`,
+`'ppc64'`, `'s390'`, `'s390x'`, and `'x64'`.
 
 ```mjs
 import { arch } from 'node:process';
@@ -939,8 +920,8 @@ argv.forEach((val, index) => {
 
 Launching the Node.js process as:
 
-```bash
-node process-args.js one two=three four
+```console
+$ node process-args.js one two=three four
 ```
 
 Would generate the output:
@@ -1058,9 +1039,6 @@ This feature is not available in [`Worker`][] threads.
 <!-- YAML
 added: v0.7.7
 changes:
-  - version: v19.0.0
-    pr-url: https://github.com/nodejs/node/pull/43627
-    description: The `process.config` object is now frozen.
   - version: v16.0.0
     pr-url: https://github.com/nodejs/node/pull/36902
     description: Modifying process.config has been deprecated.
@@ -1068,10 +1046,10 @@ changes:
 
 * {Object}
 
-The `process.config` property returns a frozen `Object` containing the
-JavaScript representation of the configure options used to compile the current
-Node.js executable. This is the same as the `config.gypi` file that was produced
-when running the `./configure` script.
+The `process.config` property returns an `Object` containing the JavaScript
+representation of the configure options used to compile the current Node.js
+executable. This is the same as the `config.gypi` file that was produced when
+running the `./configure` script.
 
 An example of the possible output looks like:
 
@@ -1095,6 +1073,7 @@ An example of the possible output looks like:
      node_shared_http_parser: 'false',
      node_shared_libuv: 'false',
      node_shared_zlib: 'false',
+     node_use_dtrace: 'false',
      node_use_openssl: 'true',
      node_shared_openssl: 'false',
      strict_aliasing: 'true',
@@ -1103,6 +1082,14 @@ An example of the possible output looks like:
    }
 }
 ```
+
+The `process.config` property is **not** read-only and there are existing
+modules in the ecosystem that are known to extend, modify, or entirely replace
+the value of `process.config`.
+
+Modifying the `process.config` property, or any child-property of the
+`process.config` object has been deprecated. The `process.config` will be made
+read-only in a future release.
 
 ## `process.connected`
 
@@ -1123,40 +1110,18 @@ over the IPC channel using `process.send()`.
 ## `process.constrainedMemory()`
 
 <!-- YAML
-added:
-  - v19.6.0
-  - v18.15.0
-changes:
-  - version: v20.13.0
-    pr-url: https://github.com/nodejs/node/pull/52039
-    description: Aligned return value with `uv_get_constrained_memory`.
+added: v18.15.0
 -->
 
 > Stability: 1 - Experimental
 
-* {number}
+* {number|undefined}
 
 Gets the amount of memory available to the process (in bytes) based on
 limits imposed by the OS. If there is no such constraint, or the constraint
-is unknown, `0` is returned.
+is unknown, `undefined` is returned.
 
 See [`uv_get_constrained_memory`][uv_get_constrained_memory] for more
-information.
-
-## `process.availableMemory()`
-
-<!-- YAML
-added: v20.13.0
--->
-
-> Stability: 1 - Experimental
-
-* {number}
-
-Gets the amount of free memory that is still available to the process
-(in bytes).
-
-See [`uv_get_available_memory`][uv_get_available_memory] for more
 information.
 
 ## `process.cpuUsage([previousValue])`
@@ -1614,8 +1579,8 @@ reflected outside the Node.js process, or (unless explicitly requested)
 to other [`Worker`][] threads.
 In other words, the following example would not work:
 
-```bash
-node -e 'process.env.foo = "bar"' && echo $foo
+```console
+$ node -e 'process.env.foo = "bar"' && echo $foo
 ```
 
 While the following will:
@@ -1722,19 +1687,21 @@ include the Node.js executable, the name of the script, or any options following
 the script name. These options are useful in order to spawn child processes with
 the same execution environment as the parent.
 
-```bash
-node --icu-data-dir=./foo --require ./bar.js script.js --version
+```console
+$ node --harmony script.js --version
 ```
 
 Results in `process.execArgv`:
 
-```json
-["--icu-data-dir=./foo", "--require", "./bar.js"]
+<!-- eslint-disable semi -->
+
+```js
+['--harmony']
 ```
 
 And `process.argv`:
 
-<!-- eslint-disable @stylistic/js/semi -->
+<!-- eslint-disable semi -->
 
 ```js
 ['/usr/local/bin/node', 'script.js', '--version']
@@ -1754,7 +1721,7 @@ added: v0.1.100
 The `process.execPath` property returns the absolute pathname of the executable
 that started the Node.js process. Symbolic links, if any, are resolved.
 
-<!-- eslint-disable @stylistic/js/semi -->
+<!-- eslint-disable semi -->
 
 ```js
 '/usr/local/bin/node'
@@ -1764,15 +1731,9 @@ that started the Node.js process. Symbolic links, if any, are resolved.
 
 <!-- YAML
 added: v0.1.13
-changes:
-  - version: v20.0.0
-    pr-url: https://github.com/nodejs/node/pull/43716
-    description: Only accepts a code of type number, or of type string if it
-                 represents an integer.
 -->
 
-* `code` {integer|string|null|undefined} The exit code. For string type, only
-  integer strings (e.g.,'1') are allowed. **Default:** `0`.
+* `code` {integer} The exit code. **Default:** `0`.
 
 The `process.exit()` method instructs Node.js to terminate the process
 synchronously with an exit status of `code`. If `code` is omitted, exit uses
@@ -1872,15 +1833,9 @@ than the current process.
 
 <!-- YAML
 added: v0.11.8
-changes:
-  - version: v20.0.0
-    pr-url: https://github.com/nodejs/node/pull/43716
-    description: Only accepts a code of type number, or of type string if it
-                 represents an integer.
 -->
 
-* {integer|string|null|undefined} The exit code. For string type, only
-  integer strings (e.g.,'1') are allowed. **Default:** `undefined`.
+* {integer}
 
 A number which will be the process exit code, when the process either
 exits gracefully, or is exited via [`process.exit()`][] without specifying
@@ -1888,114 +1843,6 @@ a code.
 
 Specifying a code to [`process.exit(code)`][`process.exit()`] will override any
 previous setting of `process.exitCode`.
-
-## `process.features.cached_builtins`
-
-<!-- YAML
-added: v12.0.0
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build is caching builtin modules.
-
-## `process.features.debug`
-
-<!-- YAML
-added: v0.5.5
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build is a debug build.
-
-## `process.features.inspector`
-
-<!-- YAML
-added: v11.10.0
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build includes the inspector.
-
-## `process.features.ipv6`
-
-<!-- YAML
-added: v0.5.3
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build includes support for IPv6.
-
-## `process.features.require_module`
-
-<!-- YAML
-added: v20.19.0
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build supports
-[loading ECMAScript modules using `require()`][].
-
-## `process.features.tls`
-
-<!-- YAML
-added: v0.5.3
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build includes support for TLS.
-
-## `process.features.tls_alpn`
-
-<!-- YAML
-added: v4.8.0
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build includes support for ALPN in TLS.
-
-***
-
-## `process.features.tls_ocsp`
-
-<!-- YAML
-added: v0.11.13
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build includes support for OCSP in TLS.
-
-***
-
-## `process.features.tls_sni`
-
-<!-- YAML
-added: v0.5.3
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build includes support for SNI in TLS.
-
-***
-
-## `process.features.uv`
-
-<!-- YAML
-added: v0.5.3
--->
-
-* {boolean}
-
-A boolean value that is `true` if the current Node.js build includes support for libuv.
-Since it's currently not possible to build Node.js without libuv, this value is always `true`.
 
 ## `process.getActiveResourcesInfo()`
 
@@ -2036,46 +1883,6 @@ console.log('After:', getActiveResourcesInfo());
 //   Before: [ 'TTYWrap', 'TTYWrap', 'TTYWrap' ]
 //   After: [ 'TTYWrap', 'TTYWrap', 'TTYWrap', 'Timeout' ]
 ```
-
-## `process.getBuiltinModule(id)`
-
-<!-- YAML
-added: v20.16.0
--->
-
-* `id` {string} ID of the built-in module being requested.
-* Returns: {Object|undefined}
-
-`process.getBuiltinModule(id)` provides a way to load built-in modules
-in a globally available function. ES Modules that need to support
-other environments can use it to conditionally load a Node.js built-in
-when it is run in Node.js, without having to deal with the resolution
-error that can be thrown by `import` in a non-Node.js environment or
-having to use dynamic `import()` which either turns the module into
-an asynchronous module, or turns a synchronous API into an asynchronous one.
-
-```mjs
-if (globalThis.process?.getBuiltinModule) {
-  // Run in Node.js, use the Node.js fs module.
-  const fs = globalThis.process.getBuiltinModule('fs');
-  // If `require()` is needed to load user-modules, use createRequire()
-  const module = globalThis.process.getBuiltinModule('module');
-  const require = module.createRequire(import.meta.url);
-  const foo = require('foo');
-}
-```
-
-If `id` specifies a built-in module available in the current Node.js process,
-`process.getBuiltinModule(id)` method returns the corresponding built-in
-module. If `id` does not correspond to any built-in module, `undefined`
-is returned.
-
-`process.getBuiltinModule(id)` accepts built-in module IDs that are recognized
-by [`module.isBuiltin(id)`][]. Some built-in modules must be loaded with the
-`node:` prefix, see [built-in modules with mandatory `node:` prefix][].
-The references returned by `process.getBuiltinModule(id)` always point to
-the built-in module corresponding to `id` even if users modify
-[`require.cache`][] so that `require(id)` returns something else.
 
 ## `process.getegid()`
 
@@ -2440,29 +2247,6 @@ process.kill(process.pid, 'SIGHUP');
 When `SIGUSR1` is received by a Node.js process, Node.js will start the
 debugger. See [Signal Events][].
 
-## `process.loadEnvFile(path)`
-
-<!-- YAML
-added: v20.12.0
--->
-
-> Stability: 1.1 - Active development
-
-* `path` {string | URL | Buffer | undefined}. **Default:** `'./.env'`
-
-Loads the `.env` file into `process.env`. Usage of `NODE_OPTIONS`
-in the `.env` file will not have any effect on Node.js.
-
-```cjs
-const { loadEnvFile } = require('node:process');
-loadEnvFile();
-```
-
-```mjs
-import { loadEnvFile } from 'node:process';
-loadEnvFile();
-```
-
 ## `process.mainModule`
 
 <!-- YAML
@@ -2594,9 +2378,6 @@ console.log(memoryUsage.rss());
 <!-- YAML
 added: v0.1.26
 changes:
-  - version: v20.18.0
-    pr-url: https://github.com/nodejs/node/pull/51280
-    description: Changed stability to Legacy.
   - version: v18.0.0
     pr-url: https://github.com/nodejs/node/pull/41678
     description: Passing an invalid callback to the `callback` argument
@@ -2606,8 +2387,6 @@ changes:
     pr-url: https://github.com/nodejs/node/pull/1077
     description: Additional arguments after `callback` are now supported.
 -->
-
-> Stability: 3 - Legacy: Use [`queueMicrotask()`][] instead.
 
 * `callback` {Function}
 * `...args` {any} Additional arguments to pass when invoking the `callback`
@@ -2743,40 +2522,34 @@ function definitelyAsync(arg, cb) {
 
 ### When to use `queueMicrotask()` vs. `process.nextTick()`
 
-The [`queueMicrotask()`][] API is an alternative to `process.nextTick()` that instead of using the
-"next tick queue" defers execution of a function using the same microtask queue used to execute the
-then, catch, and finally handlers of resolved promises.
-
-Within Node.js, every time the "next tick queue" is drained, the microtask queue
+The [`queueMicrotask()`][] API is an alternative to `process.nextTick()` that
+also defers execution of a function using the same microtask queue used to
+execute the then, catch, and finally handlers of resolved promises. Within
+Node.js, every time the "next tick queue" is drained, the microtask queue
 is drained immediately after.
-
-So in CJS modules `process.nextTick()` callbacks are always run before `queueMicrotask()` ones.
-However since ESM modules are processed already as part of the microtask queue, there
-`queueMicrotask()` callbacks are always exectued before `process.nextTick()` ones since Node.js
-is already in the process of draining the microtask queue.
 
 ```mjs
 import { nextTick } from 'node:process';
 
-Promise.resolve().then(() => console.log('resolve'));
-queueMicrotask(() => console.log('microtask'));
-nextTick(() => console.log('nextTick'));
+Promise.resolve().then(() => console.log(2));
+queueMicrotask(() => console.log(3));
+nextTick(() => console.log(1));
 // Output:
-// resolve
-// microtask
-// nextTick
+// 1
+// 2
+// 3
 ```
 
 ```cjs
 const { nextTick } = require('node:process');
 
-Promise.resolve().then(() => console.log('resolve'));
-queueMicrotask(() => console.log('microtask'));
-nextTick(() => console.log('nextTick'));
+Promise.resolve().then(() => console.log(2));
+queueMicrotask(() => console.log(3));
+nextTick(() => console.log(1));
 // Output:
-// nextTick
-// resolve
-// microtask
+// 1
+// 2
+// 3
 ```
 
 For _most_ userland use cases, the `queueMicrotask()` API provides a portable
@@ -2838,53 +2611,6 @@ flag is set on the current Node.js process. See the documentation for
 the [`'warning'` event][process_warning] and the
 [`emitWarning()` method][process_emit_warning] for more information about this
 flag's behavior.
-
-## `process.permission`
-
-<!-- YAML
-added: v20.0.0
--->
-
-* {Object}
-
-This API is available through the [`--experimental-permission`][] flag.
-
-`process.permission` is an object whose methods are used to manage permissions
-for the current process. Additional documentation is available in the
-[Permission Model][].
-
-### `process.permission.has(scope[, reference])`
-
-<!-- YAML
-added: v20.0.0
--->
-
-* `scope` {string}
-* `reference` {string}
-* Returns: {boolean}
-
-Verifies that the process is able to access the given scope and reference.
-If no reference is provided, a global scope is assumed, for instance,
-`process.permission.has('fs.read')` will check if the process has ALL
-file system read permissions.
-
-The reference has a meaning based on the provided scope. For example,
-the reference when the scope is File System means files and folders.
-
-The available scopes are:
-
-* `fs` - All File System
-* `fs.read` - File System read operations
-* `fs.write` - File System write operations
-* `child` - Child process spawning operations
-* `worker` - Worker thread spawning operation
-
-```js
-// Check if the process has permission to read the README file
-process.permission.has('fs.read', './README.md');
-// Check if the process has read permission operations
-process.permission.has('fs.read');
-```
 
 ## `process.pid`
 
@@ -3737,7 +3463,7 @@ Using this function is mutually exclusive with using the deprecated
 ## `process.sourceMapsEnabled`
 
 <!-- YAML
-added: v20.7.0
+added: v18.19.0
 -->
 
 > Stability: 1 - Experimental
@@ -4075,31 +3801,21 @@ console.log(versions);
 Will generate an object similar to:
 
 ```console
-{ node: '23.0.0',
-  acorn: '8.11.3',
-  ada: '2.7.8',
-  ares: '1.28.1',
-  base64: '0.5.2',
-  brotli: '1.1.0',
-  cjs_module_lexer: '1.2.2',
-  cldr: '45.0',
-  icu: '75.1',
-  llhttp: '9.2.1',
-  modules: '127',
-  napi: '9',
-  nghttp2: '1.61.0',
-  nghttp3: '0.7.0',
-  ngtcp2: '1.3.0',
-  openssl: '3.0.13+quic',
-  simdjson: '3.8.0',
-  simdutf: '5.2.4',
-  tz: '2024a',
-  undici: '6.13.0',
-  unicode: '15.1',
-  uv: '1.48.0',
-  uvwasi: '0.0.20',
-  v8: '12.4.254.14-node.11',
-  zlib: '1.3.0.1-motley-7d77fb7' }
+{ node: '11.13.0',
+  v8: '7.0.276.38-node.18',
+  uv: '1.27.0',
+  zlib: '1.2.11',
+  brotli: '1.0.7',
+  ares: '1.15.0',
+  modules: '67',
+  nghttp2: '1.34.0',
+  napi: '4',
+  llhttp: '1.1.1',
+  openssl: '1.1.1b',
+  cldr: '34.0',
+  icu: '63.1',
+  tz: '2018e',
+  unicode: '11.0' }
 ```
 
 ## Exit codes
@@ -4155,13 +3871,12 @@ cases:
   code will be `128` + `6`, or `134`.
 
 [Advanced serialization for `child_process`]: child_process.md#advanced-serialization
-[Android building]: https://github.com/nodejs/node/blob/HEAD/BUILDING.md#android
+[Android building]: https://github.com/nodejs/node/blob/HEAD/BUILDING.md#androidandroid-based-devices-eg-firefox-os
 [Child Process]: child_process.md
 [Cluster]: cluster.md
 [Duplex]: stream.md#duplex-and-transform-streams
-[Event Loop]: https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick#understanding-processnexttick
+[Event Loop]: https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/#process-nexttick
 [LTS]: https://github.com/nodejs/Release
-[Permission Model]: permissions.md#permission-model
 [Readable]: stream.md#readable-streams
 [Signal Events]: #signal-events
 [Source Map]: https://sourcemaps.info/spec.html
@@ -4171,8 +3886,6 @@ cases:
 [`'exit'`]: #event-exit
 [`'message'`]: child_process.md#event-message
 [`'uncaughtException'`]: #event-uncaughtexception
-[`--experimental-permission`]: cli.md#--experimental-permission
-[`--no-deprecation`]: cli.md#--no-deprecation
 [`--unhandled-rejections`]: cli.md#--unhandled-rejectionsmode
 [`Buffer`]: buffer.md
 [`ChildProcess.disconnect()`]: child_process.md#subprocessdisconnect
@@ -4187,11 +3900,9 @@ cases:
 [`console.error()`]: console.md#consoleerrordata-args
 [`console.log()`]: console.md#consolelogdata-args
 [`domain`]: domain.md
-[`module.isBuiltin(id)`]: module.md#moduleisbuiltinmodulename
 [`net.Server`]: net.md#class-netserver
 [`net.Socket`]: net.md#class-netsocket
 [`os.constants.dlopen`]: os.md#dlopen-constants
-[`postMessageToThread()`]: worker_threads.md#workerpostmessagetothreadthreadid-value-transferlist-timeout
 [`process.argv`]: #processargv
 [`process.config`]: #processconfig
 [`process.execPath`]: #processexecpath
@@ -4205,21 +3916,17 @@ cases:
 [`queueMicrotask()`]: globals.md#queuemicrotaskcallback
 [`readable.read()`]: stream.md#readablereadsize
 [`require()`]: globals.md#require
-[`require.cache`]: modules.md#requirecache
 [`require.main`]: modules.md#accessing-the-main-module
 [`subprocess.kill()`]: child_process.md#subprocesskillsignal
 [`v8.setFlagsFromString()`]: v8.md#v8setflagsfromstringflags
-[built-in modules with mandatory `node:` prefix]: modules.md#built-in-modules-with-mandatory-node-prefix
 [debugger]: debugger.md
 [deprecation code]: deprecations.md
-[loading ECMAScript modules using `require()`]: modules.md#loading-ecmascript-modules-using-require
 [note on process I/O]: #a-note-on-process-io
 [process.cpuUsage]: #processcpuusagepreviousvalue
 [process_emit_warning]: #processemitwarningwarning-type-code-ctor
 [process_warning]: #event-warning
 [report documentation]: report.md
 [terminal raw mode]: tty.md#readstreamsetrawmodemode
-[uv_get_available_memory]: https://docs.libuv.org/en/v1.x/misc.html#c.uv_get_available_memory
 [uv_get_constrained_memory]: https://docs.libuv.org/en/v1.x/misc.html#c.uv_get_constrained_memory
 [uv_rusage_t]: https://docs.libuv.org/en/v1.x/misc.html#c.uv_rusage_t
 [wikipedia_major_fault]: https://en.wikipedia.org/wiki/Page_fault#Major

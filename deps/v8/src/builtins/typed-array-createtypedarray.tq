@@ -57,16 +57,8 @@ transitioning macro AllocateTypedArray(implicit context: Context)(
   typedArray.elements = elements;
   typedArray.buffer = buffer;
   typedArray.byte_offset = byteOffset;
-  if (isLengthTracking) {
-    dcheck(IsResizableArrayBuffer(buffer));
-    // Set the byte_length and length fields of length-tracking TAs to zero, so
-    // that we won't accidentally use them and access invalid data.
-    typedArray.byte_length = 0;
-    typedArray.length = 0;
-  } else {
-    typedArray.byte_length = byteLength;
-    typedArray.length = length;
-  }
+  typedArray.byte_length = byteLength;
+  typedArray.length = length;
   typedArray.bit_field.is_length_tracking = isLengthTracking;
   typedArray.bit_field.is_backed_by_rab =
       IsResizableArrayBuffer(buffer) && !IsSharedArrayBuffer(buffer);
@@ -236,7 +228,7 @@ transitioning macro ConstructByArrayBuffer(implicit context: Context)(
   const rabGsab: bool = IsResizableArrayBuffer(buffer) &&
       (!IsSharedArrayBuffer(buffer) || isLengthTracking);
   if (rabGsab) {
-    map = GetDerivedRabGsabTypedArrayMap(target, newTarget);
+    map = GetDerivedRabGsabMap(target, newTarget);
   } else {
     map = GetDerivedMap(target, newTarget);
   }
@@ -330,18 +322,11 @@ transitioning macro TypedArrayCreateByLength(implicit context: Context)(
 
   // 2. Perform ? ValidateTypedArray(newTypedArray).
   //    ValidateTypedArray currently returns the array, not the ViewBuffer.
-  const newTypedArrayLength =
-      ValidateTypedArrayAndGetLength(context, newTypedArrayObj, methodName);
   const newTypedArray: JSTypedArray =
-      UnsafeCast<JSTypedArray>(newTypedArrayObj);
-
-  dcheck(
-      newTypedArray.bit_field.is_backed_by_rab ==
-      (IsResizableArrayBuffer(newTypedArray.buffer) &&
-       !IsSharedArrayBuffer(newTypedArray.buffer)));
-  dcheck(
-      !newTypedArray.bit_field.is_length_tracking ||
-      IsResizableArrayBuffer(newTypedArray.buffer));
+      ValidateTypedArray(context, newTypedArrayObj, methodName);
+  // TODO(v8:11111): bit_field should be initialized to 0.
+  newTypedArray.bit_field.is_length_tracking = false;
+  newTypedArray.bit_field.is_backed_by_rab = false;
 
   if (IsDetachedBuffer(newTypedArray.buffer)) deferred {
       ThrowTypeError(MessageTemplate::kDetachedOperation, methodName);
@@ -350,7 +335,7 @@ transitioning macro TypedArrayCreateByLength(implicit context: Context)(
   // 3. If argumentList is a List of a single Number, then
   //   a. If newTypedArray.[[ArrayLength]] < argumentList[0], throw a
   //      TypeError exception.
-  if (newTypedArrayLength < Convert<uintptr>(length)) deferred {
+  if (newTypedArray.length < Convert<uintptr>(length)) deferred {
       ThrowTypeError(MessageTemplate::kTypedArrayTooShort);
     }
 
@@ -360,8 +345,7 @@ transitioning macro TypedArrayCreateByLength(implicit context: Context)(
 
 transitioning macro ConstructByJSReceiver(implicit context: Context)(
     obj: JSReceiver): never
-    labels IfConstructByArrayLike(JSReceiver, uintptr),
-    IfIteratorNotCallable(JSAny) {
+    labels IfConstructByArrayLike(JSReceiver, uintptr) {
   try {
     // TODO(v8:8906): Use iterator::GetIteratorMethod() once it supports
     // labels.
@@ -380,6 +364,8 @@ transitioning macro ConstructByJSReceiver(implicit context: Context)(
     goto IfConstructByArrayLike(obj, length);
   } label IfInvalidLength(length: Number) {
     ThrowRangeError(MessageTemplate::kInvalidTypedArrayLength, length);
+  } label IfIteratorNotCallable(_value: JSAny) deferred {
+    ThrowTypeError(MessageTemplate::kIteratorSymbolNonCallable);
   }
 }
 
@@ -403,8 +389,7 @@ transitioning builtin CreateTypedArray(
         ConstructByTypedArray(typedArray) otherwise IfConstructByArrayLike;
       }
       case (obj: JSReceiver): {
-        ConstructByJSReceiver(obj) otherwise IfConstructByArrayLike,
-            IfIteratorNotCallable;
+        ConstructByJSReceiver(obj) otherwise IfConstructByArrayLike;
       }
       // The first argument was a number or fell through and is treated as
       // a number. https://tc39.github.io/ecma262/#sec-typedarray-length
@@ -425,10 +410,6 @@ transitioning builtin CreateTypedArray(
     // 56 for constructorName.
     const elementsInfo = GetTypedArrayElementsInfo(map);
     return ConstructByArrayLike(map, arrayLike, length, elementsInfo);
-  } label IfIteratorNotCallable(_value: JSAny) deferred {
-    ThrowTypeError(
-        MessageTemplate::kFirstArgumentIteratorSymbolNonCallable,
-        'TypedArray\'s constructor');
   }
 }
 
@@ -478,42 +459,20 @@ transitioning macro TypedArraySpeciesCreateByLength(implicit context: Context)(
   const typedArray: JSTypedArray = TypedArraySpeciesCreate(
       methodName, numArgs, exemplar, Convert<Number>(length), Undefined,
       Undefined);
-  try {
-    const createdArrayLength =
-        LoadJSTypedArrayLengthAndCheckDetached(typedArray)
-        otherwise DetachedOrOutOfBounds;
-    if (createdArrayLength < length) deferred {
-        ThrowTypeError(MessageTemplate::kTypedArrayTooShort);
-      }
-  } label DetachedOrOutOfBounds {
-    ThrowTypeError(MessageTemplate::kTypedArrayTooShort);
-  }
+  if (typedArray.length < length) deferred {
+      ThrowTypeError(MessageTemplate::kTypedArrayTooShort);
+    }
   return typedArray;
 }
 
 transitioning macro TypedArraySpeciesCreateByBuffer(implicit context: Context)(
     methodName: constexpr string, exemplar: JSTypedArray, buffer: JSArrayBuffer,
-    beginByteOffset: uintptr, newLength: NumberOrUndefined): JSTypedArray {
+    beginByteOffset: uintptr, newLength: uintptr): JSTypedArray {
   const numArgs: constexpr int31 = 3;
   // TODO(v8:4153): pass length further as uintptr.
   const typedArray: JSTypedArray = TypedArraySpeciesCreate(
       methodName, numArgs, exemplar, buffer, Convert<Number>(beginByteOffset),
-      newLength);
-  return typedArray;
-}
-
-transitioning macro TypedArrayCreateSameType(implicit context: Context)(
-    exemplar: JSTypedArray, newLength: uintptr): JSTypedArray {
-  const constructor = GetDefaultConstructor(exemplar);
-  const typedArray = CreateTypedArray(
-      context, constructor, constructor, Convert<Number>(newLength), Undefined,
-      Undefined);
-  dcheck(!IsDetachedBuffer(typedArray.buffer));
-  // The elements kind are equal up to resizability / growability. The newly
-  // created TypedArray is never backed by a resizable / growable buffer.
-  dcheck(
-      GetNonRabGsabElementsKind(exemplar.elements_kind) ==
-      typedArray.elements_kind);
+      Convert<Number>(newLength));
   return typedArray;
 }
 }

@@ -7,9 +7,10 @@ const bench = common.createBenchmark(main, {
     'Int8Array',
     'Uint8Array',
     'Float32Array',
-    'Uint32Array',
+    'Float64Array',
+    'Uint8ClampedArray',
   ],
-  n: [25000],
+  n: [5e2],
   strict: [0, 1],
   method: [
     'deepEqual',
@@ -22,24 +23,21 @@ function main({ type, n, len, method, strict }) {
   const clazz = global[type];
   const actual = new clazz(len);
   const expected = new clazz(len);
+  const expectedWrong = new clazz(len);
+  const wrongIndex = Math.floor(len / 2);
+  expectedWrong[wrongIndex] = 123;
 
   if (strict) {
     method = method.replace('eep', 'eepStrict');
   }
   const fn = assert[method];
-
-  if (method.includes('not')) {
-    expected[Math.floor(len / 2)] = 123;
-  }
+  const value2 = method.includes('not') ? expectedWrong : expected;
 
   bench.start();
   for (let i = 0; i < n; ++i) {
     actual[0] = i;
-    expected[0] = i;
-    const pos = Math.ceil(len / 2) + 1;
-    actual[pos] = i;
-    expected[pos] = i;
-    fn(actual, expected);
+    value2[0] = i;
+    fn(actual, value2);
   }
   bench.end(n);
 }

@@ -33,6 +33,7 @@ static constexpr int kFloat32Bit =
 static constexpr int kSimd128Bit =
     RepresentationBit(MachineRepresentation::kSimd128);
 
+
 const InstructionBlock* GetContainingLoop(const InstructionSequence* sequence,
                                           const InstructionBlock* block) {
   RpoNumber index = block->loop_header();
@@ -1424,9 +1425,7 @@ bool TopTierRegisterAllocationData::ExistsUseWithoutDefinition() {
     PrintF("Register allocator error: live v%d reached first block.\n",
            operand_index);
     LiveRange* range = GetOrCreateLiveRangeFor(operand_index);
-    PrintF("  (first use is at position %d in instruction %d)\n",
-           range->first_pos()->pos().value(),
-           range->first_pos()->pos().ToInstructionIndex());
+    PrintF("  (first use is at %d)\n", range->first_pos()->pos().value());
     if (debug_name() == nullptr) {
       PrintF("\n");
     } else {
@@ -1494,7 +1493,6 @@ void TopTierRegisterAllocationData::MarkFixedUse(MachineRepresentation rep,
   switch (rep) {
     case MachineRepresentation::kFloat32:
     case MachineRepresentation::kSimd128:
-    case MachineRepresentation::kSimd256:
       if (kFPAliasing == AliasingKind::kOverlap) {
         fixed_fp_register_use_->Add(index);
       } else if (kFPAliasing == AliasingKind::kIndependent) {
@@ -1528,8 +1526,7 @@ bool TopTierRegisterAllocationData::HasFixedUse(MachineRepresentation rep,
                                                 int index) {
   switch (rep) {
     case MachineRepresentation::kFloat32:
-    case MachineRepresentation::kSimd128:
-    case MachineRepresentation::kSimd256: {
+    case MachineRepresentation::kSimd128: {
       if (kFPAliasing == AliasingKind::kOverlap) {
         return fixed_fp_register_use_->Contains(index);
       } else if (kFPAliasing == AliasingKind::kIndependent) {
@@ -1564,7 +1561,6 @@ void TopTierRegisterAllocationData::MarkAllocated(MachineRepresentation rep,
   switch (rep) {
     case MachineRepresentation::kFloat32:
     case MachineRepresentation::kSimd128:
-    case MachineRepresentation::kSimd256:
       if (kFPAliasing == AliasingKind::kOverlap) {
         assigned_double_registers_->Add(index);
       } else if (kFPAliasing == AliasingKind::kIndependent) {
@@ -1889,23 +1885,23 @@ LiveRangeBuilder::LiveRangeBuilder(TopTierRegisterAllocationData* data,
                                    Zone* local_zone)
     : data_(data), phi_hints_(local_zone) {}
 
-SparseBitVector* LiveRangeBuilder::ComputeLiveOut(
+BitVector* LiveRangeBuilder::ComputeLiveOut(
     const InstructionBlock* block, TopTierRegisterAllocationData* data) {
   size_t block_index = block->rpo_number().ToSize();
-  SparseBitVector* live_out = data->live_out_sets()[block_index];
+  BitVector* live_out = data->live_out_sets()[block_index];
   if (live_out == nullptr) {
     // Compute live out for the given block, except not including backward
     // successor edges.
     Zone* zone = data->allocation_zone();
     const InstructionSequence* code = data->code();
 
-    live_out = zone->New<SparseBitVector>(zone);
+    live_out = zone->New<BitVector>(code->VirtualRegisterCount(), zone);
 
     // Process all successor blocks.
     for (const RpoNumber& succ : block->successors()) {
       // Add values live on entry to the successor.
       if (succ <= block->rpo_number()) continue;
-      SparseBitVector* live_in = data->live_in_sets()[succ.ToSize()];
+      BitVector* live_in = data->live_in_sets()[succ.ToSize()];
       if (live_in != nullptr) live_out->Union(*live_in);
 
       // All phi input operands corresponding to this successor edge are live
@@ -1923,7 +1919,7 @@ SparseBitVector* LiveRangeBuilder::ComputeLiveOut(
 }
 
 void LiveRangeBuilder::AddInitialIntervals(const InstructionBlock* block,
-                                           SparseBitVector* live_out) {
+                                           BitVector* live_out) {
   // Add an interval that includes the entire block to the live range for
   // each live_out value.
   LifetimePosition start = LifetimePosition::GapFromInstructionIndex(
@@ -1941,10 +1937,6 @@ void LiveRangeBuilder::AddInitialIntervals(const InstructionBlock* block,
 int LiveRangeBuilder::FixedFPLiveRangeID(int index, MachineRepresentation rep) {
   int result = -index - 1;
   switch (rep) {
-    case MachineRepresentation::kSimd256:
-      result -=
-          kNumberOfFixedRangesPerRegister * config()->num_simd128_registers();
-      V8_FALLTHROUGH;
     case MachineRepresentation::kSimd128:
       result -=
           kNumberOfFixedRangesPerRegister * config()->num_float_registers();
@@ -2122,7 +2114,7 @@ UsePosition* LiveRangeBuilder::Use(LifetimePosition block_start,
 }
 
 void LiveRangeBuilder::ProcessInstructions(const InstructionBlock* block,
-                                           SparseBitVector* live) {
+                                           BitVector* live) {
   int block_start = block->first_instruction_index();
   LifetimePosition block_start_position =
       LifetimePosition::GapFromInstructionIndex(block_start);
@@ -2356,7 +2348,7 @@ void LiveRangeBuilder::ProcessInstructions(const InstructionBlock* block,
 }
 
 void LiveRangeBuilder::ProcessPhis(const InstructionBlock* block,
-                                   SparseBitVector* live) {
+                                   BitVector* live) {
   for (PhiInstruction* phi : block->phis()) {
     // The live range interval already ends at the first instruction of the
     // block.
@@ -2478,7 +2470,7 @@ void LiveRangeBuilder::ProcessPhis(const InstructionBlock* block,
 }
 
 void LiveRangeBuilder::ProcessLoopHeader(const InstructionBlock* block,
-                                         SparseBitVector* live) {
+                                         BitVector* live) {
   DCHECK(block->IsLoopHeader());
   // Add a live range stretching from the first loop instruction to the last
   // for each value live on entry to the header.
@@ -2506,7 +2498,7 @@ void LiveRangeBuilder::BuildLiveRanges() {
     data_->tick_counter()->TickAndMaybeEnterSafepoint();
     InstructionBlock* block =
         code()->InstructionBlockAt(RpoNumber::FromInt(block_id));
-    SparseBitVector* live = ComputeLiveOut(block, data());
+    BitVector* live = ComputeLiveOut(block, data());
     // Initially consider all live_out values live for the entire block. We
     // will shorten these intervals if necessary.
     AddInitialIntervals(block, live);
@@ -2608,8 +2600,6 @@ void LiveRangeBuilder::Verify() const {
       for (const UseInterval* i = first->next(); i != nullptr; i = i->next()) {
         // Except for the first interval, the other intevals must start at
         // a block boundary, otherwise data wouldn't flow to them.
-        // You might trigger this CHECK if your SSA is not valid. For instance,
-        // if the inputs of a Phi node are in the wrong order.
         CHECK(IntervalStartsAtBlockBoundary(i));
         // The last instruction of the predecessors of the block the interval
         // starts must be covered by the range.
@@ -3401,8 +3391,7 @@ void LinearScanAllocator::ComputeStateFromManyPredecessors(
         const int* codes = allocatable_register_codes();
         MachineRepresentation rep = val.first->representation();
         if (check_aliasing && (rep == MachineRepresentation::kFloat32 ||
-                               rep == MachineRepresentation::kSimd128 ||
-                               rep == MachineRepresentation::kSimd256))
+                               rep == MachineRepresentation::kSimd128))
           GetFPRegisterSet(rep, &num_regs, &num_codes, &codes);
         for (int idx = 0; idx < num_regs; idx++) {
           int uses = val.second.used_registers[idx];
@@ -4016,10 +4005,6 @@ void LinearScanAllocator::GetFPRegisterSet(MachineRepresentation rep,
     *num_regs = data()->config()->num_simd128_registers();
     *num_codes = data()->config()->num_allocatable_simd128_registers();
     *codes = data()->config()->allocatable_simd128_codes();
-  } else if (rep == MachineRepresentation::kSimd256) {
-    *num_regs = data()->config()->num_simd256_registers();
-    *num_codes = data()->config()->num_allocatable_simd256_registers();
-    *codes = data()->config()->allocatable_simd256_codes();
   } else {
     UNREACHABLE();
   }
@@ -4892,10 +4877,10 @@ bool LiveRangeConnector::CanEagerlyResolveControlFlow(
 void LiveRangeConnector::ResolveControlFlow(Zone* local_zone) {
   // Lazily linearize live ranges in memory for fast lookup.
   LiveRangeFinder finder(data(), local_zone);
-  ZoneVector<SparseBitVector*>& live_in_sets = data()->live_in_sets();
+  ZoneVector<BitVector*>& live_in_sets = data()->live_in_sets();
   for (const InstructionBlock* block : code()->instruction_blocks()) {
     if (CanEagerlyResolveControlFlow(block)) continue;
-    SparseBitVector* live = live_in_sets[block->rpo_number().ToInt()];
+    BitVector* live = live_in_sets[block->rpo_number().ToInt()];
     auto it = live->begin();
     auto end = live->end();
     while (it != end) {
@@ -5148,7 +5133,9 @@ void LiveRangeConnector::CommitSpillsInDeferredBlocks(
   ZoneSet<std::pair<RpoNumber, int>> done_moves(temp_zone);
   // Seek the deferred blocks that dominate locations requiring spill operands,
   // and spill there. We only need to spill at the start of such blocks.
-  SparseBitVector done_blocks(temp_zone);
+  BitVector done_blocks(
+      range->GetListOfBlocksRequiringSpillOperands(data())->length(),
+      temp_zone);
   while (!worklist.empty()) {
     int block_id = worklist.front();
     worklist.pop();

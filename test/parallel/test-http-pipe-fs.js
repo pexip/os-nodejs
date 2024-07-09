@@ -23,6 +23,7 @@
 const common = require('../common');
 const http = require('http');
 const fs = require('fs');
+const path = require('path');
 const Countdown = require('../common/countdown');
 const NUMBER_OF_STREAMS = 2;
 
@@ -31,7 +32,7 @@ const countdown = new Countdown(NUMBER_OF_STREAMS, () => server.close());
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
-const file = tmpdir.resolve('http-pipe-fs-test.txt');
+const file = path.join(tmpdir.path, 'http-pipe-fs-test.txt');
 
 const server = http.createServer(common.mustCall(function(req, res) {
   const stream = fs.createWriteStream(file);

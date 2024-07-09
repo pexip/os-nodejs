@@ -56,9 +56,9 @@ assert(TextEncoder);
   encodingGetter.call(instance);
 
   const invalidThisArgs = [{}, [], true, 1, '', new TextDecoder()];
-  for (const i of invalidThisArgs) {
+  invalidThisArgs.forEach((i) => {
     assert.throws(() => inspectFn.call(i, Infinity, {}), expectedError);
     assert.throws(() => encodeFn.call(i), expectedError);
     assert.throws(() => encodingGetter.call(i), expectedError);
-  }
+  });
 }

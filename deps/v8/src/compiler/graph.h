@@ -8,6 +8,7 @@
 #include <array>
 
 #include "src/base/compiler-specific.h"
+#include "src/common/globals.h"
 #include "src/zone/zone-containers.h"
 #include "src/zone/zone.h"
 
@@ -95,12 +96,6 @@ class V8_EXPORT_PRIVATE Graph final : public NON_EXPORTED_BASE(ZoneObject) {
   // Very simple print API usable in a debugger.
   void Print() const;
 
-  bool HasSimd() const { return has_simd_; }
-  void SetSimd(bool has_simd) { has_simd_ = has_simd; }
-
-  void RecordSimdStore(Node* store);
-  ZoneVector<Node*> const& GetSimdStoreNodes();
-
  private:
   friend class NodeMarkerBase;
 
@@ -112,8 +107,6 @@ class V8_EXPORT_PRIVATE Graph final : public NON_EXPORTED_BASE(ZoneObject) {
   Mark mark_max_;
   NodeId next_node_id_;
   ZoneVector<GraphDecorator*> decorators_;
-  bool has_simd_;
-  ZoneVector<Node*> simd_stores_;
 };
 
 

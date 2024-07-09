@@ -29,8 +29,7 @@ class UnaryOpAssemblerImpl final : public CodeStubAssembler {
     TVARIABLE(Object, var_result);
     Label if_number(this), if_bigint(this, Label::kDeferred), out(this);
     TaggedToWord32OrBigIntWithFeedback(context, value, &if_number, &var_word32,
-                                       &if_bigint, nullptr, &var_bigint,
-                                       &var_feedback);
+                                       &if_bigint, &var_bigint, &var_feedback);
 
     // Number case.
     BIND(&if_number);
@@ -224,7 +223,7 @@ class UnaryOpAssemblerImpl final : public CodeStubAssembler {
                                      TNode<Object> value, TNode<UintPtrT> slot,
                                      TNode<HeapObject> maybe_feedback_vector,
                                      UpdateFeedbackMode update_feedback_mode) {
-    static_assert(kOperation == Operation::kIncrement ||
+    STATIC_ASSERT(kOperation == Operation::kIncrement ||
                   kOperation == Operation::kDecrement);
     static constexpr int kAddValue =
         (kOperation == Operation::kIncrement) ? 1 : -1;

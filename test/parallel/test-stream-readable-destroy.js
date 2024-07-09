@@ -318,7 +318,7 @@ const assert = require('assert');
   assert.rejects((async () => {
     // eslint-disable-next-line no-unused-vars, no-empty
     for await (const chunk of read) { }
-  })(), /AbortError/).then(common.mustCall());
+  })(), /AbortError/);
   setTimeout(() => controller.abort(), 0);
 }
 

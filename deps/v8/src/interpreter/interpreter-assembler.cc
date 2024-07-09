@@ -10,9 +10,11 @@
 #include "src/codegen/code-factory.h"
 #include "src/codegen/interface-descriptors-inl.h"
 #include "src/codegen/machine-type.h"
+#include "src/execution/frames.h"
 #include "src/interpreter/bytecodes.h"
 #include "src/interpreter/interpreter.h"
 #include "src/objects/objects-inl.h"
+#include "src/zone/zone.h"
 
 namespace v8 {
 namespace internal {
@@ -165,13 +167,6 @@ void InterpreterAssembler::SetAccumulator(TNode<Object> value) {
   accumulator_ = value;
 }
 
-void InterpreterAssembler::ClobberAccumulator(TNode<Object> clobber_value) {
-  DCHECK(Bytecodes::ClobbersAccumulator(bytecode_));
-  implicit_register_use_ =
-      implicit_register_use_ | ImplicitRegisterUse::kClobberAccumulator;
-  accumulator_ = clobber_value;
-}
-
 TNode<Context> InterpreterAssembler::GetContext() {
   return CAST(LoadRegister(Register::current_context()));
 }
@@ -318,7 +313,7 @@ void InterpreterAssembler::StoreRegisterForShortStar(TNode<Object> value,
   constexpr int short_star_to_operand =
       Register(0).ToOperand() - static_cast<int>(Bytecode::kStar0);
   // Make sure the values count in the right direction.
-  static_assert(short_star_to_operand ==
+  STATIC_ASSERT(short_star_to_operand ==
                 Register(1).ToOperand() - static_cast<int>(Bytecode::kStar1));
 
   TNode<IntPtrT> offset =
@@ -548,21 +543,12 @@ TNode<Uint32T> InterpreterAssembler::BytecodeOperandCount(int operand_index) {
   return BytecodeUnsignedOperand(operand_index, operand_size);
 }
 
-TNode<Uint32T> InterpreterAssembler::BytecodeOperandFlag8(int operand_index) {
+TNode<Uint32T> InterpreterAssembler::BytecodeOperandFlag(int operand_index) {
   DCHECK_EQ(OperandType::kFlag8,
             Bytecodes::GetOperandType(bytecode_, operand_index));
   OperandSize operand_size =
       Bytecodes::GetOperandSize(bytecode_, operand_index, operand_scale());
   DCHECK_EQ(operand_size, OperandSize::kByte);
-  return BytecodeUnsignedOperand(operand_index, operand_size);
-}
-
-TNode<Uint32T> InterpreterAssembler::BytecodeOperandFlag16(int operand_index) {
-  DCHECK_EQ(OperandType::kFlag16,
-            Bytecodes::GetOperandType(bytecode_, operand_index));
-  OperandSize operand_size =
-      Bytecodes::GetOperandSize(bytecode_, operand_index, operand_scale());
-  DCHECK_EQ(operand_size, OperandSize::kShort);
   return BytecodeUnsignedOperand(operand_index, operand_size);
 }
 
@@ -697,12 +683,9 @@ InterpreterAssembler::LoadAndUntagConstantPoolEntryAtOperandIndex(
   return SmiUntag(CAST(LoadConstantPoolEntryAtOperandIndex(operand_index)));
 }
 
-TNode<JSFunction> InterpreterAssembler::LoadFunctionClosure() {
-  return CAST(LoadRegister(Register::function_closure()));
-}
-
 TNode<HeapObject> InterpreterAssembler::LoadFeedbackVector() {
-  return CodeStubAssembler::LoadFeedbackVector(LoadFunctionClosure());
+  TNode<JSFunction> function = CAST(LoadRegister(Register::function_closure()));
+  return CodeStubAssembler::LoadFeedbackVector(function);
 }
 
 void InterpreterAssembler::CallPrologue() {
@@ -737,7 +720,7 @@ void InterpreterAssembler::CallJSAndDispatch(
 
   Callable callable = CodeFactory::InterpreterPushArgsThenCall(
       isolate(), receiver_mode, InterpreterPushArgsMode::kOther);
-  TNode<Code> code_target = HeapConstant(callable.code());
+  TNode<CodeT> code_target = HeapConstant(callable.code());
 
   TailCallStubThenBytecodeDispatch(callable.descriptor(), code_target, context,
                                    args_count, args.base_reg_location(),
@@ -758,7 +741,7 @@ void InterpreterAssembler::CallJSAndDispatch(TNode<Object> function,
          bytecode_ == Bytecode::kInvokeIntrinsic);
   DCHECK_EQ(Bytecodes::GetReceiverMode(bytecode_), receiver_mode);
   Callable callable = CodeFactory::Call(isolate());
-  TNode<Code> code_target = HeapConstant(callable.code());
+  TNode<CodeT> code_target = HeapConstant(callable.code());
 
   arg_count = JSParameterCount(arg_count);
   if (receiver_mode == ConvertReceiverMode::kNullOrUndefined) {
@@ -793,22 +776,17 @@ template V8_EXPORT_PRIVATE void InterpreterAssembler::CallJSAndDispatch(
 
 void InterpreterAssembler::CallJSWithSpreadAndDispatch(
     TNode<Object> function, TNode<Context> context, const RegListNodePair& args,
-    TNode<UintPtrT> slot_id) {
+    TNode<UintPtrT> slot_id, TNode<HeapObject> maybe_feedback_vector) {
   DCHECK(Bytecodes::MakesCallAlongCriticalPath(bytecode_));
   DCHECK_EQ(Bytecodes::GetReceiverMode(bytecode_), ConvertReceiverMode::kAny);
-
-#ifndef V8_JITLESS
-  TNode<HeapObject> maybe_feedback_vector = LoadFeedbackVector();
   LazyNode<Object> receiver = [=] { return LoadRegisterAtOperandIndex(1); };
   CollectCallFeedback(function, receiver, context, maybe_feedback_vector,
                       slot_id);
-#endif  // !V8_JITLESS
-
   Comment("call using CallWithSpread builtin");
   Callable callable = CodeFactory::InterpreterPushArgsThenCall(
       isolate(), ConvertReceiverMode::kAny,
       InterpreterPushArgsMode::kWithFinalSpread);
-  TNode<Code> code_target = HeapConstant(callable.code());
+  TNode<CodeT> code_target = HeapConstant(callable.code());
 
   TNode<Word32T> args_count = args.reg_count();
   TailCallStubThenBytecodeDispatch(callable.descriptor(), code_target, context,
@@ -865,24 +843,23 @@ TNode<Object> InterpreterAssembler::Construct(
 
 TNode<Object> InterpreterAssembler::ConstructWithSpread(
     TNode<Object> target, TNode<Context> context, TNode<Object> new_target,
-    const RegListNodePair& args, TNode<UintPtrT> slot_id) {
+    const RegListNodePair& args, TNode<UintPtrT> slot_id,
+    TNode<HeapObject> maybe_feedback_vector) {
   // TODO(bmeurer): Unify this with the Construct bytecode feedback
   // above once we have a way to pass the AllocationSite to the Array
   // constructor _and_ spread the last argument at the same time.
   DCHECK(Bytecodes::MakesCallAlongCriticalPath(bytecode_));
-
-#ifndef V8_JITLESS
   Label extra_checks(this, Label::kDeferred), construct(this);
-  TNode<HeapObject> maybe_feedback_vector = LoadFeedbackVector();
   GotoIf(IsUndefined(maybe_feedback_vector), &construct);
+
   TNode<FeedbackVector> feedback_vector = CAST(maybe_feedback_vector);
 
   // Increment the call count.
   IncrementCallCount(feedback_vector, slot_id);
 
   // Check if we have monomorphic {new_target} feedback already.
-  TNode<HeapObjectReference> feedback =
-      CAST(LoadFeedbackVectorSlot(feedback_vector, slot_id));
+  TNode<MaybeObject> feedback =
+      LoadFeedbackVectorSlot(feedback_vector, slot_id);
   Branch(IsWeakReferenceToObject(feedback, new_target), &construct,
          &extra_checks);
 
@@ -978,7 +955,6 @@ TNode<Object> InterpreterAssembler::ConstructWithSpread(
   }
 
   BIND(&construct);
-#endif  // !V8_JITLESS
   Comment("call using ConstructWithSpread builtin");
   Callable callable = CodeFactory::InterpreterPushArgsThenConstruct(
       isolate(), InterpreterPushArgsMode::kWithFinalSpread);
@@ -995,7 +971,7 @@ TNode<T> InterpreterAssembler::CallRuntimeN(TNode<Uint32T> function_id,
   DCHECK(Bytecodes::MakesCallAlongCriticalPath(bytecode_));
   DCHECK(Bytecodes::IsCallRuntime(bytecode_));
   Callable callable = CodeFactory::InterpreterCEntry(isolate(), return_count);
-  TNode<Code> code_target = HeapConstant(callable.code());
+  TNode<CodeT> code_target = HeapConstant(callable.code());
 
   // Get the function entry from the function id.
   TNode<RawPtrT> function_table = ReinterpretCast<RawPtrT>(ExternalConstant(
@@ -1053,8 +1029,8 @@ void InterpreterAssembler::UpdateInterruptBudget(TNode<Int32T> weight,
     BIND(&interrupt_check);
     // JumpLoop should do a stack check as part of the interrupt.
     CallRuntime(bytecode() == Bytecode::kJumpLoop
-                    ? Runtime::kBytecodeBudgetInterruptWithStackCheck_Ignition
-                    : Runtime::kBytecodeBudgetInterrupt_Ignition,
+                    ? Runtime::kBytecodeBudgetInterruptWithStackCheck
+                    : Runtime::kBytecodeBudgetInterrupt,
                 GetContext(), function);
     Goto(&done);
 
@@ -1197,9 +1173,9 @@ void InterpreterAssembler::StarDispatchLookahead(TNode<WordT> target_bytecode) {
   // opcodes are never deliberately written, so we can use a one-sided check.
   // This is no less secure than the normal-length Star handler, which performs
   // no validation on its operand.
-  static_assert(static_cast<int>(Bytecode::kLastShortStar) + 1 ==
+  STATIC_ASSERT(static_cast<int>(Bytecode::kLastShortStar) + 1 ==
                 static_cast<int>(Bytecode::kIllegal));
-  static_assert(Bytecode::kIllegal == Bytecode::kLast);
+  STATIC_ASSERT(Bytecode::kIllegal == Bytecode::kLast);
   TNode<Int32T> first_short_star_bytecode =
       Int32Constant(static_cast<int>(Bytecode::kFirstShortStar));
   TNode<BoolT> is_star = Uint32GreaterThanOrEqual(
@@ -1337,12 +1313,12 @@ void InterpreterAssembler::UpdateInterruptBudgetOnReturn() {
   UpdateInterruptBudget(profiling_weight, true);
 }
 
-TNode<Int8T> InterpreterAssembler::LoadOsrState(
-    TNode<FeedbackVector> feedback_vector) {
-  // We're loading an 8-bit field, mask it.
-  return UncheckedCast<Int8T>(Word32And(
-      LoadObjectField<Int8T>(feedback_vector, FeedbackVector::kOsrStateOffset),
-      0xFF));
+TNode<Int16T> InterpreterAssembler::LoadOsrUrgencyAndInstallTarget() {
+  // We're loading a 16-bit field, mask it.
+  return UncheckedCast<Int16T>(Word32And(
+      LoadObjectField<Int16T>(BytecodeArrayTaggedPointer(),
+                              BytecodeArray::kOsrUrgencyAndInstallTargetOffset),
+      0xFFFF));
 }
 
 void InterpreterAssembler::Abort(AbortReason abort_reason) {
@@ -1363,70 +1339,23 @@ void InterpreterAssembler::AbortIfWordNotEqual(TNode<WordT> lhs,
   BIND(&ok);
 }
 
-void InterpreterAssembler::OnStackReplacement(
-    TNode<Context> context, TNode<FeedbackVector> feedback_vector,
-    TNode<IntPtrT> relative_jump, TNode<Int32T> loop_depth,
-    TNode<IntPtrT> feedback_slot, TNode<Int8T> osr_state,
-    OnStackReplacementParams params) {
-  // Three cases may cause us to attempt OSR, in the following order:
-  //
-  // 1) Presence of cached OSR Turbofan code.
-  // 2) Presence of cached OSR Sparkplug code.
-  // 3) The OSR urgency exceeds the current loop depth - in that case, trigger
-  //    a Turbofan OSR compilation.
+void InterpreterAssembler::OnStackReplacement(TNode<Context> context,
+                                              TNode<IntPtrT> relative_jump) {
+  TNode<JSFunction> function = CAST(LoadRegister(Register::function_closure()));
+  TNode<HeapObject> shared_info = LoadJSFunctionSharedFunctionInfo(function);
+  TNode<Object> sfi_data =
+      LoadObjectField(shared_info, SharedFunctionInfo::kFunctionDataOffset);
+  TNode<Uint16T> data_type = LoadInstanceType(CAST(sfi_data));
 
-  TVARIABLE(Object, maybe_target_code, SmiConstant(0));
-  Label osr_to_turbofan(this), osr_to_sparkplug(this);
-
-  // Case 1).
-  {
-    Label next(this);
-    TNode<MaybeObject> maybe_cached_osr_code =
-        LoadFeedbackVectorSlot(feedback_vector, feedback_slot);
-    GotoIf(IsCleared(maybe_cached_osr_code), &next);
-    maybe_target_code = GetHeapObjectAssumeWeak(maybe_cached_osr_code);
-
-    // Is it marked_for_deoptimization? If yes, clear the slot.
-    GotoIfNot(IsMarkedForDeoptimization(CAST(maybe_target_code.value())),
-              &osr_to_turbofan);
-    StoreFeedbackVectorSlot(feedback_vector, Unsigned(feedback_slot),
-                            ClearedValue(), UNSAFE_SKIP_WRITE_BARRIER);
-    maybe_target_code = SmiConstant(0);
-
-    Goto(&next);
-    BIND(&next);
-  }
-
-  // Case 2).
-  if (params == OnStackReplacementParams::kBaselineCodeIsCached) {
-    Goto(&osr_to_sparkplug);
-  } else {
-    DCHECK_EQ(params, OnStackReplacementParams::kDefault);
-    TNode<SharedFunctionInfo> sfi = LoadObjectField<SharedFunctionInfo>(
-        LoadFunctionClosure(), JSFunction::kSharedFunctionInfoOffset);
-    TNode<HeapObject> sfi_data = LoadObjectField<HeapObject>(
-        sfi, SharedFunctionInfo::kFunctionDataOffset);
-    GotoIf(InstanceTypeEqual(LoadInstanceType(sfi_data), CODE_TYPE),
-           &osr_to_sparkplug);
-
-    // Case 3).
-    {
-      static_assert(FeedbackVector::OsrUrgencyBits::kShift == 0);
-      TNode<Int32T> osr_urgency = Word32And(
-          osr_state, Int32Constant(FeedbackVector::OsrUrgencyBits::kMask));
-      GotoIf(Uint32LessThan(loop_depth, osr_urgency), &osr_to_turbofan);
-      JumpBackward(relative_jump);
-    }
-  }
-
-  BIND(&osr_to_turbofan);
+  Label baseline(this);
+  GotoIf(InstanceTypeEqual(data_type, CODET_TYPE), &baseline);
   {
     Callable callable = CodeFactory::InterpreterOnStackReplacement(isolate());
-    CallStub(callable, context, maybe_target_code.value());
+    CallStub(callable, context);
     JumpBackward(relative_jump);
   }
 
-  BIND(&osr_to_sparkplug);
+  BIND(&baseline);
   {
     Callable callable =
         CodeFactory::InterpreterOnStackReplacement_ToBaseline(isolate());
@@ -1472,7 +1401,7 @@ void InterpreterAssembler::TraceBytecodeDispatch(TNode<WordT> target_bytecode) {
 
 // static
 bool InterpreterAssembler::TargetSupportsUnalignedAccess() {
-#if V8_TARGET_ARCH_MIPS64 || V8_TARGET_ARCH_RISCV64 || V8_TARGET_ARCH_RISCV32
+#if V8_TARGET_ARCH_MIPS || V8_TARGET_ARCH_MIPS64 || V8_TARGET_ARCH_RISCV64
   return false;
 #elif V8_TARGET_ARCH_IA32 || V8_TARGET_ARCH_X64 || V8_TARGET_ARCH_S390 || \
     V8_TARGET_ARCH_ARM || V8_TARGET_ARCH_ARM64 || V8_TARGET_ARCH_PPC ||   \
@@ -1509,7 +1438,7 @@ TNode<FixedArray> InterpreterAssembler::ExportParametersAndRegisterFile(
   TNode<IntPtrT> formal_parameter_count_intptr =
       Signed(ChangeUint32ToWord(formal_parameter_count));
   TNode<UintPtrT> register_count = ChangeUint32ToWord(registers.reg_count());
-  if (v8_flags.debug_code) {
+  if (FLAG_debug_code) {
     CSA_DCHECK(this, IntPtrEqual(registers.base_reg_location(),
                                  RegisterLocation(Register(0))));
     AbortIfRegisterCountInvalid(array, formal_parameter_count_intptr,
@@ -1581,7 +1510,7 @@ TNode<FixedArray> InterpreterAssembler::ImportRegisterFile(
   TNode<IntPtrT> formal_parameter_count_intptr =
       Signed(ChangeUint32ToWord(formal_parameter_count));
   TNode<UintPtrT> register_count = ChangeUint32ToWord(registers.reg_count());
-  if (v8_flags.debug_code) {
+  if (FLAG_debug_code) {
     CSA_DCHECK(this, IntPtrEqual(registers.base_reg_location(),
                                  RegisterLocation(Register(0))));
     AbortIfRegisterCountInvalid(array, formal_parameter_count_intptr,

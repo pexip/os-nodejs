@@ -143,7 +143,7 @@ static JITCodeLineInfo* UntagLineInfo(void* ptr) {
 
 // The parameter str is a mixed pattern which contains the
 // function name and some other info. It comes from all the
-// V8FileLogger::CodeCreateEvent(...) function. This function get the
+// Logger::CodeCreateEvent(...) function. This function get the
 // pure function name from the input parameter.
 static std::string GetFunctionNameFromMixedName(const char* str, int length) {
   int index = 0;
@@ -295,6 +295,7 @@ void VTUNEJITInterface::event_handler(const v8::JitCodeEvent* event) {
 }  // namespace internal
 
 v8::JitCodeEventHandler GetVtuneCodeEventHandler() {
+  v8::V8::SetFlagsFromString("--no-compact-code-space");
   return vTune::internal::VTUNEJITInterface::event_handler;
 }
 

@@ -79,7 +79,7 @@ assert.throws(
 
 assert.throws(
   () => fs.read(fd, { buffer: null }, common.mustNotCall()),
-  { code: 'ERR_INVALID_ARG_TYPE' },
+  /TypeError: Cannot read properties of null \(reading 'byteLength'\)/,
   'throws when options.buffer is null'
 );
 

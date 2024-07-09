@@ -1,7 +1,7 @@
 // Flags: --expose-gc
 'use strict';
 const common = require('../common');
-const { onGC } = require('../common/gc');
+const onGC = require('../common/ongc');
 const { createServer } = require('http');
 const { connect } = require('net');
 
@@ -14,10 +14,9 @@ const server = createServer(common.mustCall((req, res) => {
   onGC(req, { ongc: common.mustCall(() => { server.close(); }) });
   req.resume();
   req.on('end', common.mustCall(() => {
-    setImmediate(async () => {
+    setImmediate(() => {
       client.end();
-      await global.gc({ type: 'major', execution: 'async' });
-      await global.gc({ type: 'major', execution: 'async' });
+      global.gc();
     });
   }));
   res.end('hello world');

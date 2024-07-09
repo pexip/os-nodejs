@@ -376,15 +376,8 @@ function parseSignature(text, sig) {
       }
 
       if (!listParam) {
-        if (sigParam.startsWith('...')) {
-          listParam = { name: sigParam };
-        } else {
-          throw new Error(
-            `Invalid param "${sigParam}"\n` +
-            ` > ${JSON.stringify(listParam)}\n` +
-            ` > ${text}`,
-          );
-        }
+        sig.jump = true;
+        return;
       }
     }
 
@@ -573,9 +566,9 @@ function cloneValue(src) {
 }
 
 
-// This section parses out the contents of an H# tag.
+// This section parse out the contents of an H# tag.
 
-// To reduce escape slashes in RegExp string components.
+// To reduse escape slashes in RegExp string components.
 const r = String.raw;
 
 const eventPrefix = '^Event: +';

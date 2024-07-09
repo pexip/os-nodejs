@@ -52,5 +52,6 @@ for (let i = 0; i < QUEUE; i++)
   setImmediate(run);
 
 process.on('exit', function() {
+  console.log('hit', hit);
   assert.strictEqual(hit, QUEUE);
 });

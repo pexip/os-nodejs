@@ -33,9 +33,10 @@ class SlackTrackingPrediction;
 class V8_EXPORT_PRIVATE JSCreateLowering final
     : public NON_EXPORTED_BASE(AdvancedReducer) {
  public:
-  JSCreateLowering(Editor* editor, JSGraph* jsgraph, JSHeapBroker* broker,
-                   Zone* zone)
+  JSCreateLowering(Editor* editor, CompilationDependencies* dependencies,
+                   JSGraph* jsgraph, JSHeapBroker* broker, Zone* zone)
       : AdvancedReducer(editor),
+        dependencies_(dependencies),
         jsgraph_(jsgraph),
         broker_(broker),
         zone_(zone) {}
@@ -123,10 +124,11 @@ class V8_EXPORT_PRIVATE JSCreateLowering final
   NativeContextRef native_context() const;
   CommonOperatorBuilder* common() const;
   SimplifiedOperatorBuilder* simplified() const;
-  CompilationDependencies* dependencies() const;
+  CompilationDependencies* dependencies() const { return dependencies_; }
   JSHeapBroker* broker() const { return broker_; }
   Zone* zone() const { return zone_; }
 
+  CompilationDependencies* const dependencies_;
   JSGraph* const jsgraph_;
   JSHeapBroker* const broker_;
   Zone* const zone_;

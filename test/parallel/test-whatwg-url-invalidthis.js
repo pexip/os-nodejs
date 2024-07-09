@@ -10,27 +10,12 @@ const assert = require('assert');
   'toJSON',
 ].forEach((i) => {
   assert.throws(() => Reflect.apply(URL.prototype[i], [], {}), {
-    name: 'TypeError',
-    message: /Receiver must be an instance of class/,
+    code: 'ERR_INVALID_THIS',
   });
 });
 
 [
   'href',
-  'search',
-].forEach((i) => {
-  assert.throws(() => Reflect.get(URL.prototype, i, {}), {
-    name: 'TypeError',
-    message: /Receiver must be an instance of class/,
-  });
-
-  assert.throws(() => Reflect.set(URL.prototype, i, null, {}), {
-    name: 'TypeError',
-    message: /Cannot read private member/,
-  });
-});
-
-[
   'protocol',
   'username',
   'password',
@@ -38,16 +23,15 @@ const assert = require('assert');
   'hostname',
   'port',
   'pathname',
+  'search',
   'hash',
 ].forEach((i) => {
   assert.throws(() => Reflect.get(URL.prototype, i, {}), {
-    name: 'TypeError',
-    message: /Cannot read private member/,
+    code: 'ERR_INVALID_THIS',
   });
 
   assert.throws(() => Reflect.set(URL.prototype, i, null, {}), {
-    name: 'TypeError',
-    message: /Cannot read private member/,
+    code: 'ERR_INVALID_THIS',
   });
 });
 
@@ -56,7 +40,6 @@ const assert = require('assert');
   'searchParams',
 ].forEach((i) => {
   assert.throws(() => Reflect.get(URL.prototype, i, {}), {
-    name: 'TypeError',
-    message: /Cannot read private member/,
+    code: 'ERR_INVALID_THIS',
   });
 });

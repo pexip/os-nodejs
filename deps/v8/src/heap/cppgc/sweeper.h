@@ -7,13 +7,16 @@
 
 #include <memory>
 
+#include "include/cppgc/heap.h"
 #include "src/base/macros.h"
 #include "src/base/platform/time.h"
-#include "src/heap/cppgc/heap-config.h"
 #include "src/heap/cppgc/memory.h"
-#include "src/heap/cppgc/stats-collector.h"
 
-namespace cppgc::internal {
+namespace cppgc {
+
+class Platform;
+
+namespace internal {
 
 class HeapBase;
 class ConcurrentSweeperTest;
@@ -21,16 +24,15 @@ class NormalPageSpace;
 
 class V8_EXPORT_PRIVATE Sweeper final {
  public:
-  class V8_EXPORT_PRIVATE SweepingOnMutatorThreadObserver {
-   public:
-    explicit SweepingOnMutatorThreadObserver(Sweeper&);
-    virtual ~SweepingOnMutatorThreadObserver();
+  struct SweepingConfig {
+    using SweepingType = cppgc::Heap::SweepingType;
+    enum class CompactableSpaceHandling { kSweep, kIgnore };
+    enum class FreeMemoryHandling { kDoNotDiscard, kDiscardWherePossible };
 
-    virtual void Start() = 0;
-    virtual void End() = 0;
-
-   private:
-    Sweeper& sweeper_;
+    SweepingType sweeping_type = SweepingType::kIncrementalAndConcurrent;
+    CompactableSpaceHandling compactable_space_handling =
+        CompactableSpaceHandling::kSweep;
+    FreeMemoryHandling free_memory_handling = FreeMemoryHandling::kDoNotDiscard;
   };
 
   static constexpr bool CanDiscardMemory() {
@@ -45,24 +47,19 @@ class V8_EXPORT_PRIVATE Sweeper final {
 
   // Sweeper::Start assumes the heap holds no linear allocation buffers.
   void Start(SweepingConfig);
-  // Returns true when sweeping was finished and false if it was not running or
-  // couldn't be finished due to being a recursive sweep call.
-  bool FinishIfRunning();
+  void FinishIfRunning();
   void FinishIfOutOfWork();
   void NotifyDoneIfNeeded();
-  // SweepForAllocationIfRunning sweeps the given `space` until a slot that can
-  // fit an allocation of `min_wanted_size` bytes is found. Returns true if a
-  // slot was found. Aborts after `max_duration`.
-  bool SweepForAllocationIfRunning(NormalPageSpace* space,
-                                   size_t min_wanted_size,
-                                   v8::base::TimeDelta max_duration);
+  // SweepForAllocationIfRunning sweeps the given |space| until a slot that can
+  // fit an allocation of size |size| is found. Returns true if a slot was
+  // found.
+  bool SweepForAllocationIfRunning(NormalPageSpace* space, size_t size);
 
   bool IsSweepingOnMutatorThread() const;
   bool IsSweepingInProgress() const;
 
   // Assist with sweeping. Returns true if sweeping is done.
-  bool PerformSweepOnMutatorThread(v8::base::TimeDelta max_duration,
-                                   StatsCollector::ScopeId);
+  bool PerformSweepOnMutatorThread(double deadline_in_seconds);
 
  private:
   void WaitForConcurrentSweepingForTesting();
@@ -75,6 +72,7 @@ class V8_EXPORT_PRIVATE Sweeper final {
   friend class ConcurrentSweeperTest;
 };
 
-}  // namespace cppgc::internal
+}  // namespace internal
+}  // namespace cppgc
 
 #endif  // V8_HEAP_CPPGC_SWEEPER_H_

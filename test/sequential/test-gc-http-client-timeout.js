@@ -3,7 +3,7 @@
 // Like test-gc-http-client.js, but with a timeout set.
 
 const common = require('../common');
-const { onGC } = require('../common/gc');
+const onGC = require('../common/ongc');
 const http = require('http');
 
 function serverHandler(req, res) {

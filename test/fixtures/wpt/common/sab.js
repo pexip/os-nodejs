@@ -6,14 +6,14 @@ const createBuffer = (() => {
   } catch(e) {
     sabConstructor = null;
   }
-  return (type, length, opts) => {
+  return (type, length) => {
     if (type === "ArrayBuffer") {
-      return new ArrayBuffer(length, opts);
+      return new ArrayBuffer(length);
     } else if (type === "SharedArrayBuffer") {
       if (sabConstructor && sabConstructor.name !== "SharedArrayBuffer") {
         throw new Error("WebAssembly.Memory does not support shared:true");
       }
-      return new sabConstructor(length, opts);
+      return new sabConstructor(length);
     } else {
       throw new Error("type has to be ArrayBuffer or SharedArrayBuffer");
     }

@@ -6,17 +6,11 @@ const { Readable } = require('stream');
 const readline = require('readline');
 
 const CONTENT = 'content';
-const LINES_PER_PUSH = 2051;
-const REPETITIONS = 3;
+const TOTAL_LINES = 18;
 
 (async () => {
   const readable = new Readable({ read() {} });
-  let salt = 0;
-  for (let i = 0; i < REPETITIONS; i++) {
-    readable.push(`${CONTENT}\n`.repeat(LINES_PER_PUSH + i));
-    salt += i;
-  }
-  const TOTAL_LINES = LINES_PER_PUSH * REPETITIONS + salt;
+  readable.push(`${CONTENT}\n`.repeat(TOTAL_LINES));
 
   const rli = readline.createInterface({
     input: readable,
@@ -24,24 +18,21 @@ const REPETITIONS = 3;
   });
 
   const it = rli[Symbol.asyncIterator]();
-  const watermarkData = it[Symbol.for('nodejs.watermarkData')];
-  const highWaterMark = watermarkData.high;
+  const highWaterMark = it.stream.readableHighWaterMark;
 
   // For this test to work, we have to queue up more than the number of
   // highWaterMark items in rli. Make sure that is the case.
-  assert(TOTAL_LINES > highWaterMark, `TOTAL_LINES (${TOTAL_LINES}) isn't greater than highWaterMark (${highWaterMark})`);
+  assert(TOTAL_LINES > highWaterMark);
 
   let iterations = 0;
   let readableEnded = false;
-  let notPaused = 0;
   for await (const line of it) {
     assert.strictEqual(readableEnded, false);
+
     assert.strictEqual(line, CONTENT);
-    assert.ok(watermarkData.size <= TOTAL_LINES);
-    assert.strictEqual(readable.isPaused(), watermarkData.size >= 1);
-    if (!readable.isPaused()) {
-      notPaused++;
-    }
+
+    const expectedPaused = TOTAL_LINES - iterations > highWaterMark;
+    assert.strictEqual(readable.isPaused(), expectedPaused);
 
     iterations += 1;
 
@@ -54,5 +45,4 @@ const REPETITIONS = 3;
   }
 
   assert.strictEqual(iterations, TOTAL_LINES);
-  assert.strictEqual(notPaused, REPETITIONS);
 })().then(common.mustCall());

@@ -3,9 +3,10 @@ const common = require('../common');
 const assert = require('assert');
 const cp = require('child_process');
 const fs = require('fs');
+const path = require('path');
 const util = require('util');
 
-const tests = { __proto__: null };
+const tests = Object.create(null);
 
 let gid = 1;
 let uid = 1;
@@ -115,7 +116,7 @@ if (common.canCreateSymLink()) {
 
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
-const traceFile = tmpdir.resolve('node_trace.1.log');
+const traceFile = path.join(tmpdir.path, 'node_trace.1.log');
 
 for (const tr in tests) {
   const proc = cp.spawnSync(process.execPath,

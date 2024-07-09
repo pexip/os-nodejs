@@ -73,7 +73,6 @@ myEmitter.on('event', function(a, b) {
   //     _events: [Object: null prototype] { event: [Function (anonymous)] },
   //     _eventsCount: 1,
   //     _maxListeners: undefined,
-  //     [Symbol(shapeMode)]: false,
   //     [Symbol(kCapture)]: false
   //   } true
 });
@@ -91,7 +90,6 @@ myEmitter.on('event', function(a, b) {
   //     _events: [Object: null prototype] { event: [Function (anonymous)] },
   //     _eventsCount: 1,
   //     _maxListeners: undefined,
-  //     [Symbol(shapeMode)]: false,
   //     [Symbol(kCapture)]: false
   //   } true
 });
@@ -107,7 +105,7 @@ class MyEmitter extends EventEmitter {}
 const myEmitter = new MyEmitter();
 myEmitter.on('event', (a, b) => {
   console.log(a, b, this);
-  // Prints: a b undefined
+  // Prints: a b {}
 });
 myEmitter.emit('event', 'a', 'b');
 ```
@@ -653,7 +651,7 @@ set by [`emitter.setMaxListeners(n)`][] or defaults to
 <!-- YAML
 added: v3.2.0
 changes:
-  - version: v19.8.0
+  - version: v18.16.0
     pr-url: https://github.com/nodejs/node/pull/46523
     description: Added the `listener` argument.
 -->
@@ -960,7 +958,7 @@ myEmitter.emit('event');
 ```
 
 Because listeners are managed using an internal array, calling this will
-change the position indexes of any listener registered _after_ the listener
+change the position indices of any listener registered _after_ the listener
 being removed. This will not impact the order in which listeners are called,
 but it means that any copies of the listener array as returned by
 the `emitter.listeners()` method will need to be recreated.
@@ -1271,7 +1269,7 @@ const { getEventListeners, EventEmitter } = require('node:events');
 ## `events.getMaxListeners(emitterOrTarget)`
 
 <!-- YAML
-added: v19.9.0
+added: v18.17.0
 -->
 
 * `emitterOrTarget` {EventEmitter|EventTarget}
@@ -1333,7 +1331,7 @@ changes:
 -->
 
 * `emitter` {EventEmitter}
-* `name` {string|symbol}
+* `name` {string}
 * `options` {Object}
   * `signal` {AbortSignal} Can be used to cancel waiting for the event.
 * Returns: {Promise}
@@ -1455,7 +1453,8 @@ async function foo(emitter, event, signal) {
 }
 
 foo(ee, 'foo', ac.signal);
-ac.abort(); // Prints: Waiting for the event was canceled!
+ac.abort(); // Abort waiting for the event
+ee.emit('foo'); // Prints: Waiting for the event was canceled!
 ```
 
 ```cjs
@@ -1478,7 +1477,8 @@ async function foo(emitter, event, signal) {
 }
 
 foo(ee, 'foo', ac.signal);
-ac.abort(); // Prints: Waiting for the event was canceled!
+ac.abort(); // Abort waiting for the event
+ee.emit('foo'); // Prints: Waiting for the event was canceled!
 ```
 
 ### Awaiting multiple events emitted on `process.nextTick()`
@@ -1655,31 +1655,12 @@ console.log(listenerCount(myEmitter, 'event'));
 added:
  - v13.6.0
  - v12.16.0
-changes:
-  - version: v20.13.0
-    pr-url: https://github.com/nodejs/node/pull/52080
-    description: Support `highWaterMark` and `lowWaterMark` options,
-                 For consistency. Old options are still supported.
-  - version:
-    - v20.0.0
-    pr-url: https://github.com/nodejs/node/pull/41276
-    description: The `close`, `highWatermark`, and `lowWatermark`
-                 options are supported now.
 -->
 
 * `emitter` {EventEmitter}
 * `eventName` {string|symbol} The name of the event being listened for
 * `options` {Object}
   * `signal` {AbortSignal} Can be used to cancel awaiting events.
-  * `close` - {string\[]} Names of events that will end the iteration.
-  * `highWaterMark` - {integer} **Default:** `Number.MAX_SAFE_INTEGER`
-    The high watermark. The emitter is paused every time the size of events
-    being buffered is higher than it. Supported only on emitters implementing
-    `pause()` and `resume()` methods.
-  * `lowWaterMark` - {integer} **Default:** `1`
-    The low watermark. The emitter is resumed every time the size of events
-    being buffered is lower than it. Supported only on emitters implementing
-    `pause()` and `resume()` methods.
 * Returns: {AsyncIterator} that iterates `eventName` events emitted by the `emitter`
 
 ```mjs
@@ -1818,17 +1799,17 @@ const emitter = new EventEmitter();
 setMaxListeners(5, target, emitter);
 ```
 
-## `events.addAbortListener(signal, listener)`
+## `events.addAbortListener(signal, resource)`
 
 <!-- YAML
-added: v20.5.0
+added: v18.18.0
 -->
 
 > Stability: 1 - Experimental
 
 * `signal` {AbortSignal}
 * `listener` {Function|EventListener}
-* Returns: {Disposable} A Disposable that removes the `abort` listener.
+* Returns: {Disposable} that removes the `abort` listener.
 
 Listens once to the `abort` event on the provided `signal`.
 
@@ -2220,22 +2201,6 @@ added: v14.5.0
 
 This is not used in Node.js and is provided purely for completeness.
 
-#### `event.initEvent(type[, bubbles[, cancelable]])`
-
-<!-- YAML
-added: v19.5.0
--->
-
-> Stability: 3 - Legacy: The WHATWG spec considers it deprecated and users
-> shouldn't use it at all.
-
-* `type` {string}
-* `bubbles` {boolean}
-* `cancelable` {boolean}
-
-Redundant with event constructors and incapable of setting `composed`.
-This is not used in Node.js and is provided purely for completeness.
-
 #### `event.isTrusted`
 
 <!-- YAML
@@ -2415,16 +2380,10 @@ Removes the `listener` from the list of handlers for event `type`.
 ### Class: `CustomEvent`
 
 <!-- YAML
-added:
-  - v18.7.0
-  - v16.17.0
-changes:
-  - version: v20.13.0
-    pr-url: https://github.com/nodejs/node/pull/52618
-    description: CustomEvent is now stable.
+added: v18.7.0
 -->
 
-> Stability: 2 - Stable
+> Stability: 1 - Experimental.
 
 * Extends: {Event}
 
@@ -2434,16 +2393,10 @@ Instances are created internally by Node.js.
 #### `event.detail`
 
 <!-- YAML
-added:
-  - v18.7.0
-  - v16.17.0
-changes:
-  - version: v20.13.0
-    pr-url: https://github.com/nodejs/node/pull/52618
-    description: CustomEvent is now stable.
+added: v18.7.0
 -->
 
-> Stability: 2 - Stable
+> Stability: 1 - Experimental.
 
 * Type: {any} Returns custom data passed when initializing.
 

@@ -4,13 +4,14 @@
 const common = require('../common');
 
 const assert = require('assert');
+const path = require('path');
 const { writeFile, readFile } = require('fs').promises;
 const tmpdir = require('../common/tmpdir');
 const { internalBinding } = require('internal/test/binding');
 const fsBinding = internalBinding('fs');
 tmpdir.refresh();
 
-const fn = tmpdir.resolve('large-file');
+const fn = path.join(tmpdir.path, 'large-file');
 
 // Creating large buffer with random content
 const largeBuffer = Buffer.from(
@@ -46,7 +47,7 @@ function validateReadFileAbortLogicBefore() {
   const signal = AbortSignal.abort();
   assert.rejects(readFile(fn, { signal }), {
     name: 'AbortError'
-  }).then(common.mustCall());
+  });
 }
 
 function validateReadFileAbortLogicDuring() {
@@ -55,7 +56,7 @@ function validateReadFileAbortLogicDuring() {
   process.nextTick(() => controller.abort());
   assert.rejects(readFile(fn, { signal }), {
     name: 'AbortError'
-  }).then(common.mustCall());
+  });
 }
 
 async function validateWrongSignalParam() {
@@ -72,7 +73,7 @@ async function validateWrongSignalParam() {
 async function validateZeroByteLiar() {
   const originalFStat = fsBinding.fstat;
   fsBinding.fstat = common.mustCall(
-    async () => (/* stat fields */ [0, 1, 2, 3, 4, 5, 6, 7, 0 /* size */])
+    () => (/* stat fields */ [0, 1, 2, 3, 4, 5, 6, 7, 0 /* size */])
   );
   const readBuffer = await readFile(fn);
   assert.strictEqual(readBuffer.toString(), largeBuffer.toString());

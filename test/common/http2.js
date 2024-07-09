@@ -81,6 +81,24 @@ class SettingsFrame extends Frame {
   }
 }
 
+class DataFrame extends Frame {
+  constructor(id, payload, padlen = 0, final = false) {
+    let len = payload.length;
+    let flags = 0;
+    if (final) flags |= FLAG_EOS;
+    const buffers = [payload];
+    if (padlen > 0) {
+      buffers.unshift(Buffer.from([padlen]));
+      buffers.push(PADDING.slice(0, padlen));
+      len += padlen + 1;
+      flags |= FLAG_PADDED;
+    }
+    super(len, 0, flags, id);
+    buffers.unshift(this[kFrameData]);
+    this[kFrameData] = Buffer.concat(buffers);
+  }
+}
+
 class HeadersFrame extends Frame {
   constructor(id, payload, padlen = 0, final = false) {
     let len = payload.length;
@@ -120,6 +138,7 @@ class AltSvcFrame extends Frame {
 module.exports = {
   Frame,
   AltSvcFrame,
+  DataFrame,
   HeadersFrame,
   SettingsFrame,
   PingFrame,

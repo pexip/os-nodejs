@@ -2,7 +2,7 @@
 const common = require('../common');
 const fs = require('fs');
 
-if (!common.isMacOS) {
+if (!common.isOSX) {
   common.skip('this tests works only on MacOS');
 }
 

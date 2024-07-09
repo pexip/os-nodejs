@@ -22,6 +22,7 @@
 'use strict';
 const common = require('../common');
 const assert = require('assert');
+const path = require('path');
 const fs = require('fs');
 const expected = Buffer.from('hello');
 
@@ -30,7 +31,7 @@ tmpdir.refresh();
 
 // fs.write with all parameters provided:
 {
-  const filename = tmpdir.resolve('write1.txt');
+  const filename = path.join(tmpdir.path, 'write1.txt');
   fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
     const cb = common.mustSucceed((written) => {
       assert.strictEqual(written, expected.length);
@@ -46,7 +47,7 @@ tmpdir.refresh();
 
 // fs.write with a buffer, without the length parameter:
 {
-  const filename = tmpdir.resolve('write2.txt');
+  const filename = path.join(tmpdir.path, 'write2.txt');
   fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
     const cb = common.mustSucceed((written) => {
       assert.strictEqual(written, 2);
@@ -62,7 +63,7 @@ tmpdir.refresh();
 
 // fs.write with a buffer, without the offset and length parameters:
 {
-  const filename = tmpdir.resolve('write3.txt');
+  const filename = path.join(tmpdir.path, 'write3.txt');
   fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
     const cb = common.mustSucceed((written) => {
       assert.strictEqual(written, expected.length);
@@ -78,7 +79,7 @@ tmpdir.refresh();
 
 // fs.write with the offset passed as undefined followed by the callback:
 {
-  const filename = tmpdir.resolve('write4.txt');
+  const filename = path.join(tmpdir.path, 'write4.txt');
   fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
     const cb = common.mustSucceed((written) => {
       assert.strictEqual(written, expected.length);
@@ -94,7 +95,7 @@ tmpdir.refresh();
 
 // fs.write with offset and length passed as undefined followed by the callback:
 {
-  const filename = tmpdir.resolve('write5.txt');
+  const filename = path.join(tmpdir.path, 'write5.txt');
   fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
     const cb = common.mustSucceed((written) => {
       assert.strictEqual(written, expected.length);
@@ -110,7 +111,7 @@ tmpdir.refresh();
 
 // fs.write with a Uint8Array, without the offset and length parameters:
 {
-  const filename = tmpdir.resolve('write6.txt');
+  const filename = path.join(tmpdir.path, 'write6.txt');
   fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
     const cb = common.mustSucceed((written) => {
       assert.strictEqual(written, expected.length);
@@ -126,7 +127,7 @@ tmpdir.refresh();
 
 // fs.write with invalid offset type
 {
-  const filename = tmpdir.resolve('write7.txt');
+  const filename = path.join(tmpdir.path, 'write7.txt');
   fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
     assert.throws(() => {
       fs.write(fd,
@@ -148,7 +149,7 @@ tmpdir.refresh();
 
 // fs.write with a DataView, without the offset and length parameters:
 {
-  const filename = tmpdir.resolve('write8.txt');
+  const filename = path.join(tmpdir.path, 'write8.txt');
   fs.open(filename, 'w', 0o644, common.mustSucceed((fd) => {
     const cb = common.mustSucceed((written) => {
       assert.strictEqual(written, expected.length);

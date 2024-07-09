@@ -12,12 +12,7 @@ namespace internal {
 PropertyCallbackArguments::PropertyCallbackArguments(
     Isolate* isolate, Object data, Object self, JSObject holder,
     Maybe<ShouldThrow> should_throw)
-    : Super(isolate)
-#ifdef DEBUG
-      ,
-      javascript_execution_counter_(isolate->javascript_execution_counter())
-#endif  // DEBUG
-{
+    : Super(isolate) {
   slot_at(T::kThisIndex).store(self);
   slot_at(T::kHolderIndex).store(holder);
   slot_at(T::kDataIndex).store(data);
@@ -38,7 +33,8 @@ PropertyCallbackArguments::PropertyCallbackArguments(
 }
 
 FunctionCallbackArguments::FunctionCallbackArguments(
-    internal::Isolate* isolate, internal::Object data, internal::Object holder,
+    internal::Isolate* isolate, internal::Object data,
+    internal::HeapObject callee, internal::Object holder,
     internal::HeapObject new_target, internal::Address* argv, int argc)
     : Super(isolate), argv_(argv), argc_(argc) {
   slot_at(T::kDataIndex).store(data);

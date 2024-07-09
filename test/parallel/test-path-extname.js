@@ -6,7 +6,7 @@ const path = require('path');
 const failures = [];
 const slashRE = /\//g;
 
-const testPaths = [
+[
   [__filename, '.js'],
   ['', ''],
   ['/path/to/file', ''],
@@ -50,13 +50,10 @@ const testPaths = [
   ['file//', ''],
   ['file./', '.'],
   ['file.//', '.'],
-];
-
-for (const testPath of testPaths) {
-  const expected = testPath[1];
-  const extNames = [path.posix.extname, path.win32.extname];
-  for (const extname of extNames) {
-    let input = testPath[0];
+].forEach((test) => {
+  const expected = test[1];
+  [path.posix.extname, path.win32.extname].forEach((extname) => {
+    let input = test[0];
     let os;
     if (extname === path.win32.extname) {
       input = input.replace(slashRE, '\\');
@@ -69,14 +66,16 @@ for (const testPath of testPaths) {
       JSON.stringify(expected)}\n  actual=${JSON.stringify(actual)}`;
     if (actual !== expected)
       failures.push(`\n${message}`);
+  });
+  {
+    const input = `C:${test[0].replace(slashRE, '\\')}`;
+    const actual = path.win32.extname(input);
+    const message = `path.win32.extname(${JSON.stringify(input)})\n  expect=${
+      JSON.stringify(expected)}\n  actual=${JSON.stringify(actual)}`;
+    if (actual !== expected)
+      failures.push(`\n${message}`);
   }
-  const input = `C:${testPath[0].replace(slashRE, '\\')}`;
-  const actual = path.win32.extname(input);
-  const message = `path.win32.extname(${JSON.stringify(input)})\n  expect=${
-    JSON.stringify(expected)}\n  actual=${JSON.stringify(actual)}`;
-  if (actual !== expected)
-    failures.push(`\n${message}`);
-}
+});
 assert.strictEqual(failures.length, 0, failures.join(''));
 
 // On Windows, backslash is a path separator.

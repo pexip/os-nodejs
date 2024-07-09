@@ -20,12 +20,8 @@ server.listen(0, function() {
   const req = https.request({ port: this.address().port });
   req.end();
 
-  let expectedErrorMessage = new RegExp('wrong version number');
-  if (common.hasOpenSSL(3, 2)) {
-    expectedErrorMessage = new RegExp('packet length too long');
-  }
   req.once('error', common.mustCall(function(err) {
-    assert(expectedErrorMessage.test(err.message));
+    assert(/wrong version number/.test(err.message));
     server.close();
   }));
 });

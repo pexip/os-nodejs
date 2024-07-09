@@ -27,6 +27,7 @@ const fixtures = require('../common/fixtures');
 
 const assert = require('assert');
 const fs = require('fs');
+const path = require('path');
 
 // 0 if not found in fs.constants
 const { O_APPEND = 0,
@@ -82,10 +83,10 @@ assert.throws(
   { code: 'ERR_INVALID_ARG_VALUE', name: 'TypeError' }
 );
 
-if (common.isLinux || common.isMacOS) {
+if (common.isLinux || common.isOSX) {
   const tmpdir = require('../common/tmpdir');
   tmpdir.refresh();
-  const file = tmpdir.resolve('a.js');
+  const file = path.join(tmpdir.path, 'a.js');
   fs.copyFileSync(fixtures.path('a.js'), file);
   fs.open(file, O_DSYNC, common.mustSucceed((fd) => {
     fs.closeSync(fd);

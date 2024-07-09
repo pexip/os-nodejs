@@ -2,6 +2,6 @@
 
 const { WPTRunner } = require('../common/wpt');
 
-const runner = new WPTRunner('html/webappapis/timers', { concurrency: 1 });
+const runner = new WPTRunner('html/webappapis/timers');
 
 runner.runJsTests();

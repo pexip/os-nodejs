@@ -12,13 +12,16 @@
 #include "src/builtins/accessors.h"
 #include "src/common/message-template.h"
 #include "src/heap/local-factory-inl.h"
+#include "src/init/bootstrapper.h"
 #include "src/logging/runtime-call-stats-scope.h"
+#include "src/objects/module-inl.h"
+#include "src/objects/objects-inl.h"
 #include "src/objects/scope-info.h"
-#include "src/objects/string-inl.h"
-#include "src/objects/string-set.h"
+#include "src/objects/string-set-inl.h"
 #include "src/parsing/parse-info.h"
 #include "src/parsing/parser.h"
 #include "src/parsing/preparse-data.h"
+#include "src/zone/zone-list-inl.h"
 #include "src/zone/zone.h"
 
 namespace v8 {
@@ -252,7 +255,7 @@ Scope::Scope(Zone* zone, ScopeType scope_type,
   must_use_preparsed_scope_data_ = true;
 
   if (scope_type == BLOCK_SCOPE) {
-    // Set is_block_scope_for_object_literal_ based on the existence of the home
+    // Set is_block_scope_for_object_literal_ based on the existince of the home
     // object variable (we don't store it explicitly).
     DCHECK_NOT_NULL(ast_value_factory);
     int home_object_index = scope_info->ContextSlotIndex(
@@ -632,8 +635,7 @@ void DeclarationScope::HoistSloppyBlockFunctions(AstNodeFactory* factory) {
     // scope and we terminate the iteration there anyway.
     do {
       Variable* var = query_scope->LookupInScopeOrScopeInfo(name, query_scope);
-      if (var != nullptr && IsLexicalVariableMode(var->mode()) &&
-          !var->is_sloppy_block_function()) {
+      if (var != nullptr && IsLexicalVariableMode(var->mode())) {
         should_hoist = false;
         break;
       }
@@ -650,19 +652,6 @@ void DeclarationScope::HoistSloppyBlockFunctions(AstNodeFactory* factory) {
       auto declaration = factory->NewVariableDeclaration(pos);
       // Based on the preceding checks, it doesn't matter what we pass as
       // sloppy_mode_block_scope_function_redefinition.
-      //
-      // This synthesized var for Annex B functions-in-block (FiB) may be
-      // declared multiple times for the same var scope, such as in the case of
-      // shadowed functions-in-block like the following:
-      //
-      // {
-      //    function f() {}
-      //    { function f() {} }
-      // }
-      //
-      // Redeclarations for vars do not create new bindings, but the
-      // redeclarations' initializers are still run. That is, shadowed FiB will
-      // result in multiple assignments to the same synthesized var.
       Variable* var = DeclareVariable(
           declaration, name, pos, VariableMode::kVar, NORMAL_VARIABLE,
           Variable::DefaultInitializationFlag(VariableMode::kVar), &was_added,
@@ -729,7 +718,7 @@ bool DeclarationScope::Analyze(ParseInfo* info) {
   scope->GetScriptScope()->RewriteReplGlobalVariables();
 
 #ifdef DEBUG
-  if (v8_flags.print_scopes) {
+  if (FLAG_print_scopes) {
     PrintF("Global scope:\n");
     scope->Print();
   }
@@ -1277,9 +1266,8 @@ Declaration* DeclarationScope::CheckConflictingVarDeclarations(
     if (decl->IsVariableDeclaration() &&
         decl->AsVariableDeclaration()->AsNested() != nullptr) {
       Scope* current = decl->AsVariableDeclaration()->AsNested()->scope();
-      if (decl->var()->mode() != VariableMode::kVar &&
-          decl->var()->mode() != VariableMode::kDynamic)
-        continue;
+      DCHECK(decl->var()->mode() == VariableMode::kVar ||
+             decl->var()->mode() == VariableMode::kDynamic);
       // Iterate through all scopes until the declaration scope.
       do {
         // There is a conflict if there exists a non-VAR binding.
@@ -1770,7 +1758,7 @@ void DeclarationScope::AnalyzePartially(Parser* parser,
   }
 
 #ifdef DEBUG
-  if (v8_flags.print_scopes) {
+  if (FLAG_print_scopes) {
     PrintF("Inner function scope:\n");
     Print();
   }
@@ -1811,8 +1799,6 @@ const char* Header(ScopeType scope_type, FunctionKind function_kind,
     case CLASS_SCOPE:
       return "class";
     case WITH_SCOPE: return "with";
-    case SHADOW_REALM_SCOPE:
-      return "shadowrealm";
   }
   UNREACHABLE();
 }
@@ -2075,15 +2061,6 @@ Variable* Scope::NonLocal(const AstRawString* name, VariableMode mode) {
   return var;
 }
 
-void Scope::ForceDynamicLookup(VariableProxy* proxy) {
-  // At the moment this is only used for looking up private names dynamically
-  // in debug-evaluate from top-level scope.
-  DCHECK(proxy->IsPrivateName());
-  DCHECK(is_script_scope() || is_module_scope() || is_eval_scope());
-  Variable* dynamic = NonLocal(proxy->raw_name(), VariableMode::kDynamic);
-  proxy->BindTo(dynamic);
-}
-
 // static
 template <Scope::ScopeLookupMode mode>
 Variable* Scope::Lookup(VariableProxy* proxy, Scope* scope,
@@ -2313,7 +2290,7 @@ void UpdateNeedsHoleCheck(Variable* var, VariableProxy* proxy, Scope* scope) {
     // Dynamically introduced variables never need a hole check (since they're
     // VariableMode::kVar bindings, either from var or function declarations),
     // but the variable they shadow might need a hole check, which we want to do
-    // if we decide that no shadowing variable was dynamically introduced.
+    // if we decide that no shadowing variable was dynamically introoduced.
     DCHECK_EQ(kCreatedInitialized, var->initialization_flag());
     return UpdateNeedsHoleCheck(var->local_if_not_shadowed(), proxy, scope);
   }
@@ -2817,7 +2794,7 @@ bool IsComplementaryAccessorPair(VariableMode a, VariableMode b) {
 void ClassScope::FinalizeReparsedClassScope(
     Isolate* isolate, MaybeHandle<ScopeInfo> maybe_scope_info,
     AstValueFactory* ast_value_factory, bool needs_allocation_fixup) {
-  // Set this bit so that DeclarationScope::Analyze recognizes
+  // Set this bit so that DelcarationScope::Analyze recognizes
   // the reparsed instance member initializer scope.
 #ifdef DEBUG
   is_reparsed_class_scope_ = true;
@@ -2968,7 +2945,7 @@ Variable* ClassScope::LookupPrivateName(VariableProxy* proxy) {
        scope_iter.Next()) {
     ClassScope* scope = scope_iter.GetScope();
     // Try finding it in the private name map first, if it can't be found,
-    // try the deserialized scope info.
+    // try the deseralized scope info.
     Variable* var = scope->LookupLocalPrivateName(proxy->raw_name());
     if (var == nullptr && !scope->scope_info_.is_null()) {
       var = scope->LookupPrivateNameInScopeInfo(proxy->raw_name());
@@ -3060,7 +3037,7 @@ VariableProxy* ClassScope::ResolvePrivateNamesPartially() {
       }
 
       // The private name may be found later in the outer private name scope, so
-      // push it to the outer scope.
+      // push it to the outer sopce.
       private_name_scope_iter.AddUnresolvedPrivateName(proxy);
     }
 
@@ -3135,13 +3112,6 @@ void PrivateNameScopeIterator::AddUnresolvedPrivateName(VariableProxy* proxy) {
   // be new.
   DCHECK(!proxy->is_resolved());
   DCHECK(proxy->IsPrivateName());
-
-  // Use dynamic lookup for top-level scopes in debug-evaluate.
-  if (Done()) {
-    start_scope_->ForceDynamicLookup(proxy);
-    return;
-  }
-
   GetScope()->EnsureRareData()->unresolved_private_names.Add(proxy);
   // Any closure scope that contain uses of private names that skips over a
   // class scope due to heritage expressions need private name context chain

@@ -28,8 +28,6 @@ added:
 A list of the names of all modules provided by Node.js. Can be used to verify
 if a module is maintained by a third party or not.
 
-Note: the list doesn't contain [prefix-only modules][] like `node:test`.
-
 `module` in this context isn't the same object that's provided
 by the [module wrapper][]. To access it, require the `Module` module:
 
@@ -67,9 +65,7 @@ const siblingModule = require('./sibling-module');
 ### `module.isBuiltin(moduleName)`
 
 <!-- YAML
-added:
-  - v18.6.0
-  - v16.17.0
+added: v18.6.0
 -->
 
 * `moduleName` {string} name of the module
@@ -85,18 +81,14 @@ isBuiltin('wss'); // false
 ### `module.register(specifier[, parentURL][, options])`
 
 <!-- YAML
-added: v20.6.0
+added: v18.19.0
 changes:
-  - version: v20.18.2
-    pr-url: https://github.com/nodejs-private/node-private/pull/629
-    description: Using this feature with the permission model enabled requires
-                 passing `--allow-worker`.
-  - version: v20.8.0
+  - version: v18.19.0
     pr-url: https://github.com/nodejs/node/pull/49655
     description: Add support for WHATWG URL instances.
 -->
 
-> Stability: 1.2 - Release candidate
+> Stability: 1.1 - Active development
 
 * `specifier` {string|URL} Customization hooks to be registered; this should be
   the same string that would be passed to `import()`, except that if it is
@@ -105,10 +97,6 @@ changes:
   URL, such as `import.meta.url`, you can pass that URL here. **Default:**
   `'data:'`
 * `options` {Object}
-  * `parentURL` {string|URL} If you want to resolve `specifier` relative to a
-    base URL, such as `import.meta.url`, you can pass that URL here. This
-    property is ignored if the `parentURL` is supplied as the second argument.
-    **Default:** `'data:'`
   * `data` {any} Any arbitrary, cloneable JavaScript value to pass into the
     [`initialize`][] hook.
   * `transferList` {Object\[]} [transferrable objects][] to be passed into the
@@ -116,8 +104,6 @@ changes:
 
 Register a module that exports [hooks][] that customize Node.js module
 resolution and loading behavior. See [Customization hooks][].
-
-This feature requires `--allow-worker` if used with the [Permission Model][].
 
 ### `module.syncBuiltinESMExports()`
 
@@ -165,7 +151,7 @@ import('node:fs').then((esmFS) => {
 <!-- YAML
 added: v8.8.0
 changes:
-  - version: v20.6.0
+  - version: v18.19.0
     pr-url: https://github.com/nodejs/node/pull/48842
     description: Added `initialize` hook to replace `globalPreload`.
   - version:
@@ -179,7 +165,7 @@ changes:
                  `globalPreload`; added `load` hook and `getGlobalPreload` hook.
 -->
 
-> Stability: 1.2 - Release candidate
+> Stability: 1.1 - Active development
 
 <!-- type=misc -->
 
@@ -276,8 +262,8 @@ It's possible to call `register` more than once:
 // entrypoint.mjs
 import { register } from 'node:module';
 
-register('./foo.mjs', import.meta.url);
-register('./bar.mjs', import.meta.url);
+register('./first.mjs', import.meta.url);
+register('./second.mjs', import.meta.url);
 await import('./my-app.mjs');
 ```
 
@@ -287,23 +273,20 @@ const { register } = require('node:module');
 const { pathToFileURL } = require('node:url');
 
 const parentURL = pathToFileURL(__filename);
-register('./foo.mjs', parentURL);
-register('./bar.mjs', parentURL);
+register('./first.mjs', parentURL);
+register('./second.mjs', parentURL);
 import('./my-app.mjs');
 ```
 
-In this example, the registered hooks will form chains. These chains run
-last-in, first out (LIFO). If both `foo.mjs` and `bar.mjs` define a `resolve`
-hook, they will be called like so (note the right-to-left):
-node's default ← `./foo.mjs` ← `./bar.mjs`
-(starting with `./bar.mjs`, then `./foo.mjs`, then the Node.js default).
-The same applies to all the other hooks.
+In this example, the registered hooks will form chains. If both `first.mjs` and
+`second.mjs` define a `resolve` hook, both will be called, in the order they
+were registered. The same applies to all the other hooks.
 
 The registered hooks also affect `register` itself. In this example,
-`bar.mjs` will be resolved and loaded via the hooks registered by `foo.mjs`
-(because `foo`'s hooks will have already been added to the chain). This allows
-for things like writing hooks in non-JavaScript languages, so long as
-earlier registered hooks transpile into JavaScript.
+`second.mjs` will be resolved and loaded per the hooks registered by
+`first.mjs`. This allows for things like writing hooks in non-JavaScript
+languages, so long as an earlier registered loader is one that transpiles into
+JavaScript.
 
 The `register` method cannot be called from within the module that defines the
 hooks.
@@ -329,7 +312,6 @@ const { port1, port2 } = new MessageChannel();
 port1.on('message', (msg) => {
   console.log(msg);
 });
-port1.unref();
 
 register('./my-hooks.mjs', {
   parentURL: import.meta.url,
@@ -350,7 +332,6 @@ const { port1, port2 } = new MessageChannel();
 port1.on('message', (msg) => {
   console.log(msg);
 });
-port1.unref();
 
 register('./my-hooks.mjs', {
   parentURL: pathToFileURL(__filename),
@@ -380,11 +361,11 @@ export async function load(url, context, nextLoad) {
 }
 ```
 
-Hooks are part of a [chain][], even if that chain consists of only one
-custom (user-provided) hook and the default hook, which is always present. Hook
+Hooks are part of a chain, even if that chain consists of only one custom
+(user-provided) hook and the default hook, which is always present. Hook
 functions nest: each one must always return a plain object, and chaining happens
 as a result of each function calling `next<hookName>()`, which is a reference to
-the subsequent loader's hook (in LIFO order).
+the subsequent loader's hook.
 
 A hook that returns a value lacking a required property triggers an exception. A
 hook that returns without calling `next<hookName>()` _and_ without returning
@@ -400,10 +381,10 @@ asynchronous operations (like `console.log`) to complete.
 #### `initialize()`
 
 <!-- YAML
-added: v20.6.0
+added: v18.19.0
 -->
 
-> Stability: 1.2 - Release candidate
+> Stability: 1.1 - Active development
 
 * `data` {any} The data from `register(loader, import.meta.url, { data })`.
 
@@ -441,7 +422,6 @@ const { port1, port2 } = new MessageChannel();
 port1.on('message', (msg) => {
   assert.strictEqual(msg, 'increment: 2');
 });
-port1.unref();
 
 register('./path-to-my-hooks.js', {
   parentURL: import.meta.url,
@@ -464,7 +444,6 @@ const { port1, port2 } = new MessageChannel();
 port1.on('message', (msg) => {
   assert.strictEqual(msg, 'increment: 2');
 });
-port1.unref();
 
 register('./path-to-my-hooks.js', {
   parentURL: pathToFileURL(__filename),
@@ -477,7 +456,7 @@ register('./path-to-my-hooks.js', {
 
 <!-- YAML
 changes:
-  - version: v20.10.0
+  - version: v18.19.0
     pr-url: https://github.com/nodejs/node/pull/50140
     description: The property `context.importAssertions` is replaced with
                  `context.importAttributes`. Using the old name is still
@@ -580,9 +559,6 @@ export async function resolve(specifier, context, nextResolve) {
 
 <!-- YAML
 changes:
-  - version: v20.6.0
-    pr-url: https://github.com/nodejs/node/pull/47999
-    description: Add support for `source` with format `commonjs`.
   - version:
     - v18.6.0
     - v16.17.0
@@ -602,12 +578,12 @@ changes:
   * `importAttributes` {Object}
 * `nextLoad` {Function} The subsequent `load` hook in the chain, or the
   Node.js default `load` hook after the last user-supplied `load` hook
-  * `url` {string}
+  * `specifier` {string}
   * `context` {Object}
 * Returns: {Object}
   * `format` {string}
   * `shortCircuit` {undefined|boolean} A signal that this hook intends to
-    terminate the chain of `load` hooks. **Default:** `false`
+    terminate the chain of `resolve` hooks. **Default:** `false`
   * `source` {string|ArrayBuffer|TypedArray} The source for Node.js to evaluate
 
 The `load` hook provides a way to define a custom method of determining how a
@@ -616,48 +592,20 @@ validating the import assertion.
 
 The final value of `format` must be one of the following:
 
-| `format`     | Description                    | Acceptable types for `source` returned by `load`                           |
-| ------------ | ------------------------------ | -------------------------------------------------------------------------- |
-| `'builtin'`  | Load a Node.js builtin module  | Not applicable                                                             |
-| `'commonjs'` | Load a Node.js CommonJS module | { [`string`][], [`ArrayBuffer`][], [`TypedArray`][], `null`, `undefined` } |
-| `'json'`     | Load a JSON file               | { [`string`][], [`ArrayBuffer`][], [`TypedArray`][] }                      |
-| `'module'`   | Load an ES module              | { [`string`][], [`ArrayBuffer`][], [`TypedArray`][] }                      |
-| `'wasm'`     | Load a WebAssembly module      | { [`ArrayBuffer`][], [`TypedArray`][] }                                    |
+| `format`     | Description                    | Acceptable types for `source` returned by `load`      |
+| ------------ | ------------------------------ | ----------------------------------------------------- |
+| `'builtin'`  | Load a Node.js builtin module  | Not applicable                                        |
+| `'commonjs'` | Load a Node.js CommonJS module | Not applicable                                        |
+| `'json'`     | Load a JSON file               | { [`string`][], [`ArrayBuffer`][], [`TypedArray`][] } |
+| `'module'`   | Load an ES module              | { [`string`][], [`ArrayBuffer`][], [`TypedArray`][] } |
+| `'wasm'`     | Load a WebAssembly module      | { [`ArrayBuffer`][], [`TypedArray`][] }               |
 
 The value of `source` is ignored for type `'builtin'` because currently it is
-not possible to replace the value of a Node.js builtin (core) module.
-
-Omitting vs providing a `source` for `'commonjs'` has very different effects:
-
-* When a `source` is provided, all `require` calls from this module will be
-  processed by the ESM loader with registered `resolve` and `load` hooks; all
-  `require.resolve` calls from this module will be processed by the ESM loader
-  with registered `resolve` hooks; only a subset of the CommonJS API will be
-  available (e.g. no `require.extensions`, no `require.cache`, no
-  `require.resolve.paths`) and monkey-patching on the CommonJS module loader
-  will not apply.
-* If `source` is undefined or `null`, it will be handled by the CommonJS module
-  loader and `require`/`require.resolve` calls will not go through the
-  registered hooks. This behavior for nullish `source` is temporary — in the
-  future, nullish `source` will not be supported.
-
-When `node` is run with `--experimental-default-type=commonjs`, the Node.js
-internal `load` implementation, which is the value of `next` for the
-last hook in the `load` chain, returns `null` for `source` when `format` is
-`'commonjs'` for backward compatibility. Here is an example hook that would
-opt-in to using the non-default behavior:
-
-```mjs
-import { readFile } from 'node:fs/promises';
-
-export async function load(url, context, nextLoad) {
-  const result = await nextLoad(url, context);
-  if (result.format === 'commonjs') {
-    result.source ??= await readFile(new URL(result.responseURL ?? url));
-  }
-  return result;
-}
-```
+not possible to replace the value of a Node.js builtin (core) module. The value
+of `source` is ignored for type `'commonjs'` because the CommonJS module loader
+does not provide a mechanism for the ES module loader to override the
+[CommonJS module return value](esm.md#commonjs-namespaces). This limitation
+might be overcome in the future.
 
 > **Warning**: The ESM `load` hook and namespaced exports from CommonJS modules
 > are incompatible. Attempting to use them together will result in an empty
@@ -764,14 +712,14 @@ close normally.
  * and sends the message back to the application context
  */
 export function globalPreload({ port }) {
-  port.onmessage = (evt) => {
-    port.postMessage(evt.data);
-  };
+  port.on('message', (msg) => {
+    port.postMessage(msg);
+  });
   return `\
     port.postMessage('console.log("I went to the hook and back");');
-    port.onmessage = (evt) => {
-      eval(evt.data);
-    };
+    port.on('message', (msg) => {
+      eval(msg);
+    });
   `;
 }
 ```
@@ -899,7 +847,7 @@ async function getPackageType(url) {
     .catch((err) => {
       if (err?.code !== 'ENOENT') console.error(err);
     });
-  // If package.json existed and contained a `type` field with a value, voilà
+  // Ff package.json existed and contained a `type` field with a value, voila
   if (type) return type;
   // Otherwise, (if not at the root) continue checking the next directory up
   // If at the root, stop and return false
@@ -1031,17 +979,9 @@ added:
  - v12.17.0
 -->
 
-#### `new SourceMap(payload[, { lineLengths }])`
-
-<!-- YAML
-changes:
-  - version: v20.5.0
-    pr-url: https://github.com/nodejs/node/pull/48461
-    description: Add support for `lineLengths`.
--->
+#### `new SourceMap(payload)`
 
 * `payload` {Object}
-* `lineLengths` {number\[]}
 
 Creates a new `sourceMap` instance.
 
@@ -1054,9 +994,6 @@ Creates a new `sourceMap` instance.
 * `names`: {string\[]}
 * `mappings`: {string}
 * `sourceRoot`: {string}
-
-`lineLengths` is an optional array of the length of each line in the
-generated code.
 
 #### `sourceMap.payload`
 
@@ -1102,22 +1039,18 @@ columnNumber)`
 
 #### `sourceMap.findOrigin(lineNumber, columnNumber)`
 
-<!-- YAML
-added: v20.4.0
--->
-
 * `lineNumber` {number} The 1-indexed line number of the call
   site in the generated source
-* `columnNumber` {number} The 1-indexed column number
+* `columnOffset` {number} The 1-indexed column number
   of the call site in the generated source
 * Returns: {Object}
 
-Given a 1-indexed `lineNumber` and `columnNumber` from a call site in
+Given a 1-indexed lineNumber and columnNumber from a call site in
 the generated source, find the corresponding call site location
 in the original source.
 
-If the `lineNumber` and `columnNumber` provided are not found in any
-source map, then an empty object is returned. Otherwise, the
+If the lineNumber and columnNumber provided are not found in any
+source map, then an empty object is returned.  Otherwise, the
 returned object contains the following keys:
 
 * name: {string | undefined} The name of the range in the
@@ -1134,7 +1067,6 @@ returned object contains the following keys:
 [Customization hooks]: #customization-hooks
 [ES Modules]: esm.md
 [HTTPS and HTTP imports]: esm.md#https-and-http-imports
-[Permission Model]: permissions.md#permission-model
 [Source map v3 format]: https://sourcemaps.info/spec.html#h.mofvlxcwqzej
 [`"exports"`]: packages.md#exports
 [`--enable-source-maps`]: cli.md#--enable-source-maps
@@ -1151,11 +1083,9 @@ returned object contains the following keys:
 [`register`]: #moduleregisterspecifier-parenturl-options
 [`string`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String
 [`util.TextDecoder`]: util.md#class-utiltextdecoder
-[chain]: #chaining
 [hooks]: #customization-hooks
 [load hook]: #loadurl-context-nextload
 [module wrapper]: modules.md#the-module-wrapper
-[prefix-only modules]: modules.md#built-in-modules-with-mandatory-node-prefix
 [realm]: https://tc39.es/ecma262/#realm
 [source map include directives]: https://sourcemaps.info/spec.html#h.lmz475t4mvbx
 [transferrable objects]: worker_threads.md#portpostmessagevalue-transferlist

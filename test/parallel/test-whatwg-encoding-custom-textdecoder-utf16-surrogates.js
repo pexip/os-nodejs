@@ -43,7 +43,7 @@ const bad = [
   },
 ];
 
-for (const t of bad) {
+bad.forEach((t) => {
   assert.throws(
     () => {
       new TextDecoder(t.encoding, { fatal: true })
@@ -53,4 +53,4 @@ for (const t of bad) {
       name: 'TypeError'
     }
   );
-}
+});

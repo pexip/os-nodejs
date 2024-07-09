@@ -278,7 +278,9 @@ void CipherBase::Initialize(Environment* env, Local<Object> target) {
 
   Local<FunctionTemplate> t = NewFunctionTemplate(isolate, New);
 
-  t->InstanceTemplate()->SetInternalFieldCount(CipherBase::kInternalFieldCount);
+  t->InstanceTemplate()->SetInternalFieldCount(
+      CipherBase::kInternalFieldCount);
+  t->Inherit(BaseObject::GetConstructorTemplate(env));
 
   SetProtoMethod(isolate, t, "init", Init);
   SetProtoMethod(isolate, t, "initiv", InitIv);
@@ -448,7 +450,7 @@ void CipherBase::Init(const char* cipher_type,
 
 void CipherBase::Init(const FunctionCallbackInfo<Value>& args) {
   CipherBase* cipher;
-  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.Holder());
   Environment* env = Environment::GetCurrent(args);
 
   CHECK_GE(args.Length(), 3);
@@ -520,7 +522,7 @@ void CipherBase::InitIv(const char* cipher_type,
 
 void CipherBase::InitIv(const FunctionCallbackInfo<Value>& args) {
   CipherBase* cipher;
-  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.Holder());
   Environment* env = cipher->env();
 
   CHECK_GE(args.Length(), 4);
@@ -655,7 +657,7 @@ bool CipherBase::IsAuthenticatedMode() const {
 void CipherBase::GetAuthTag(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   CipherBase* cipher;
-  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.Holder());
 
   // Only callable after Final and if encrypting.
   if (cipher->ctx_ ||
@@ -671,7 +673,7 @@ void CipherBase::GetAuthTag(const FunctionCallbackInfo<Value>& args) {
 
 void CipherBase::SetAuthTag(const FunctionCallbackInfo<Value>& args) {
   CipherBase* cipher;
-  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.Holder());
   Environment* env = Environment::GetCurrent(args);
 
   if (!cipher->ctx_ ||
@@ -705,19 +707,6 @@ void CipherBase::SetAuthTag(const FunctionCallbackInfo<Value>& args) {
   if (!is_valid) {
     return THROW_ERR_CRYPTO_INVALID_AUTH_TAG(
       env, "Invalid authentication tag length: %u", tag_len);
-  }
-
-  if (mode == EVP_CIPH_GCM_MODE && cipher->auth_tag_len_ == kNoAuthTagLength &&
-      tag_len != 16 && env->options()->pending_deprecation &&
-      env->EmitProcessEnvWarning()) {
-    if (ProcessEmitDeprecationWarning(
-            env,
-            "Using AES-GCM authentication tags of less than 128 bits without "
-            "specifying the authTagLength option when initializing decryption "
-            "is deprecated.",
-            "DEP0182")
-            .IsNothing())
-      return;
   }
 
   cipher->auth_tag_len_ = tag_len;
@@ -784,7 +773,7 @@ bool CipherBase::SetAAD(
 
 void CipherBase::SetAAD(const FunctionCallbackInfo<Value>& args) {
   CipherBase* cipher;
-  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.Holder());
   Environment* env = Environment::GetCurrent(args);
 
   CHECK_EQ(args.Length(), 2);
@@ -843,15 +832,10 @@ CipherBase::UpdateResult CipherBase::Update(
                            len);
 
   CHECK_LE(static_cast<size_t>(buf_len), (*out)->ByteLength());
-  if (buf_len == 0) {
+  if (buf_len == 0)
     *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
-  } else if (static_cast<size_t>(buf_len) != (*out)->ByteLength()) {
-    std::unique_ptr<BackingStore> old_out = std::move(*out);
-    *out = ArrayBuffer::NewBackingStore(env()->isolate(), buf_len);
-    memcpy(static_cast<char*>((*out)->Data()),
-           static_cast<char*>(old_out->Data()),
-           buf_len);
-  }
+  else
+    *out = BackingStore::Reallocate(env()->isolate(), std::move(*out), buf_len);
 
   // When in CCM mode, EVP_CipherUpdate will fail if the authentication tag is
   // invalid. In that case, remember the error and throw in final().
@@ -897,7 +881,7 @@ bool CipherBase::SetAutoPadding(bool auto_padding) {
 
 void CipherBase::SetAutoPadding(const FunctionCallbackInfo<Value>& args) {
   CipherBase* cipher;
-  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.Holder());
 
   bool b = cipher->SetAutoPadding(args.Length() < 1 || args[0]->IsTrue());
   args.GetReturnValue().Set(b);  // Possibly report invalid state failure
@@ -939,14 +923,11 @@ bool CipherBase::Final(std::unique_ptr<BackingStore>* out) {
                             &out_len) == 1;
 
     CHECK_LE(static_cast<size_t>(out_len), (*out)->ByteLength());
-    if (out_len == 0) {
+    if (out_len > 0) {
+      *out =
+        BackingStore::Reallocate(env()->isolate(), std::move(*out), out_len);
+    } else {
       *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
-    } else if (static_cast<size_t>(out_len) != (*out)->ByteLength()) {
-      std::unique_ptr<BackingStore> old_out = std::move(*out);
-      *out = ArrayBuffer::NewBackingStore(env()->isolate(), out_len);
-      memcpy(static_cast<char*>((*out)->Data()),
-             static_cast<char*>(old_out->Data()),
-             out_len);
     }
 
     if (ok && kind_ == kCipher && IsAuthenticatedMode()) {
@@ -972,7 +953,7 @@ void CipherBase::Final(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
   CipherBase* cipher;
-  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.This());
+  ASSIGN_OR_RETURN_UNWRAP(&cipher, args.Holder());
   if (cipher->ctx_ == nullptr)
     return THROW_ERR_CRYPTO_INVALID_STATE(env);
 
@@ -1046,15 +1027,10 @@ bool PublicKeyCipher::Cipher(
   }
 
   CHECK_LE(out_len, (*out)->ByteLength());
-  if (out_len == 0) {
+  if (out_len > 0)
+    *out = BackingStore::Reallocate(env->isolate(), std::move(*out), out_len);
+  else
     *out = ArrayBuffer::NewBackingStore(env->isolate(), 0);
-  } else if (out_len != (*out)->ByteLength()) {
-    std::unique_ptr<BackingStore> old_out = std::move(*out);
-    *out = ArrayBuffer::NewBackingStore(env->isolate(), out_len);
-    memcpy(static_cast<char*>((*out)->Data()),
-           static_cast<char*>(old_out->Data()),
-           out_len);
-  }
 
   return true;
 }

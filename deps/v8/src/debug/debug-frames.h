@@ -19,7 +19,7 @@ class JavaScriptFrame;
 class CommonFrame;
 class WasmFrame;
 
-class V8_EXPORT_PRIVATE FrameInspector {
+class FrameInspector {
  public:
   FrameInspector(CommonFrame* frame, int inlined_frame_index, Isolate* isolate);
   FrameInspector(const FrameInspector&) = delete;

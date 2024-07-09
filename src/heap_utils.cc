@@ -2,7 +2,6 @@
 #include "env-inl.h"
 #include "memory_tracker-inl.h"
 #include "node_external_reference.h"
-#include "permission/permission.h"
 #include "stream_base-inl.h"
 #include "util-inl.h"
 
@@ -26,7 +25,6 @@ using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::Global;
 using v8::HandleScope;
-using v8::HeapProfiler;
 using v8::HeapSnapshot;
 using v8::Isolate;
 using v8::JustVoid;
@@ -38,7 +36,6 @@ using v8::Number;
 using v8::Object;
 using v8::ObjectTemplate;
 using v8::String;
-using v8::Uint8Array;
 using v8::Value;
 
 namespace node {
@@ -343,19 +340,15 @@ class HeapSnapshotStream : public AsyncWrap,
   HeapSnapshotPointer snapshot_;
 };
 
-inline void TakeSnapshot(Environment* env,
-                         v8::OutputStream* out,
-                         HeapProfiler::HeapSnapshotOptions options) {
-  HeapSnapshotPointer snapshot{
-      env->isolate()->GetHeapProfiler()->TakeHeapSnapshot(options)};
+inline void TakeSnapshot(Environment* env, v8::OutputStream* out) {
+  HeapSnapshotPointer snapshot {
+      env->isolate()->GetHeapProfiler()->TakeHeapSnapshot() };
   snapshot->Serialize(out, HeapSnapshot::kJSON);
 }
 
 }  // namespace
 
-Maybe<void> WriteSnapshot(Environment* env,
-                          const char* filename,
-                          HeapProfiler::HeapSnapshotOptions options) {
+Maybe<void> WriteSnapshot(Environment* env, const char* filename) {
   uv_fs_t req;
   int err;
 
@@ -372,7 +365,7 @@ Maybe<void> WriteSnapshot(Environment* env,
   }
 
   FileOutputStream stream(fd, &req);
-  TakeSnapshot(env, &stream, options);
+  TakeSnapshot(env, &stream);
   if ((err = stream.status()) < 0) {
     env->ThrowUVException(err, "write", nullptr, filename);
     return Nothing<void>();
@@ -417,28 +410,10 @@ BaseObjectPtr<AsyncWrap> CreateHeapSnapshotStream(
   return MakeBaseObject<HeapSnapshotStream>(env, std::move(snapshot), obj);
 }
 
-HeapProfiler::HeapSnapshotOptions GetHeapSnapshotOptions(
-    Local<Value> options_value) {
-  CHECK(options_value->IsUint8Array());
-  Local<Uint8Array> arr = options_value.As<Uint8Array>();
-  uint8_t* options =
-      static_cast<uint8_t*>(arr->Buffer()->Data()) + arr->ByteOffset();
-  HeapProfiler::HeapSnapshotOptions result;
-  result.snapshot_mode = options[0]
-                             ? HeapProfiler::HeapSnapshotMode::kExposeInternals
-                             : HeapProfiler::HeapSnapshotMode::kRegular;
-  result.numerics_mode = options[1]
-                             ? HeapProfiler::NumericsMode::kExposeNumericValues
-                             : HeapProfiler::NumericsMode::kHideNumericValues;
-  return result;
-}
-
 void CreateHeapSnapshotStream(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
-  CHECK_EQ(args.Length(), 1);
-  auto options = GetHeapSnapshotOptions(args[0]);
-  HeapSnapshotPointer snapshot{
-      env->isolate()->GetHeapProfiler()->TakeHeapSnapshot(options)};
+  HeapSnapshotPointer snapshot {
+      env->isolate()->GetHeapProfiler()->TakeHeapSnapshot() };
   CHECK(snapshot);
   BaseObjectPtr<AsyncWrap> stream =
       CreateHeapSnapshotStream(env, std::move(snapshot));
@@ -449,17 +424,13 @@ void CreateHeapSnapshotStream(const FunctionCallbackInfo<Value>& args) {
 void TriggerHeapSnapshot(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   Isolate* isolate = args.GetIsolate();
-  CHECK_EQ(args.Length(), 2);
+
   Local<Value> filename_v = args[0];
-  auto options = GetHeapSnapshotOptions(args[1]);
 
   if (filename_v->IsUndefined()) {
     DiagnosticFilename name(env, "Heap", "heapsnapshot");
-    THROW_IF_INSUFFICIENT_PERMISSIONS(
-        env,
-        permission::PermissionScope::kFileSystemWrite,
-        Environment::GetCwd(env->exec_path()));
-    if (WriteSnapshot(env, *name, options).IsNothing()) return;
+    if (WriteSnapshot(env, *name).IsNothing())
+      return;
     if (String::NewFromUtf8(isolate, *name).ToLocal(&filename_v)) {
       args.GetReturnValue().Set(filename_v);
     }
@@ -468,9 +439,8 @@ void TriggerHeapSnapshot(const FunctionCallbackInfo<Value>& args) {
 
   BufferValue path(isolate, filename_v);
   CHECK_NOT_NULL(*path);
-  THROW_IF_INSUFFICIENT_PERMISSIONS(
-      env, permission::PermissionScope::kFileSystemWrite, path.ToStringView());
-  if (WriteSnapshot(env, *path, options).IsNothing()) return;
+  if (WriteSnapshot(env, *path).IsNothing())
+    return;
   return args.GetReturnValue().Set(filename_v);
 }
 

@@ -17,9 +17,8 @@ assert.throws(
 assert.throws(
   () => {
     const source = 'module.exports = require("internal/bootstrap/realm")';
-    // This needs to be process.binding() to mimic what's normally available
-    // in the user land.
-    process.binding('natives').owo = source;
+    const { internalBinding } = require('internal/test/binding');
+    internalBinding('natives').owo = source;
     require('owo');
   }, {
     code: 'MODULE_NOT_FOUND',

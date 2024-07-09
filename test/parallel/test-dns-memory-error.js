@@ -11,8 +11,6 @@ const errors = require('internal/errors');
 const { internalBinding } = require('internal/test/binding');
 
 const { UV_EAI_MEMORY } = internalBinding('uv');
-const memoryError = new errors.DNSException(UV_EAI_MEMORY, 'fhqwhgads');
+const memoryError = errors.dnsException(UV_EAI_MEMORY, 'fhqwhgads');
 
 assert.strictEqual(memoryError.code, 'EAI_MEMORY');
-const stack = memoryError.stack.split('\n');
-assert.match(stack[1], /^ {4}at Object/);

@@ -5,8 +5,11 @@ const { WPTRunner } = require('../common/wpt');
 const runner = new WPTRunner('hr-time');
 
 runner.setInitScript(`
-  self.GLOBAL.isWorker = () => false;
+  const { Blob } = require('buffer');
+  global.Blob = Blob;
+
+  const { PerformanceObserver } = require('perf_hooks');
+  global.PerformanceObserver = PerformanceObserver;
 `);
-runner.pretendGlobalThisAs('Window');
 
 runner.runJsTests();

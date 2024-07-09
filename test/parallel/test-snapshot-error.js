@@ -8,10 +8,11 @@ const assert = require('assert');
 const { spawnSync } = require('child_process');
 const tmpdir = require('../common/tmpdir');
 const fixtures = require('../common/fixtures');
+const path = require('path');
 const fs = require('fs');
 
 tmpdir.refresh();
-const blobPath = tmpdir.resolve('snapshot.blob');
+const blobPath = path.join(tmpdir.path, 'snapshot.blob');
 const entry = fixtures.path('snapshot', 'error.js');
 
 // --build-snapshot should be run with an entry point.
@@ -30,7 +31,7 @@ const entry = fixtures.path('snapshot', 'error.js');
   assert.strictEqual(child.status, 9);
   assert.match(stderr,
                /--build-snapshot must be used with an entry point script/);
-  assert(!fs.existsSync(tmpdir.resolve('snapshot.blob')));
+  assert(!fs.existsSync(path.join(tmpdir.path, 'snapshot.blob')));
 }
 
 // Loading a non-existent snapshot should fail.
@@ -46,9 +47,9 @@ const entry = fixtures.path('snapshot', 'error.js');
   console.log(child.status);
   console.log(stderr);
   console.log(child.stdout.toString());
-  assert.strictEqual(child.status, 14);
+  assert.strictEqual(child.status, 1);
   assert.match(stderr, /Cannot open/);
-  assert(!fs.existsSync(tmpdir.resolve('snapshot.blob')));
+  assert(!fs.existsSync(path.join(tmpdir.path, 'snapshot.blob')));
 }
 
 
@@ -68,5 +69,5 @@ const entry = fixtures.path('snapshot', 'error.js');
   console.log(child.stdout.toString());
   assert.strictEqual(child.status, 1);
   assert.match(stderr, /error\.js:1/);
-  assert(!fs.existsSync(tmpdir.resolve('snapshot.blob')));
+  assert(!fs.existsSync(path.join(tmpdir.path, 'snapshot.blob')));
 }

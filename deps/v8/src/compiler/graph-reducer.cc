@@ -109,7 +109,7 @@ Reduction GraphReducer::Reduce(Node* const node) {
         // {replacement} == {node} represents an in-place reduction. Rerun
         // all the other reducers for this node, as now there may be more
         // opportunities for reduction.
-        if (v8_flags.trace_turbo_reduction) {
+        if (FLAG_trace_turbo_reduction) {
           UnparkedScopeIfNeeded unparked(broker_);
           // TODO(neis): Disallow racy handle dereference once we stop
           // supporting --no-local-heaps --no-concurrent-inlining.
@@ -122,7 +122,7 @@ Reduction GraphReducer::Reduce(Node* const node) {
         continue;
       } else {
         // {node} was replaced by another node.
-        if (v8_flags.trace_turbo_reduction) {
+        if (FLAG_trace_turbo_reduction) {
           UnparkedScopeIfNeeded unparked(broker_);
           // TODO(neis): Disallow racy handle dereference once we stop
           // supporting --no-local-heaps --no-concurrent-inlining.
