@@ -32,7 +32,6 @@ DEB_CONFIGURE_EXTRA_FLAGS = \
 --shared-nghttp3 \
 --shared-nghttp2 \
 --shared-brotli \
---shared-libuv \
 --shared-simdjson \
 --shared-builtin-undici/undici-path=/usr/share/nodejs/undici/undici-fetch.js \
 --shared-builtin-acorn-path=/usr/share/nodejs/acorn/dist/acorn.js \
@@ -47,6 +46,10 @@ DEB_CONFIGURE_EXTRA_FLAGS = \
 --arch-triplet=$(DEB_HOST_MULTIARCH) \
 --node-relative-path="lib/$(DEB_HOST_MULTIARCH)/nodejs:share/nodejs" \
 --dest-os=linux
+
+ifneq ($(DEB_HOST_ARCH),i386)
+	DEB_CONFIGURE_EXTRA_FLAGS += --shared-libuv
+endif
 
 ifneq ($(filter pkg.nodejs.nobuiltin,$(DEB_BUILD_PROFILES)),)
 	DEB_CONFIGURE_EXTRA_FLAGS += --node-builtin-modules-path=$(builtins)

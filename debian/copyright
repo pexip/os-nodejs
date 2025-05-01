@@ -48,7 +48,6 @@ Files-Excluded:
  deps/openssl/*
  deps/simdjson/*
  deps/undici/*
- deps/uv/*
  deps/zlib/*
  benchmark/fixtures/alice.html
  doc/osx_installer_logo.png
@@ -117,6 +116,130 @@ License: CC0 or BSD-2-clause~holders
 
 Files: deps/llhttp/*
 Copyright: 2018 Fedor Indutny
+License: Expat
+
+Files: deps/uv/*
+Copyright: 2015-2025, libuv project contributors.
+License: Expat
+
+Files: deps/uv/AUTHORS
+ deps/uv/CONTRIBUTING.md
+ deps/uv/ChangeLog
+ deps/uv/MAINTAINERS.md
+ deps/uv/SUPPORTED_PLATFORMS.md
+ deps/uv/libuv.pc.in
+Copyright: 2011-2015, Joyent, Inc. and other Node contributors.
+License: Expat
+
+Files: deps/uv/LINKS.md
+ deps/uv/libuv-static.pc.in
+Copyright: 2015-2020, libuv project contributors.
+ 2011-2015, Joyent, Inc. and other Node contributors.
+License: Expat
+
+Files: deps/uv/Makefile.am
+ deps/uv/autogen.sh
+ deps/uv/configure.ac
+Copyright: 2013-2015, Ben Noordhuis <info@bnoordhuis.nl>
+License: ISC
+
+Files: deps/uv/include/*
+Copyright: Joyent, Inc. and other Node contributors.
+License: Expat
+
+Files: deps/uv/include/uv/os390.h
+ deps/uv/include/uv/posix.h
+Copyright: 2015-2025, libuv project contributors.
+License: Expat
+
+Files: deps/uv/include/uv/tree.h
+Copyright: 2002, Niels Provos <provos@citi.umich.edu>
+License: BSD-2-clause~holders
+
+Files: deps/uv/m4/*
+Copyright: 2011-2015, Joyent, Inc. and other Node contributors.
+License: Expat
+
+Files: deps/uv/m4/ax_pthread.m4
+Copyright: 2011, Daniel Richard G. <skunk@iSKUNK.ORG>
+ 2008, Steven G. Johnson <stevenj@alum.mit.edu>
+License: GPL3+ with autoconf exception
+
+Files: deps/uv/m4/libuv-check-flags.m4
+Copyright: 2021, libuv project
+ 2006-2008, xine project
+ 2006-2008, Diego Pettenò <flameeyes gmail com>
+License: GPL3+ with autoconf exception
+
+Files: deps/uv/src/*
+Copyright: Joyent, Inc. and other Node contributors.
+License: Expat
+
+Files: deps/uv/src/heap-inl.h
+ deps/uv/src/queue.h
+Copyright: 2013-2015, Ben Noordhuis <info@bnoordhuis.nl>
+License: ISC
+
+Files: deps/uv/src/idna.c
+ deps/uv/src/idna.h
+Copyright: libuv contributors.
+License: ISC
+
+Files: deps/uv/src/inet.c
+Copyright: 2004, Internet Systems Consortium, Inc. ("ISC")
+ 1996-1999, Internet Software Consortium.
+License: ISC
+
+Files: deps/uv/src/random.c
+Copyright: libuv contributors.
+License: Expat
+
+Files: deps/uv/src/strscpy.c
+ deps/uv/src/strscpy.h
+ deps/uv/src/strtok.c
+ deps/uv/src/strtok.h
+ deps/uv/src/thread-common.c
+ deps/uv/src/uv-data-getter-setters.c
+Copyright: 2015-2025, libuv project contributors.
+License: Expat
+
+Files: deps/uv/src/unix/aix-common.c
+ deps/uv/src/unix/bsd-ifaddrs.c
+ deps/uv/src/unix/bsd-proctitle.c
+ deps/uv/src/unix/cygwin.c
+ deps/uv/src/unix/darwin-stub.h
+ deps/uv/src/unix/haiku.c
+ deps/uv/src/unix/hurd.c
+ deps/uv/src/unix/ibmi.c
+ deps/uv/src/unix/no-fsevents.c
+ deps/uv/src/unix/no-proctitle.c
+ deps/uv/src/unix/os390-proctitle.c
+ deps/uv/src/unix/os390-syscalls.c
+ deps/uv/src/unix/os390-syscalls.h
+ deps/uv/src/unix/os390.c
+ deps/uv/src/unix/posix-hrtime.c
+ deps/uv/src/unix/posix-poll.c
+ deps/uv/src/unix/procfs-exepath.c
+ deps/uv/src/unix/sysinfo-loadavg.c
+ deps/uv/src/unix/sysinfo-memory.c
+Copyright: 2015-2025, libuv project contributors.
+License: Expat
+
+Files: deps/uv/src/unix/qnx.c
+ deps/uv/src/unix/random-devurandom.c
+ deps/uv/src/unix/random-getentropy.c
+ deps/uv/src/unix/random-getrandom.c
+ deps/uv/src/unix/random-sysctl-linux.c
+Copyright: libuv contributors.
+License: Expat
+
+Files: deps/uv/src/win/detect-wakeup.c
+ deps/uv/src/win/fs-fd-hash-inl.h
+Copyright: 2015-2025, libuv project contributors.
+License: Expat
+
+Files: deps/uv/src/win/snprintf.c
+Copyright: the libuv project contributors.
 License: Expat
 
 Files: deps/uvwasi/*
@@ -555,6 +678,33 @@ License: GPL-2
  .
  On Debian GNU/Linux systems, the complete text of the GNU General
  Public License can be found in `/usr/share/common-licenses/GPL-2'
+
+License: GPL3+ with autoconf exception
+ This program is free software: you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation, either version 3 of the License, or (at your
+ option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program. If not, see <https://www.gnu.org/licenses/>.
+ .
+ As a special exception, the respective Autoconf Macro's copyright owner
+ gives unlimited permission to copy, distribute and modify the configure
+ scripts that are the output of Autoconf when processing the Macro. You
+ need not follow the terms of the GNU General Public License when using
+ or distributing such scripts, even though portions of the text of the
+ Macro appear in them. The GNU General Public License (GPL) does govern
+ all other use of the material that constitutes the Autoconf Macro.
+ .
+ This special exception to the GPL applies to versions of the Autoconf
+ Macro released by the Autoconf Archive. When you make and distribute a
+ modified version of the Autoconf Macro, you may extend this special
+ exception to the GPL to apply to your modified version as well.
 
 License: ISC
  Permission to use, copy, modify, and/or distribute this software for any
@@ -1091,8 +1241,7 @@ License: LGPL-2.1+
  GNU Lesser General Public License for more details.
  .
  You should have received a copy of the GNU Lesser General Public License along
- with this program; if not, write to the Free Software Foundation,
- Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ with this program. If not, see https://www.gnu.org/licenses/.
  .
  On Debian systems, the complete text of the GNU Lesser General Public
  License version 2.1 can be found in ‘/usr/share/common-licenses/LGPL-2.1’.
