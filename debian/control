@@ -50,7 +50,7 @@ Homepage: https://nodejs.org/
 Vcs-Browser: https://salsa.debian.org/js-team/nodejs/tree/master-18.x
 Vcs-Git: https://salsa.debian.org/js-team/nodejs.git -b master-18.x
 Rules-Requires-Root: no
-XS-Pexip-Upstream: http://deb.debian.org/debian/ bookworm
+XS-Pexip-Upstream: http://deb.debian.org/debian/ trixie
 
 Package: libnode-dev
 Section: libdevel
