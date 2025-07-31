@@ -1,3 +1,9 @@
+nodejs (20.19.2+dfsg-1+pexip25u1) pexip-trixie; urgency=medium
+
+  * New upstream release
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 31 Jul 2025 14:08:05 +0100
+
 nodejs (20.19.2+dfsg-1) unstable; urgency=medium
 
   * New upstream version 20.19.2+dfsg
