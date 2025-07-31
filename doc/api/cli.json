@@ -1074,7 +1074,7 @@
                 ],
                 "changes": []
               },
-              "desc": "<p>Use an insecure HTTP parser that accepts invalid HTTP headers. This may allow\ninteroperability with non-conformant HTTP implementations. It may also allow\nrequest smuggling and other HTTP attacks that rely on invalid headers being\naccepted. Avoid using this option.</p>",
+              "desc": "<p>Enable leniency flags on the HTTP parser. This may allow\ninteroperability with non-conformant HTTP implementations.</p>\n<p>When enabled, the parser will accept the following:</p>\n<ul>\n<li>Invalid HTTP headers values.</li>\n<li>Invalid HTTP versions.</li>\n<li>Allow message containing both <code>Transfer-Encoding</code>\nand <code>Content-Length</code> headers.</li>\n<li>Allow extra data after message when <code>Connection: close</code> is present.</li>\n<li>Allow extra trasfer encodings after <code>chunked</code> has been provided.</li>\n<li>Allow <code>\\n</code> to be used as token separator instead of <code>\\r\\n</code>.</li>\n<li>Allow <code>\\r\\n</code> not to be provided after a chunk.</li>\n<li>Allow spaces to be present after a chunk size and before <code>\\r\\n</code>.</li>\n</ul>\n<p>All the above will expose your application to request smuggling\nor poisoning attack. Avoid using this option.</p>",
               "type": "module",
               "displayName": "`--insecure-http-parser`"
             },
