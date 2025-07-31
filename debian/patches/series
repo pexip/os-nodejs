@@ -17,4 +17,3 @@ arm64/stacksize.patch
 build/ada.patch
 deps/v8-no-static-zlib.patch
 build/no-deps.patch
-build/test-update-parallel-test-tls-dhe-for-OpenSSL-3.5.patch

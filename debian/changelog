@@ -1,3 +1,15 @@
+nodejs (20.19.2+dfsg-1) unstable; urgency=medium
+
+  * New upstream version 20.19.2+dfsg
+    Security fixes: (Closes: #1105832)
+    + CVE-2025-23165: add missing call to uv_fs_req_cleanup (low)
+    + CVE-2025-23166: fix error handling on async crypto operations (high)
+    + CVE-2025-23167: Improper HTTP header block termination in llhttp (medium)
+  * Drop patch, applied upstream
+  * Switch back to +dfsg suffix
+
+ -- Jérémy Lal <kapouer@melix.org>  Wed, 14 May 2025 23:43:31 +0200
+
 nodejs (20.19.0+dfsg1-1+pexip25u1+pexip25u1) pexip-trixie; urgency=medium
 
   * New upstream release
