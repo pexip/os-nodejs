@@ -17,3 +17,4 @@ arm64/stacksize.patch
 build/ada.patch
 deps/v8-no-static-zlib.patch
 build/no-deps.patch
+pexip_openssl3_deprecations.patch
