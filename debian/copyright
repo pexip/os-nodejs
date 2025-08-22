@@ -11,6 +11,9 @@ Comment: Repackaged to exclude non-DFSG files:
   + deps/acorn/*
     because it contains only the compiled version,
     using node-acorn instead
+  + deps/amaro/*
+    because it wraps part of swc in a wasm blob
+    Blocked by #991761.
   + deps/minimatch/*
     compiled version, using node-minimatch instead
   + deps/brotli/*
@@ -20,6 +23,8 @@ Comment: Repackaged to exclude non-DFSG files:
     missing source files in the source tarball.
   + deps/corepack/*
     missing all source files, not stable.
+  + deps/sqlite/*
+    not preferred form for modifications
   + deps/undici/*
     contains precompiled wasm files
     using node-undici instead
@@ -31,13 +36,12 @@ Comment: Repackaged to exclude non-DFSG files:
     compiled version, dropped for now (used by one test)
   + deps/v8/third_party/ittapi/include/fortran/*
     contains useless generated files
-  + tools/github_reporter/index.js
-    non preferred form, also, useless
  Other files being excluded to ease copyright maintenance and security updates.
 Files-Excluded:
  deps/ada/*.h
  deps/ada/*.cpp
  deps/acorn/*
+ deps/amaro/*
  deps/minimatch/*
  deps/brotli/*
  deps/cares/*
@@ -47,8 +51,10 @@ Files-Excluded:
  deps/ngtcp2/*
  deps/openssl/*
  deps/simdjson/*
+ deps/sqlite/*
  deps/undici/*
  deps/zlib/*
+ deps/zstd/*
  benchmark/fixtures/alice.html
  doc/osx_installer_logo.png
  doc/full-white-stripe.jpg
@@ -57,7 +63,6 @@ Files-Excluded:
  deps/icu-small/*
  deps/npm/*
  tools/certdata.txt
- tools/github_reporter/index.js
  tools/gyp/*
  test/fixtures/postject-copy/*
  deps/v8/third_party/ittapi/include/fortran/*

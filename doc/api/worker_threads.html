@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v20.19.2">
-  <title>Worker threads | Node.js v20.19.2 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v22.18.0">
+  <title>Worker threads | Node.js v22.18.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -23,7 +23,7 @@
         document.documentElement.classList.add('dark-mode');
       }
   </script>
-  <style>@media(max-width:550px){.with-41-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:326px){.with-13-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}</style>
+  <style>@media(max-width:550px){.with-41-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:326px){.with-13-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:662px){.with-55-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:694px){.with-59-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:1096px){.with-75-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:1176px){.with-85-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:670px){.with-56-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:1064px){.with-71-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:502px){.with-35-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:342px){.with-15-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:646px){.with-53-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:486px){.with-33-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}</style>
 </head>
 <body class="alt apidoc" id="api-section-worker_threads">
   <a href="#apicontent" class="skip-to-content">Skip to content</a>
@@ -51,7 +51,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -71,6 +70,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -83,6 +83,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -110,7 +111,7 @@
     <div id="column1" data-id="worker_threads" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v20.19.2 documentation</h1>
+          <h1>Node.js v22.18.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -125,7 +126,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v20.19.2</li>
+            <li class="pinned-header">Node.js v22.18.0</li>
             
     <li class="picker-header">
       <a href="#toc-picker" aria-controls="toc-picker">
@@ -137,11 +138,14 @@
 <li><span class="stability_2"><a href="#worker-threads">Worker threads</a></span>
 <ul>
 <li><a href="#workergetenvironmentdatakey"><code>worker.getEnvironmentData(key)</code></a></li>
+<li><a href="#workerisinternalthread"><code>worker.isInternalThread</code></a></li>
 <li><a href="#workerismainthread"><code>worker.isMainThread</code></a></li>
 <li><a href="#workermarkasuntransferableobject"><code>worker.markAsUntransferable(object)</code></a></li>
+<li><a href="#workerismarkedasuntransferableobject"><code>worker.isMarkedAsUntransferable(object)</code></a></li>
+<li><a href="#workermarkasuncloneableobject"><code>worker.markAsUncloneable(object)</code></a></li>
 <li><a href="#workermovemessageporttocontextport-contextifiedsandbox"><code>worker.moveMessagePortToContext(port, contextifiedSandbox)</code></a></li>
 <li><a href="#workerparentport"><code>worker.parentPort</code></a></li>
-<li><span class="stability_1"><a href="#workerpostmessagetothreadthreadid-value-transferlist-timeout"><code>worker.postMessageToThread(threadId, value[, transferList][, timeout])</code></a></span></li>
+<li><span class="stability_1.1"><a href="#workerpostmessagetothreadthreadid-value-transferlist-timeout"><code>worker.postMessageToThread(threadId, value[, transferList][, timeout])</code></a></span></li>
 <li><a href="#workerreceivemessageonportport"><code>worker.receiveMessageOnPort(port)</code></a></li>
 <li><a href="#workerresourcelimits"><code>worker.resourceLimits</code></a></li>
 <li><a href="#workershare_env"><code>worker.SHARE_ENV</code></a></li>
@@ -172,7 +176,7 @@
 <li><a href="#considerations-when-cloning-objects-with-prototypes-classes-and-accessors">Considerations when cloning objects with prototypes, classes, and accessors</a></li>
 </ul>
 </li>
-<li><span class="stability_1"><a href="#porthasref"><code>port.hasRef()</code></a></span></li>
+<li><a href="#porthasref"><code>port.hasRef()</code></a></li>
 <li><a href="#portref"><code>port.ref()</code></a></li>
 <li><a href="#portstart"><code>port.start()</code></a></li>
 <li><a href="#portunref"><code>port.unref()</code></a></li>
@@ -187,6 +191,7 @@
 <li><a href="#event-messageerror_1">Event: <code>'messageerror'</code></a></li>
 <li><a href="#event-online">Event: <code>'online'</code></a></li>
 <li><a href="#workergetheapsnapshotoptions"><code>worker.getHeapSnapshot([options])</code></a></li>
+<li><a href="#workergetheapstatistics"><code>worker.getHeapStatistics()</code></a></li>
 <li><a href="#workerperformance"><code>worker.performance</code></a>
 <ul>
 <li><a href="#performanceeventlooputilizationutilization1-utilization2"><code>performance.eventLoopUtilization([utilization1[, utilization2]])</code></a></li>
@@ -201,6 +206,7 @@
 <li><a href="#workerterminate"><code>worker.terminate()</code></a></li>
 <li><a href="#workerthreadid_1"><code>worker.threadId</code></a></li>
 <li><a href="#workerunref"><code>worker.unref()</code></a></li>
+<li><a href="#workersymbolasyncdispose"><code>worker[Symbol.asyncDispose]()</code></a></li>
 </ul>
 </li>
 <li><a href="#notes">Notes</a>
@@ -243,7 +249,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -263,6 +268,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -275,6 +281,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -349,11 +356,14 @@
 <li><span class="stability_2"><a href="#worker-threads">Worker threads</a></span>
 <ul>
 <li><a href="#workergetenvironmentdatakey"><code>worker.getEnvironmentData(key)</code></a></li>
+<li><a href="#workerisinternalthread"><code>worker.isInternalThread</code></a></li>
 <li><a href="#workerismainthread"><code>worker.isMainThread</code></a></li>
 <li><a href="#workermarkasuntransferableobject"><code>worker.markAsUntransferable(object)</code></a></li>
+<li><a href="#workerismarkedasuntransferableobject"><code>worker.isMarkedAsUntransferable(object)</code></a></li>
+<li><a href="#workermarkasuncloneableobject"><code>worker.markAsUncloneable(object)</code></a></li>
 <li><a href="#workermovemessageporttocontextport-contextifiedsandbox"><code>worker.moveMessagePortToContext(port, contextifiedSandbox)</code></a></li>
 <li><a href="#workerparentport"><code>worker.parentPort</code></a></li>
-<li><span class="stability_1"><a href="#workerpostmessagetothreadthreadid-value-transferlist-timeout"><code>worker.postMessageToThread(threadId, value[, transferList][, timeout])</code></a></span></li>
+<li><span class="stability_1.1"><a href="#workerpostmessagetothreadthreadid-value-transferlist-timeout"><code>worker.postMessageToThread(threadId, value[, transferList][, timeout])</code></a></span></li>
 <li><a href="#workerreceivemessageonportport"><code>worker.receiveMessageOnPort(port)</code></a></li>
 <li><a href="#workerresourcelimits"><code>worker.resourceLimits</code></a></li>
 <li><a href="#workershare_env"><code>worker.SHARE_ENV</code></a></li>
@@ -384,7 +394,7 @@
 <li><a href="#considerations-when-cloning-objects-with-prototypes-classes-and-accessors">Considerations when cloning objects with prototypes, classes, and accessors</a></li>
 </ul>
 </li>
-<li><span class="stability_1"><a href="#porthasref"><code>port.hasRef()</code></a></span></li>
+<li><a href="#porthasref"><code>port.hasRef()</code></a></li>
 <li><a href="#portref"><code>port.ref()</code></a></li>
 <li><a href="#portstart"><code>port.start()</code></a></li>
 <li><a href="#portunref"><code>port.unref()</code></a></li>
@@ -399,6 +409,7 @@
 <li><a href="#event-messageerror_1">Event: <code>'messageerror'</code></a></li>
 <li><a href="#event-online">Event: <code>'online'</code></a></li>
 <li><a href="#workergetheapsnapshotoptions"><code>worker.getHeapSnapshot([options])</code></a></li>
+<li><a href="#workergetheapstatistics"><code>worker.getHeapStatistics()</code></a></li>
 <li><a href="#workerperformance"><code>worker.performance</code></a>
 <ul>
 <li><a href="#performanceeventlooputilizationutilization1-utilization2"><code>performance.eventLoopUtilization([utilization1[, utilization2]])</code></a></li>
@@ -413,6 +424,7 @@
 <li><a href="#workerterminate"><code>worker.terminate()</code></a></li>
 <li><a href="#workerthreadid_1"><code>worker.threadId</code></a></li>
 <li><a href="#workerunref"><code>worker.unref()</code></a></li>
+<li><a href="#workersymbolasyncdispose"><code>worker[Symbol.asyncDispose]()</code></a></li>
 </ul>
 </li>
 <li><a href="#notes">Notes</a>
@@ -429,18 +441,52 @@
         <h2>Worker threads<span><a class="mark" href="#worker-threads" id="worker-threads">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_threads"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v20.19.2/lib/worker_threads.js">lib/worker_threads.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v22.18.0/lib/worker_threads.js">lib/worker_threads.js</a></p>
 <p>The <code>node:worker_threads</code> module enables the use of threads that execute
 JavaScript in parallel. To access it:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> worker = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);</code> <button class="copy-button">copy</button></pre>
+
+<pre class="with-41-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> worker <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> worker = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);</code><button class="copy-button">copy</button></pre>
 <p>Workers (threads) are useful for performing CPU-intensive JavaScript operations.
 They do not help much with I/O-intensive work. The Node.js built-in
 asynchronous I/O operations are more efficient than Workers can be.</p>
 <p>Unlike <code>child_process</code> or <code>cluster</code>, <code>worker_threads</code> can share memory. They do
 so by transferring <code>ArrayBuffer</code> instances or sharing <code>SharedArrayBuffer</code>
 instances.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> {
-  <span class="hljs-title class_">Worker</span>, isMainThread, parentPort, workerData,
+
+<pre class="with-13-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> {
+  <span class="hljs-title class_">Worker</span>,
+  isMainThread,
+  parentPort,
+  workerData,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">if</span> (!isMainThread) {
+  <span class="hljs-keyword">const</span> { parse } = <span class="hljs-keyword">await</span> <span class="hljs-keyword">import</span>(<span class="hljs-string">'some-js-parsing-library'</span>);
+  <span class="hljs-keyword">const</span> script = workerData;
+  parentPort.<span class="hljs-title function_">postMessage</span>(<span class="hljs-title function_">parse</span>(script));
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">parseJSAsync</span>(<span class="hljs-params">script</span>) {
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =></span> {
+    <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>), {
+      <span class="hljs-attr">workerData</span>: script,
+    });
+    worker.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, resolve);
+    worker.<span class="hljs-title function_">on</span>(<span class="hljs-string">'error'</span>, reject);
+    worker.<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">(<span class="hljs-params">code</span>) =></span> {
+      <span class="hljs-keyword">if</span> (code !== <span class="hljs-number">0</span>)
+        <span class="hljs-title function_">reject</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">`Worker stopped with exit code <span class="hljs-subst">${code}</span>`</span>));
+    });
+  });
+};</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> {
+  <span class="hljs-title class_">Worker</span>,
+  isMainThread,
+  parentPort,
+  workerData,
 } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
 
 <span class="hljs-keyword">if</span> (isMainThread) {
@@ -461,7 +507,7 @@ instances.</p>
   <span class="hljs-keyword">const</span> { parse } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'some-js-parsing-library'</span>);
   <span class="hljs-keyword">const</span> script = workerData;
   parentPort.<span class="hljs-title function_">postMessage</span>(<span class="hljs-title function_">parse</span>(script));
-}</code> <button class="copy-button">copy</button></pre>
+}</code><button class="copy-button">copy</button></pre>
 <p>The above example spawns a Worker thread for each <code>parseJSAsync()</code> call. In
 practice, use a pool of Workers for these kinds of tasks. Otherwise, the
 overhead of creating Workers would likely exceed their benefit.</p>
@@ -494,7 +540,22 @@ specifically <code>argv</code> and <code>execArgv</code> options.</p>
 of data passed to the spawning thread's <code>worker.setEnvironmentData()</code>.
 Every new <code>Worker</code> receives its own copy of the environment data
 automatically.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> {
+
+<pre class="with-13-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> {
+  <span class="hljs-title class_">Worker</span>,
+  isMainThread,
+  setEnvironmentData,
+  getEnvironmentData,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">if</span> (isMainThread) {
+  <span class="hljs-title function_">setEnvironmentData</span>(<span class="hljs-string">'Hello'</span>, <span class="hljs-string">'World!'</span>);
+  <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>));
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title function_">getEnvironmentData</span>(<span class="hljs-string">'Hello'</span>));  <span class="hljs-comment">// Prints 'World!'.</span>
+}</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> {
   <span class="hljs-title class_">Worker</span>,
   isMainThread,
   setEnvironmentData,
@@ -506,7 +567,32 @@ automatically.</p>
   <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(__filename);
 } <span class="hljs-keyword">else</span> {
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title function_">getEnvironmentData</span>(<span class="hljs-string">'Hello'</span>));  <span class="hljs-comment">// Prints 'World!'.</span>
-}</code> <button class="copy-button">copy</button></pre>
+}</code><button class="copy-button">copy</button></pre>
+</section><section><h3><code>worker.isInternalThread</code><span><a class="mark" href="#workerisinternalthread" id="workerisinternalthread">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_isinternalthread"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.14.0</span>
+</div>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
+</ul>
+<p>Is <code>true</code> if this code is running inside of an internal <a href="#class-worker"><code>Worker</code></a> thread (e.g the loader thread).</p>
+<pre><code class="language-bash">node --experimental-loader ./loader.js main.js</code> <button class="copy-button">copy</button></pre>
+
+<pre class="with-55-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-comment">// loader.js</span>
+<span class="hljs-keyword">import</span> { isInternalThread } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(isInternalThread);  <span class="hljs-comment">// true</span></code><code class="language-js cjs"><span class="hljs-comment">// loader.js</span>
+<span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { isInternalThread } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(isInternalThread);  <span class="hljs-comment">// true</span></code><button class="copy-button">copy</button></pre>
+
+<pre class="with-55-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-comment">// main.js</span>
+<span class="hljs-keyword">import</span> { isInternalThread } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(isInternalThread);  <span class="hljs-comment">// false</span></code><code class="language-js cjs"><span class="hljs-comment">// main.js</span>
+<span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { isInternalThread } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(isInternalThread);  <span class="hljs-comment">// false</span></code><button class="copy-button">copy</button></pre>
 </section><section><h3><code>worker.isMainThread</code><span><a class="mark" href="#workerismainthread" id="workerismainthread">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_ismainthread"></a></h3>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -515,7 +601,18 @@ automatically.</p>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>Is <code>true</code> if this code is not running inside of a <a href="#class-worker"><code>Worker</code></a> thread.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, isMainThread } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-59-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">Worker</span>, isMainThread } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">if</span> (isMainThread) {
+  <span class="hljs-comment">// This re-loads the current file inside a Worker instance.</span>
+  <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>));
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Inside Worker!'</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(isMainThread);  <span class="hljs-comment">// Prints 'false'.</span>
+}</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, isMainThread } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
 
 <span class="hljs-keyword">if</span> (isMainThread) {
   <span class="hljs-comment">// This re-loads the current file inside a Worker instance.</span>
@@ -523,19 +620,24 @@ automatically.</p>
 } <span class="hljs-keyword">else</span> {
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Inside Worker!'</span>);
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(isMainThread);  <span class="hljs-comment">// Prints 'false'.</span>
-}</code> <button class="copy-button">copy</button></pre>
+}</code><button class="copy-button">copy</button></pre>
 </section><section><h3><code>worker.markAsUntransferable(object)</code><span><a class="mark" href="#workermarkasuntransferableobject" id="workermarkasuntransferableobject">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_markasuntransferable_object"></a></h3>
 <div class="api_metadata">
 <span>Added in: v14.5.0, v12.19.0</span>
 </div>
+<ul>
+<li><code>object</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> Any arbitrary JavaScript value.</li>
+</ul>
 <p>Mark an object as not transferable. If <code>object</code> occurs in the transfer list of
-a <a href="#portpostmessagevalue-transferlist"><code>port.postMessage()</code></a> call, it is ignored.</p>
+a <a href="#portpostmessagevalue-transferlist"><code>port.postMessage()</code></a> call, an error is thrown. This is a no-op if
+<code>object</code> is a primitive value.</p>
 <p>In particular, this makes sense for objects that can be cloned, rather than
 transferred, and which are used by other objects on the sending side.
 For example, Node.js marks the <code>ArrayBuffer</code>s it uses for its
 <a href="buffer.html#static-method-bufferallocunsafesize"><code>Buffer</code> pool</a> with this.</p>
 <p>This operation cannot be undone.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span>, markAsUntransferable } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-75-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">MessageChannel</span>, markAsUntransferable } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
 
 <span class="hljs-keyword">const</span> pooledBuffer = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayBuffer</span>(<span class="hljs-number">8</span>);
 <span class="hljs-keyword">const</span> typedArray1 = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Uint8Array</span>(pooledBuffer);
@@ -544,14 +646,106 @@ For example, Node.js marks the <code>ArrayBuffer</code>s it uses for its
 <span class="hljs-title function_">markAsUntransferable</span>(pooledBuffer);
 
 <span class="hljs-keyword">const</span> { port1 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
-port1.<span class="hljs-title function_">postMessage</span>(typedArray1, [ typedArray1.<span class="hljs-property">buffer</span> ]);
+<span class="hljs-keyword">try</span> {
+  <span class="hljs-comment">// This will throw an error, because pooledBuffer is not transferable.</span>
+  port1.<span class="hljs-title function_">postMessage</span>(typedArray1, [ typedArray1.<span class="hljs-property">buffer</span> ]);
+} <span class="hljs-keyword">catch</span> (error) {
+  <span class="hljs-comment">// error.name === 'DataCloneError'</span>
+}
 
 <span class="hljs-comment">// The following line prints the contents of typedArray1 -- it still owns</span>
-<span class="hljs-comment">// its memory and has been cloned, not transferred. Without</span>
-<span class="hljs-comment">// `markAsUntransferable()`, this would print an empty Uint8Array.</span>
+<span class="hljs-comment">// its memory and has not been transferred. Without</span>
+<span class="hljs-comment">// `markAsUntransferable()`, this would print an empty Uint8Array and the</span>
+<span class="hljs-comment">// postMessage call would have succeeded.</span>
 <span class="hljs-comment">// typedArray2 is intact as well.</span>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(typedArray1);
-<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(typedArray2);</code> <button class="copy-button">copy</button></pre>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(typedArray2);</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span>, markAsUntransferable } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<span class="hljs-keyword">const</span> pooledBuffer = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayBuffer</span>(<span class="hljs-number">8</span>);
+<span class="hljs-keyword">const</span> typedArray1 = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Uint8Array</span>(pooledBuffer);
+<span class="hljs-keyword">const</span> typedArray2 = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Float64Array</span>(pooledBuffer);
+
+<span class="hljs-title function_">markAsUntransferable</span>(pooledBuffer);
+
+<span class="hljs-keyword">const</span> { port1 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+<span class="hljs-keyword">try</span> {
+  <span class="hljs-comment">// This will throw an error, because pooledBuffer is not transferable.</span>
+  port1.<span class="hljs-title function_">postMessage</span>(typedArray1, [ typedArray1.<span class="hljs-property">buffer</span> ]);
+} <span class="hljs-keyword">catch</span> (error) {
+  <span class="hljs-comment">// error.name === 'DataCloneError'</span>
+}
+
+<span class="hljs-comment">// The following line prints the contents of typedArray1 -- it still owns</span>
+<span class="hljs-comment">// its memory and has not been transferred. Without</span>
+<span class="hljs-comment">// `markAsUntransferable()`, this would print an empty Uint8Array and the</span>
+<span class="hljs-comment">// postMessage call would have succeeded.</span>
+<span class="hljs-comment">// typedArray2 is intact as well.</span>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(typedArray1);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(typedArray2);</code><button class="copy-button">copy</button></pre>
+<p>There is no equivalent to this API in browsers.</p>
+</section><section><h3><code>worker.isMarkedAsUntransferable(object)</code><span><a class="mark" href="#workerismarkedasuntransferableobject" id="workerismarkedasuntransferableobject">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_ismarkedasuntransferable_object"></a></h3>
+<div class="api_metadata">
+<span>Added in: v21.0.0</span>
+</div>
+<ul>
+<li><code>object</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> Any JavaScript value.</li>
+<li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
+</ul>
+<p>Check if an object is marked as not transferable with
+<a href="#workermarkasuntransferableobject"><code>markAsUntransferable()</code></a>.</p>
+
+<pre class="with-85-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { markAsUntransferable, isMarkedAsUntransferable } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">const</span> pooledBuffer = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayBuffer</span>(<span class="hljs-number">8</span>);
+<span class="hljs-title function_">markAsUntransferable</span>(pooledBuffer);
+
+<span class="hljs-title function_">isMarkedAsUntransferable</span>(pooledBuffer);  <span class="hljs-comment">// Returns true.</span></code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { markAsUntransferable, isMarkedAsUntransferable } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<span class="hljs-keyword">const</span> pooledBuffer = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayBuffer</span>(<span class="hljs-number">8</span>);
+<span class="hljs-title function_">markAsUntransferable</span>(pooledBuffer);
+
+<span class="hljs-title function_">isMarkedAsUntransferable</span>(pooledBuffer);  <span class="hljs-comment">// Returns true.</span></code><button class="copy-button">copy</button></pre>
+<p>There is no equivalent to this API in browsers.</p>
+</section><section><h3><code>worker.markAsUncloneable(object)</code><span><a class="mark" href="#workermarkasuncloneableobject" id="workermarkasuncloneableobject">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_markasuncloneable_object"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.10.0</span>
+</div>
+<ul>
+<li><code>object</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> Any arbitrary JavaScript value.</li>
+</ul>
+<p>Mark an object as not cloneable. If <code>object</code> is used as <a href="#event-message"><code>message</code></a> in
+a <a href="#portpostmessagevalue-transferlist"><code>port.postMessage()</code></a> call, an error is thrown. This is a no-op if <code>object</code> is a
+primitive value.</p>
+<p>This has no effect on <code>ArrayBuffer</code>, or any <code>Buffer</code> like objects.</p>
+<p>This operation cannot be undone.</p>
+
+<pre class="with-56-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { markAsUncloneable } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">const</span> anyObject = { <span class="hljs-attr">foo</span>: <span class="hljs-string">'bar'</span> };
+<span class="hljs-title function_">markAsUncloneable</span>(anyObject);
+<span class="hljs-keyword">const</span> { port1 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+<span class="hljs-keyword">try</span> {
+  <span class="hljs-comment">// This will throw an error, because anyObject is not cloneable.</span>
+  port1.<span class="hljs-title function_">postMessage</span>(anyObject);
+} <span class="hljs-keyword">catch</span> (error) {
+  <span class="hljs-comment">// error.name === 'DataCloneError'</span>
+}</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { markAsUncloneable } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<span class="hljs-keyword">const</span> anyObject = { <span class="hljs-attr">foo</span>: <span class="hljs-string">'bar'</span> };
+<span class="hljs-title function_">markAsUncloneable</span>(anyObject);
+<span class="hljs-keyword">const</span> { port1 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+<span class="hljs-keyword">try</span> {
+  <span class="hljs-comment">// This will throw an error, because anyObject is not cloneable.</span>
+  port1.<span class="hljs-title function_">postMessage</span>(anyObject);
+} <span class="hljs-keyword">catch</span> (error) {
+  <span class="hljs-comment">// error.name === 'DataCloneError'</span>
+}</code><button class="copy-button">copy</button></pre>
 <p>There is no equivalent to this API in browsers.</p>
 </section><section><h3><code>worker.moveMessagePortToContext(port, contextifiedSandbox)</code><span><a class="mark" href="#workermovemessageporttocontextport-contextifiedsandbox" id="workermovemessageporttocontextport-contextifiedsandbox">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_movemessageporttocontext_port_contextifiedsandbox"></a></h3>
 <div class="api_metadata">
@@ -577,7 +771,7 @@ inherits from its global <code>Object</code> class. Objects passed to the
 <a href="https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/onmessage"><code>port.onmessage()</code></a> listener are also created in the target context
 and inherit from its global <code>Object</code> class.</p>
 <p>However, the created <code>MessagePort</code> no longer inherits from
-<a href="https://developer.mozilla.org/en-US/docs/Web/API/EventTarget"><code>EventTarget</code></a>, and only <a href="https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/onmessage"><code>port.onmessage()</code></a> can be used to receive
+<a href="events.html#class-eventtarget" class="type">&#x3C;EventTarget></a>, and only <a href="https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/onmessage"><code>port.onmessage()</code></a> can be used to receive
 events using it.</p>
 </section><section><h3><code>worker.parentPort</code><span><a class="mark" href="#workerparentport" id="workerparentport">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_parentport"></a></h3>
 <div class="api_metadata">
@@ -592,7 +786,23 @@ allowing communication with the parent thread. Messages sent using
 using <code>worker.on('message')</code>, and messages sent from the parent thread
 using <code>worker.postMessage()</code> are available in this thread using
 <code>parentPort.on('message')</code>.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, isMainThread, parentPort } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-71-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">Worker</span>, isMainThread, parentPort } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">if</span> (isMainThread) {
+  <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>));
+  worker.<span class="hljs-title function_">once</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(message);  <span class="hljs-comment">// Prints 'Hello, world!'.</span>
+  });
+  worker.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'Hello, world!'</span>);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-comment">// When a message from the parent thread is received, send it back:</span>
+  parentPort.<span class="hljs-title function_">once</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> {
+    parentPort.<span class="hljs-title function_">postMessage</span>(message);
+  });
+}</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, isMainThread, parentPort } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
 
 <span class="hljs-keyword">if</span> (isMainThread) {
   <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(__filename);
@@ -605,14 +815,14 @@ using <code>worker.postMessage()</code> are available in this thread using
   parentPort.<span class="hljs-title function_">once</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> {
     parentPort.<span class="hljs-title function_">postMessage</span>(message);
   });
-}</code> <button class="copy-button">copy</button></pre>
+}</code><button class="copy-button">copy</button></pre>
 </section><section><h3><code>worker.postMessageToThread(threadId, value[, transferList][, timeout])</code><span><a class="mark" href="#workerpostmessagetothreadthreadid-value-transferlist-timeout" id="workerpostmessagetothreadthreadid-value-transferlist-timeout">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_postmessagetothread_threadid_value_transferlist_timeout"></a></h3>
 <div class="api_metadata">
-<span>Added in: v20.19.0</span>
+<span>Added in: v22.5.0</span>
 </div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a>.1 - Active development</div><p></p>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1.1</a> - Active development</div><p></p>
 <ul>
-<li><code>destination</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a> The target thread ID. If the thread ID is invalid, a
+<li><code>threadId</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a> The target thread ID. If the thread ID is invalid, a
 <a href="errors.html#err_worker_messaging_failed"><code>ERR_WORKER_MESSAGING_FAILED</code></a> error will be thrown. If the target thread ID is the current thread ID,
 a <a href="errors.html#err_worker_messaging_same_thread"><code>ERR_WORKER_MESSAGING_SAME_THREAD</code></a> error will be thrown.</li>
 <li><code>value</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> The value to send.</li>
@@ -636,11 +846,8 @@ and the <a href="#workerpostmessagevalue-transferlist"><code>worker.postMessage(
 <p>The example below shows the use of of <code>postMessageToThread</code>: it creates 10 nested threads,
 the last one will try to communicate with the main thread.</p>
 
-<pre class="with-41-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { fileURLToPath } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:url'</span>;
-<span class="hljs-keyword">import</span> { once } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:events'</span>;
-<span class="hljs-keyword">import</span> process <span class="hljs-keyword">from</span> <span class="hljs-string">'node:process'</span>;
+<pre class="with-35-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> process <span class="hljs-keyword">from</span> <span class="hljs-string">'node:process'</span>;
 <span class="hljs-keyword">import</span> {
-  isMainThread,
   postMessageToThread,
   threadId,
   workerData,
@@ -651,7 +858,7 @@ the last one will try to communicate with the main thread.</p>
 <span class="hljs-keyword">const</span> level = workerData?.<span class="hljs-property">level</span> ?? <span class="hljs-number">0</span>;
 
 <span class="hljs-keyword">if</span> (level &#x3C; <span class="hljs-number">10</span>) {
-  <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-title function_">fileURLToPath</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>), {
+  <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>), {
     <span class="hljs-attr">workerData</span>: { <span class="hljs-attr">level</span>: level + <span class="hljs-number">1</span> },
   });
 }
@@ -671,9 +878,10 @@ the last one will try to communicate with the main thread.</p>
   <span class="hljs-keyword">await</span> <span class="hljs-title function_">postMessageToThread</span>(<span class="hljs-number">0</span>, { <span class="hljs-attr">message</span>: <span class="hljs-string">'ping'</span> });
 }
 
-channel.<span class="hljs-property">onmessage</span> = channel.<span class="hljs-property">close</span>;</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { once } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:events'</span>);
+channel.<span class="hljs-property">onmessage</span> = channel.<span class="hljs-property">close</span>;</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> process = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 <span class="hljs-keyword">const</span> {
-  isMainThread,
   postMessageToThread,
   threadId,
   workerData,
@@ -729,14 +937,24 @@ channel.<span class="hljs-property">onmessage</span> = channel.<span class="hljs
 <code>undefined</code> is returned, otherwise an object with a single <code>message</code> property
 that contains the message payload, corresponding to the oldest message in the
 <code>MessagePort</code>'s queue.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span>, receiveMessageOnPort } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-75-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">MessageChannel</span>, receiveMessageOnPort } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
 <span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
 port1.<span class="hljs-title function_">postMessage</span>({ <span class="hljs-attr">hello</span>: <span class="hljs-string">'world'</span> });
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title function_">receiveMessageOnPort</span>(port2));
 <span class="hljs-comment">// Prints: { message: { hello: 'world' } }</span>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title function_">receiveMessageOnPort</span>(port2));
-<span class="hljs-comment">// Prints: undefined</span></code> <button class="copy-button">copy</button></pre>
+<span class="hljs-comment">// Prints: undefined</span></code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span>, receiveMessageOnPort } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+<span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+port1.<span class="hljs-title function_">postMessage</span>({ <span class="hljs-attr">hello</span>: <span class="hljs-string">'world'</span> });
+
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title function_">receiveMessageOnPort</span>(port2));
+<span class="hljs-comment">// Prints: { message: { hello: 'world' } }</span>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title function_">receiveMessageOnPort</span>(port2));
+<span class="hljs-comment">// Prints: undefined</span></code><button class="copy-button">copy</button></pre>
 <p>When this function is used, no <code>'message'</code> event is emitted and the
 <code>onmessage</code> listener is not invoked.</p>
 </section><section><h3><code>worker.resourceLimits</code><span><a class="mark" href="#workerresourcelimits" id="workerresourcelimits">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_resourcelimits"></a></h3>
@@ -767,11 +985,19 @@ this matches its values.</p>
 <p>A special value that can be passed as the <code>env</code> option of the <a href="#class-worker"><code>Worker</code></a>
 constructor, to indicate that the current thread and the Worker thread should
 share read and write access to the same set of environment variables.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, <span class="hljs-variable constant_">SHARE_ENV</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-56-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> process <span class="hljs-keyword">from</span> <span class="hljs-string">'node:process'</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">Worker</span>, <span class="hljs-variable constant_">SHARE_ENV</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
 <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-string">'process.env.SET_IN_WORKER = "foo"'</span>, { <span class="hljs-attr">eval</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">env</span>: <span class="hljs-variable constant_">SHARE_ENV</span> })
   .<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
     <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">SET_IN_WORKER</span>);  <span class="hljs-comment">// Prints 'foo'.</span>
-  });</code> <button class="copy-button">copy</button></pre>
+  });</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, <span class="hljs-variable constant_">SHARE_ENV</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+<span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-string">'process.env.SET_IN_WORKER = "foo"'</span>, { <span class="hljs-attr">eval</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">env</span>: <span class="hljs-variable constant_">SHARE_ENV</span> })
+  .<span class="hljs-title function_">on</span>(<span class="hljs-string">'exit'</span>, <span class="hljs-function">() =></span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">SET_IN_WORKER</span>);  <span class="hljs-comment">// Prints 'foo'.</span>
+  });</code><button class="copy-button">copy</button></pre>
 </section><section><h3><code>worker.setEnvironmentData(key[, value])</code><span><a class="mark" href="#workersetenvironmentdatakey-value" id="workersetenvironmentdatakey-value">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_setenvironmentdata_key_value"></a></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -812,13 +1038,22 @@ This value is unique for each <a href="#class-worker"><code>Worker</code></a> in
 to this thread's <code>Worker</code> constructor.</p>
 <p>The data is cloned as if using <a href="#portpostmessagevalue-transferlist"><code>postMessage()</code></a>,
 according to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm">HTML structured clone algorithm</a>.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, isMainThread, workerData } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-71-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">Worker</span>, isMainThread, workerData } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">if</span> (isMainThread) {
+  <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>), { <span class="hljs-attr">workerData</span>: <span class="hljs-string">'Hello, world!'</span> });
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(workerData);  <span class="hljs-comment">// Prints 'Hello, world!'.</span>
+}</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, isMainThread, workerData } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
 
 <span class="hljs-keyword">if</span> (isMainThread) {
   <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(__filename, { <span class="hljs-attr">workerData</span>: <span class="hljs-string">'Hello, world!'</span> });
 } <span class="hljs-keyword">else</span> {
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(workerData);  <span class="hljs-comment">// Prints 'Hello, world!'.</span>
-}</code> <button class="copy-button">copy</button></pre>
+}</code><button class="copy-button">copy</button></pre>
 </section><section><h3>Class: <code>BroadcastChannel extends EventTarget</code><span><a class="mark" href="#class-broadcastchannel-extends-eventtarget" id="class-broadcastchannel-extends-eventtarget">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_class_broadcastchannel_extends_eventtarget"></a></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -833,7 +1068,27 @@ according to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_W
 </div>
 <p>Instances of <code>BroadcastChannel</code> allow asynchronous one-to-many communication
 with all other <code>BroadcastChannel</code> instances bound to the same channel name.</p>
-<pre><code class="language-js"><span class="hljs-meta">'use strict'</span>;
+
+<pre class="with-15-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> {
+  isMainThread,
+  <span class="hljs-title class_">BroadcastChannel</span>,
+  <span class="hljs-title class_">Worker</span>,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">const</span> bc = <span class="hljs-keyword">new</span> <span class="hljs-title class_">BroadcastChannel</span>(<span class="hljs-string">'hello'</span>);
+
+<span class="hljs-keyword">if</span> (isMainThread) {
+  <span class="hljs-keyword">let</span> c = <span class="hljs-number">0</span>;
+  bc.<span class="hljs-property">onmessage</span> = <span class="hljs-function">(<span class="hljs-params">event</span>) =></span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(event.<span class="hljs-property">data</span>);
+    <span class="hljs-keyword">if</span> (++c === <span class="hljs-number">10</span>) bc.<span class="hljs-title function_">close</span>();
+  };
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> n = <span class="hljs-number">0</span>; n &#x3C; <span class="hljs-number">10</span>; n++)
+    <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>));
+} <span class="hljs-keyword">else</span> {
+  bc.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'hello from every worker'</span>);
+  bc.<span class="hljs-title function_">close</span>();
+}</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
 
 <span class="hljs-keyword">const</span> {
   isMainThread,
@@ -854,7 +1109,8 @@ with all other <code>BroadcastChannel</code> instances bound to the same channel
 } <span class="hljs-keyword">else</span> {
   bc.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'hello from every worker'</span>);
   bc.<span class="hljs-title function_">close</span>();
-}</code> <button class="copy-button">copy</button></pre>
+}</code><button class="copy-button">copy</button></pre>
+<div>
 <h4><code>new BroadcastChannel(name)</code><span><a class="mark" href="#new-broadcastchannelname" id="new-broadcastchannelname">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_new_broadcastchannel_name"></a></h4>
 <div class="api_metadata">
 <span>Added in: v15.4.0</span>
@@ -863,11 +1119,13 @@ with all other <code>BroadcastChannel</code> instances bound to the same channel
 <li><code>name</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> The name of the channel to connect to. Any JavaScript value
 that can be converted to a string using <code>`${name}`</code> is permitted.</li>
 </ul>
+</div><div>
 <h4><code>broadcastChannel.close()</code><span><a class="mark" href="#broadcastchannelclose" id="broadcastchannelclose">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_broadcastchannel_close"></a></h4>
 <div class="api_metadata">
 <span>Added in: v15.4.0</span>
 </div>
 <p>Closes the <code>BroadcastChannel</code> connection.</p>
+</div><div>
 <h4><code>broadcastChannel.onmessage</code><span><a class="mark" href="#broadcastchannelonmessage" id="broadcastchannelonmessage">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_broadcastchannel_onmessage"></a></h4>
 <div class="api_metadata">
 <span>Added in: v15.4.0</span>
@@ -876,6 +1134,7 @@ that can be converted to a string using <code>`${name}`</code> is permitted.</li
 <li>Type: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> Invoked with a single <code>MessageEvent</code> argument
 when a message is received.</li>
 </ul>
+</div><div>
 <h4><code>broadcastChannel.onmessageerror</code><span><a class="mark" href="#broadcastchannelonmessageerror" id="broadcastchannelonmessageerror">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_broadcastchannel_onmessageerror"></a></h4>
 <div class="api_metadata">
 <span>Added in: v15.4.0</span>
@@ -884,6 +1143,7 @@ when a message is received.</li>
 <li>Type: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> Invoked with a received message cannot be
 deserialized.</li>
 </ul>
+</div><div>
 <h4><code>broadcastChannel.postMessage(message)</code><span><a class="mark" href="#broadcastchannelpostmessagemessage" id="broadcastchannelpostmessagemessage">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_broadcastchannel_postmessage_message"></a></h4>
 <div class="api_metadata">
 <span>Added in: v15.4.0</span>
@@ -891,6 +1151,7 @@ deserialized.</li>
 <ul>
 <li><code>message</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> Any cloneable JavaScript value.</li>
 </ul>
+</div><div>
 <h4><code>broadcastChannel.ref()</code><span><a class="mark" href="#broadcastchannelref" id="broadcastchannelref">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_broadcastchannel_ref"></a></h4>
 <div class="api_metadata">
 <span>Added in: v15.4.0</span>
@@ -899,6 +1160,7 @@ deserialized.</li>
 BroadcastChannel does <em>not</em> let the program exit if it's the only active handle
 left (the default behavior). If the port is <code>ref()</code>ed, calling <code>ref()</code> again
 has no effect.</p>
+</div><div>
 <h4><code>broadcastChannel.unref()</code><span><a class="mark" href="#broadcastchannelunref" id="broadcastchannelunref">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_broadcastchannel_unref"></a></h4>
 <div class="api_metadata">
 <span>Added in: v15.4.0</span>
@@ -906,6 +1168,7 @@ has no effect.</p>
 <p>Calling <code>unref()</code> on a BroadcastChannel allows the thread to exit if this
 is the only active handle in the event system. If the BroadcastChannel is
 already <code>unref()</code>ed calling <code>unref()</code> again has no effect.</p>
+</div>
 </section><section><h3>Class: <code>MessageChannel</code><span><a class="mark" href="#class-messagechannel" id="class-messagechannel">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_class_messagechannel"></a></h3>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -915,12 +1178,20 @@ two-way communications channel.
 The <code>MessageChannel</code> has no methods of its own. <code>new MessageChannel()</code>
 yields an object with <code>port1</code> and <code>port2</code> properties, which refer to linked
 <a href="#class-messageport"><code>MessagePort</code></a> instances.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-53-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">MessageChannel</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
 
 <span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
 port1.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'received'</span>, message));
 port2.<span class="hljs-title function_">postMessage</span>({ <span class="hljs-attr">foo</span>: <span class="hljs-string">'bar'</span> });
-<span class="hljs-comment">// Prints: received { foo: 'bar' } from the `port1.on('message')` listener</span></code> <button class="copy-button">copy</button></pre>
+<span class="hljs-comment">// Prints: received { foo: 'bar' } from the `port1.on('message')` listener</span></code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+port1.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'received'</span>, message));
+port2.<span class="hljs-title function_">postMessage</span>({ <span class="hljs-attr">foo</span>: <span class="hljs-string">'bar'</span> });
+<span class="hljs-comment">// Prints: received { foo: 'bar' } from the `port1.on('message')` listener</span></code><button class="copy-button">copy</button></pre>
 </section><section><h3>Class: <code>MessagePort</code><span><a class="mark" href="#class-messageport" id="class-messageport">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_class_messageport"></a></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -941,13 +1212,15 @@ asynchronous, two-way communications channel. It can be used to transfer
 structured data, memory regions and other <code>MessagePort</code>s between different
 <a href="#class-worker"><code>Worker</code></a>s.</p>
 <p>This implementation matches <a href="https://developer.mozilla.org/en-US/docs/Web/API/MessagePort">browser <code>MessagePort</code></a>s.</p>
+<div>
 <h4>Event: <code>'close'</code><span><a class="mark" href="#event-close" id="event-close">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_event_close"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
 </div>
 <p>The <code>'close'</code> event is emitted once either side of the channel has been
 disconnected.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-53-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">MessageChannel</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
 <span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
 
 <span class="hljs-comment">// Prints:</span>
@@ -957,7 +1230,20 @@ port2.<span class="hljs-title function_">on</span>(<span class="hljs-string">'me
 port2.<span class="hljs-title function_">on</span>(<span class="hljs-string">'close'</span>, <span class="hljs-function">() =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'closed!'</span>));
 
 port1.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'foobar'</span>);
-port1.<span class="hljs-title function_">close</span>();</code> <button class="copy-button">copy</button></pre>
+port1.<span class="hljs-title function_">close</span>();</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+<span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+
+<span class="hljs-comment">// Prints:</span>
+<span class="hljs-comment">//   foobar</span>
+<span class="hljs-comment">//   closed!</span>
+port2.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(message));
+port2.<span class="hljs-title function_">on</span>(<span class="hljs-string">'close'</span>, <span class="hljs-function">() =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'closed!'</span>));
+
+port1.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'foobar'</span>);
+port1.<span class="hljs-title function_">close</span>();</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Event: <code>'message'</code><span><a class="mark" href="#event-message" id="event-message">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_event_message"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -969,6 +1255,7 @@ port1.<span class="hljs-title function_">close</span>();</code> <button class="c
 input of <a href="#portpostmessagevalue-transferlist"><code>port.postMessage()</code></a>.</p>
 <p>Listeners on this event receive a clone of the <code>value</code> parameter as passed
 to <code>postMessage()</code> and no further arguments.</p>
+</div><div>
 <h4>Event: <code>'messageerror'</code><span><a class="mark" href="#event-messageerror" id="event-messageerror">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_event_messageerror"></a></h4>
 <div class="api_metadata">
 <span>Added in: v14.5.0, v12.19.0</span>
@@ -982,6 +1269,7 @@ instantiating the posted JS object on the receiving end. Such situations
 are rare, but can happen, for instance, when certain Node.js API objects
 are received in a <code>vm.Context</code> (where Node.js APIs are currently
 unavailable).</p>
+</div><div>
 <h4><code>port.close()</code><span><a class="mark" href="#portclose" id="portclose">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_port_close"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -991,11 +1279,14 @@ This method can be called when no further communication will happen over this
 <code>MessagePort</code>.</p>
 <p>The <a href="#event-close"><code>'close'</code> event</a> is emitted on both <code>MessagePort</code> instances that
 are part of the channel.</p>
+</div><div>
 <h4><code>port.postMessage(value[, transferList])</code><span><a class="mark" href="#portpostmessagevalue-transferlist" id="portpostmessagevalue-transferlist">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_port_postmessage_value_transferlist"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v21.0.0</td>
+<td><p>An error is thrown when an untransferable object is in the transfer list.</p></td></tr>
 <tr><td>v15.6.0</td>
 <td><p>Added <code>X509Certificate</code> to the list of cloneable types.</p></td></tr>
 <tr><td>v15.0.0</td>
@@ -1041,7 +1332,8 @@ and <code>SharedArrayBuffer</code>s.</li>
 </ul>
 </li>
 </ul>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-53-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">MessageChannel</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
 <span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
 
 port1.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(message));
@@ -1049,18 +1341,29 @@ port1.<span class="hljs-title function_">on</span>(<span class="hljs-string">'me
 <span class="hljs-keyword">const</span> circularData = {};
 circularData.<span class="hljs-property">foo</span> = circularData;
 <span class="hljs-comment">// Prints: { foo: [Circular] }</span>
-port2.<span class="hljs-title function_">postMessage</span>(circularData);</code> <button class="copy-button">copy</button></pre>
-<p><code>transferList</code> may be a list of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer"><code>ArrayBuffer</code></a>, <a href="#class-messageport"><code>MessagePort</code></a>, and
+port2.<span class="hljs-title function_">postMessage</span>(circularData);</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+<span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+
+port1.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(message));
+
+<span class="hljs-keyword">const</span> circularData = {};
+circularData.<span class="hljs-property">foo</span> = circularData;
+<span class="hljs-comment">// Prints: { foo: [Circular] }</span>
+port2.<span class="hljs-title function_">postMessage</span>(circularData);</code><button class="copy-button">copy</button></pre>
+<p><code>transferList</code> may be a list of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer" class="type">&#x3C;ArrayBuffer></a>, <a href="#class-messageport"><code>MessagePort</code></a>, and
 <a href="fs.html#class-filehandle"><code>FileHandle</code></a> objects.
 After transferring, they are not usable on the sending side of the channel
 anymore (even if they are not contained in <code>value</code>). Unlike with
 <a href="child_process.html">child processes</a>, transferring handles such as network sockets is currently
 not supported.</p>
-<p>If <code>value</code> contains <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer"><code>SharedArrayBuffer</code></a> instances, those are accessible
+<p>If <code>value</code> contains <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer" class="type">&#x3C;SharedArrayBuffer></a> instances, those are accessible
 from either thread. They cannot be listed in <code>transferList</code>.</p>
 <p><code>value</code> may still contain <code>ArrayBuffer</code> instances that are not in
 <code>transferList</code>; in that case, the underlying memory is copied rather than moved.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-53-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">MessageChannel</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
 <span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
 
 port1.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(message));
@@ -1080,14 +1383,37 @@ port2.<span class="hljs-title function_">postMessage</span>(sharedUint8Array);
 <span class="hljs-comment">// This can be used, for example, to create communication channels between</span>
 <span class="hljs-comment">// multiple `Worker` threads that are children of the same parent thread.</span>
 <span class="hljs-keyword">const</span> otherChannel = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
-port2.<span class="hljs-title function_">postMessage</span>({ <span class="hljs-attr">port</span>: otherChannel.<span class="hljs-property">port1</span> }, [ otherChannel.<span class="hljs-property">port1</span> ]);</code> <button class="copy-button">copy</button></pre>
+port2.<span class="hljs-title function_">postMessage</span>({ <span class="hljs-attr">port</span>: otherChannel.<span class="hljs-property">port1</span> }, [ otherChannel.<span class="hljs-property">port1</span> ]);</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">MessageChannel</span> } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+<span class="hljs-keyword">const</span> { port1, port2 } = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+
+port1.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">message</span>) =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(message));
+
+<span class="hljs-keyword">const</span> uint8Array = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Uint8Array</span>([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span> ]);
+<span class="hljs-comment">// This posts a copy of `uint8Array`:</span>
+port2.<span class="hljs-title function_">postMessage</span>(uint8Array);
+<span class="hljs-comment">// This does not copy data, but renders `uint8Array` unusable:</span>
+port2.<span class="hljs-title function_">postMessage</span>(uint8Array, [ uint8Array.<span class="hljs-property">buffer</span> ]);
+
+<span class="hljs-comment">// The memory for the `sharedUint8Array` is accessible from both the</span>
+<span class="hljs-comment">// original and the copy received by `.on('message')`:</span>
+<span class="hljs-keyword">const</span> sharedUint8Array = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Uint8Array</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">SharedArrayBuffer</span>(<span class="hljs-number">4</span>));
+port2.<span class="hljs-title function_">postMessage</span>(sharedUint8Array);
+
+<span class="hljs-comment">// This transfers a freshly created message port to the receiver.</span>
+<span class="hljs-comment">// This can be used, for example, to create communication channels between</span>
+<span class="hljs-comment">// multiple `Worker` threads that are children of the same parent thread.</span>
+<span class="hljs-keyword">const</span> otherChannel = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+port2.<span class="hljs-title function_">postMessage</span>({ <span class="hljs-attr">port</span>: otherChannel.<span class="hljs-property">port1</span> }, [ otherChannel.<span class="hljs-property">port1</span> ]);</code><button class="copy-button">copy</button></pre>
 <p>The message object is cloned immediately, and can be modified after
 posting without having side effects.</p>
 <p>For more information on the serialization and deserialization mechanisms
 behind this API, see the <a href="v8.html#serialization-api">serialization API of the <code>node:v8</code> module</a>.</p>
+<div>
 <h5>Considerations when transferring TypedArrays and Buffers<span><a class="mark" href="#considerations-when-transferring-typedarrays-and-buffers" id="considerations-when-transferring-typedarrays-and-buffers">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_considerations_when_transferring_typedarrays_and_buffers"></a></h5>
-<p>All <code>TypedArray</code> and <code>Buffer</code> instances are views over an underlying
-<code>ArrayBuffer</code>. That is, it is the <code>ArrayBuffer</code> that actually stores
+<p>All <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray" class="type">&#x3C;TypedArray></a> | <a href="buffer.html#class-buffer" class="type">&#x3C;Buffer></a> instances are views over an underlying
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer" class="type">&#x3C;ArrayBuffer></a>. That is, it is the <code>ArrayBuffer</code> that actually stores
 the raw data while the <code>TypedArray</code> and <code>Buffer</code> objects provide a
 way of viewing and manipulating the data. It is possible and common
 for multiple views to be created over the same <code>ArrayBuffer</code> instance.
@@ -1123,12 +1449,14 @@ usage and possible security concerns.</p>
 <code>Buffer.alloc()</code> or <code>Buffer.allocUnsafeSlow()</code> can always be
 transferred but doing so renders all other existing views of
 those <code>ArrayBuffer</code>s unusable.</p>
+</div><div>
 <h5>Considerations when cloning objects with prototypes, classes, and accessors<span><a class="mark" href="#considerations-when-cloning-objects-with-prototypes-classes-and-accessors" id="considerations-when-cloning-objects-with-prototypes-classes-and-accessors">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_considerations_when_cloning_objects_with_prototypes_classes_and_accessors"></a></h5>
 <p>Because object cloning uses the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm">HTML structured clone algorithm</a>,
 non-enumerable properties, property accessors, and object prototypes are
-not preserved. In particular, <a href="buffer.html"><code>Buffer</code></a> objects will be read as
-plain <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array"><code>Uint8Array</code></a>s on the receiving side, and instances of JavaScript
+not preserved. In particular, <a href="buffer.html#class-buffer" class="type">&#x3C;Buffer></a> objects will be read as
+plain <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array" class="type">&#x3C;Uint8Array></a>s on the receiving side, and instances of JavaScript
 classes will be cloned as plain JavaScript objects.</p>
+<!-- eslint-disable no-unused-private-class-members -->
 <pre><code class="language-js"><span class="hljs-keyword">const</span> b = <span class="hljs-title class_">Symbol</span>(<span class="hljs-string">'b'</span>);
 
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">Foo</span> {
@@ -1157,15 +1485,24 @@ port1.<span class="hljs-property">onmessage</span> = <span class="hljs-function"
 port2.<span class="hljs-title function_">postMessage</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-string">'https://example.org'</span>));
 
 <span class="hljs-comment">// Prints: { }</span></code> <button class="copy-button">copy</button></pre>
+</div></div><div>
 <h4><code>port.hasRef()</code><span><a class="mark" href="#porthasref" id="porthasref">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_port_hasref"></a></h4>
 <div class="api_metadata">
-<span>Added in: v18.1.0, v16.17.0</span>
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v22.17.0</td>
+<td><p>Marking the API stable.</p></td></tr>
+<tr><td>v18.1.0, v16.17.0</td>
+<td><p><span>Added in: v18.1.0, v16.17.0</span></p></td></tr>
+</tbody></table>
+</details>
 </div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>If true, the <code>MessagePort</code> object will keep the Node.js event loop active.</p>
+</div><div>
 <h4><code>port.ref()</code><span><a class="mark" href="#portref" id="portref">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_port_ref"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1176,6 +1513,7 @@ behavior). If the port is <code>ref()</code>ed, calling <code>ref()</code> again
 <p>If listeners are attached or removed using <code>.on('message')</code>, the port
 is <code>ref()</code>ed and <code>unref()</code>ed automatically depending on whether
 listeners for the event exist.</p>
+</div><div>
 <h4><code>port.start()</code><span><a class="mark" href="#portstart" id="portstart">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_port_start"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1188,6 +1526,7 @@ it is only useful for ignoring messages when no event listener is present.
 Node.js also diverges in its handling of <code>.onmessage</code>. Setting it
 automatically calls <code>.start()</code>, but unsetting it lets messages queue up
 until a new handler is set or the port is discarded.</p>
+</div><div>
 <h4><code>port.unref()</code><span><a class="mark" href="#portunref" id="portunref">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_port_unref"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1198,6 +1537,7 @@ active handle in the event system. If the port is already <code>unref()</code>ed
 <p>If listeners are attached or removed using <code>.on('message')</code>, the port is
 <code>ref()</code>ed and <code>unref()</code>ed automatically depending on whether
 listeners for the event exist.</p>
+</div>
 </section><section><h3>Class: <code>Worker</code><span><a class="mark" href="#class-worker" id="class-worker">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_class_worker"></a></h3>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1248,7 +1588,27 @@ pre-existing channel, such as the global one.</p>
 <p>See <a href="#portpostmessagevalue-transferlist"><code>port.postMessage()</code></a> for more information on how messages are passed,
 and what kind of JavaScript values can be successfully transported through
 the thread barrier.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:assert'</span>);
+
+<pre class="with-33-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> assert <span class="hljs-keyword">from</span> <span class="hljs-string">'node:assert'</span>;
+<span class="hljs-keyword">import</span> {
+  <span class="hljs-title class_">Worker</span>, <span class="hljs-title class_">MessageChannel</span>, <span class="hljs-title class_">MessagePort</span>, isMainThread, parentPort,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+<span class="hljs-keyword">if</span> (isMainThread) {
+  <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>));
+  <span class="hljs-keyword">const</span> subChannel = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MessageChannel</span>();
+  worker.<span class="hljs-title function_">postMessage</span>({ <span class="hljs-attr">hereIsYourPort</span>: subChannel.<span class="hljs-property">port1</span> }, [subChannel.<span class="hljs-property">port1</span>]);
+  subChannel.<span class="hljs-property">port2</span>.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">value</span>) =></span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'received:'</span>, value);
+  });
+} <span class="hljs-keyword">else</span> {
+  parentPort.<span class="hljs-title function_">once</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">(<span class="hljs-params">value</span>) =></span> {
+    <span class="hljs-title function_">assert</span>(value.<span class="hljs-property">hereIsYourPort</span> <span class="hljs-keyword">instanceof</span> <span class="hljs-title class_">MessagePort</span>);
+    value.<span class="hljs-property">hereIsYourPort</span>.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'the worker is sending this'</span>);
+    value.<span class="hljs-property">hereIsYourPort</span>.<span class="hljs-title function_">close</span>();
+  });
+}</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:assert'</span>);
 <span class="hljs-keyword">const</span> {
   <span class="hljs-title class_">Worker</span>, <span class="hljs-title class_">MessageChannel</span>, <span class="hljs-title class_">MessagePort</span>, isMainThread, parentPort,
 } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
@@ -1265,13 +1625,14 @@ the thread barrier.</p>
     value.<span class="hljs-property">hereIsYourPort</span>.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'the worker is sending this'</span>);
     value.<span class="hljs-property">hereIsYourPort</span>.<span class="hljs-title function_">close</span>();
   });
-}</code> <button class="copy-button">copy</button></pre>
+}</code><button class="copy-button">copy</button></pre>
+<div>
 <h4><code>new Worker(filename[, options])</code><span><a class="mark" href="#new-workerfilename-options" id="new-workerfilename-options">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_new_worker_filename_options"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
-<tr><td>v19.8.0</td>
+<tr><td>v19.8.0, v18.16.0</td>
 <td><p>Added support for a <code>name</code> option, which allows adding a name to worker title for debugging.</p></td></tr>
 <tr><td>v14.9.0</td>
 <td><p>The <code>filename</code> parameter can be a WHATWG <code>URL</code> object using <code>data:</code> protocol.</p></td></tr>
@@ -1366,6 +1727,7 @@ for debugging/identification purposes, making the final title as
 </ul>
 </li>
 </ul>
+</div><div>
 <h4>Event: <code>'error'</code><span><a class="mark" href="#event-error" id="event-error">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_event_error"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1375,6 +1737,7 @@ for debugging/identification purposes, making the final title as
 </ul>
 <p>The <code>'error'</code> event is emitted if the worker thread throws an uncaught
 exception. In that case, the worker is terminated.</p>
+</div><div>
 <h4>Event: <code>'exit'</code><span><a class="mark" href="#event-exit" id="event-exit">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_event_exit"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1387,6 +1750,7 @@ exited by calling <a href="process.html#processexitcode"><code>process.exit()</c
 passed exit code. If the worker was terminated, the <code>exitCode</code> parameter is
 <code>1</code>.</p>
 <p>This is the final event emitted by any <code>Worker</code> instance.</p>
+</div><div>
 <h4>Event: <code>'message'</code><span><a class="mark" href="#event-message_1" id="event-message_1">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_event_message_1"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1399,6 +1763,7 @@ passed exit code. If the worker was terminated, the <code>exitCode</code> parame
 See the <a href="#event-message"><code>port.on('message')</code></a> event for more details.</p>
 <p>All messages sent from the worker thread are emitted before the
 <a href="#event-exit"><code>'exit'</code> event</a> is emitted on the <code>Worker</code> object.</p>
+</div><div>
 <h4>Event: <code>'messageerror'</code><span><a class="mark" href="#event-messageerror_1" id="event-messageerror_1">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_event_messageerror_1"></a></h4>
 <div class="api_metadata">
 <span>Added in: v14.5.0, v12.19.0</span>
@@ -1407,12 +1772,14 @@ See the <a href="#event-message"><code>port.on('message')</code></a> event for m
 <li><code>error</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error" class="type">&#x3C;Error></a> An Error object</li>
 </ul>
 <p>The <code>'messageerror'</code> event is emitted when deserializing a message failed.</p>
+</div><div>
 <h4>Event: <code>'online'</code><span><a class="mark" href="#event-online" id="event-online">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_event_online"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
 </div>
 <p>The <code>'online'</code> event is emitted when the worker thread has started executing
 JavaScript code.</p>
+</div><div>
 <h4><code>worker.getHeapSnapshot([options])</code><span><a class="mark" href="#workergetheapsnapshotoptions" id="workergetheapsnapshotoptions">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_getheapsnapshot_options"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -1442,12 +1809,25 @@ See <a href="v8.html#v8getheapsnapshotoptions"><code>v8.getHeapSnapshot()</code>
 <p>If the Worker thread is no longer running, which may occur before the
 <a href="#event-exit"><code>'exit'</code> event</a> is emitted, the returned <code>Promise</code> is rejected
 immediately with an <a href="errors.html#err_worker_not_running"><code>ERR_WORKER_NOT_RUNNING</code></a> error.</p>
+</div><div>
+<h4><code>worker.getHeapStatistics()</code><span><a class="mark" href="#workergetheapstatistics" id="workergetheapstatistics">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_getheapstatistics"></a></h4>
+<div class="api_metadata">
+<span>Added in: v22.16.0</span>
+</div>
+<ul>
+<li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="type">&#x3C;Promise></a></li>
+</ul>
+<p>This method returns a <code>Promise</code> that will resolve to an object identical to <a href="v8.html#v8getheapstatistics"><code>v8.getHeapStatistics()</code></a>,
+or reject with an <a href="errors.html#err_worker_not_running"><code>ERR_WORKER_NOT_RUNNING</code></a> error if the worker is no longer running.
+This methods allows the statistics to be observed from outside the actual thread.</p>
+</div><div>
 <h4><code>worker.performance</code><span><a class="mark" href="#workerperformance" id="workerperformance">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_performance"></a></h4>
 <div class="api_metadata">
 <span>Added in: v15.1.0, v14.17.0, v12.22.0</span>
 </div>
 <p>An object that can be used to query performance information from a worker
 instance. Similar to <a href="perf_hooks.html#perf_hooksperformance"><code>perf_hooks.performance</code></a>.</p>
+<div>
 <h5><code>performance.eventLoopUtilization([utilization1[, utilization2]])</code><span><a class="mark" href="#performanceeventlooputilizationutilization1-utilization2" id="performanceeventlooputilizationutilization1-utilization2">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_performance_eventlooputilization_utilization1_utilization2"></a></h5>
 <div class="api_metadata">
 <span>Added in: v15.1.0, v14.17.0, v12.22.0</span>
@@ -1474,7 +1854,26 @@ immediately available once the worker's script begins execution.</p>
 stuck in bootstrap. The following examples shows how the worker's entire
 lifetime never accumulates any <code>idle</code> time, but is still be able to process
 messages.</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, isMainThread, parentPort } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
+
+<pre class="with-71-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">Worker</span>, isMainThread, parentPort } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:worker_threads'</span>;
+
+<span class="hljs-keyword">if</span> (isMainThread) {
+  <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>));
+  <span class="hljs-built_in">setInterval</span>(<span class="hljs-function">() =></span> {
+    worker.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'hi'</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(worker.<span class="hljs-property">performance</span>.<span class="hljs-title function_">eventLoopUtilization</span>());
+  }, <span class="hljs-number">100</span>).<span class="hljs-title function_">unref</span>();
+} <span class="hljs-keyword">else</span> {
+  parentPort.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">() =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'msg'</span>)).<span class="hljs-title function_">unref</span>();
+  (<span class="hljs-keyword">function</span> <span class="hljs-title function_">r</span>(<span class="hljs-params">n</span>) {
+    <span class="hljs-keyword">if</span> (--n &#x3C; <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span>;
+    <span class="hljs-keyword">const</span> t = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>();
+    <span class="hljs-keyword">while</span> (<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - t &#x3C; <span class="hljs-number">300</span>);
+    <span class="hljs-title function_">setImmediate</span>(r, n);
+  })(<span class="hljs-number">10</span>);
+}</code><code class="language-js cjs"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">const</span> { <span class="hljs-title class_">Worker</span>, isMainThread, parentPort } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);
 
 <span class="hljs-keyword">if</span> (isMainThread) {
   <span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(__filename);
@@ -1482,19 +1881,19 @@ messages.</p>
     worker.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">'hi'</span>);
     <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(worker.<span class="hljs-property">performance</span>.<span class="hljs-title function_">eventLoopUtilization</span>());
   }, <span class="hljs-number">100</span>).<span class="hljs-title function_">unref</span>();
-  <span class="hljs-keyword">return</span>;
-}
-
-parentPort.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">() =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'msg'</span>)).<span class="hljs-title function_">unref</span>();
-(<span class="hljs-keyword">function</span> <span class="hljs-title function_">r</span>(<span class="hljs-params">n</span>) {
-  <span class="hljs-keyword">if</span> (--n &#x3C; <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span>;
-  <span class="hljs-keyword">const</span> t = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>();
-  <span class="hljs-keyword">while</span> (<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - t &#x3C; <span class="hljs-number">300</span>);
-  <span class="hljs-title function_">setImmediate</span>(r, n);
-})(<span class="hljs-number">10</span>);</code> <button class="copy-button">copy</button></pre>
+} <span class="hljs-keyword">else</span> {
+  parentPort.<span class="hljs-title function_">on</span>(<span class="hljs-string">'message'</span>, <span class="hljs-function">() =></span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'msg'</span>)).<span class="hljs-title function_">unref</span>();
+  (<span class="hljs-keyword">function</span> <span class="hljs-title function_">r</span>(<span class="hljs-params">n</span>) {
+    <span class="hljs-keyword">if</span> (--n &#x3C; <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span>;
+    <span class="hljs-keyword">const</span> t = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>();
+    <span class="hljs-keyword">while</span> (<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - t &#x3C; <span class="hljs-number">300</span>);
+    <span class="hljs-title function_">setImmediate</span>(r, n);
+  })(<span class="hljs-number">10</span>);
+}</code><button class="copy-button">copy</button></pre>
 <p>The event loop utilization of a worker is available only after the <a href="#event-online"><code>'online'</code>
 event</a> emitted, and if called before this, or after the <a href="#event-exit"><code>'exit'</code>
 event</a>, then all properties have the value of <code>0</code>.</p>
+</div></div><div>
 <h4><code>worker.postMessage(value[, transferList])</code><span><a class="mark" href="#workerpostmessagevalue-transferlist" id="workerpostmessagevalue-transferlist">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_postmessage_value_transferlist"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1506,6 +1905,7 @@ event</a>, then all properties have the value of <code>0</code>.</p>
 <p>Send a message to the worker that is received via
 <a href="#event-message"><code>require('node:worker_threads').parentPort.on('message')</code></a>.
 See <a href="#portpostmessagevalue-transferlist"><code>port.postMessage()</code></a> for more details.</p>
+</div><div>
 <h4><code>worker.ref()</code><span><a class="mark" href="#workerref" id="workerref">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_ref"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1514,6 +1914,7 @@ See <a href="#portpostmessagevalue-transferlist"><code>port.postMessage()</code>
 <em>not</em> let the program exit if it's the only active handle left (the default
 behavior). If the worker is <code>ref()</code>ed, calling <code>ref()</code> again has
 no effect.</p>
+</div><div>
 <h4><code>worker.resourceLimits</code><span><a class="mark" href="#workerresourcelimits_1" id="workerresourcelimits_1">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_resourcelimits_1"></a></h4>
 <div class="api_metadata">
 <span>Added in: v13.2.0, v12.16.0</span>
@@ -1532,6 +1933,7 @@ no effect.</p>
 If the <code>resourceLimits</code> option was passed to the <a href="#class-worker"><code>Worker</code></a> constructor,
 this matches its values.</p>
 <p>If the worker has stopped, the return value is an empty object.</p>
+</div><div>
 <h4><code>worker.stderr</code><span><a class="mark" href="#workerstderr" id="workerstderr">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_stderr"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1543,6 +1945,7 @@ this matches its values.</p>
 inside the worker thread. If <code>stderr: true</code> was not passed to the
 <a href="#class-worker"><code>Worker</code></a> constructor, then data is piped to the parent thread's
 <a href="process.html#processstderr"><code>process.stderr</code></a> stream.</p>
+</div><div>
 <h4><code>worker.stdin</code><span><a class="mark" href="#workerstdin" id="workerstdin">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_stdin"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1553,6 +1956,7 @@ inside the worker thread. If <code>stderr: true</code> was not passed to the
 <p>If <code>stdin: true</code> was passed to the <a href="#class-worker"><code>Worker</code></a> constructor, this is a
 writable stream. The data written to this stream will be made available in
 the worker thread as <a href="process.html#processstdin"><code>process.stdin</code></a>.</p>
+</div><div>
 <h4><code>worker.stdout</code><span><a class="mark" href="#workerstdout" id="workerstdout">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_stdout"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1564,6 +1968,7 @@ the worker thread as <a href="process.html#processstdin"><code>process.stdin</co
 inside the worker thread. If <code>stdout: true</code> was not passed to the
 <a href="#class-worker"><code>Worker</code></a> constructor, then data is piped to the parent thread's
 <a href="process.html#processstdout"><code>process.stdout</code></a> stream.</p>
+</div><div>
 <h4><code>worker.terminate()</code><span><a class="mark" href="#workerterminate" id="workerterminate">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_terminate"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -1582,6 +1987,7 @@ inside the worker thread. If <code>stdout: true</code> was not passed to the
 <p>Stop all JavaScript execution in the worker thread as soon as possible.
 Returns a Promise for the exit code that is fulfilled when the
 <a href="#event-exit"><code>'exit'</code> event</a> is emitted.</p>
+</div><div>
 <h4><code>worker.threadId</code><span><a class="mark" href="#workerthreadid_1" id="workerthreadid_1">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_threadid_1"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1592,6 +1998,7 @@ Returns a Promise for the exit code that is fulfilled when the
 <p>An integer identifier for the referenced thread. Inside the worker thread,
 it is available as <a href="#workerthreadid"><code>require('node:worker_threads').threadId</code></a>.
 This value is unique for each <code>Worker</code> instance inside a single process.</p>
+</div><div>
 <h4><code>worker.unref()</code><span><a class="mark" href="#workerunref" id="workerunref">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_unref"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.5.0</span>
@@ -1599,7 +2006,15 @@ This value is unique for each <code>Worker</code> instance inside a single proce
 <p>Calling <code>unref()</code> on a worker allows the thread to exit if this is the only
 active handle in the event system. If the worker is already <code>unref()</code>ed calling
 <code>unref()</code> again has no effect.</p>
+</div><div>
+<h4><code>worker[Symbol.asyncDispose]()</code><span><a class="mark" href="#workersymbolasyncdispose" id="workersymbolasyncdispose">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_symbol_asyncdispose"></a></h4>
+<div class="api_metadata">
+<span>Added in: v22.18.0</span>
+</div>
+<p>Alias for <a href="#workerterminate"><code>worker.terminate()</code></a>.</p>
+</div>
 </section><section><h3>Notes<span><a class="mark" href="#notes" id="notes">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_notes"></a></h3>
+<div>
 <h4>Synchronous blocking of stdio<span><a class="mark" href="#synchronous-blocking-of-stdio" id="synchronous-blocking-of-stdio">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_synchronous_blocking_of_stdio"></a></h4>
 <p><code>Worker</code>s utilize message passing via <a href="worker_threads.html#class-messageport" class="type">&#x3C;MessagePort></a> to implement interactions
 with <code>stdio</code>. This means that <code>stdio</code> output originating from a <code>Worker</code> can
@@ -1635,13 +2050,14 @@ Node.js event loop.</p>
   <span class="hljs-comment">// This output will be blocked by the for loop in the main thread.</span>
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'foo'</span>);
 }</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Launching worker threads from preload scripts<span><a class="mark" href="#launching-worker-threads-from-preload-scripts" id="launching-worker-threads-from-preload-scripts">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_launching_worker_threads_from_preload_scripts"></a></h4>
 <p>Take care when launching worker threads from preload scripts (scripts loaded
 and run using the <code>-r</code> command line flag). Unless the <code>execArgv</code> option is
 explicitly set, new Worker threads automatically inherit the command line flags
 from the running process and will preload the same preload scripts as the main
 thread. If the preload script unconditionally launches a worker thread, every
-thread spawned will spawn another until the application crashes.</p></section>
+thread spawned will spawn another until the application crashes.</p></div></section>
         <!-- API END -->
       </div>
     </div>

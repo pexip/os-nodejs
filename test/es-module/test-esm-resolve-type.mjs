@@ -13,8 +13,10 @@ import path from 'path';
 import fs from 'fs';
 import url from 'url';
 import process from 'process';
+import { isMainThread } from 'worker_threads';
 
-if (!common.isMainThread) {
+
+if (!isMainThread) {
   common.skip(
     'test-esm-resolve-type.mjs: process.chdir is not available in Workers'
   );
@@ -38,6 +40,7 @@ try {
    * with the defaultResolver
    */
   [
+    [ '/es-modules/package-ends-node_modules/index.js', 'module' ],
     [ '/es-modules/package-type-module/index.js', 'module' ],
     [ '/es-modules/package-type-commonjs/index.js', 'commonjs' ],
     [ '/es-modules/package-without-type/index.js', null ],
@@ -185,7 +188,7 @@ try {
     [ 'qmod', 'index.js', 'imp.js', 'commonjs', 'module', 'module', '?k=v'],
     [ 'hmod', 'index.js', 'imp.js', 'commonjs', 'module', 'module', '#Key'],
     [ 'qhmod', 'index.js', 'imp.js', 'commonjs', 'module', 'module', '?k=v#h'],
-    [ 'ts-mod-com', 'index.js', 'imp.ts', 'module', 'commonjs', undefined],
+    [ 'ts-mod-com', 'index.js', 'imp.ts', 'module', 'commonjs', 'commonjs-typescript'],
   ].forEach((testVariant) => {
     const [
       moduleName,

@@ -133,7 +133,7 @@ inline AliasedFloat64Array& AsyncHooks::async_ids_stack() {
 }
 
 v8::Local<v8::Array> AsyncHooks::js_execution_async_resources() {
-  if (UNLIKELY(js_execution_async_resources_.IsEmpty())) {
+  if (js_execution_async_resources_.IsEmpty()) [[unlikely]] {
     js_execution_async_resources_.Reset(
         env()->isolate(), v8::Array::New(env()->isolate()));
   }
@@ -210,13 +210,14 @@ inline bool TickInfo::has_rejection_to_warn() const {
 }
 
 inline Environment* Environment::GetCurrent(v8::Isolate* isolate) {
-  if (UNLIKELY(!isolate->InContext())) return nullptr;
+  if (!isolate->InContext()) [[unlikely]]
+    return nullptr;
   v8::HandleScope handle_scope(isolate);
   return GetCurrent(isolate->GetCurrentContext());
 }
 
 inline Environment* Environment::GetCurrent(v8::Local<v8::Context> context) {
-  if (UNLIKELY(!ContextEmbedderTag::IsNodeContext(context))) {
+  if (!ContextEmbedderTag::IsNodeContext(context)) [[unlikely]] {
     return nullptr;
   }
   return static_cast<Environment*>(
@@ -365,10 +366,19 @@ inline void Environment::set_exiting(bool value) {
   exit_info_[kExiting] = value ? 1 : 0;
 }
 
+inline bool Environment::exiting() const {
+  return exit_info_[kExiting] == 1;
+}
+
 inline ExitCode Environment::exit_code(const ExitCode default_code) const {
   return exit_info_[kHasExitCode] == 0
              ? default_code
              : static_cast<ExitCode>(exit_info_[kExitCode]);
+}
+
+inline void Environment::set_exit_code(const ExitCode code) {
+  exit_info_[kExitCode] = static_cast<int>(code);
+  exit_info_[kHasExitCode] = 1;
 }
 
 inline AliasedInt32Array& Environment::exit_info() {
@@ -454,6 +464,10 @@ inline double Environment::get_default_trigger_async_id() {
   return default_trigger_async_id;
 }
 
+inline int64_t Environment::stack_trace_limit() const {
+  return isolate_data_->options()->stack_trace_limit;
+}
+
 inline std::shared_ptr<EnvironmentOptions> Environment::options() {
   return options_;
 }
@@ -468,6 +482,16 @@ inline const std::vector<std::string>& Environment::exec_argv() {
 
 inline const std::string& Environment::exec_path() const {
   return exec_path_;
+}
+
+inline CompileCacheHandler* Environment::compile_cache_handler() {
+  auto* result = compile_cache_handler_.get();
+  DCHECK_NOT_NULL(result);
+  return result;
+}
+
+inline bool Environment::use_compile_cache() const {
+  return compile_cache_handler_.get() != nullptr;
 }
 
 #if HAVE_INSPECTOR
@@ -650,7 +674,8 @@ inline bool Environment::owns_inspector() const {
 
 inline bool Environment::should_create_inspector() const {
   return (flags_ & EnvironmentFlags::kNoCreateInspector) == 0 &&
-         !options_->test_runner && !options_->watch_mode;
+         !(options_->test_runner && options_->test_isolation == "process") &&
+         !options_->watch_mode;
 }
 
 inline bool Environment::should_wait_for_inspector_frontend() const {
@@ -671,7 +696,8 @@ inline bool Environment::no_global_search_paths() const {
 }
 
 inline bool Environment::should_start_debug_signal_handler() const {
-  return (flags_ & EnvironmentFlags::kNoStartDebugSignalHandler) == 0;
+  return ((flags_ & EnvironmentFlags::kNoStartDebugSignalHandler) == 0) &&
+         !options_->disable_sigusr1;
 }
 
 inline bool Environment::no_browser_globals() const {
@@ -772,16 +798,18 @@ inline void Environment::ThrowRangeError(const char* errmsg) {
   ThrowError(v8::Exception::RangeError, errmsg);
 }
 
-inline void Environment::ThrowError(V8ExceptionConstructorOld fun,
-                                    const char* errmsg) {
-  v8::HandleScope handle_scope(isolate());
-  isolate()->ThrowException(fun(OneByteString(isolate(), errmsg)));
-}
-
-inline void Environment::ThrowError(V8ExceptionConstructorNew fun,
-                                    const char* errmsg) {
+inline void Environment::ThrowError(
+    v8::Local<v8::Value> (*fun)(v8::Local<v8::String>, v8::Local<v8::Value>),
+    const char* errmsg) {
   v8::HandleScope handle_scope(isolate());
   isolate()->ThrowException(fun(OneByteString(isolate(), errmsg), {}));
+}
+
+inline void Environment::ThrowStdErrException(std::error_code error_code,
+                                              const char* syscall,
+                                              const char* path) {
+  ThrowErrnoException(
+      error_code.value(), syscall, error_code.message().c_str(), path);
 }
 
 inline void Environment::ThrowErrnoException(int errorno,
@@ -900,6 +928,10 @@ inline bool Environment::is_in_heapsnapshot_heap_limit_callback() const {
   return is_in_heapsnapshot_heap_limit_callback_;
 }
 
+inline bool Environment::report_exclude_env() const {
+  return options_->report_exclude_env;
+}
+
 inline void Environment::AddHeapSnapshotNearHeapLimitCallback() {
   DCHECK(!heapsnapshot_near_heap_limit_callback_added_);
   heapsnapshot_near_heap_limit_callback_added_ = true;
@@ -914,6 +946,26 @@ inline void Environment::RemoveHeapSnapshotNearHeapLimitCallback(
                                         heap_limit);
 }
 
+inline void Environment::SetAsyncResourceContextFrame(
+    std::uintptr_t async_resource_handle,
+    v8::Global<v8::Value>&& context_frame) {
+  async_resource_context_frames_.emplace(
+      std::make_pair(async_resource_handle, std::move(context_frame)));
+}
+
+inline const v8::Global<v8::Value>& Environment::GetAsyncResourceContextFrame(
+    std::uintptr_t async_resource_handle) {
+  auto&& async_resource_context_frame =
+      async_resource_context_frames_.find(async_resource_handle);
+  CHECK_NE(async_resource_context_frame, async_resource_context_frames_.end());
+
+  return async_resource_context_frame->second;
+}
+
+inline void Environment::RemoveAsyncResourceContextFrame(
+    std::uintptr_t async_resource_handle) {
+  async_resource_context_frames_.erase(async_resource_handle);
+}
 }  // namespace node
 
 // These two files depend on each other. Including base_object-inl.h after this

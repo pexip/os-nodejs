@@ -7,7 +7,7 @@ Bug: https://github.com/nodejs/node/pull/28532
 Bug: https://github.com/nodejs/node/issues/30093
 --- a/node.gypi
 +++ b/node.gypi
-@@ -346,6 +346,9 @@
+@@ -371,6 +371,9 @@
        'libraries!': [
          '-lrt'
        ],
@@ -15,5 +15,5 @@ Bug: https://github.com/nodejs/node/issues/30093
 +        '-latomic'
 +      ]
      }],
-     [ 'OS in "freebsd linux"', {
+     [ 'OS in "freebsd linux openharmony"', {
        'ldflags': [ '-Wl,-z,relro',

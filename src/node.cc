@@ -20,7 +20,9 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "node.h"
+#include "node_config_file.h"
 #include "node_dotenv.h"
+#include "node_task_runner.h"
 
 // ========== local headers ==========
 
@@ -46,6 +48,7 @@
 #include "node_version.h"
 
 #if HAVE_OPENSSL
+#include "ncrypto.h"
 #include "node_crypto.h"
 #endif
 
@@ -116,6 +119,8 @@
 #include <unistd.h>        // STDIN_FILENO, STDERR_FILENO
 #endif
 
+#include "absl/synchronization/mutex.h"
+
 // ========== global C++ headers ==========
 
 #include <cerrno>
@@ -147,6 +152,9 @@ namespace per_process {
 // node_dotenv.h
 // Instance is used to store environment variables including NODE_OPTIONS.
 node::Dotenv dotenv_file = Dotenv();
+
+// node_config_file.h
+node::ConfigReader config_reader = ConfigReader();
 
 // node_revert.h
 // Bit flag used to track security reverts.
@@ -271,6 +279,10 @@ void Environment::InitializeDiagnostics() {
   if (options_->trace_uncaught)
     isolate_->SetCaptureStackTraceForUncaughtExceptions(true);
   if (options_->trace_atomics_wait) {
+    ProcessEmitDeprecationWarning(
+        Environment::GetCurrent(isolate_),
+        "The flag --trace-atomics-wait is deprecated.",
+        "DEP0165");
     isolate_->SetAtomicsWaitCallback(AtomicsWaitCallback, this);
     AddCleanupHook([](void* data) {
       Environment* env = static_cast<Environment*>(data);
@@ -374,7 +386,10 @@ MaybeLocal<Value> StartExecution(Environment* env, StartExecutionCallback cb) {
   }
 #endif
 
-  if (env->options()->has_env_file_string) {
+  // Ignore env file if we're in watch mode.
+  // Without it env is not updated when restarting child process.
+  // Child process has --watch flag removed, so it will load the file.
+  if (env->options()->has_env_file_string && !env->options()->watch_mode) {
     per_process::dotenv_file.SetEnvironment(env);
   }
 
@@ -538,7 +553,7 @@ void ResetSignalHandlers() {
       continue;
     act.sa_handler = (nr == SIGPIPE || nr == SIGXFSZ) ? SIG_IGN : SIG_DFL;
     if (act.sa_handler == SIG_DFL) {
-      // The only bad handler value we can inhert from before exec is SIG_IGN
+      // The only bad handler value we can inherit from before exec is SIG_IGN
       // (any actual function pointer is reset to SIG_DFL during exec).
       // If that's the case, we want to reset it back to SIG_DFL.
       // However, it's also possible that an embeder (or an LD_PRELOAD-ed
@@ -746,9 +761,11 @@ void ResetStdio() {
       while (err == -1 && errno == EINTR);  // NOLINT
       CHECK_EQ(0, pthread_sigmask(SIG_UNBLOCK, &sa, nullptr));
 
-      // Normally we expect err == 0. But if macOS App Sandbox is enabled,
-      // tcsetattr will fail with err == -1 and errno == EPERM.
-      CHECK_IMPLIES(err != 0, err == -1 && errno == EPERM);
+      // We don't check the return value of tcsetattr() because it can fail
+      // for a number of reasons, none that we can do anything about. Examples:
+      // - if macOS App Sandbox is enabled, tcsetattr fails with EPERM
+      // - if the process group is orphaned, e.g. because the user logged out,
+      //   tcsetattr fails with EIO
     }
   }
 #endif  // __POSIX__
@@ -790,12 +807,6 @@ static ExitCode ProcessGlobalArgsInternal(std::vector<std::string>* args,
     return ExitCode::kInvalidCommandLineArgument2;
   }
 
-  // TODO(aduh95): remove this when the harmony-import-assertions flag
-  // is removed in V8.
-  if (std::find(v8_args.begin(), v8_args.end(),
-                "--no-harmony-import-assertions") == v8_args.end()) {
-    v8_args.emplace_back("--harmony-import-assertions");
-  }
   // TODO(aduh95): remove this when the harmony-import-attributes flag
   // is removed in V8.
   if (std::find(v8_args.begin(),
@@ -803,6 +814,9 @@ static ExitCode ProcessGlobalArgsInternal(std::vector<std::string>* args,
                 "--no-harmony-import-attributes") == v8_args.end()) {
     v8_args.emplace_back("--harmony-import-attributes");
   }
+  // TODO(nicolo-ribaudo): remove this once V8 doesn't enable it by default
+  // anymore.
+  v8_args.emplace_back("--no-harmony-import-assertions");
 
   auto env_opts = per_process::cli_options->per_isolate->per_env;
   if (std::find(v8_args.begin(), v8_args.end(),
@@ -930,6 +944,36 @@ static ExitCode InitializeNodeWithArgsInternal(
     per_process::dotenv_file.AssignNodeOptionsIfAvailable(&node_options);
   }
 
+  std::string node_options_from_config;
+  if (auto path = per_process::config_reader.GetDataFromArgs(*argv)) {
+    switch (per_process::config_reader.ParseConfig(*path)) {
+      case ParseResult::Valid:
+        break;
+      case ParseResult::InvalidContent:
+        errors->push_back(std::string(*path) + ": invalid content");
+        break;
+      case ParseResult::FileError:
+        errors->push_back(std::string(*path) + ": not found");
+        break;
+      default:
+        UNREACHABLE();
+    }
+    node_options_from_config = per_process::config_reader.AssignNodeOptions();
+    // (@marco-ippolito) Avoid reparsing the env options again
+    std::vector<std::string> env_argv_from_config =
+        ParseNodeOptionsEnvVar(node_options_from_config, errors);
+
+    // Check the number of flags in NODE_OPTIONS from the config file
+    // matches the parsed ones. This avoid users from sneaking in
+    // additional flags.
+    if (env_argv_from_config.size() !=
+        per_process::config_reader.GetFlagsSize()) {
+      errors->emplace_back("The number of NODE_OPTIONS doesn't match "
+                           "the number of flags in the config file");
+    }
+    node_options += node_options_from_config;
+  }
+
 #if !defined(NODE_WITHOUT_NODE_OPTIONS)
   if (!(flags & ProcessInitializationFlags::kDisableNodeOptionsEnv)) {
     // NODE_OPTIONS environment variable is preferred over the file one.
@@ -1033,17 +1077,17 @@ int InitializeNodeWithArgs(std::vector<std::string>* argv,
       InitializeNodeWithArgsInternal(argv, exec_argv, errors, flags));
 }
 
-static std::unique_ptr<InitializationResultImpl>
+static std::shared_ptr<InitializationResultImpl>
 InitializeOncePerProcessInternal(const std::vector<std::string>& args,
                                  ProcessInitializationFlags::Flags flags =
                                      ProcessInitializationFlags::kNoFlags) {
-  auto result = std::make_unique<InitializationResultImpl>();
+  auto result = std::make_shared<InitializationResultImpl>();
   result->args_ = args;
 
   if (!(flags & ProcessInitializationFlags::kNoParseGlobalDebugVariables)) {
     // Initialized the enabled list for Debug() calls with system
     // environment variables.
-    per_process::enabled_debug_list.Parse(per_process::system_environment);
+    per_process::enabled_debug_list.Parse(nullptr);
   }
 
   PlatformInit(flags);
@@ -1065,6 +1109,14 @@ InitializeOncePerProcessInternal(const std::vector<std::string>& args,
     if (per_process::cli_options->use_largepages == "on" && lp_result != 0) {
       result->errors_.emplace_back(node::LargePagesError(lp_result));
     }
+  }
+
+  if (!per_process::cli_options->run.empty()) {
+    auto positional_args = task_runner::GetPositionalArgs(args);
+    result->early_return_ = true;
+    task_runner::RunTask(
+        result, per_process::cli_options->run, positional_args);
+    return result;
   }
 
   if (!(flags & ProcessInitializationFlags::kNoPrintHelpOrVersionOutput)) {
@@ -1171,10 +1223,7 @@ InitializeOncePerProcessInternal(const std::vector<std::string>& args,
     }
 #endif
     if (!crypto::ProcessFipsOptions()) {
-      // XXX: ERR_GET_REASON does not return something that is
-      // useful as an exit code at all.
-      result->exit_code_ =
-          static_cast<ExitCode>(ERR_GET_REASON(ERR_peek_error()));
+      result->exit_code_ = ExitCode::kGenericUserError;
       result->early_return_ = true;
       result->errors_.emplace_back(
           "OpenSSL error when trying to enable FIPS:\n" +
@@ -1183,14 +1232,14 @@ InitializeOncePerProcessInternal(const std::vector<std::string>& args,
     }
 
     // Ensure CSPRNG is properly seeded.
-    CHECK(crypto::CSPRNG(nullptr, 0).is_ok());
+    CHECK(ncrypto::CSPRNG(nullptr, 0));
 
     V8::SetEntropySource([](unsigned char* buffer, size_t length) {
       // V8 falls back to very weak entropy when this function fails
       // and /dev/urandom isn't available. That wouldn't be so bad if
       // the entropy was only used for Math.random() but it's also used for
       // hash table and address space layout randomization. Better to abort.
-      CHECK(crypto::CSPRNG(buffer, length).is_ok());
+      CHECK(ncrypto::CSPRNG(buffer, length));
       return true;
     });
 #endif  // !defined(OPENSSL_IS_BORINGSSL)
@@ -1210,6 +1259,11 @@ InitializeOncePerProcessInternal(const std::vector<std::string>& args,
 
   if (!(flags & ProcessInitializationFlags::kNoInitializeV8)) {
     V8::Initialize();
+
+    // Disable absl deadlock detection in V8 as it reports false-positive cases.
+    // TODO(legendecas): Replace this global disablement with case suppressions.
+    // https://github.com/nodejs/node-v8/issues/301
+    absl::SetMutexDeadlockDetectionMode(absl::OnDeadlockCycle::kIgnore);
   }
 
   if (!(flags & ProcessInitializationFlags::kNoInitializeCppgc)) {
@@ -1257,7 +1311,7 @@ InitializeOncePerProcessInternal(const std::vector<std::string>& args,
   return result;
 }
 
-std::unique_ptr<InitializationResult> InitializeOncePerProcess(
+std::shared_ptr<InitializationResult> InitializeOncePerProcess(
     const std::vector<std::string>& args,
     ProcessInitializationFlags::Flags flags) {
   return InitializeOncePerProcessInternal(args, flags);
@@ -1295,6 +1349,10 @@ void TearDownOncePerProcess() {
     // will never be fully cleaned up.
     per_process::v8_platform.Dispose();
   }
+
+#if HAVE_OPENSSL
+  crypto::CleanupCachedRootCertificates();
+#endif  // HAVE_OPENSSL
 }
 
 ExitCode GenerateAndWriteSnapshotData(const SnapshotData** snapshot_data_ptr,
@@ -1347,18 +1405,24 @@ ExitCode GenerateAndWriteSnapshotData(const SnapshotData** snapshot_data_ptr,
       return exit_code;
     }
   } else {
+    std::optional<std::string> builder_script_content;
     // Otherwise, load and run the specified builder script.
     std::unique_ptr<SnapshotData> generated_data =
         std::make_unique<SnapshotData>();
-    std::string builder_script_content;
-    int r = ReadFileSync(&builder_script_content, builder_script.c_str());
-    if (r != 0) {
-      FPrintF(stderr,
-              "Cannot read builder script %s for building snapshot. %s: %s",
-              builder_script,
-              uv_err_name(r),
-              uv_strerror(r));
-      return ExitCode::kGenericUserError;
+    if (builder_script != "node:generate_default_snapshot") {
+      builder_script_content = std::string();
+      int r = ReadFileSync(&(builder_script_content.value()),
+                           builder_script.c_str());
+      if (r != 0) {
+        FPrintF(stderr,
+                "Cannot read builder script %s for building snapshot. %s: %s\n",
+                builder_script,
+                uv_err_name(r),
+                uv_strerror(r));
+        return ExitCode::kGenericUserError;
+      }
+    } else {
+      snapshot_config.builder_script_path = std::nullopt;
     }
 
     exit_code = node::SnapshotBuilder::Generate(generated_data.get(),
@@ -1463,7 +1527,7 @@ static ExitCode StartInternal(int argc, char** argv) {
   // Hack around with the argv pointer. Used for process.title = "blah".
   argv = uv_setup_args(argc, argv);
 
-  std::unique_ptr<InitializationResultImpl> result =
+  std::shared_ptr<InitializationResultImpl> result =
       InitializeOncePerProcessInternal(
           std::vector<std::string>(argv, argv + argc));
   for (const std::string& error : result->errors()) {

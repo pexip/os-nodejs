@@ -8,7 +8,7 @@
       "introduced_in": "v16.4.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v20.19.2/lib/async_hooks.js\">lib/async_hooks.js</a></p>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v22.18.0/lib/async_hooks.js\">lib/async_hooks.js</a></p>",
       "modules": [
         {
           "textRaw": "Introduction",
@@ -36,7 +36,7 @@
               }
             ]
           },
-          "desc": "<p>This class creates stores that stay coherent through asynchronous operations.</p>\n<p>While you can create your own implementation on top of the <code>node:async_hooks</code>\nmodule, <code>AsyncLocalStorage</code> should be preferred as it is a performant and memory\nsafe implementation that involves significant optimizations that are non-obvious\nto implement.</p>\n<p>The following example uses <code>AsyncLocalStorage</code> to build a simple logger\nthat assigns IDs to incoming HTTP requests and includes them in messages\nlogged within each request.</p>\n<pre><code class=\"language-mjs\">import http from 'node:http';\nimport { AsyncLocalStorage } from 'node:async_hooks';\n\nconst asyncLocalStorage = new AsyncLocalStorage();\n\nfunction logWithId(msg) {\n  const id = asyncLocalStorage.getStore();\n  console.log(`${id !== undefined ? id : '-'}:`, msg);\n}\n\nlet idSeq = 0;\nhttp.createServer((req, res) => {\n  asyncLocalStorage.run(idSeq++, () => {\n    logWithId('start');\n    // Imagine any chain of async operations here\n    setImmediate(() => {\n      logWithId('finish');\n      res.end();\n    });\n  });\n}).listen(8080);\n\nhttp.get('http://localhost:8080');\nhttp.get('http://localhost:8080');\n// Prints:\n//   0: start\n//   1: start\n//   0: finish\n//   1: finish\n</code></pre>\n<pre><code class=\"language-cjs\">const http = require('node:http');\nconst { AsyncLocalStorage } = require('node:async_hooks');\n\nconst asyncLocalStorage = new AsyncLocalStorage();\n\nfunction logWithId(msg) {\n  const id = asyncLocalStorage.getStore();\n  console.log(`${id !== undefined ? id : '-'}:`, msg);\n}\n\nlet idSeq = 0;\nhttp.createServer((req, res) => {\n  asyncLocalStorage.run(idSeq++, () => {\n    logWithId('start');\n    // Imagine any chain of async operations here\n    setImmediate(() => {\n      logWithId('finish');\n      res.end();\n    });\n  });\n}).listen(8080);\n\nhttp.get('http://localhost:8080');\nhttp.get('http://localhost:8080');\n// Prints:\n//   0: start\n//   1: start\n//   0: finish\n//   1: finish\n</code></pre>\n<p>Each instance of <code>AsyncLocalStorage</code> maintains an independent storage context.\nMultiple instances can safely exist simultaneously without risk of interfering\nwith each other's data.</p>",
+          "desc": "<p>This class creates stores that stay coherent through asynchronous operations.</p>\n<p>While you can create your own implementation on top of the <code>node:async_hooks</code>\nmodule, <code>AsyncLocalStorage</code> should be preferred as it is a performant and memory\nsafe implementation that involves significant optimizations that are non-obvious\nto implement.</p>\n<p>The following example uses <code>AsyncLocalStorage</code> to build a simple logger\nthat assigns IDs to incoming HTTP requests and includes them in messages\nlogged within each request.</p>\n<pre><code class=\"language-mjs\">import http from 'node:http';\nimport { AsyncLocalStorage } from 'node:async_hooks';\n\nconst asyncLocalStorage = new AsyncLocalStorage();\n\nfunction logWithId(msg) {\n  const id = asyncLocalStorage.getStore();\n  console.log(`${id !== undefined ? id : '-'}:`, msg);\n}\n\nlet idSeq = 0;\nhttp.createServer((req, res) => {\n  asyncLocalStorage.run(idSeq++, () => {\n    logWithId('start');\n    // Imagine any chain of async operations here\n    setImmediate(() => {\n      logWithId('finish');\n      res.end();\n    });\n  });\n}).listen(8080);\n\nhttp.get('http://localhost:8080');\nhttp.get('http://localhost:8080');\n// Prints:\n//   0: start\n//   0: finish\n//   1: start\n//   1: finish\n</code></pre>\n<pre><code class=\"language-cjs\">const http = require('node:http');\nconst { AsyncLocalStorage } = require('node:async_hooks');\n\nconst asyncLocalStorage = new AsyncLocalStorage();\n\nfunction logWithId(msg) {\n  const id = asyncLocalStorage.getStore();\n  console.log(`${id !== undefined ? id : '-'}:`, msg);\n}\n\nlet idSeq = 0;\nhttp.createServer((req, res) => {\n  asyncLocalStorage.run(idSeq++, () => {\n    logWithId('start');\n    // Imagine any chain of async operations here\n    setImmediate(() => {\n      logWithId('finish');\n      res.end();\n    });\n  });\n}).listen(8080);\n\nhttp.get('http://localhost:8080');\nhttp.get('http://localhost:8080');\n// Prints:\n//   0: start\n//   0: finish\n//   1: start\n//   1: finish\n</code></pre>\n<p>Each instance of <code>AsyncLocalStorage</code> maintains an independent storage context.\nMultiple instances can safely exist simultaneously without risk of interfering\nwith each other's data.</p>",
           "classMethods": [
             {
               "textRaw": "Static method: `AsyncLocalStorage.bind(fn)`",
@@ -44,12 +44,17 @@
               "name": "bind",
               "meta": {
                 "added": [
-                  "v19.8.0"
+                  "v19.8.0",
+                  "v18.16.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.15.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57510",
+                    "description": "Marking the API stable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {
@@ -76,12 +81,17 @@
               "name": "snapshot",
               "meta": {
                 "added": [
-                  "v19.8.0"
+                  "v19.8.0",
+                  "v18.16.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.15.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57510",
+                    "description": "Marking the API stable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {

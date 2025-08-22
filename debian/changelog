@@ -1,3 +1,67 @@
+nodejs (22.18.0+dfsg+~cs22.17.2-2) experimental; urgency=medium
+
+  * Fix flag syntax. ಠಠ
+
+ -- Jérémy Lal <kapouer@melix.org>  Fri, 22 Aug 2025 19:51:04 +0200
+
+nodejs (22.18.0+dfsg+~cs22.17.2-1) experimental; urgency=medium
+
+  * New upstream version 22.18.0+dfsg+~cs22.17.2
+  * Fix tools/test.py patch
+  * watch: component @types/node with checksum. Closes: #1111724.
+  * Disable amaro for now
+
+ -- Jérémy Lal <kapouer@melix.org>  Fri, 22 Aug 2025 14:04:32 +0200
+
+nodejs (22.18.0+dfsg-1) experimental; urgency=medium
+
+  * New upstream version 22.18.0+dfsg
+  * Recommends: node-amaro (currently unavailable)
+    + patch: load it from /usr/share/nodejs/amaro/dist/index.js
+  * d/control: B-D libzstd-dev
+  * d/control: Bump libuv1 to 1.51.0
+  * d/copyright: maintenance, and exclude deps/zstd
+
+ -- Jérémy Lal <kapouer@melix.org>  Fri, 08 Aug 2025 10:44:50 +0200
+
+nodejs (22.14.0+dfsg-1) experimental; urgency=medium
+
+  * New upstream version 22.14.0+dfsg
+  * Patch: update tests to use system modules, not local deps
+  * Tests: skip tests using typescript support
+
+ -- Jérémy Lal <kapouer@melix.org>  Fri, 14 Mar 2025 10:19:59 +0100
+
+nodejs (22.12.0+dfsg-3) experimental; urgency=medium
+
+  * Breaks/Replaces libnode115 with libnode127
+
+ -- Jérémy Lal <kapouer@melix.org>  Wed, 11 Dec 2024 23:53:24 +0100
+
+nodejs (22.12.0+dfsg-2) experimental; urgency=medium
+
+  * Fix uv patch
+  * libnode ABI bump from 115 to 127
+
+ -- Jérémy Lal <kapouer@melix.org>  Wed, 11 Dec 2024 14:19:26 +0100
+
+nodejs (22.12.0+dfsg-1) experimental; urgency=medium
+
+  * New upstream version 22.12.0+dfsg
+  * Switch gbp.conf, control, and watch to 22.x
+  * dfsg-exclude sqlite, use system library, b-d sqlite3-dev.
+  * dfsg-exclude amaro, build without it - it requires swc.
+    This disables the ability to execute TypeScript files
+    using the --experimental-strip-types flag.
+  * Less intrusive patch for test timeout multiplier
+  * Extend no-deps.patch to ignore missing simdjson.gyp
+  * Depends icu >= 73.1
+  * Depends libuv1 >= 1.48, though 1.49 is needed.
+    Add interim patch to work around that.
+  * Depends node-undici >= 7.1.0
+
+ -- Jérémy Lal <kapouer@melix.org>  Tue, 10 Dec 2024 16:10:57 +0100
+
 nodejs (20.19.2+dfsg-1) unstable; urgency=medium
 
   * New upstream version 20.19.2+dfsg

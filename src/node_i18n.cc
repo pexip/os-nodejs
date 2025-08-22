@@ -66,6 +66,7 @@
 #include <unicode/utypes.h>
 #include <unicode/uvernum.h>
 #include <unicode/uversion.h>
+#include "nbytes.h"
 
 #ifdef NODE_HAVE_SMALL_ICU
 #include <unicode/udata.h>
@@ -109,9 +110,9 @@ MaybeLocal<Object> ToBufferEndian(Environment* env, MaybeStackBuffer<T>* buf) {
 
   static_assert(sizeof(T) == 1 || sizeof(T) == 2,
                 "Currently only one- or two-byte buffers are supported");
-  if (sizeof(T) > 1 && IsBigEndian()) {
+  if constexpr (sizeof(T) > 1 && IsBigEndian()) {
     SPREAD_BUFFER_ARG(ret.ToLocalChecked(), retbuf);
-    SwapBytes16(retbuf_data, retbuf_length);
+    CHECK(nbytes::SwapBytes16(retbuf_data, retbuf_length));
   }
 
   return ret;
@@ -126,8 +127,8 @@ void CopySourceBuffer(MaybeStackBuffer<UChar>* dest,
   dest->AllocateSufficientStorage(length_in_chars);
   char* dst = reinterpret_cast<char*>(**dest);
   memcpy(dst, data, length);
-  if (IsBigEndian()) {
-    SwapBytes16(dst, length);
+  if constexpr (IsBigEndian()) {
+    CHECK(nbytes::SwapBytes16(dst, length));
   }
 }
 
@@ -172,7 +173,7 @@ MaybeLocal<Object> TranscodeLatin1ToUcs2(Environment* env,
                                          const char* source,
                                          const size_t source_length,
                                          UErrorCode* status) {
-  MaybeStackBuffer<UChar> destbuf(source_length);
+  MaybeStackBuffer<char16_t> destbuf(source_length);
   auto actual_length =
       simdutf::convert_latin1_to_utf16le(source, source_length, destbuf.out());
   if (actual_length == 0) {
@@ -216,7 +217,7 @@ MaybeLocal<Object> TranscodeUcs2FromUtf8(Environment* env,
                                          UErrorCode* status) {
   size_t expected_utf16_length =
       simdutf::utf16_length_from_utf8(source, source_length);
-  MaybeStackBuffer<UChar> destbuf(expected_utf16_length);
+  MaybeStackBuffer<char16_t> destbuf(expected_utf16_length);
   auto actual_length =
       simdutf::convert_utf8_to_utf16le(source, source_length, destbuf.out());
 
@@ -326,9 +327,7 @@ void ICUErrorName(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   CHECK(args[0]->IsInt32());
   UErrorCode status = static_cast<UErrorCode>(args[0].As<Int32>()->Value());
-  args.GetReturnValue().Set(
-      String::NewFromUtf8(env->isolate(),
-                          u_errorName(status)).ToLocalChecked());
+  args.GetReturnValue().Set(OneByteString(env->isolate(), u_errorName(status)));
 }
 
 }  // anonymous namespace
@@ -505,8 +504,8 @@ void ConverterObject::Decode(const FunctionCallbackInfo<Value>& args) {
 
     char* value = reinterpret_cast<char*>(output) + beginning;
 
-    if (IsBigEndian()) {
-      SwapBytes16(value, length);
+    if constexpr (IsBigEndian()) {
+      CHECK(nbytes::SwapBytes16(value, length));
     }
 
     MaybeLocal<Value> encoded =

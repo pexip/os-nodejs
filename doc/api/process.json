@@ -7,7 +7,7 @@
       "name": "Process",
       "introduced_in": "v0.10.0",
       "type": "global",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v20.19.2/lib/process.js\">lib/process.js</a></p>\n<p>The <code>process</code> object provides information about, and control over, the current\nNode.js process.</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v22.18.0/lib/process.js\">lib/process.js</a></p>\n<p>The <code>process</code> object provides information about, and control over, the current\nNode.js process.</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n</code></pre>",
       "modules": [
         {
           "textRaw": "Process events",
@@ -149,7 +149,7 @@
               "name": "workerMessage",
               "meta": {
                 "added": [
-                  "v20.19.0"
+                  "v22.5.0"
                 ],
                 "changes": []
               },
@@ -275,7 +275,7 @@
                   "desc": "The rejected promise."
                 }
               ],
-              "desc": "<p>The <code>'unhandledRejection'</code> event is emitted whenever a <code>Promise</code> is rejected and\nno error handler is attached to the promise within a turn of the event loop.\nWhen programming with Promises, exceptions are encapsulated as \"rejected\npromises\". Rejections can be caught and handled using <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch\"><code>promise.catch()</code></a> and\nare propagated through a <code>Promise</code> chain. The <code>'unhandledRejection'</code> event is\nuseful for detecting and keeping track of promises that were rejected whose\nrejections have not yet been handled.</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n\nprocess.on('unhandledRejection', (reason, promise) => {\n  console.log('Unhandled Rejection at:', promise, 'reason:', reason);\n  // Application specific logging, throwing an error, or other logic here\n});\n\nsomePromise.then((res) => {\n  return reportToUser(JSON.pasre(res)); // Note the typo (`pasre`)\n}); // No `.catch()` or `.then()`\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n\nprocess.on('unhandledRejection', (reason, promise) => {\n  console.log('Unhandled Rejection at:', promise, 'reason:', reason);\n  // Application specific logging, throwing an error, or other logic here\n});\n\nsomePromise.then((res) => {\n  return reportToUser(JSON.pasre(res)); // Note the typo (`pasre`)\n}); // No `.catch()` or `.then()`\n</code></pre>\n<p>The following will also trigger the <code>'unhandledRejection'</code> event to be\nemitted:</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n\nfunction SomeResource() {\n  // Initially set the loaded status to a rejected promise\n  this.loaded = Promise.reject(new Error('Resource not yet loaded!'));\n}\n\nconst resource = new SomeResource();\n// no .catch or .then on resource.loaded for at least a turn\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n\nfunction SomeResource() {\n  // Initially set the loaded status to a rejected promise\n  this.loaded = Promise.reject(new Error('Resource not yet loaded!'));\n}\n\nconst resource = new SomeResource();\n// no .catch or .then on resource.loaded for at least a turn\n</code></pre>\n<p>In this example case, it is possible to track the rejection as a developer error\nas would typically be the case for other <code>'unhandledRejection'</code> events. To\naddress such failures, a non-operational\n<a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch\"><code>.catch(() => { })</code></a> handler may be attached to\n<code>resource.loaded</code>, which would prevent the <code>'unhandledRejection'</code> event from\nbeing emitted.</p>"
+              "desc": "<p>The <code>'unhandledRejection'</code> event is emitted whenever a <code>Promise</code> is rejected and\nno error handler is attached to the promise within a turn of the event loop.\nWhen programming with Promises, exceptions are encapsulated as \"rejected\npromises\". Rejections can be caught and handled using <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch\"><code>promise.catch()</code></a> and\nare propagated through a <code>Promise</code> chain. The <code>'unhandledRejection'</code> event is\nuseful for detecting and keeping track of promises that were rejected whose\nrejections have not yet been handled.</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n\nprocess.on('unhandledRejection', (reason, promise) => {\n  console.log('Unhandled Rejection at:', promise, 'reason:', reason);\n  // Application specific logging, throwing an error, or other logic here\n});\n\nsomePromise.then((res) => {\n  return reportToUser(JSON.pasre(res)); // Note the typo (`pasre`)\n}); // No `.catch()` or `.then()`\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n\nprocess.on('unhandledRejection', (reason, promise) => {\n  console.log('Unhandled Rejection at:', promise, 'reason:', reason);\n  // Application specific logging, throwing an error, or other logic here\n});\n\nsomePromise.then((res) => {\n  return reportToUser(JSON.pasre(res)); // Note the typo (`pasre`)\n}); // No `.catch()` or `.then()`\n</code></pre>\n<p>The following will also trigger the <code>'unhandledRejection'</code> event to be\nemitted:</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n\nfunction SomeResource() {\n  // Initially set the loaded status to a rejected promise\n  this.loaded = Promise.reject(new Error('Resource not yet loaded!'));\n}\n\nconst resource = new SomeResource();\n// no .catch or .then on resource.loaded for at least a turn\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n\nfunction SomeResource() {\n  // Initially set the loaded status to a rejected promise\n  this.loaded = Promise.reject(new Error('Resource not yet loaded!'));\n}\n\nconst resource = new SomeResource();\n// no .catch or .then on resource.loaded for at least a turn\n</code></pre>\n<p>In this example case, it is possible to track the rejection as a developer error\nas would typically be the case for other <code>'unhandledRejection'</code> events. To\naddress such failures, a non-operational\n<a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch\"><code>.catch(() => { })</code></a> handler may be attached to\n<code>resource.loaded</code>, which would prevent the <code>'unhandledRejection'</code> event from\nbeing emitted.</p>\n<p>If an <code>'unhandledRejection'</code> event is emitted but not handled it will\nbe raised as an uncaught exception. This alongside other behaviors of\n<code>'unhandledRejection'</code> events can changed via the <a href=\"cli.html#--unhandled-rejectionsmode\"><code>--unhandled-rejections</code></a> flag.</p>"
             },
             {
               "textRaw": "Event: `'warning'`",
@@ -369,7 +369,7 @@
         {
           "textRaw": "Exit codes",
           "name": "exit_codes",
-          "desc": "<p>Node.js will normally exit with a <code>0</code> status code when no more async\noperations are pending. The following status codes are used in other\ncases:</p>\n<ul>\n<li><code>1</code> <strong>Uncaught Fatal Exception</strong>: There was an uncaught exception,\nand it was not handled by a domain or an <a href=\"#event-uncaughtexception\"><code>'uncaughtException'</code></a> event\nhandler.</li>\n<li><code>2</code>: Unused (reserved by Bash for builtin misuse)</li>\n<li><code>3</code> <strong>Internal JavaScript Parse Error</strong>: The JavaScript source code\ninternal in the Node.js bootstrapping process caused a parse error. This\nis extremely rare, and generally can only happen during development\nof Node.js itself.</li>\n<li><code>4</code> <strong>Internal JavaScript Evaluation Failure</strong>: The JavaScript\nsource code internal in the Node.js bootstrapping process failed to\nreturn a function value when evaluated. This is extremely rare, and\ngenerally can only happen during development of Node.js itself.</li>\n<li><code>5</code> <strong>Fatal Error</strong>: There was a fatal unrecoverable error in V8.\nTypically a message will be printed to stderr with the prefix <code>FATAL ERROR</code>.</li>\n<li><code>6</code> <strong>Non-function Internal Exception Handler</strong>: There was an\nuncaught exception, but the internal fatal exception handler\nfunction was somehow set to a non-function, and could not be called.</li>\n<li><code>7</code> <strong>Internal Exception Handler Run-Time Failure</strong>: There was an\nuncaught exception, and the internal fatal exception handler\nfunction itself threw an error while attempting to handle it. This\ncan happen, for example, if an <a href=\"#event-uncaughtexception\"><code>'uncaughtException'</code></a> or\n<code>domain.on('error')</code> handler throws an error.</li>\n<li><code>8</code>: Unused. In previous versions of Node.js, exit code 8 sometimes\nindicated an uncaught exception.</li>\n<li><code>9</code> <strong>Invalid Argument</strong>: Either an unknown option was specified,\nor an option requiring a value was provided without a value.</li>\n<li><code>10</code> <strong>Internal JavaScript Run-Time Failure</strong>: The JavaScript\nsource code internal in the Node.js bootstrapping process threw an error\nwhen the bootstrapping function was called. This is extremely rare,\nand generally can only happen during development of Node.js itself.</li>\n<li><code>12</code> <strong>Invalid Debug Argument</strong>: The <code>--inspect</code> and/or <code>--inspect-brk</code>\noptions were set, but the port number chosen was invalid or unavailable.</li>\n<li><code>13</code> <strong>Unfinished Top-Level Await</strong>: <code>await</code> was used outside of a function\nin the top-level code, but the passed <code>Promise</code> never resolved.</li>\n<li><code>14</code> <strong>Snapshot Failure</strong>: Node.js was started to build a V8 startup\nsnapshot and it failed because certain requirements of the state of\nthe application were not met.</li>\n<li><code>>128</code> <strong>Signal Exits</strong>: If Node.js receives a fatal signal such as\n<code>SIGKILL</code> or <code>SIGHUP</code>, then its exit code will be <code>128</code> plus the\nvalue of the signal code. This is a standard POSIX practice, since\nexit codes are defined to be 7-bit integers, and signal exits set\nthe high-order bit, and then contain the value of the signal code.\nFor example, signal <code>SIGABRT</code> has value <code>6</code>, so the expected exit\ncode will be <code>128</code> + <code>6</code>, or <code>134</code>.</li>\n</ul>",
+          "desc": "<p>Node.js will normally exit with a <code>0</code> status code when no more async\noperations are pending. The following status codes are used in other\ncases:</p>\n<ul>\n<li><code>1</code> <strong>Uncaught Fatal Exception</strong>: There was an uncaught exception,\nand it was not handled by a domain or an <a href=\"#event-uncaughtexception\"><code>'uncaughtException'</code></a> event\nhandler.</li>\n<li><code>2</code>: Unused (reserved by Bash for builtin misuse)</li>\n<li><code>3</code> <strong>Internal JavaScript Parse Error</strong>: The JavaScript source code\ninternal in the Node.js bootstrapping process caused a parse error. This\nis extremely rare, and generally can only happen during development\nof Node.js itself.</li>\n<li><code>4</code> <strong>Internal JavaScript Evaluation Failure</strong>: The JavaScript\nsource code internal in the Node.js bootstrapping process failed to\nreturn a function value when evaluated. This is extremely rare, and\ngenerally can only happen during development of Node.js itself.</li>\n<li><code>5</code> <strong>Fatal Error</strong>: There was a fatal unrecoverable error in V8.\nTypically a message will be printed to stderr with the prefix <code>FATAL ERROR</code>.</li>\n<li><code>6</code> <strong>Non-function Internal Exception Handler</strong>: There was an\nuncaught exception, but the internal fatal exception handler\nfunction was somehow set to a non-function, and could not be called.</li>\n<li><code>7</code> <strong>Internal Exception Handler Run-Time Failure</strong>: There was an\nuncaught exception, and the internal fatal exception handler\nfunction itself threw an error while attempting to handle it. This\ncan happen, for example, if an <a href=\"#event-uncaughtexception\"><code>'uncaughtException'</code></a> or\n<code>domain.on('error')</code> handler throws an error.</li>\n<li><code>8</code>: Unused. In previous versions of Node.js, exit code 8 sometimes\nindicated an uncaught exception.</li>\n<li><code>9</code> <strong>Invalid Argument</strong>: Either an unknown option was specified,\nor an option requiring a value was provided without a value.</li>\n<li><code>10</code> <strong>Internal JavaScript Run-Time Failure</strong>: The JavaScript\nsource code internal in the Node.js bootstrapping process threw an error\nwhen the bootstrapping function was called. This is extremely rare,\nand generally can only happen during development of Node.js itself.</li>\n<li><code>12</code> <strong>Invalid Debug Argument</strong>: The <code>--inspect</code> and/or <code>--inspect-brk</code>\noptions were set, but the port number chosen was invalid or unavailable.</li>\n<li><code>13</code> <strong>Unsettled Top-Level Await</strong>: <code>await</code> was used outside of a function\nin the top-level code, but the passed <code>Promise</code> never settled.</li>\n<li><code>14</code> <strong>Snapshot Failure</strong>: Node.js was started to build a V8 startup\nsnapshot and it failed because certain requirements of the state of\nthe application were not met.</li>\n<li><code>>128</code> <strong>Signal Exits</strong>: If Node.js receives a fatal signal such as\n<code>SIGKILL</code> or <code>SIGHUP</code>, then its exit code will be <code>128</code> plus the\nvalue of the signal code. This is a standard POSIX practice, since\nexit codes are defined to be 7-bit integers, and signal exits set\nthe high-order bit, and then contain the value of the signal code.\nFor example, signal <code>SIGABRT</code> has value <code>6</code>, so the expected exit\ncode will be <code>128</code> + <code>6</code>, or <code>134</code>.</li>\n</ul>",
           "type": "module",
           "displayName": "Exit codes"
         }
@@ -391,6 +391,34 @@
             }
           ],
           "desc": "<p>The <code>process.abort()</code> method causes the Node.js process to exit immediately and\ngenerate a core file.</p>\n<p>This feature is not available in <a href=\"worker_threads.html#class-worker\"><code>Worker</code></a> threads.</p>"
+        },
+        {
+          "textRaw": "`process.availableMemory()`",
+          "type": "method",
+          "name": "availableMemory",
+          "meta": {
+            "added": [
+              "v22.0.0"
+            ],
+            "changes": [
+              {
+                "version": "v22.16.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57765",
+                "description": "Change stability index for this feature from Experimental to Stable."
+              }
+            ]
+          },
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "{number}",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "desc": "<p>Gets the amount of free memory that is still available to the process\n(in bytes).</p>\n<p>See <a href=\"https://docs.libuv.org/en/v1.x/misc.html#c.uv_get_available_memory\"><code>uv_get_available_memory</code></a> for more\ninformation.</p>"
         },
         {
           "textRaw": "`process.chdir(directory)`",
@@ -426,14 +454,17 @@
             ],
             "changes": [
               {
-                "version": "v20.13.0",
+                "version": "v22.16.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57765",
+                "description": "Change stability index for this feature from Experimental to Stable."
+              },
+              {
+                "version": "v22.0.0",
                 "pr-url": "https://github.com/nodejs/node/pull/52039",
                 "description": "Aligned return value with `uv_get_constrained_memory`."
               }
             ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "params": [
@@ -445,30 +476,6 @@
             }
           ],
           "desc": "<p>Gets the amount of memory available to the process (in bytes) based on\nlimits imposed by the OS. If there is no such constraint, or the constraint\nis unknown, <code>0</code> is returned.</p>\n<p>See <a href=\"https://docs.libuv.org/en/v1.x/misc.html#c.uv_get_constrained_memory\"><code>uv_get_constrained_memory</code></a> for more\ninformation.</p>"
-        },
-        {
-          "textRaw": "`process.availableMemory()`",
-          "type": "method",
-          "name": "availableMemory",
-          "meta": {
-            "added": [
-              "v20.13.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental",
-          "signatures": [
-            {
-              "params": [
-                {
-                  "textRaw": "{number}",
-                  "type": "number"
-                }
-              ]
-            }
-          ],
-          "desc": "<p>Gets the amount of free memory that is still available to the process\n(in bytes).</p>\n<p>See <a href=\"https://docs.libuv.org/en/v1.x/misc.html#c.uv_get_available_memory\"><code>uv_get_available_memory</code></a> for more\ninformation.</p>"
         },
         {
           "textRaw": "`process.cpuUsage([previousValue])`",
@@ -701,6 +708,45 @@
           ]
         },
         {
+          "textRaw": "`process.execve(file[, args[, env]])`",
+          "type": "method",
+          "name": "execve",
+          "meta": {
+            "added": [
+              "v22.15.0"
+            ],
+            "changes": []
+          },
+          "stability": 1,
+          "stabilityText": "Experimental",
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`file` {string} The name or path of the executable file to run.",
+                  "name": "file",
+                  "type": "string",
+                  "desc": "The name or path of the executable file to run."
+                },
+                {
+                  "textRaw": "`args` {string\\[]} List of string arguments. No argument can contain a null-byte (`\\u0000`).",
+                  "name": "args",
+                  "type": "string\\[]",
+                  "desc": "List of string arguments. No argument can contain a null-byte (`\\u0000`)."
+                },
+                {
+                  "textRaw": "`env` {Object} Environment key-value pairs. No key or value can contain a null-byte (`\\u0000`). **Default:** `process.env`.",
+                  "name": "env",
+                  "type": "Object",
+                  "default": "`process.env`",
+                  "desc": "Environment key-value pairs. No key or value can contain a null-byte (`\\u0000`)."
+                }
+              ]
+            }
+          ],
+          "desc": "<p>Replaces the current process with a new process.</p>\n<p>This is achieved by using the <code>execve</code> POSIX function and therefore no memory or other\nresources from the current process are preserved, except for the standard input,\nstandard output and standard error file descriptor.</p>\n<p>All other resources are discarded by the system when the processes are swapped, without triggering\nany exit or close events and without running any cleanup handler.</p>\n<p>This function will never return, unless an error occurred.</p>\n<p>This function is not available on Windows or IBM i.</p>"
+        },
+        {
           "textRaw": "`process.exit([code])`",
           "type": "method",
           "name": "exit",
@@ -732,6 +778,124 @@
           "desc": "<p>The <code>process.exit()</code> method instructs Node.js to terminate the process\nsynchronously with an exit status of <code>code</code>. If <code>code</code> is omitted, exit uses\neither the 'success' code <code>0</code> or the value of <code>process.exitCode</code> if it has been\nset. Node.js will not terminate until all the <a href=\"#event-exit\"><code>'exit'</code></a> event listeners are\ncalled.</p>\n<p>To exit with a 'failure' code:</p>\n<pre><code class=\"language-mjs\">import { exit } from 'node:process';\n\nexit(1);\n</code></pre>\n<pre><code class=\"language-cjs\">const { exit } = require('node:process');\n\nexit(1);\n</code></pre>\n<p>The shell that executed Node.js should see the exit code as <code>1</code>.</p>\n<p>Calling <code>process.exit()</code> will force the process to exit as quickly as possible\neven if there are still asynchronous operations pending that have not yet\ncompleted fully, including I/O operations to <code>process.stdout</code> and\n<code>process.stderr</code>.</p>\n<p>In most situations, it is not actually necessary to call <code>process.exit()</code>\nexplicitly. The Node.js process will exit on its own <em>if there is no additional\nwork pending</em> in the event loop. The <code>process.exitCode</code> property can be set to\ntell the process which exit code to use when the process exits gracefully.</p>\n<p>For instance, the following example illustrates a <em>misuse</em> of the\n<code>process.exit()</code> method that could lead to data printed to stdout being\ntruncated and lost:</p>\n<pre><code class=\"language-mjs\">import { exit } from 'node:process';\n\n// This is an example of what *not* to do:\nif (someConditionNotMet()) {\n  printUsageToStdout();\n  exit(1);\n}\n</code></pre>\n<pre><code class=\"language-cjs\">const { exit } = require('node:process');\n\n// This is an example of what *not* to do:\nif (someConditionNotMet()) {\n  printUsageToStdout();\n  exit(1);\n}\n</code></pre>\n<p>The reason this is problematic is because writes to <code>process.stdout</code> in Node.js\nare sometimes <em>asynchronous</em> and may occur over multiple ticks of the Node.js\nevent loop. Calling <code>process.exit()</code>, however, forces the process to exit\n<em>before</em> those additional writes to <code>stdout</code> can be performed.</p>\n<p>Rather than calling <code>process.exit()</code> directly, the code <em>should</em> set the\n<code>process.exitCode</code> and allow the process to exit naturally by avoiding\nscheduling any additional work for the event loop:</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n\n// How to properly set the exit code while letting\n// the process exit gracefully.\nif (someConditionNotMet()) {\n  printUsageToStdout();\n  process.exitCode = 1;\n}\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n\n// How to properly set the exit code while letting\n// the process exit gracefully.\nif (someConditionNotMet()) {\n  printUsageToStdout();\n  process.exitCode = 1;\n}\n</code></pre>\n<p>If it is necessary to terminate the Node.js process due to an error condition,\nthrowing an <em>uncaught</em> error and allowing the process to terminate accordingly\nis safer than calling <code>process.exit()</code>.</p>\n<p>In <a href=\"worker_threads.html#class-worker\"><code>Worker</code></a> threads, this function stops the current thread rather\nthan the current process.</p>"
         },
         {
+          "textRaw": "`process.finalization.register(ref, callback)`",
+          "type": "method",
+          "name": "register",
+          "meta": {
+            "added": [
+              "v22.5.0"
+            ],
+            "changes": []
+          },
+          "stability": 1,
+          "stabilityText": ".1 - Active Development",
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`ref` {Object | Function} The reference to the resource that is being tracked.",
+                  "name": "ref",
+                  "type": "Object | Function",
+                  "desc": "The reference to the resource that is being tracked."
+                },
+                {
+                  "textRaw": "`callback` {Function} The callback function to be called when the resource is finalized.",
+                  "name": "callback",
+                  "type": "Function",
+                  "desc": "The callback function to be called when the resource is finalized.",
+                  "options": [
+                    {
+                      "textRaw": "`ref` {Object | Function} The reference to the resource that is being tracked.",
+                      "name": "ref",
+                      "type": "Object | Function",
+                      "desc": "The reference to the resource that is being tracked."
+                    },
+                    {
+                      "textRaw": "`event` {string} The event that triggered the finalization. Defaults to 'exit'.",
+                      "name": "event",
+                      "type": "string",
+                      "desc": "The event that triggered the finalization. Defaults to 'exit'."
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "desc": "<p>This function registers a callback to be called when the process emits the <code>exit</code>\nevent if the <code>ref</code> object was not garbage collected. If the object <code>ref</code> was garbage collected\nbefore the <code>exit</code> event is emitted, the callback will be removed from the finalization registry,\nand it will not be called on process exit.</p>\n<p>Inside the callback you can release the resources allocated by the <code>ref</code> object.\nBe aware that all limitations applied to the <code>beforeExit</code> event are also applied to the <code>callback</code> function,\nthis means that there is a possibility that the callback will not be called under special circumstances.</p>\n<p>The idea of ​​this function is to help you free up resources when the starts process exiting,\nbut also let the object be garbage collected if it is no longer being used.</p>\n<p>Eg: you can register an object that contains a buffer, you want to make sure that buffer is released\nwhen the process exit, but if the object is garbage collected before the process exit, we no longer\nneed to release the buffer, so in this case we just remove the callback from the finalization registry.</p>\n<pre><code class=\"language-cjs\">const { finalization } = require('node:process');\n\n// Please make sure that the function passed to finalization.register()\n// does not create a closure around unnecessary objects.\nfunction onFinalize(obj, event) {\n  // You can do whatever you want with the object\n  obj.dispose();\n}\n\nfunction setup() {\n  // This object can be safely garbage collected,\n  // and the resulting shutdown function will not be called.\n  // There are no leaks.\n  const myDisposableObject = {\n    dispose() {\n      // Free your resources synchronously\n    },\n  };\n\n  finalization.register(myDisposableObject, onFinalize);\n}\n\nsetup();\n</code></pre>\n<pre><code class=\"language-mjs\">import { finalization } from 'node:process';\n\n// Please make sure that the function passed to finalization.register()\n// does not create a closure around unnecessary objects.\nfunction onFinalize(obj, event) {\n  // You can do whatever you want with the object\n  obj.dispose();\n}\n\nfunction setup() {\n  // This object can be safely garbage collected,\n  // and the resulting shutdown function will not be called.\n  // There are no leaks.\n  const myDisposableObject = {\n    dispose() {\n      // Free your resources synchronously\n    },\n  };\n\n  finalization.register(myDisposableObject, onFinalize);\n}\n\nsetup();\n</code></pre>\n<p>The code above relies on the following assumptions:</p>\n<ul>\n<li>arrow functions are avoided</li>\n<li>regular functions are recommended to be within the global context (root)</li>\n</ul>\n<p>Regular functions <em>could</em> reference the context where the <code>obj</code> lives, making the <code>obj</code> not garbage collectible.</p>\n<p>Arrow functions will hold the previous context. Consider, for example:</p>\n<pre><code class=\"language-js\">class Test {\n  constructor() {\n    finalization.register(this, (ref) => ref.dispose());\n\n    // Even something like this is highly discouraged\n    // finalization.register(this, () => this.dispose());\n  }\n  dispose() {}\n}\n</code></pre>\n<p>It is very unlikely (not impossible) that this object will be garbage collected,\nbut if it is not, <code>dispose</code> will be called when <code>process.exit</code> is called.</p>\n<p>Be careful and avoid relying on this feature for the disposal of critical resources,\nas it is not guaranteed that the callback will be called under all circumstances.</p>"
+        },
+        {
+          "textRaw": "`process.finalization.registerBeforeExit(ref, callback)`",
+          "type": "method",
+          "name": "registerBeforeExit",
+          "meta": {
+            "added": [
+              "v22.5.0"
+            ],
+            "changes": []
+          },
+          "stability": 1,
+          "stabilityText": ".1 - Active Development",
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`ref` {Object | Function} The reference to the resource that is being tracked.",
+                  "name": "ref",
+                  "type": "Object | Function",
+                  "desc": "The reference to the resource that is being tracked."
+                },
+                {
+                  "textRaw": "`callback` {Function} The callback function to be called when the resource is finalized.",
+                  "name": "callback",
+                  "type": "Function",
+                  "desc": "The callback function to be called when the resource is finalized.",
+                  "options": [
+                    {
+                      "textRaw": "`ref` {Object | Function} The reference to the resource that is being tracked.",
+                      "name": "ref",
+                      "type": "Object | Function",
+                      "desc": "The reference to the resource that is being tracked."
+                    },
+                    {
+                      "textRaw": "`event` {string} The event that triggered the finalization. Defaults to 'beforeExit'.",
+                      "name": "event",
+                      "type": "string",
+                      "desc": "The event that triggered the finalization. Defaults to 'beforeExit'."
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "desc": "<p>This function behaves exactly like the <code>register</code>, except that the callback will be called\nwhen the process emits the <code>beforeExit</code> event if <code>ref</code> object was not garbage collected.</p>\n<p>Be aware that all limitations applied to the <code>beforeExit</code> event are also applied to the <code>callback</code> function,\nthis means that there is a possibility that the callback will not be called under special circumstances.</p>"
+        },
+        {
+          "textRaw": "`process.finalization.unregister(ref)`",
+          "type": "method",
+          "name": "unregister",
+          "meta": {
+            "added": [
+              "v22.5.0"
+            ],
+            "changes": []
+          },
+          "stability": 1,
+          "stabilityText": ".1 - Active Development",
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`ref` {Object | Function} The reference to the resource that was registered previously.",
+                  "name": "ref",
+                  "type": "Object | Function",
+                  "desc": "The reference to the resource that was registered previously."
+                }
+              ]
+            }
+          ],
+          "desc": "<p>This function remove the register of the object from the finalization\nregistry, so the callback will not be called anymore.</p>\n<pre><code class=\"language-cjs\">const { finalization } = require('node:process');\n\n// Please make sure that the function passed to finalization.register()\n// does not create a closure around unnecessary objects.\nfunction onFinalize(obj, event) {\n  // You can do whatever you want with the object\n  obj.dispose();\n}\n\nfunction setup() {\n  // This object can be safely garbage collected,\n  // and the resulting shutdown function will not be called.\n  // There are no leaks.\n  const myDisposableObject = {\n    dispose() {\n      // Free your resources synchronously\n    },\n  };\n\n  finalization.register(myDisposableObject, onFinalize);\n\n  // Do something\n\n  myDisposableObject.dispose();\n  finalization.unregister(myDisposableObject);\n}\n\nsetup();\n</code></pre>\n<pre><code class=\"language-mjs\">import { finalization } from 'node:process';\n\n// Please make sure that the function passed to finalization.register()\n// does not create a closure around unnecessary objects.\nfunction onFinalize(obj, event) {\n  // You can do whatever you want with the object\n  obj.dispose();\n}\n\nfunction setup() {\n  // This object can be safely garbage collected,\n  // and the resulting shutdown function will not be called.\n  // There are no leaks.\n  const myDisposableObject = {\n    dispose() {\n      // Free your resources synchronously\n    },\n  };\n\n  // Please make sure that the function passed to finalization.register()\n  // does not create a closure around unnecessary objects.\n  function onFinalize(obj, event) {\n    // You can do whatever you want with the object\n    obj.dispose();\n  }\n\n  finalization.register(myDisposableObject, onFinalize);\n\n  // Do something\n\n  myDisposableObject.dispose();\n  finalization.unregister(myDisposableObject);\n}\n\nsetup();\n</code></pre>"
+        },
+        {
           "textRaw": "`process.getActiveResourcesInfo()`",
           "type": "method",
           "name": "getActiveResourcesInfo",
@@ -740,10 +904,14 @@
               "v17.3.0",
               "v16.14.0"
             ],
-            "changes": []
+            "changes": [
+              {
+                "version": "v22.16.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57765",
+                "description": "Change stability index for this feature from Experimental to Stable."
+              }
+            ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "return": {
@@ -762,7 +930,7 @@
           "name": "getBuiltinModule",
           "meta": {
             "added": [
-              "v20.16.0"
+              "v22.3.0"
             ],
             "changes": []
           },
@@ -888,7 +1056,7 @@
               "params": []
             }
           ],
-          "desc": "<p>The <code>process.getuid()</code> method returns the numeric user identity of the process.\n(See <a href=\"http://man7.org/linux/man-pages/man2/getuid.2.html\"><code>getuid(2)</code></a>.)</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n\nif (process.getuid) {\n  console.log(`Current uid: ${process.getuid()}`);\n}\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n\nif (process.getuid) {\n  console.log(`Current uid: ${process.getuid()}`);\n}\n</code></pre>\n<p>This function is only available on POSIX platforms (i.e. not Windows or\nAndroid).</p>"
+          "desc": "<p>The <code>process.getuid()</code> method returns the numeric user identity of the process.\n(See <a href=\"http://man7.org/linux/man-pages/man2/getuid.2.html\"><code>getuid(2)</code></a>.)</p>\n<pre><code class=\"language-mjs\">import process from 'node:process';\n\nif (process.getuid) {\n  console.log(`Current uid: ${process.getuid()}`);\n}\n</code></pre>\n<pre><code class=\"language-cjs\">const process = require('node:process');\n\nif (process.getuid) {\n  console.log(`Current uid: ${process.getuid()}`);\n}\n</code></pre>\n<p>This function not available on Windows.</p>"
         },
         {
           "textRaw": "`process.hasUncaughtExceptionCaptureCallback()`",
@@ -1032,6 +1200,7 @@
           "name": "loadEnvFile",
           "meta": {
             "added": [
+              "v21.7.0",
               "v20.12.0"
             ],
             "changes": []
@@ -1149,7 +1318,7 @@
             ],
             "changes": [
               {
-                "version": "v20.18.0",
+                "version": "v22.7.0",
                 "pr-url": "https://github.com/nodejs/node/pull/51280",
                 "description": "Changed stability to Legacy."
               },
@@ -1194,6 +1363,32 @@
               "displayName": "When to use `queueMicrotask()` vs. `process.nextTick()`"
             }
           ]
+        },
+        {
+          "textRaw": "`process.ref(maybeRefable)`",
+          "type": "method",
+          "name": "ref",
+          "meta": {
+            "added": [
+              "v22.14.0"
+            ],
+            "changes": []
+          },
+          "stability": 1,
+          "stabilityText": "Experimental",
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`maybeRefable` {any} An object that may be \"refable\".",
+                  "name": "maybeRefable",
+                  "type": "any",
+                  "desc": "An object that may be \"refable\"."
+                }
+              ]
+            }
+          ],
+          "desc": "<p>An object is \"refable\" if it implements the Node.js \"Refable protocol\".\nSpecifically, this means that the object implements the <code>Symbol.for('nodejs.ref')</code>\nand <code>Symbol.for('nodejs.unref')</code> methods. \"Ref'd\" objects will keep the Node.js\nevent loop alive, while \"unref'd\" objects will not. Historically, this was\nimplemented by using <code>ref()</code> and <code>unref()</code> methods directly on the objects.\nThis pattern, however, is being deprecated in favor of the \"Refable protocol\"\nin order to better support Web Platform API types whose APIs cannot be modified\nto add <code>ref()</code> and <code>unref()</code> methods but still need to support that behavior.</p>"
         },
         {
           "textRaw": "`process.resourceUsage()`",
@@ -1499,7 +1694,7 @@
             "changes": []
           },
           "stability": 1,
-          "stabilityText": "Experimental",
+          "stabilityText": "Experimental: Use [`module.setSourceMapsSupport()`][] instead.",
           "signatures": [
             {
               "params": [
@@ -1511,7 +1706,7 @@
               ]
             }
           ],
-          "desc": "<p>This function enables or disables the <a href=\"https://sourcemaps.info/spec.html\">Source Map v3</a> support for\nstack traces.</p>\n<p>It provides same features as launching Node.js process with commandline options\n<code>--enable-source-maps</code>.</p>\n<p>Only source maps in JavaScript files that are loaded after source maps has been\nenabled will be parsed and loaded.</p>"
+          "desc": "<p>This function enables or disables the <a href=\"https://tc39.es/ecma426/\">Source Map</a> support for\nstack traces.</p>\n<p>It provides same features as launching Node.js process with commandline options\n<code>--enable-source-maps</code>.</p>\n<p>Only source maps in JavaScript files that are loaded after source maps has been\nenabled will be parsed and loaded.</p>\n<p>This implies calling <code>module.setSourceMapsSupport()</code> with an option\n<code>{ nodeModules: true, generatedCode: true }</code>.</p>"
         },
         {
           "textRaw": "`process.setUncaughtExceptionCaptureCallback(fn)`",
@@ -1586,6 +1781,32 @@
             }
           ],
           "desc": "<p><code>process.umask(mask)</code> sets the Node.js process's file mode creation mask. Child\nprocesses inherit the mask from the parent process. Returns the previous mask.</p>\n<pre><code class=\"language-mjs\">import { umask } from 'node:process';\n\nconst newmask = 0o022;\nconst oldmask = umask(newmask);\nconsole.log(\n  `Changed umask from ${oldmask.toString(8)} to ${newmask.toString(8)}`,\n);\n</code></pre>\n<pre><code class=\"language-cjs\">const { umask } = require('node:process');\n\nconst newmask = 0o022;\nconst oldmask = umask(newmask);\nconsole.log(\n  `Changed umask from ${oldmask.toString(8)} to ${newmask.toString(8)}`,\n);\n</code></pre>\n<p>In <a href=\"worker_threads.html#class-worker\"><code>Worker</code></a> threads, <code>process.umask(mask)</code> will throw an exception.</p>"
+        },
+        {
+          "textRaw": "`process.unref(maybeRefable)`",
+          "type": "method",
+          "name": "unref",
+          "meta": {
+            "added": [
+              "v22.14.0"
+            ],
+            "changes": []
+          },
+          "stability": 1,
+          "stabilityText": "Experimental",
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`maybeUnfefable` {any} An object that may be \"unref'd\".",
+                  "name": "maybeUnfefable",
+                  "type": "any",
+                  "desc": "An object that may be \"unref'd\"."
+                }
+              ]
+            }
+          ],
+          "desc": "<p>An object is \"unrefable\" if it implements the Node.js \"Refable protocol\".\nSpecifically, this means that the object implements the <code>Symbol.for('nodejs.ref')</code>\nand <code>Symbol.for('nodejs.unref')</code> methods. \"Ref'd\" objects will keep the Node.js\nevent loop alive, while \"unref'd\" objects will not. Historically, this was\nimplemented by using <code>ref()</code> and <code>unref()</code> methods directly on the objects.\nThis pattern, however, is being deprecated in favor of the \"Refable protocol\"\nin order to better support Web Platform API types whose APIs cannot be modified\nto add <code>ref()</code> and <code>unref()</code> methods but still need to support that behavior.</p>"
         },
         {
           "textRaw": "`process.uptime()`",
@@ -1734,7 +1955,7 @@
               }
             ]
           },
-          "desc": "<p>The <code>process.config</code> property returns a frozen <code>Object</code> containing the\nJavaScript representation of the configure options used to compile the current\nNode.js executable. This is the same as the <code>config.gypi</code> file that was produced\nwhen running the <code>./configure</code> script.</p>\n<p>An example of the possible output looks like:</p>\n<!-- eslint-skip -->\n<pre><code class=\"language-js\">{\n  target_defaults:\n   { cflags: [],\n     default_configuration: 'Release',\n     defines: [],\n     include_dirs: [],\n     libraries: [] },\n  variables:\n   {\n     host_arch: 'x64',\n     napi_build_version: 5,\n     node_install_npm: 'true',\n     node_prefix: '',\n     node_shared_cares: 'false',\n     node_shared_http_parser: 'false',\n     node_shared_libuv: 'false',\n     node_shared_zlib: 'false',\n     node_use_openssl: 'true',\n     node_shared_openssl: 'false',\n     strict_aliasing: 'true',\n     target_arch: 'x64',\n     v8_use_snapshot: 1\n   }\n}\n</code></pre>"
+          "desc": "<p>The <code>process.config</code> property returns a frozen <code>Object</code> containing the\nJavaScript representation of the configure options used to compile the current\nNode.js executable. This is the same as the <code>config.gypi</code> file that was produced\nwhen running the <code>./configure</code> script.</p>\n<p>An example of the possible output looks like:</p>\n<!-- eslint-skip -->\n<pre><code class=\"language-js\">{\n  target_defaults:\n   { cflags: [],\n     default_configuration: 'Release',\n     defines: [],\n     include_dirs: [],\n     libraries: [] },\n  variables:\n   {\n     host_arch: 'x64',\n     napi_build_version: 5,\n     node_install_npm: 'true',\n     node_prefix: '',\n     node_shared_cares: 'false',\n     node_shared_http_parser: 'false',\n     node_shared_libuv: 'false',\n     node_shared_zlib: 'false',\n     node_use_openssl: 'true',\n     node_shared_openssl: 'false',\n     target_arch: 'x64',\n     v8_use_snapshot: 1\n   }\n}\n</code></pre>"
         },
         {
           "textRaw": "`connected` {boolean}",
@@ -1824,7 +2045,7 @@
             ]
           },
           "default": "`undefined`",
-          "desc": "<p>A number which will be the process exit code, when the process either\nexits gracefully, or is exited via <a href=\"#processexitcode\"><code>process.exit()</code></a> without specifying\na code.</p>\n<p>Specifying a code to <a href=\"#processexitcode\"><code>process.exit(code)</code></a> will override any\nprevious setting of <code>process.exitCode</code>.</p>",
+          "desc": "<p>A number which will be the process exit code, when the process either\nexits gracefully, or is exited via <a href=\"#processexitcode\"><code>process.exit()</code></a> without specifying\na code.</p>\n<p>The value of <code>process.exitCode</code> can be updated by either assigning a value to\n<code>process.exitCode</code> or by passing an argument to <a href=\"#processexitcode\"><code>process.exit()</code></a>:</p>\n<pre><code class=\"language-console\">$ node -e 'process.exitCode = 9'; echo $?\n9\n$ node -e 'process.exit(42)'; echo $?\n42\n$ node -e 'process.exitCode = 9; process.exit(42)'; echo $?\n42\n</code></pre>\n<p>The value can also be set implicitly by Node.js when unrecoverable errors occur (e.g.\nsuch as the encountering of an unsettled top-level await). However explicit\nmanipulations of the exit code always take precedence over implicit ones:</p>\n<pre><code class=\"language-console\">$ node --input-type=module -e 'await new Promise(() => {})'; echo $?\n13\n$ node --input-type=module -e 'process.exitCode = 9; await new Promise(() => {})'; echo $?\n9\n</code></pre>",
           "shortDesc": "The exit code. For string type, only integer strings (e.g.,'1') are allowed."
         },
         {
@@ -1871,9 +2092,14 @@
             "added": [
               "v0.5.3"
             ],
+            "deprecated": [
+              "v22.13.0"
+            ],
             "changes": []
           },
-          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for IPv6.</p>"
+          "stability": 0,
+          "stabilityText": "Deprecated. This property is always true, and any checks based on it are redundant.",
+          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for IPv6.</p>\n<p>Since all Node.js builds have IPv6 support, this value is always <code>true</code>.</p>"
         },
         {
           "textRaw": "`require_module` {boolean}",
@@ -1881,7 +2107,7 @@
           "name": "require_module",
           "meta": {
             "added": [
-              "v20.19.0"
+              "v22.10.0"
             ],
             "changes": []
           },
@@ -1907,9 +2133,14 @@
             "added": [
               "v4.8.0"
             ],
+            "deprecated": [
+              "v22.13.0"
+            ],
             "changes": []
           },
-          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for ALPN in TLS.</p>\n<hr>"
+          "stability": 0,
+          "stabilityText": "Deprecated. Use `process.features.tls` instead.",
+          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for ALPN in TLS.</p>\n<p>In Node.js 11.0.0 and later versions, the OpenSSL dependencies feature unconditional ALPN support.\nThis value is therefore identical to that of <code>process.features.tls</code>.</p>"
         },
         {
           "textRaw": "`tls_ocsp` {boolean}",
@@ -1919,9 +2150,14 @@
             "added": [
               "v0.11.13"
             ],
+            "deprecated": [
+              "v22.13.0"
+            ],
             "changes": []
           },
-          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for OCSP in TLS.</p>\n<hr>"
+          "stability": 0,
+          "stabilityText": "Deprecated. Use `process.features.tls` instead.",
+          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for OCSP in TLS.</p>\n<p>In Node.js 11.0.0 and later versions, the OpenSSL dependencies feature unconditional OCSP support.\nThis value is therefore identical to that of <code>process.features.tls</code>.</p>"
         },
         {
           "textRaw": "`tls_sni` {boolean}",
@@ -1931,9 +2167,28 @@
             "added": [
               "v0.5.3"
             ],
+            "deprecated": [
+              "v22.13.0"
+            ],
             "changes": []
           },
-          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for SNI in TLS.</p>\n<hr>"
+          "stability": 0,
+          "stabilityText": "Deprecated. Use `process.features.tls` instead.",
+          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for SNI in TLS.</p>\n<p>In Node.js 11.0.0 and later versions, the OpenSSL dependencies feature unconditional SNI support.\nThis value is therefore identical to that of <code>process.features.tls</code>.</p>"
+        },
+        {
+          "textRaw": "`typescript` {boolean|string}",
+          "type": "boolean|string",
+          "name": "typescript",
+          "meta": {
+            "added": [
+              "v22.10.0"
+            ],
+            "changes": []
+          },
+          "stability": 1,
+          "stabilityText": ".1 - Active development",
+          "desc": "<p>A value that is <code>\"strip\"</code> by default,\n<code>\"transform\"</code> if Node.js is run with <code>--experimental-transform-types</code>, and <code>false</code> if\nNode.js is run with <code>--no-experimental-strip-types</code>.</p>"
         },
         {
           "textRaw": "`uv` {boolean}",
@@ -1943,9 +2198,14 @@
             "added": [
               "v0.5.3"
             ],
+            "deprecated": [
+              "v22.13.0"
+            ],
             "changes": []
           },
-          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for libuv.\nSince it's currently not possible to build Node.js without libuv, this value is always <code>true</code>.</p>"
+          "stability": 0,
+          "stabilityText": "Deprecated. This property is always true, and any checks based on it are redundant.",
+          "desc": "<p>A boolean value that is <code>true</code> if the current Node.js build includes support for libuv.</p>\n<p>Since it's not possible to build Node.js without libuv, this value is always <code>true</code>.</p>"
         },
         {
           "textRaw": "`mainModule` {Object}",
@@ -1986,7 +2246,7 @@
             ],
             "changes": []
           },
-          "desc": "<p>This API is available through the <a href=\"cli.html#--experimental-permission\"><code>--experimental-permission</code></a> flag.</p>\n<p><code>process.permission</code> is an object whose methods are used to manage permissions\nfor the current process. Additional documentation is available in the\n<a href=\"permissions.html#permission-model\">Permission Model</a>.</p>",
+          "desc": "<p>This API is available through the <a href=\"cli.html#--permission\"><code>--permission</code></a> flag.</p>\n<p><code>process.permission</code> is an object whose methods are used to manage permissions\nfor the current process. Additional documentation is available in the\n<a href=\"permissions.html#permission-model\">Permission Model</a>.</p>",
           "methods": [
             {
               "textRaw": "`process.permission.has(scope[, reference])`",
@@ -2219,6 +2479,18 @@
               "desc": "<p>If <code>true</code>, a diagnostic report is generated on uncaught exception.</p>\n<pre><code class=\"language-mjs\">import { report } from 'node:process';\n\nconsole.log(`Report on exception: ${report.reportOnUncaughtException}`);\n</code></pre>\n<pre><code class=\"language-cjs\">const { report } = require('node:process');\n\nconsole.log(`Report on exception: ${report.reportOnUncaughtException}`);\n</code></pre>"
             },
             {
+              "textRaw": "`excludeEnv` {boolean}",
+              "type": "boolean",
+              "name": "excludeEnv",
+              "meta": {
+                "added": [
+                  "v22.13.0"
+                ],
+                "changes": []
+              },
+              "desc": "<p>If <code>true</code>, a diagnostic report is generated without the environment variables.</p>"
+            },
+            {
               "textRaw": "`signal` {string}",
               "type": "string",
               "name": "signal",
@@ -2332,13 +2604,14 @@
           "name": "sourceMapsEnabled",
           "meta": {
             "added": [
-              "v20.7.0"
+              "v20.7.0",
+              "v18.19.0"
             ],
             "changes": []
           },
           "stability": 1,
-          "stabilityText": "Experimental",
-          "desc": "<p>The <code>process.sourceMapsEnabled</code> property returns whether the\n<a href=\"https://sourcemaps.info/spec.html\">Source Map v3</a> support for stack traces is enabled.</p>"
+          "stabilityText": "Experimental: Use [`module.getSourceMapsSupport()`][] instead.",
+          "desc": "<p>The <code>process.sourceMapsEnabled</code> property returns whether the\n<a href=\"https://tc39.es/ecma426/\">Source Map</a> support for stack traces is enabled.</p>"
         },
         {
           "textRaw": "`stderr` {Stream}",
@@ -2460,7 +2733,7 @@
               }
             ]
           },
-          "desc": "<p>The <code>process.versions</code> property returns an object listing the version strings of\nNode.js and its dependencies. <code>process.versions.modules</code> indicates the current\nABI version, which is increased whenever a C++ API changes. Node.js will refuse\nto load modules that were compiled against a different module ABI version.</p>\n<pre><code class=\"language-mjs\">import { versions } from 'node:process';\n\nconsole.log(versions);\n</code></pre>\n<pre><code class=\"language-cjs\">const { versions } = require('node:process');\n\nconsole.log(versions);\n</code></pre>\n<p>Will generate an object similar to:</p>\n<pre><code class=\"language-console\">{ node: '23.0.0',\n  acorn: '8.11.3',\n  ada: '2.7.8',\n  ares: '1.28.1',\n  base64: '0.5.2',\n  brotli: '1.1.0',\n  cjs_module_lexer: '1.2.2',\n  cldr: '45.0',\n  icu: '75.1',\n  llhttp: '9.2.1',\n  modules: '127',\n  napi: '9',\n  nghttp2: '1.61.0',\n  nghttp3: '0.7.0',\n  ngtcp2: '1.3.0',\n  openssl: '3.0.13+quic',\n  simdjson: '3.8.0',\n  simdutf: '5.2.4',\n  tz: '2024a',\n  undici: '6.13.0',\n  unicode: '15.1',\n  uv: '1.48.0',\n  uvwasi: '0.0.20',\n  v8: '12.4.254.14-node.11',\n  zlib: '1.3.0.1-motley-7d77fb7' }\n</code></pre>"
+          "desc": "<p>The <code>process.versions</code> property returns an object listing the version strings of\nNode.js and its dependencies. <code>process.versions.modules</code> indicates the current\nABI version, which is increased whenever a C++ API changes. Node.js will refuse\nto load modules that were compiled against a different module ABI version.</p>\n<pre><code class=\"language-mjs\">import { versions } from 'node:process';\n\nconsole.log(versions);\n</code></pre>\n<pre><code class=\"language-cjs\">const { versions } = require('node:process');\n\nconsole.log(versions);\n</code></pre>\n<p>Will generate an object similar to:</p>\n<pre><code class=\"language-console\">{ node: '23.0.0',\n  acorn: '8.11.3',\n  ada: '2.7.8',\n  ares: '1.28.1',\n  base64: '0.5.2',\n  brotli: '1.1.0',\n  cjs_module_lexer: '1.2.2',\n  cldr: '45.0',\n  icu: '75.1',\n  llhttp: '9.2.1',\n  modules: '127',\n  napi: '9',\n  nghttp2: '1.61.0',\n  nghttp3: '0.7.0',\n  ngtcp2: '1.3.0',\n  openssl: '3.0.13+quic',\n  simdjson: '3.8.0',\n  simdutf: '5.2.4',\n  sqlite: '3.46.0',\n  tz: '2024a',\n  undici: '6.13.0',\n  unicode: '15.1',\n  uv: '1.48.0',\n  uvwasi: '0.0.20',\n  v8: '12.4.254.14-node.11',\n  zlib: '1.3.0.1-motley-7d77fb7' }\n</code></pre>"
         }
       ]
     }

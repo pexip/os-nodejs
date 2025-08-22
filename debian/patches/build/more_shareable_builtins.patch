@@ -5,25 +5,22 @@ Author: Jérémy Lal <kapouer@melix.org>
 
 --- a/configure.py
 +++ b/configure.py
-@@ -59,7 +59,10 @@
- 
+@@ -61,6 +61,9 @@
  shareable_builtins = {'cjs_module_lexer/lexer': 'deps/cjs-module-lexer/lexer.js',
                       'cjs_module_lexer/dist/lexer': 'deps/cjs-module-lexer/dist/lexer.js',
--                     'undici/undici': 'deps/undici/undici.js'
-+                     'undici/undici': 'deps/undici/undici.js',
+                      'undici/undici': 'deps/undici/undici.js',
 +                     'acorn': 'deps/acorn/acorn/dist/acorn.js',
 +                     'acorn_walk': 'deps/acorn/acorn-walk/dist/walk.js',
-+                     'minimatch': 'deps/minimatch/index.js'
++                     'minimatch': 'deps/minimatch/index.js',
+                      'amaro/dist/index': 'deps/amaro/dist/index.js'
  }
  
- # create option groups
 --- a/src/node_builtins.cc
 +++ b/src/node_builtins.cc
-@@ -51,6 +51,25 @@
-   AddExternalizedBuiltin("internal/deps/undici/undici",
+@@ -52,6 +52,24 @@
                           STRINGIFY(NODE_SHARED_BUILTIN_UNDICI_UNDICI_PATH));
  #endif  // NODE_SHARED_BUILTIN_UNDICI_UNDICI_PATH
-+
+ 
 +#ifdef NODE_SHARED_BUILTIN_ACORN_PATH
 +  AddExternalizedBuiltin(
 +    "internal/deps/acorn/acorn/dist/acorn",
@@ -42,12 +39,12 @@ Author: Jérémy Lal <kapouer@melix.org>
 +    STRINGIFY(NODE_SHARED_BUILTIN_MINIMATCH_PATH));
 +#endif  // NODE_SHARED_BUILTIN_MINIMATCH_PATH
 +
- }
- 
- bool BuiltinLoader::Exists(const char* id) {
+ #if HAVE_AMARO
+ #ifdef NODE_SHARED_BUILTIN_AMARO_DIST_INDEX_PATH
+   AddExternalizedBuiltin("internal/deps/amaro/dist/index",
 --- a/node.gyp
 +++ b/node.gyp
-@@ -52,9 +52,6 @@
+@@ -56,9 +56,6 @@
        'deps/v8/tools/tickprocessor.mjs',
        'deps/v8/tools/sourcemap.mjs',
        'deps/v8/tools/tickprocessor-driver.mjs',

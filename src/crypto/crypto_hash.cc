@@ -11,13 +11,17 @@
 
 namespace node {
 
+using ncrypto::EVPMDCtxPointer;
+using ncrypto::MarkPopErrorOnReturn;
 using v8::Context;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::Int32;
 using v8::Isolate;
 using v8::Just;
+using v8::JustVoid;
 using v8::Local;
+using v8::LocalVector;
 using v8::Maybe;
 using v8::MaybeLocal;
 using v8::Name;
@@ -143,14 +147,14 @@ void Hash::GetCachedAliases(const FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = args.GetIsolate();
   Local<Context> context = args.GetIsolate()->GetCurrentContext();
   Environment* env = Environment::GetCurrent(context);
-  std::vector<Local<Name>> names;
-  std::vector<Local<Value>> values;
   size_t size = env->alias_to_md_id_map.size();
+  LocalVector<Name> names(isolate);
+  LocalVector<Value> values(isolate);
 #if OPENSSL_VERSION_MAJOR >= 3
   names.reserve(size);
   values.reserve(size);
   for (auto& [alias, id] : env->alias_to_md_id_map) {
-    names.push_back(OneByteString(isolate, alias.c_str(), alias.size()));
+    names.push_back(OneByteString(isolate, alias));
     values.push_back(v8::Uint32::New(isolate, id));
   }
 #else
@@ -341,10 +345,22 @@ bool Hash::HashInit(const EVP_MD* md, Maybe<unsigned int> xof_md_len) {
   }
 
   md_len_ = EVP_MD_size(md);
+  bool is_xof = (EVP_MD_flags(md) & EVP_MD_FLAG_XOF) != 0;
+  if (is_xof && !xof_md_len.IsJust() && md_len_ == 0) {
+    const char* name = OBJ_nid2sn(EVP_MD_type(md));
+    if (name != nullptr) {
+      if (strcmp(name, "SHAKE128") == 0) {
+        md_len_ = 16;
+      } else if (strcmp(name, "SHAKE256") == 0) {
+        md_len_ = 32;
+      }
+    }
+  }
+
   if (xof_md_len.IsJust() && xof_md_len.FromJust() != md_len_) {
     // This is a little hack to cause createHash to fail when an incorrect
     // hashSize option was passed for a non-XOF hash function.
-    if ((EVP_MD_flags(md) & EVP_MD_FLAG_XOF) == 0) {
+    if (!is_xof) {
       EVPerr(EVP_F_EVP_DIGESTFINALXOF, EVP_R_NOT_XOF_OR_INVALID_LENGTH);
       return false;
     }
@@ -367,7 +383,7 @@ void Hash::HashUpdate(const FunctionCallbackInfo<Value>& args) {
                   const char* data,
                   size_t size) {
                  Environment* env = Environment::GetCurrent(args);
-                 if (UNLIKELY(size > INT_MAX))
+                 if (size > INT_MAX) [[unlikely]]
                    return THROW_ERR_OUT_OF_RANGE(env, "data is too long");
                  bool r = hash->HashUpdate(data, size);
                  args.GetReturnValue().Set(r);
@@ -448,16 +464,13 @@ void HashConfig::MemoryInfo(MemoryTracker* tracker) const {
     tracker->TrackFieldWithSize("in", in.size());
 }
 
-Maybe<bool> HashTraits::EncodeOutput(
-    Environment* env,
-    const HashConfig& params,
-    ByteSource* out,
-    v8::Local<v8::Value>* result) {
-  *result = out->ToArrayBuffer(env);
-  return Just(!result->IsEmpty());
+MaybeLocal<Value> HashTraits::EncodeOutput(Environment* env,
+                                           const HashConfig& params,
+                                           ByteSource* out) {
+  return out->ToArrayBuffer(env);
 }
 
-Maybe<bool> HashTraits::AdditionalConfig(
+Maybe<void> HashTraits::AdditionalConfig(
     CryptoJobMode mode,
     const FunctionCallbackInfo<Value>& args,
     unsigned int offset,
@@ -469,15 +482,15 @@ Maybe<bool> HashTraits::AdditionalConfig(
   CHECK(args[offset]->IsString());  // Hash algorithm
   Utf8Value digest(env->isolate(), args[offset]);
   params->digest = EVP_get_digestbyname(*digest);
-  if (UNLIKELY(params->digest == nullptr)) {
+  if (params->digest == nullptr) [[unlikely]] {
     THROW_ERR_CRYPTO_INVALID_DIGEST(env, "Invalid digest: %s", *digest);
-    return Nothing<bool>();
+    return Nothing<void>();
   }
 
   ArrayBufferOrViewContents<char> data(args[offset + 1]);
-  if (UNLIKELY(!data.CheckSizeInt32())) {
+  if (!data.CheckSizeInt32()) [[unlikely]] {
     THROW_ERR_OUT_OF_RANGE(env, "data is too big");
-    return Nothing<bool>();
+    return Nothing<void>();
   }
   params->in = mode == kCryptoJobAsync
       ? data.ToCopy()
@@ -485,7 +498,7 @@ Maybe<bool> HashTraits::AdditionalConfig(
 
   unsigned int expected = EVP_MD_size(params->digest);
   params->length = expected;
-  if (UNLIKELY(args[offset + 2]->IsUint32())) {
+  if (args[offset + 2]->IsUint32()) [[unlikely]] {
     // length is expressed in terms of bits
     params->length =
         static_cast<uint32_t>(args[offset + 2]
@@ -493,12 +506,12 @@ Maybe<bool> HashTraits::AdditionalConfig(
     if (params->length != expected) {
       if ((EVP_MD_flags(params->digest) & EVP_MD_FLAG_XOF) == 0) {
         THROW_ERR_CRYPTO_INVALID_DIGEST(env, "Digest method not supported");
-        return Nothing<bool>();
+        return Nothing<void>();
       }
     }
   }
 
-  return Just(true);
+  return JustVoid();
 }
 
 bool HashTraits::DeriveBits(Environment* env,
@@ -507,14 +520,13 @@ bool HashTraits::DeriveBits(Environment* env,
                             CryptoJobMode mode) {
   EVPMDCtxPointer ctx(EVP_MD_CTX_new());
 
-  if (UNLIKELY(!ctx ||
-               EVP_DigestInit_ex(ctx.get(), params.digest, nullptr) <= 0 ||
-               EVP_DigestUpdate(
-                   ctx.get(), params.in.data<char>(), params.in.size()) <= 0)) {
+  if (!ctx || EVP_DigestInit_ex(ctx.get(), params.digest, nullptr) <= 0 ||
+      EVP_DigestUpdate(ctx.get(), params.in.data<char>(), params.in.size()) <=
+          0) [[unlikely]] {
     return false;
   }
 
-  if (LIKELY(params.length > 0)) {
+  if (params.length > 0) [[likely]] {
     unsigned int length = params.length;
     ByteSource::Builder buf(length);
 
@@ -525,7 +537,7 @@ bool HashTraits::DeriveBits(Environment* env,
             ? EVP_DigestFinal_ex(ctx.get(), buf.data<unsigned char>(), &length)
             : EVP_DigestFinalXOF(ctx.get(), buf.data<unsigned char>(), length);
 
-    if (UNLIKELY(ret != 1))
+    if (ret != 1) [[unlikely]]
       return false;
 
     *out = std::move(buf).release();

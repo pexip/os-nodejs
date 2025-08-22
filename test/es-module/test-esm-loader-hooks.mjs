@@ -4,7 +4,7 @@ import assert from 'node:assert';
 import { execPath } from 'node:process';
 import { describe, it } from 'node:test';
 
-describe('Loader hooks', { concurrency: true }, () => {
+describe('Loader hooks', { concurrency: !process.env.TEST_PARALLEL }, () => {
   it('are called with all expected arguments', async () => {
     const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
       '--no-warnings',
@@ -50,8 +50,8 @@ describe('Loader hooks', { concurrency: true }, () => {
     assert.strictEqual(lines.length, 5);
   });
 
-  describe('should handle never-settling hooks in ESM files', { concurrency: true }, () => {
-    it('top-level await of a never-settling resolve', async () => {
+  describe('should handle never-settling hooks in ESM files', { concurrency: !process.env.TEST_PARALLEL }, () => {
+    it('top-level await of a never-settling resolve without warning', async () => {
       const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
         '--no-warnings',
         '--experimental-loader',
@@ -65,7 +65,20 @@ describe('Loader hooks', { concurrency: true }, () => {
       assert.strictEqual(signal, null);
     });
 
-    it('top-level await of a never-settling load', async () => {
+    it('top-level await of a never-settling resolve with warning', async () => {
+      const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
+        '--experimental-loader',
+        fixtures.fileURL('es-module-loaders/never-settling-resolve-step/loader.mjs'),
+        fixtures.path('es-module-loaders/never-settling-resolve-step/never-resolve.mjs'),
+      ]);
+
+      assert.match(stderr, /Warning: Detected unsettled top-level await at.+never-resolve\.mjs:5/);
+      assert.match(stdout, /^should be output\r?\n$/);
+      assert.strictEqual(code, 13);
+      assert.strictEqual(signal, null);
+    });
+
+    it('top-level await of a never-settling load without warning', async () => {
       const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
         '--no-warnings',
         '--experimental-loader',
@@ -79,6 +92,18 @@ describe('Loader hooks', { concurrency: true }, () => {
       assert.strictEqual(signal, null);
     });
 
+    it('top-level await of a never-settling load with warning', async () => {
+      const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
+        '--experimental-loader',
+        fixtures.fileURL('es-module-loaders/never-settling-resolve-step/loader.mjs'),
+        fixtures.path('es-module-loaders/never-settling-resolve-step/never-load.mjs'),
+      ]);
+
+      assert.match(stderr, /Warning: Detected unsettled top-level await at.+never-load\.mjs:5/);
+      assert.match(stdout, /^should be output\r?\n$/);
+      assert.strictEqual(code, 13);
+      assert.strictEqual(signal, null);
+    });
 
     it('top-level await of a race of never-settling hooks', async () => {
       const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
@@ -109,7 +134,7 @@ describe('Loader hooks', { concurrency: true }, () => {
     });
   });
 
-  describe('should handle never-settling hooks in CJS files', { concurrency: true }, () => {
+  describe('should handle never-settling hooks in CJS files', { concurrency: !process.env.TEST_PARALLEL }, () => {
     it('never-settling resolve', async () => {
       const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
         '--no-warnings',
@@ -157,7 +182,7 @@ describe('Loader hooks', { concurrency: true }, () => {
   it('should not work without worker permission', async () => {
     const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
       '--no-warnings',
-      '--experimental-permission',
+      '--permission',
       '--allow-fs-read',
       '*',
       '--experimental-loader',
@@ -174,7 +199,7 @@ describe('Loader hooks', { concurrency: true }, () => {
   it('should allow loader hooks to spawn workers when allowed by the CLI flags', async () => {
     const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
       '--no-warnings',
-      '--experimental-permission',
+      '--permission',
       '--allow-worker',
       '--allow-fs-read',
       '*',
@@ -192,7 +217,7 @@ describe('Loader hooks', { concurrency: true }, () => {
   it('should not allow loader hooks to spawn workers if restricted by the CLI flags', async () => {
     const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
       '--no-warnings',
-      '--experimental-permission',
+      '--permission',
       '--allow-fs-read',
       '*',
       '--experimental-loader',
@@ -431,7 +456,17 @@ describe('Loader hooks', { concurrency: true }, () => {
         fixtures.path('empty.js'),
       ]);
 
-      assert.strictEqual(stderr.match(/`globalPreload` is an experimental feature/g).length, 1);
+      assert.strictEqual(stderr.match(/`globalPreload` has been removed; use `initialize` instead/g).length, 1);
+    });
+
+    it('should not emit warning when initialize is supplied', async () => {
+      const { stderr } = await spawnPromisified(execPath, [
+        '--experimental-loader',
+        'data:text/javascript,export function globalPreload(){}export function initialize(){}',
+        fixtures.path('empty.js'),
+      ]);
+
+      assert.doesNotMatch(stderr, /`globalPreload` has been removed; use `initialize` instead/);
     });
   });
 
@@ -756,14 +791,14 @@ describe('Loader hooks', { concurrency: true }, () => {
     const hook = `
     import { readFile } from 'node:fs/promises';
     export ${
-  async function load(url, context, nextLoad) {
-    const resolved = await nextLoad(url, context);
-    if (context.format === 'commonjs') {
-      resolved.source = await readFile(new URL(url));
-    }
-    return resolved;
-  }
-}`;
+      async function load(url, context, nextLoad) {
+        const resolved = await nextLoad(url, context);
+        if (context.format === 'commonjs') {
+          resolved.source = await readFile(new URL(url));
+        }
+        return resolved;
+      }
+    }`;
 
     const { code, signal, stdout, stderr } = await spawnPromisified(execPath, [
       '--no-warnings',
@@ -772,8 +807,8 @@ describe('Loader hooks', { concurrency: true }, () => {
       `data:text/javascript,${encodeURIComponent(`
       import{ register } from "node:module";
       register(${
-  JSON.stringify('data:text/javascript,' + encodeURIComponent(hook))
-});
+        JSON.stringify('data:text/javascript,' + encodeURIComponent(hook))
+      });
       `)}`,
       fixtures.path('source-map/throw-on-require.js'),
     ]);

@@ -33,7 +33,7 @@
       "introduced_in": "v8.4.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v20.19.2/lib/http2.js\">lib/http2.js</a></p>\n<p>The <code>node:http2</code> module provides an implementation of the <a href=\"https://tools.ietf.org/html/rfc7540\">HTTP/2</a> protocol.\nIt can be accessed using:</p>\n<pre><code class=\"language-js\">const http2 = require('node:http2');\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v22.18.0/lib/http2.js\">lib/http2.js</a></p>\n<p>The <code>node:http2</code> module provides an implementation of the <a href=\"https://tools.ietf.org/html/rfc7540\">HTTP/2</a> protocol.\nIt can be accessed using:</p>\n<pre><code class=\"language-js\">const http2 = require('node:http2');\n</code></pre>",
       "modules": [
         {
           "textRaw": "Determining if crypto support is unavailable",
@@ -960,7 +960,13 @@
                     "added": [
                       "v8.4.0"
                     ],
-                    "changes": []
+                    "changes": [
+                      {
+                        "version": "v22.17.0",
+                        "pr-url": "https://github.com/nodejs/node/pull/58313",
+                        "description": "Following the deprecation of priority signaling as of RFC 9113, `weight` option is deprecated."
+                      }
+                    ]
                   },
                   "signatures": [
                     {
@@ -971,9 +977,10 @@
                       },
                       "params": [
                         {
-                          "textRaw": "`headers` {HTTP/2 Headers Object}",
+                          "textRaw": "`headers` {HTTP/2 Headers Object} | {Array}",
                           "name": "headers",
-                          "type": "HTTP/2 Headers Object"
+                          "type": "HTTP/2 Headers Object",
+                          "desc": "| {Array}"
                         },
                         {
                           "textRaw": "`options` {Object}",
@@ -1000,10 +1007,10 @@
                               "desc": "Specifies the numeric identifier of a stream the newly created stream is dependent on."
                             },
                             {
-                              "textRaw": "`weight` {number} Specifies the relative dependency of a stream in relation to other streams with the same `parent`. The value is a number between `1` and `256` (inclusive).",
+                              "textRaw": "`weight` {number} Specifies the relative dependency of a stream in relation to other streams with the same `parent`. The value is a number between `1` and `256` (inclusive). This has been **deprecated** in [RFC 9113][], and support for it will be removed in future versions of Node.js.",
                               "name": "weight",
                               "type": "number",
-                              "desc": "Specifies the relative dependency of a stream in relation to other streams with the same `parent`. The value is a number between `1` and `256` (inclusive)."
+                              "desc": "Specifies the relative dependency of a stream in relation to other streams with the same `parent`. The value is a number between `1` and `256` (inclusive). This has been **deprecated** in [RFC 9113][], and support for it will be removed in future versions of Node.js."
                             },
                             {
                               "textRaw": "`waitForTrailers` {boolean} When `true`, the `Http2Stream` will emit the `'wantTrailers'` event after the final `DATA` frame has been sent.",
@@ -1358,9 +1365,15 @@
                     "added": [
                       "v8.4.0"
                     ],
-                    "changes": []
+                    "changes": [
+                      {
+                        "version": "v22.17.0",
+                        "pr-url": "https://github.com/nodejs/node/pull/58313",
+                        "description": "Following the deprecation of priority signaling as of RFC 9113, `weight` and `sumDependencyWeight` options are deprecated."
+                      }
+                    ]
                   },
-                  "desc": "<p>Provides miscellaneous information about the current state of the\n<code>Http2Stream</code>.</p>\n<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a>\n<ul>\n<li><code>localWindowSize</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> The number of bytes the connected peer may send\nfor this <code>Http2Stream</code> without receiving a <code>WINDOW_UPDATE</code>.</li>\n<li><code>state</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> A flag indicating the low-level current state of the\n<code>Http2Stream</code> as determined by <code>nghttp2</code>.</li>\n<li><code>localClose</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> <code>1</code> if this <code>Http2Stream</code> has been closed locally.</li>\n<li><code>remoteClose</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> <code>1</code> if this <code>Http2Stream</code> has been closed\nremotely.</li>\n<li><code>sumDependencyWeight</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> The sum weight of all <code>Http2Stream</code>\ninstances that depend on this <code>Http2Stream</code> as specified using\n<code>PRIORITY</code> frames.</li>\n<li><code>weight</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> The priority weight of this <code>Http2Stream</code>.</li>\n</ul>\n</li>\n</ul>\n<p>A current state of this <code>Http2Stream</code>.</p>"
+                  "desc": "<p>Provides miscellaneous information about the current state of the\n<code>Http2Stream</code>.</p>\n<ul>\n<li><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a>\n<ul>\n<li><code>localWindowSize</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> The number of bytes the connected peer may send\nfor this <code>Http2Stream</code> without receiving a <code>WINDOW_UPDATE</code>.</li>\n<li><code>state</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> A flag indicating the low-level current state of the\n<code>Http2Stream</code> as determined by <code>nghttp2</code>.</li>\n<li><code>localClose</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> <code>1</code> if this <code>Http2Stream</code> has been closed locally.</li>\n<li><code>remoteClose</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> <code>1</code> if this <code>Http2Stream</code> has been closed\nremotely.</li>\n<li><code>sumDependencyWeight</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> The sum weight of all <code>Http2Stream</code>\ninstances that depend on this <code>Http2Stream</code> as specified using\n<code>PRIORITY</code> frames. This has been <strong>deprecated</strong> in <a href=\"https://datatracker.ietf.org/doc/html/rfc9113#section-5.3.1\">RFC 9113</a>, and\nsupport for it will be removed in future versions of Node.js.</li>\n<li><code>weight</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type\" class=\"type\">&lt;number&gt;</a> The priority weight of this <code>Http2Stream</code>. This has been\n<strong>deprecated</strong> in <a href=\"https://datatracker.ietf.org/doc/html/rfc9113#section-5.3.1\">RFC 9113</a>, and support for it will be removed in future\nversions of Node.js.</li>\n</ul>\n</li>\n</ul>\n<p>A current state of this <code>Http2Stream</code>.</p>"
                 }
               ],
               "methods": [
@@ -1409,8 +1422,13 @@
                     "added": [
                       "v8.4.0"
                     ],
+                    "deprecated": [
+                      "v22.17.0"
+                    ],
                     "changes": []
                   },
+                  "stability": 0,
+                  "stabilityText": "Deprecated: support for priority signaling has been deprecated in the [RFC 9113][] and is no longer supported in Node.js.",
                   "signatures": [
                     {
                       "params": [
@@ -2593,6 +2611,13 @@
                 "changes": [
                   {
                     "version": [
+                      "v22.10.0"
+                    ],
+                    "pr-url": "https://github.com/nodejs/node/pull/54875",
+                    "description": "Added `streamResetBurst` and `streamResetRate`."
+                  },
+                  {
+                    "version": [
                       "v15.10.0",
                       "v14.16.0",
                       "v12.21.0",
@@ -2760,6 +2785,12 @@
                           "desc": "The initial settings to send to the remote peer upon connection."
                         },
                         {
+                          "textRaw": "`streamResetBurst` {number} and `streamResetRate` {number} Sets the rate limit for the incoming stream reset (RST\\_STREAM frame). Both settings must be set to have any effect, and default to 1000 and 33 respectively.",
+                          "name": "streamResetBurst",
+                          "type": "number",
+                          "desc": "and `streamResetRate` {number} Sets the rate limit for the incoming stream reset (RST\\_STREAM frame). Both settings must be set to have any effect, and default to 1000 and 33 respectively."
+                        },
+                        {
                           "textRaw": "`remoteCustomSettings` {Array} The array of integer values determines the settings types, which are included in the `CustomSettings`-property of the received remoteSettings. Please see the `CustomSettings`-property of the `Http2Settings` object for more information, on the allowed setting types.",
                           "name": "remoteCustomSettings",
                           "type": "Array",
@@ -2799,6 +2830,13 @@
                           "type": "number",
                           "default": "`10000`",
                           "desc": "Specifies a timeout in milliseconds that a server should wait when an [`'unknownProtocol'`][] is emitted. If the socket has not been destroyed by that time the server will destroy it."
+                        },
+                        {
+                          "textRaw": "`strictFieldWhitespaceValidation` {boolean} If `true`, it turns on strict leading and trailing whitespace validation for HTTP/2 header field names and values as per [RFC-9113](https://www.rfc-editor.org/rfc/rfc9113.html#section-8.2.1). **Default:** `true`.",
+                          "name": "strictFieldWhitespaceValidation",
+                          "type": "boolean",
+                          "default": "`true`",
+                          "desc": "If `true`, it turns on strict leading and trailing whitespace validation for HTTP/2 header field names and values as per [RFC-9113](https://www.rfc-editor.org/rfc/rfc9113.html#section-8.2.1)."
                         },
                         {
                           "textRaw": "...: Any [`net.createServer()`][] option can be provided.",
@@ -2998,6 +3036,12 @@
                           "desc": "The initial settings to send to the remote peer upon connection."
                         },
                         {
+                          "textRaw": "`streamResetBurst` {number} and `streamResetRate` {number} Sets the rate limit for the incoming stream reset (RST\\_STREAM frame). Both settings must be set to have any effect, and default to 1000 and 33 respectively.",
+                          "name": "streamResetBurst",
+                          "type": "number",
+                          "desc": "and `streamResetRate` {number} Sets the rate limit for the incoming stream reset (RST\\_STREAM frame). Both settings must be set to have any effect, and default to 1000 and 33 respectively."
+                        },
+                        {
                           "textRaw": "`remoteCustomSettings` {Array} The array of integer values determines the settings types, which are included in the `customSettings`-property of the received remoteSettings. Please see the `customSettings`-property of the `Http2Settings` object for more information, on the allowed setting types.",
                           "name": "remoteCustomSettings",
                           "type": "Array",
@@ -3020,6 +3064,13 @@
                           "type": "number",
                           "default": "`10000`",
                           "desc": "Specifies a timeout in milliseconds that a server should wait when an [`'unknownProtocol'`][] event is emitted. If the socket has not been destroyed by that time the server will destroy it."
+                        },
+                        {
+                          "textRaw": "`strictFieldWhitespaceValidation` {boolean} If `true`, it turns on strict leading and trailing whitespace validation for HTTP/2 header field names and values as per [RFC-9113](https://www.rfc-editor.org/rfc/rfc9113.html#section-8.2.1). **Default:** `true`.",
+                          "name": "strictFieldWhitespaceValidation",
+                          "type": "boolean",
+                          "default": "`true`",
+                          "desc": "If `true`, it turns on strict leading and trailing whitespace validation for HTTP/2 header field names and values as per [RFC-9113](https://www.rfc-editor.org/rfc/rfc9113.html#section-8.2.1)."
                         }
                       ]
                     },
@@ -3214,6 +3265,13 @@
                           "type": "number",
                           "default": "`10000`",
                           "desc": "Specifies a timeout in milliseconds that a server should wait when an [`'unknownProtocol'`][] event is emitted. If the socket has not been destroyed by that time the server will destroy it."
+                        },
+                        {
+                          "textRaw": "`strictFieldWhitespaceValidation` {boolean} If `true`, it turns on strict leading and trailing whitespace validation for HTTP/2 header field names and values as per [RFC-9113](https://www.rfc-editor.org/rfc/rfc9113.html#section-8.2.1). **Default:** `true`.",
+                          "name": "strictFieldWhitespaceValidation",
+                          "type": "boolean",
+                          "default": "`true`",
+                          "desc": "If `true`, it turns on strict leading and trailing whitespace validation for HTTP/2 header field names and values as per [RFC-9113](https://www.rfc-editor.org/rfc/rfc9113.html#section-8.2.1)."
                         }
                       ]
                     },
@@ -3313,6 +3371,7 @@
               "name": "performServerHandshake",
               "meta": {
                 "added": [
+                  "v21.7.0",
                   "v20.12.0"
                 ],
                 "changes": []
@@ -3741,6 +3800,7 @@
                   "name": "appendHeader",
                   "meta": {
                     "added": [
+                      "v21.7.0",
                       "v20.12.0"
                     ],
                     "changes": []

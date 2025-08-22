@@ -38,7 +38,7 @@ enum AESKeyVariant {
 struct AESCipherConfig final : public MemoryRetainer {
   CryptoJobMode mode;
   AESKeyVariant variant;
-  const EVP_CIPHER* cipher;
+  ncrypto::Cipher cipher;
   size_t length;
   ByteSource iv;  // Used for both iv or counter
   ByteSource additional_data;
@@ -60,20 +60,19 @@ struct AESCipherTraits final {
 
   using AdditionalParameters = AESCipherConfig;
 
-  static v8::Maybe<bool> AdditionalConfig(
+  static v8::Maybe<void> AdditionalConfig(
       CryptoJobMode mode,
       const v8::FunctionCallbackInfo<v8::Value>& args,
       unsigned int offset,
       WebCryptoCipherMode cipher_mode,
       AESCipherConfig* config);
 
-  static WebCryptoCipherStatus DoCipher(
-      Environment* env,
-      std::shared_ptr<KeyObjectData> key_data,
-      WebCryptoCipherMode cipher_mode,
-      const AESCipherConfig& params,
-      const ByteSource& in,
-      ByteSource* out);
+  static WebCryptoCipherStatus DoCipher(Environment* env,
+                                        const KeyObjectData& key_data,
+                                        WebCryptoCipherMode cipher_mode,
+                                        const AESCipherConfig& params,
+                                        const ByteSource& in,
+                                        ByteSource* out);
 };
 
 using AESCryptoJob = CipherJob<AESCipherTraits>;

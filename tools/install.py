@@ -181,9 +181,19 @@ def files(options, action):
       link_path = abspath(options.install_path, 'lib/libnode.so')
       try_symlink(options, so_name, link_path)
     else:
-      output_lib = 'libnode.' + options.variables.get('shlib_suffix')
-      action(options, [os.path.join(options.build_dir, output_lib)],
-             os.path.join(options.variables.get('libdir'), output_lib))
+      # Ninja and Makefile generators output the library in different directories;
+      # find out which one we have, and install first found
+      output_lib_name = 'libnode.' + options.variables.get('shlib_suffix')
+      output_lib_candidate_paths = [
+        os.path.join(options.build_dir, output_lib_name),
+        os.path.join(options.build_dir, "lib", output_lib_name),
+      ]
+      try:
+        output_lib = next(filter(os.path.exists, output_lib_candidate_paths))
+      except StopIteration as not_found:
+        raise RuntimeError("No libnode.so to install!") from not_found
+      action(options, [output_lib],
+             os.path.join(options.variables.get('libdir'), output_lib_name))
 
   action(options, [os.path.join(options.v8_dir, 'tools/gdbinit')], 'share/doc/node/')
   action(options, [os.path.join(options.v8_dir, 'tools/lldb_commands.py')], 'share/doc/node/')
@@ -270,6 +280,7 @@ def headers(options, action):
       'include/v8-forward.h',
       'include/v8-function-callback.h',
       'include/v8-function.h',
+      'include/v8-handle-base.h',
       'include/v8-initialization.h',
       'include/v8-internal.h',
       'include/v8-isolate.h',
@@ -292,6 +303,7 @@ def headers(options, action):
       'include/v8-regexp.h',
       'include/v8-script.h',
       'include/v8-snapshot.h',
+      'include/v8-source-location.h',
       'include/v8-statistics.h',
       'include/v8-template.h',
       'include/v8-traced-handle.h',

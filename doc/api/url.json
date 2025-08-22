@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v20.19.2/lib/url.js\">lib/url.js</a></p>\n<p>The <code>node:url</code> module provides utilities for URL resolution and parsing. It can\nbe accessed using:</p>\n<pre><code class=\"language-mjs\">import url from 'node:url';\n</code></pre>\n<pre><code class=\"language-cjs\">const url = require('node:url');\n</code></pre>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v22.18.0/lib/url.js\">lib/url.js</a></p>\n<p>The <code>node:url</code> module provides utilities for URL resolution and parsing. It can\nbe accessed using:</p>\n<pre><code class=\"language-mjs\">import url from 'node:url';\n</code></pre>\n<pre><code class=\"language-cjs\">const url = require('node:url');\n</code></pre>",
       "modules": [
         {
           "textRaw": "URL strings and URL objects",
@@ -206,10 +206,14 @@
                     "added": [
                       "v16.7.0"
                     ],
-                    "changes": []
+                    "changes": [
+                      {
+                        "version": "v22.17.0",
+                        "pr-url": "https://github.com/nodejs/node/pull/57513",
+                        "description": "Marking the API stable."
+                      }
+                    ]
                   },
-                  "stability": 1,
-                  "stabilityText": "Experimental",
                   "signatures": [
                     {
                       "return": {
@@ -236,10 +240,14 @@
                     "added": [
                       "v16.7.0"
                     ],
-                    "changes": []
+                    "changes": [
+                      {
+                        "version": "v22.17.0",
+                        "pr-url": "https://github.com/nodejs/node/pull/57513",
+                        "description": "Marking the API stable."
+                      }
+                    ]
                   },
-                  "stability": 1,
-                  "stabilityText": "Experimental",
                   "signatures": [
                     {
                       "params": [
@@ -260,7 +268,8 @@
                   "name": "canParse",
                   "meta": {
                     "added": [
-                      "v19.9.0"
+                      "v19.9.0",
+                      "v18.17.0"
                     ],
                     "changes": []
                   },
@@ -393,7 +402,10 @@
                   "meta": {
                     "changes": [
                       {
-                        "version": "v20.2.0",
+                        "version": [
+                          "v20.2.0",
+                          "v18.18.0"
+                        ],
                         "pr-url": "https://github.com/nodejs/node/pull/47885",
                         "description": "Add support for optional `value` argument."
                       }
@@ -431,7 +443,7 @@
                       "params": []
                     }
                   ],
-                  "desc": "<p>Returns an ES6 <code>Iterator</code> over each of the name-value pairs in the query.\nEach item of the iterator is a JavaScript <code>Array</code>. The first item of the <code>Array</code>\nis the <code>name</code>, the second item of the <code>Array</code> is the <code>value</code>.</p>\n<p>Alias for <a href=\"#urlsearchparamssymboliterator\"><code>urlSearchParams[@@iterator]()</code></a>.</p>"
+                  "desc": "<p>Returns an ES6 <code>Iterator</code> over each of the name-value pairs in the query.\nEach item of the iterator is a JavaScript <code>Array</code>. The first item of the <code>Array</code>\nis the <code>name</code>, the second item of the <code>Array</code> is the <code>value</code>.</p>\n<p>Alias for <a href=\"#urlsearchparamssymboliterator\"><code>urlSearchParams[Symbol.iterator]()</code></a>.</p>"
                 },
                 {
                   "textRaw": "`urlSearchParams.forEach(fn[, thisArg])`",
@@ -518,7 +530,10 @@
                   "meta": {
                     "changes": [
                       {
-                        "version": "v20.2.0",
+                        "version": [
+                          "v20.2.0",
+                          "v18.18.0"
+                        ],
                         "pr-url": "https://github.com/nodejs/node/pull/47885",
                         "description": "Add support for optional `value` argument."
                       }
@@ -658,7 +673,8 @@
                   "name": "size",
                   "meta": {
                     "added": [
-                      "v19.8.0"
+                      "v19.8.0",
+                      "v18.16.0"
                     ],
                     "changes": []
                   },
@@ -701,7 +717,7 @@
                       "desc": "An iterable object whose elements are key-value pairs"
                     }
                   ],
-                  "desc": "<p>Instantiate a new <code>URLSearchParams</code> object with an iterable map in a way that\nis similar to <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map\"><code>Map</code></a>'s constructor. <code>iterable</code> can be an <code>Array</code> or any\niterable object. That means <code>iterable</code> can be another <code>URLSearchParams</code>, in\nwhich case the constructor will simply create a clone of the provided\n<code>URLSearchParams</code>. Elements of <code>iterable</code> are key-value pairs, and can\nthemselves be any iterable object.</p>\n<p>Duplicate keys are allowed.</p>\n<pre><code class=\"language-js\">let params;\n\n// Using an array\nparams = new URLSearchParams([\n  ['user', 'abc'],\n  ['query', 'first'],\n  ['query', 'second'],\n]);\nconsole.log(params.toString());\n// Prints 'user=abc&#x26;query=first&#x26;query=second'\n\n// Using a Map object\nconst map = new Map();\nmap.set('user', 'abc');\nmap.set('query', 'xyz');\nparams = new URLSearchParams(map);\nconsole.log(params.toString());\n// Prints 'user=abc&#x26;query=xyz'\n\n// Using a generator function\nfunction* getQueryPairs() {\n  yield ['user', 'abc'];\n  yield ['query', 'first'];\n  yield ['query', 'second'];\n}\nparams = new URLSearchParams(getQueryPairs());\nconsole.log(params.toString());\n// Prints 'user=abc&#x26;query=first&#x26;query=second'\n\n// Each key-value pair must have exactly two elements\nnew URLSearchParams([\n  ['user', 'abc', 'error'],\n]);\n// Throws TypeError [ERR_INVALID_TUPLE]:\n//        Each query pair must be an iterable [name, value] tuple\n</code></pre>"
+                  "desc": "<p>Instantiate a new <code>URLSearchParams</code> object with an iterable map in a way that\nis similar to <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map\" class=\"type\">&lt;Map&gt;</a>'s constructor. <code>iterable</code> can be an <code>Array</code> or any\niterable object. That means <code>iterable</code> can be another <code>URLSearchParams</code>, in\nwhich case the constructor will simply create a clone of the provided\n<code>URLSearchParams</code>. Elements of <code>iterable</code> are key-value pairs, and can\nthemselves be any iterable object.</p>\n<p>Duplicate keys are allowed.</p>\n<pre><code class=\"language-js\">let params;\n\n// Using an array\nparams = new URLSearchParams([\n  ['user', 'abc'],\n  ['query', 'first'],\n  ['query', 'second'],\n]);\nconsole.log(params.toString());\n// Prints 'user=abc&#x26;query=first&#x26;query=second'\n\n// Using a Map object\nconst map = new Map();\nmap.set('user', 'abc');\nmap.set('query', 'xyz');\nparams = new URLSearchParams(map);\nconsole.log(params.toString());\n// Prints 'user=abc&#x26;query=xyz'\n\n// Using a generator function\nfunction* getQueryPairs() {\n  yield ['user', 'abc'];\n  yield ['query', 'first'];\n  yield ['query', 'second'];\n}\nparams = new URLSearchParams(getQueryPairs());\nconsole.log(params.toString());\n// Prints 'user=abc&#x26;query=first&#x26;query=second'\n\n// Each key-value pair must have exactly two elements\nnew URLSearchParams([\n  ['user', 'abc', 'error'],\n]);\n// Throws TypeError [ERR_INVALID_TUPLE]:\n//        Each query pair must be an iterable [name, value] tuple\n</code></pre>"
                 }
               ]
             }
@@ -718,7 +734,10 @@
                 ],
                 "changes": [
                   {
-                    "version": "v20.0.0",
+                    "version": [
+                      "v20.0.0",
+                      "v18.17.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/47339",
                     "description": "ICU requirement is removed."
                   }
@@ -753,7 +772,10 @@
                 ],
                 "changes": [
                   {
-                    "version": "v20.0.0",
+                    "version": [
+                      "v20.0.0",
+                      "v18.17.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/47339",
                     "description": "ICU requirement is removed."
                   }
@@ -787,7 +809,7 @@
                 ],
                 "changes": [
                   {
-                    "version": "v20.13.0",
+                    "version": "v22.1.0",
                     "pr-url": "https://github.com/nodejs/node/pull/52509",
                     "description": "The `options` argument can now be used to determine how to parse the `path` argument."
                   }
@@ -826,6 +848,17 @@
                 }
               ],
               "desc": "<p>This function ensures the correct decodings of percent-encoded characters as\nwell as ensuring a cross-platform valid absolute path string.</p>\n<pre><code class=\"language-mjs\">import { fileURLToPath } from 'node:url';\n\nconst __filename = fileURLToPath(import.meta.url);\n\nnew URL('file:///C:/path/').pathname;      // Incorrect: /C:/path/\nfileURLToPath('file:///C:/path/');         // Correct:   C:\\path\\ (Windows)\n\nnew URL('file://nas/foo.txt').pathname;    // Incorrect: /foo.txt\nfileURLToPath('file://nas/foo.txt');       // Correct:   \\\\nas\\foo.txt (Windows)\n\nnew URL('file:///你好.txt').pathname;      // Incorrect: /%E4%BD%A0%E5%A5%BD.txt\nfileURLToPath('file:///你好.txt');         // Correct:   /你好.txt (POSIX)\n\nnew URL('file:///hello world').pathname;   // Incorrect: /hello%20world\nfileURLToPath('file:///hello world');      // Correct:   /hello world (POSIX)\n</code></pre>\n<pre><code class=\"language-cjs\">const { fileURLToPath } = require('node:url');\nnew URL('file:///C:/path/').pathname;      // Incorrect: /C:/path/\nfileURLToPath('file:///C:/path/');         // Correct:   C:\\path\\ (Windows)\n\nnew URL('file://nas/foo.txt').pathname;    // Incorrect: /foo.txt\nfileURLToPath('file://nas/foo.txt');       // Correct:   \\\\nas\\foo.txt (Windows)\n\nnew URL('file:///你好.txt').pathname;      // Incorrect: /%E4%BD%A0%E5%A5%BD.txt\nfileURLToPath('file:///你好.txt');         // Correct:   /你好.txt (POSIX)\n\nnew URL('file:///hello world').pathname;   // Incorrect: /hello%20world\nfileURLToPath('file:///hello world');      // Correct:   /hello world (POSIX)\n</code></pre>"
+            },
+            {
+              "textRaw": "`url.fileURLToPathBuffer(url[, options])`",
+              "type": "method",
+              "name": "fileURLToPathBuffer",
+              "signatures": [
+                {
+                  "params": []
+                }
+              ],
+              "desc": "<!--\nadded: v22.18.0\n-->\n<ul>\n<li><code>url</code> <a href=\"url.html#the-whatwg-url-api\" class=\"type\">&lt;URL&gt;</a> | <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type\" class=\"type\">&lt;string&gt;</a> The file URL string or URL object to convert to a path.</li>\n<li><code>options</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object\" class=\"type\">&lt;Object&gt;</a>\n<ul>\n<li><code>windows</code> <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type\" class=\"type\">&lt;boolean&gt;</a> | <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Undefined_type\" class=\"type\">&lt;undefined&gt;</a> <code>true</code> if the <code>path</code> should be\nreturn as a windows filepath, <code>false</code> for posix, and\n<code>undefined</code> for the system default.\n<strong>Default:</strong> <code>undefined</code>.</li>\n</ul>\n</li>\n<li>Returns: <a href=\"buffer.html#class-buffer\" class=\"type\">&lt;Buffer&gt;</a> The fully-resolved platform-specific Node.js file path\nas a <a href=\"buffer.html#class-buffer\" class=\"type\">&lt;Buffer&gt;</a>.</li>\n</ul>\n<p>Like <code>url.fileURLToPath(...)</code> except that instead of returning a string\nrepresentation of the path, a <code>Buffer</code> is returned. This conversion is\nhelpful when the input URL contains percent-encoded segments that are\nnot valid UTF-8 / Unicode sequences.</p>"
             },
             {
               "textRaw": "`url.format(URL[, options])`",
@@ -901,7 +934,7 @@
                 ],
                 "changes": [
                   {
-                    "version": "v20.13.0",
+                    "version": "v22.1.0",
                     "pr-url": "https://github.com/nodejs/node/pull/52509",
                     "description": "The `options` argument can now be used to determine how to return the `path` value."
                   }
@@ -952,7 +985,10 @@
                 ],
                 "changes": [
                   {
-                    "version": "v19.9.0",
+                    "version": [
+                      "v19.9.0",
+                      "v18.17.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/46989",
                     "description": "The returned object will also contain all the own enumerable properties of the `url` argument."
                   }
@@ -1081,8 +1117,6 @@
                   }
                 ]
               },
-              "stability": 3,
-              "stabilityText": "Legacy: Use the WHATWG URL API instead.",
               "desc": "<p>The legacy <code>urlObject</code> (<code>require('node:url').Url</code> or\n<code>import { Url } from 'node:url'</code>) is\ncreated and returned by the <code>url.parse()</code> function.</p>",
               "properties": [
                 {
@@ -1185,8 +1219,6 @@
                   }
                 ]
               },
-              "stability": 3,
-              "stabilityText": "Legacy: Use the WHATWG URL API instead.",
               "signatures": [
                 {
                   "params": [
@@ -1315,8 +1347,6 @@
                   }
                 ]
               },
-              "stability": 3,
-              "stabilityText": "Legacy: Use the WHATWG URL API instead.",
               "signatures": [
                 {
                   "params": [

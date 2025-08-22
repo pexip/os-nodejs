@@ -131,7 +131,9 @@ return `true`.
 
 <!-- YAML
 changes:
-  - version: v20.0.0
+  - version:
+    - v20.0.0
+    - v18.17.0
     pr-url: https://github.com/nodejs/node/pull/47339
     description: ICU requirement is removed.
 -->
@@ -626,9 +628,11 @@ console.log(JSON.stringify(myURLs));
 
 <!-- YAML
 added: v16.7.0
+changes:
+ - version: v22.17.0
+   pr-url: https://github.com/nodejs/node/pull/57513
+   description: Marking the API stable.
 -->
-
-> Stability: 1 - Experimental
 
 * `blob` {Blob}
 * Returns: {string}
@@ -662,9 +666,11 @@ to other workers or the main thread.
 
 <!-- YAML
 added: v16.7.0
+changes:
+ - version: v22.17.0
+   pr-url: https://github.com/nodejs/node/pull/57513
+   description: Marking the API stable.
 -->
-
-> Stability: 1 - Experimental
 
 * `id` {string} A `'blob:nodedata:...` URL string returned by a prior call to
   `URL.createObjectURL()`.
@@ -675,7 +681,9 @@ ID that isn't registered will silently fail.
 #### `URL.canParse(input[, base])`
 
 <!-- YAML
-added: v19.9.0
+added:
+  - v19.9.0
+  - v18.17.0
 -->
 
 * `input` {string} The absolute or relative input URL to parse. If `input`
@@ -829,7 +837,7 @@ added:
 * `iterable` {Iterable} An iterable object whose elements are key-value pairs
 
 Instantiate a new `URLSearchParams` object with an iterable map in a way that
-is similar to [`Map`][]'s constructor. `iterable` can be an `Array` or any
+is similar to {Map}'s constructor. `iterable` can be an `Array` or any
 iterable object. That means `iterable` can be another `URLSearchParams`, in
 which case the constructor will simply create a clone of the provided
 `URLSearchParams`. Elements of `iterable` are key-value pairs, and can
@@ -886,7 +894,9 @@ Append a new name-value pair to the query string.
 
 <!-- YAML
 changes:
-  - version: v20.2.0
+  - version:
+      - v20.2.0
+      - v18.18.0
     pr-url: https://github.com/nodejs/node/pull/47885
     description: Add support for optional `value` argument.
 -->
@@ -907,7 +917,7 @@ Returns an ES6 `Iterator` over each of the name-value pairs in the query.
 Each item of the iterator is a JavaScript `Array`. The first item of the `Array`
 is the `name`, the second item of the `Array` is the `value`.
 
-Alias for [`urlSearchParams[@@iterator]()`][`urlSearchParams@@iterator()`].
+Alias for [`urlSearchParams[Symbol.iterator]()`][`urlSearchParamsSymbol.iterator()`].
 
 #### `urlSearchParams.forEach(fn[, thisArg])`
 
@@ -956,7 +966,9 @@ no such pairs, an empty array is returned.
 
 <!-- YAML
 changes:
-  - version: v20.2.0
+  - version:
+      - v20.2.0
+      - v18.18.0
     pr-url: https://github.com/nodejs/node/pull/47885
     description: Add support for optional `value` argument.
 -->
@@ -1017,7 +1029,9 @@ console.log(params.toString());
 #### `urlSearchParams.size`
 
 <!-- YAML
-added: v19.8.0
+added:
+ - v19.8.0
+ - v18.16.0
 -->
 
 The total number of parameter entries.
@@ -1083,7 +1097,9 @@ added:
   - v7.4.0
   - v6.13.0
 changes:
-  - version: v20.0.0
+  - version:
+    - v20.0.0
+    - v18.17.0
     pr-url: https://github.com/nodejs/node/pull/47339
     description: ICU requirement is removed.
 -->
@@ -1125,7 +1141,9 @@ added:
   - v7.4.0
   - v6.13.0
 changes:
-  - version: v20.0.0
+  - version:
+    - v20.0.0
+    - v18.17.0
     pr-url: https://github.com/nodejs/node/pull/47339
     description: ICU requirement is removed.
 -->
@@ -1165,7 +1183,7 @@ console.log(url.domainToUnicode('xn--iñvalid.com'));
 <!-- YAML
 added: v10.12.0
 changes:
-  - version: v20.13.0
+  - version: v22.1.0
     pr-url: https://github.com/nodejs/node/pull/52509
     description: The `options` argument can now be used to
                  determine how to parse the `path` argument.
@@ -1214,6 +1232,26 @@ fileURLToPath('file:///你好.txt');         // Correct:   /你好.txt (POSIX)
 new URL('file:///hello world').pathname;   // Incorrect: /hello%20world
 fileURLToPath('file:///hello world');      // Correct:   /hello world (POSIX)
 ```
+
+### `url.fileURLToPathBuffer(url[, options])`
+
+<!--
+added: v22.18.0
+-->
+
+* `url` {URL | string} The file URL string or URL object to convert to a path.
+* `options` {Object}
+  * `windows` {boolean|undefined} `true` if the `path` should be
+    return as a windows filepath, `false` for posix, and
+    `undefined` for the system default.
+    **Default:** `undefined`.
+* Returns: {Buffer} The fully-resolved platform-specific Node.js file path
+  as a {Buffer}.
+
+Like `url.fileURLToPath(...)` except that instead of returning a string
+representation of the path, a `Buffer` is returned. This conversion is
+helpful when the input URL contains percent-encoded segments that are
+not valid UTF-8 / Unicode sequences.
 
 ### `url.format(URL[, options])`
 
@@ -1275,7 +1313,7 @@ console.log(url.format(myURL, { fragment: false, unicode: true, auth: false }));
 <!-- YAML
 added: v10.12.0
 changes:
-  - version: v20.13.0
+  - version: v22.1.0
     pr-url: https://github.com/nodejs/node/pull/52509
     description: The `options` argument can now be used to
                  determine how to return the `path` value.
@@ -1323,7 +1361,9 @@ added:
   - v15.7.0
   - v14.18.0
 changes:
-  - version: v19.9.0
+  - version:
+    - v19.9.0
+    - v18.17.0
     pr-url: https://github.com/nodejs/node/pull/46989
     description: The returned object will also contain all the own enumerable
                  properties of the `url` argument.
@@ -1416,8 +1456,6 @@ changes:
     pr-url: https://github.com/nodejs/node/pull/22715
     description: The Legacy URL API is deprecated. Use the WHATWG URL API.
 -->
-
-> Stability: 3 - Legacy: Use the WHATWG URL API instead.
 
 The legacy `urlObject` (`require('node:url').Url` or
 `import { Url } from 'node:url'`) is
@@ -1545,8 +1583,6 @@ changes:
                  `slashes` option with no protocol is now also respected at all
                  times.
 -->
-
-> Stability: 3 - Legacy: Use the WHATWG URL API instead.
 
 * `urlObject` {Object|string} A URL object (as returned by `url.parse()` or
   constructed otherwise). If a string, it is converted to an object by passing
@@ -1708,8 +1744,6 @@ changes:
                  contains a hostname.
 -->
 
-> Stability: 3 - Legacy: Use the WHATWG URL API instead.
-
 * `from` {string} The base URL to use if `to` is a relative URL.
 * `to` {string} The target URL to resolve.
 
@@ -1808,7 +1842,6 @@ console.log(myURL.origin);
 [WHATWG URL Standard]: https://url.spec.whatwg.org/
 [`Error`]: errors.md#class-error
 [`JSON.stringify()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify
-[`Map`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
 [`TypeError`]: errors.md#class-typeerror
 [`URLSearchParams`]: #class-urlsearchparams
 [`array.toString()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toString
@@ -1825,7 +1858,7 @@ console.log(myURL.origin);
 [`url.toJSON()`]: #urltojson
 [`url.toString()`]: #urltostring
 [`urlSearchParams.entries()`]: #urlsearchparamsentries
-[`urlSearchParams@@iterator()`]: #urlsearchparamssymboliterator
+[`urlSearchParamsSymbol.iterator()`]: #urlsearchparamssymboliterator
 [converted to a string]: https://tc39.es/ecma262/#sec-tostring
 [examples of parsed URLs]: https://url.spec.whatwg.org/#example-url-parsing
 [host name spoofing]: https://hackerone.com/reports/678487

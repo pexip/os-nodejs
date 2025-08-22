@@ -31,11 +31,11 @@ const inspector = require('node:inspector');
 
 ## Promises API
 
-> Stability: 1 - Experimental
-
 <!-- YAML
 added: v19.0.0
 -->
+
+> Stability: 1 - Experimental
 
 ### Class: `inspector.Session`
 
@@ -490,6 +490,8 @@ An exception will be thrown if there is no active inspector.
 
 ## Integration with DevTools
 
+> Stability: 1.1 - Active development
+
 The `node:inspector` module provides an API for integrating with devtools that support Chrome DevTools Protocol.
 DevTools frontends connected to a running Node.js instance can capture protocol events emitted from the instance
 and display them accordingly to facilitate debugging.
@@ -509,14 +511,39 @@ inspector.Network.requestWillBeSent({
 });
 ```
 
+### `inspector.Network.dataReceived([params])`
+
+<!-- YAML
+added: v22.17.0
+-->
+
+* `params` {Object}
+
+This feature is only available with the `--experimental-network-inspection` flag enabled.
+
+Broadcasts the `Network.dataReceived` event to connected frontends, or buffers the data if
+`Network.streamResourceContent` command was not invoked for the given request yet.
+
+Also enables `Network.getResponseBody` command to retrieve the response data.
+
+### `inspector.Network.dataSent([params])`
+
+<!-- YAML
+added: v22.18.0
+-->
+
+* `params` {Object}
+
+This feature is only available with the `--experimental-network-inspection` flag enabled.
+
+Enables `Network.getRequestPostData` command to retrieve the request data.
+
 ### `inspector.Network.requestWillBeSent([params])`
 
 <!-- YAML
 added:
- - v20.18.0
+ - v22.6.0
 -->
-
-> Stability: 1 - Experimental
 
 * `params` {Object}
 
@@ -529,10 +556,8 @@ the application is about to send an HTTP request.
 
 <!-- YAML
 added:
- - v20.18.0
+ - v22.6.0
 -->
-
-> Stability: 1 - Experimental
 
 * `params` {Object}
 
@@ -545,10 +570,8 @@ HTTP response is available.
 
 <!-- YAML
 added:
- - v20.18.0
+ - v22.6.0
 -->
-
-> Stability: 1 - Experimental
 
 * `params` {Object}
 
@@ -561,10 +584,8 @@ HTTP request has finished loading.
 
 <!-- YAML
 added:
- - v20.18.0
+ - v22.7.0
 -->
-
-> Stability: 1 - Experimental
 
 * `params` {Object}
 
