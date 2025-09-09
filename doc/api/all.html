@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.19.0">
-  <title>Node.js v18.19.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.20.4">
+  <title>Node.js v18.20.4 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="all" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.19.0 documentation</h1>
+          <h1>Node.js v18.20.4 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.19.0</li>
+            <li class="pinned-header">Node.js v18.20.4</li>
             
             
             
@@ -120,7 +120,8 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/all.html">21.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v22.x/api/all.html">22.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v21.x/api/all.html">21.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v20.x/api/all.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/all.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/all.html">18.x <b>LTS</b></a></li>
@@ -516,6 +517,7 @@
 <li><a href="#all_n-api_napi_status"><code>napi_status</code></a></li>
 <li><a href="#all_n-api_napi_extended_error_info"><code>napi_extended_error_info</code></a></li>
 <li><a href="#all_n-api_napi_env"><code>napi_env</code></a></li>
+<li><span class="stability_1"><a href="#all_n-api_node_api_nogc_env"><code>node_api_nogc_env</code></a></span></li>
 <li><a href="#all_n-api_napi_value"><code>napi_value</code></a></li>
 <li><a href="#all_n-api_napi_threadsafe_function"><code>napi_threadsafe_function</code></a></li>
 <li><a href="#all_n-api_napi_threadsafe_function_release_mode"><code>napi_threadsafe_function_release_mode</code></a></li>
@@ -533,6 +535,7 @@
 <ul>
 <li><a href="#all_n-api_napi_callback_info"><code>napi_callback_info</code></a></li>
 <li><a href="#all_n-api_napi_callback"><code>napi_callback</code></a></li>
+<li><span class="stability_1"><a href="#all_n-api_node_api_nogc_finalize"><code>node_api_nogc_finalize</code></a></span></li>
 <li><a href="#all_n-api_napi_finalize"><code>napi_finalize</code></a></li>
 <li><a href="#all_n-api_napi_async_execute_callback"><code>napi_async_execute_callback</code></a></li>
 <li><a href="#all_n-api_napi_async_complete_callback"><code>napi_async_complete_callback</code></a></li>
@@ -1581,6 +1584,7 @@
 <li><a href="#DEP0169">DEP0169: Insecure url.parse()</a></li>
 <li><a href="#DEP0170">DEP0170: Invalid port when using <code>url.parse()</code></a></li>
 <li><a href="#DEP0171">DEP0171: Setters for <code>http.IncomingMessage</code> headers and trailers</a></li>
+<li><a href="#DEP0178">DEP0178: <code>dirent.path</code></a></li>
 </ul>
 </li>
 </ul>
@@ -2073,6 +2077,7 @@
 <li><a href="#all_errors_err_unsupported_esm_url_scheme"><code>ERR_UNSUPPORTED_ESM_URL_SCHEME</code></a></li>
 <li><span class="stability_1"><a href="#all_errors_err_use_after_close"><code>ERR_USE_AFTER_CLOSE</code></a></span></li>
 <li><a href="#all_errors_err_valid_performance_entry_type"><code>ERR_VALID_PERFORMANCE_ENTRY_TYPE</code></a></li>
+<li><a href="#all_errors_err_vm_dynamic_import_callback_missing_flag"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG</code></a></li>
 <li><a href="#all_errors_err_vm_dynamic_import_callback_missing"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING</code></a></li>
 <li><a href="#all_errors_err_vm_module_already_linked"><code>ERR_VM_MODULE_ALREADY_LINKED</code></a></li>
 <li><a href="#all_errors_err_vm_module_cached_data_rejected"><code>ERR_VM_MODULE_CACHED_DATA_REJECTED</code></a></li>
@@ -2093,6 +2098,7 @@
 <li><a href="#all_errors_err_worker_unsupported_operation"><code>ERR_WORKER_UNSUPPORTED_OPERATION</code></a></li>
 <li><a href="#all_errors_err_zlib_initialization_failed"><code>ERR_ZLIB_INITIALIZATION_FAILED</code></a></li>
 <li><a href="#all_errors_hpe_header_overflow"><code>HPE_HEADER_OVERFLOW</code></a></li>
+<li><a href="#all_errors_hpe_chunk_extensions_overflow"><code>HPE_CHUNK_EXTENSIONS_OVERFLOW</code></a></li>
 <li><a href="#all_errors_hpe_unexpected_content_length"><code>HPE_UNEXPECTED_CONTENT_LENGTH</code></a></li>
 <li><a href="#all_errors_module_not_found"><code>MODULE_NOT_FOUND</code></a></li>
 </ul>
@@ -2471,7 +2477,8 @@
 <li><a href="#all_fs_direntissocket"><code>dirent.isSocket()</code></a></li>
 <li><a href="#all_fs_direntissymboliclink"><code>dirent.isSymbolicLink()</code></a></li>
 <li><a href="#all_fs_direntname"><code>dirent.name</code></a></li>
-<li><a href="#all_fs_direntpath"><code>dirent.path</code></a></li>
+<li><span class="stability_1"><a href="#all_fs_direntparentpath"><code>dirent.parentPath</code></a></span></li>
+<li><span class="stability_0"><a href="#all_fs_direntpath"><code>dirent.path</code></a></span></li>
 </ul>
 </li>
 <li><a href="#all_fs_class-fsfswatcher">Class: <code>fs.FSWatcher</code></a>
@@ -5652,7 +5659,7 @@ the server is working.</p></section>
 <section><h2>Assert<span><a class="mark" href="#all_assert_assert" id="all_assert_assert">#</a></span><a aria-hidden="true" class="legacy" id="assert_assert"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/assert.js">lib/assert.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/assert.js">lib/assert.js</a></p>
 <p>The <code>node:assert</code> module provides a set of assertion functions for verifying
 invariants.</p>
 <section><h3>Strict assertion mode<span><a class="mark" href="#all_assert_strict-assertion-mode" id="all_assert_strict-assertion-mode">#</a></span><a aria-hidden="true" class="legacy" id="assert_strict_assertion_mode"></a></h3>
@@ -5735,7 +5742,7 @@ more on color support in terminal environments, read the tty
 <a href="#all_assert_assertdeepequalactual-expected-message"><code>assert.deepEqual()</code></a>:</p>
 <pre><code class="language-js cjs"><span class="hljs-comment">// WARNING: This does not throw an AssertionError in legacy assertion mode!</span>
 assert.<span class="hljs-title function_">deepEqual</span>(<span class="hljs-regexp">/a/gi</span>, <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>());</code> <button class="copy-button">copy</button></pre>
-</section><section><h3>Class: assert.AssertionError<a class="srclink" href="https://github.com/nodejs/node/blob/9e0c715518efb028fdabf43994df141fb91fa65f/lib/assert.js#L178">[src]</a><span><a class="mark" href="#all_assert_class-assertassertionerror" id="all_assert_class-assertassertionerror">#</a></span><a aria-hidden="true" class="legacy" id="assert_class_assert_assertionerror"></a></h3>
+</section><section><h3>Class: assert.AssertionError<a class="srclink" href="https://github.com/nodejs/node/blob/e922fb64b53530af4ad2e3df298a302225645f5b/lib/assert.js#L178">[src]</a><span><a class="mark" href="#all_assert_class-assertassertionerror" id="all_assert_class-assertassertionerror">#</a></span><a aria-hidden="true" class="legacy" id="assert_class_assert_assertionerror"></a></h3>
 <ul>
 <li>Extends: <a href="#all_errors_class-error" class="type">&#x3C;errors.Error></a></li>
 </ul>
@@ -7770,7 +7777,7 @@ argument.</p></section>
 <section><h2>Asynchronous context tracking<span><a class="mark" href="#all_async_context_asynchronous-context-tracking" id="all_async_context_asynchronous-context-tracking">#</a></span><a aria-hidden="true" class="legacy" id="async_context_asynchronous_context_tracking"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/async_hooks.js">lib/async_hooks.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/async_hooks.js">lib/async_hooks.js</a></p>
 <section><h3>Introduction<span><a class="mark" href="#all_async_context_introduction" id="all_async_context_introduction">#</a></span><a aria-hidden="true" class="legacy" id="async_context_introduction"></a></h3>
 <p>These classes are used to associate state and propagate it throughout
 callbacks and promise chains.
@@ -8500,7 +8507,7 @@ tracking need solved by <a href="#all_async_context_class-asynclocalstorage"><co
 provided by <a href="diagnostics_channel.html">Diagnostics Channel</a>, please open an issue at
 <a href="https://github.com/nodejs/node/issues">https://github.com/nodejs/node/issues</a> describing your use case so we can
 create a more purpose-focused API.</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/async_hooks.js">lib/async_hooks.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/async_hooks.js">lib/async_hooks.js</a></p>
 <p>We strongly discourage the use of the <code>async_hooks</code> API.
 Other APIs that can cover most of its use cases include:</p>
 <ul>
@@ -9225,7 +9232,7 @@ like I/O, connection pooling, or managing callback queues may use the
 <section><h2>Buffer<span><a class="mark" href="#all_buffer_buffer" id="all_buffer_buffer">#</a></span><a aria-hidden="true" class="legacy" id="buffer_buffer"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/buffer.js">lib/buffer.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/buffer.js">lib/buffer.js</a></p>
 <p><code>Buffer</code> objects are used to represent a fixed-length sequence of bytes. Many
 Node.js APIs support <code>Buffer</code>s.</p>
 <p>The <code>Buffer</code> class is a subclass of JavaScript's <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array"><code>Uint8Array</code></a> class and
@@ -15034,7 +15041,7 @@ status = <span class="hljs-built_in">napi_set_named_property</span>(env, object,
 it still gets the benefits of the ABI stability provided by the C API.</p>
 <p>When using <code>node-addon-api</code> instead of the C APIs, start with the API <a href="https://github.com/nodejs/node-addon-api#api-documentation">docs</a>
 for <code>node-addon-api</code>.</p>
-<p>The <a href="https://nodejs.github.io/node-addon-examples/">Node-API Resource</a> offers
+<p>The <a href="https://nodejs.github.io/node-addon-examples/">Node-API Resource</a> offers
 an excellent orientation and tips for developers just getting started with
 Node-API and <code>node-addon-api</code>. Additional media resources can be found on the
 <a href="https://github.com/nodejs/abi-stable-node/blob/HEAD/node-api-media.md">Node-API Media</a> page.</p>
@@ -15100,7 +15107,8 @@ developers have run into limitations in node-gyp.</p>
 <h5>CMake.js<span><a class="mark" href="#all_n-api_cmakejs" id="all_n-api_cmakejs">#</a></span><a aria-hidden="true" class="legacy" id="n_api_cmake_js"></a></h5>
 <p><a href="https://github.com/cmake-js/cmake-js">CMake.js</a> is an alternative build system based on <a href="https://cmake.org">CMake</a>.</p>
 <p>CMake.js is a good choice for projects that already use CMake or for
-developers affected by limitations in node-gyp.</p>
+developers affected by limitations in node-gyp. <a href="https://github.com/nodejs/node-addon-examples/tree/main/build_with_cmake"><code>build_with_cmake</code></a> is an
+example of a CMake-based native addon project.</p>
 <h4>Uploading precompiled binaries<span><a class="mark" href="#all_n-api_uploading-precompiled-binaries" id="all_n-api_uploading-precompiled-binaries">#</a></span><a aria-hidden="true" class="legacy" id="n_api_uploading_precompiled_binaries"></a></h4>
 <p>The three tools listed here permit native addon developers and maintainers
 to create and upload binaries to public or private servers. These tools are
@@ -15138,6 +15146,13 @@ in the specified (and earlier) versions.</p>
 <span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&#x3C;node_api.h></span></span></code> <button class="copy-button">copy</button></pre>
 <p>In this case the entire API surface, including any experimental APIs, will be
 available to the module code.</p>
+<p>Occasionally, experimental features are introduced that affect already-released
+and stable APIs. These features can be disabled by an opt-out:</p>
+<pre><code class="language-c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> NAPI_EXPERIMENTAL</span>
+<span class="hljs-meta">#<span class="hljs-keyword">define</span> NODE_API_EXPERIMENTAL_<span class="hljs-string">&#x3C;FEATURE_NAME></span>_OPT_OUT</span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&#x3C;node_api.h></span></span></code> <button class="copy-button">copy</button></pre>
+<p>where <code>&#x3C;FEATURE_NAME></code> is the name of an experimental feature that affects both
+experimental and stable APIs.</p>
 </section><section><h3>Node-API version matrix<span><a class="mark" href="#all_n-api_node-api-version-matrix" id="all_n-api_node-api-version-matrix">#</a></span><a aria-hidden="true" class="legacy" id="n_api_node_api_version_matrix"></a></h3>
 <p>Node-API versions are additive and versioned independently from Node.js.
 Version 4 is an extension to version 3 in that it has all of the APIs
@@ -15281,7 +15296,7 @@ napi_value <span class="hljs-title function_">create_addon</span><span class="hl
 <span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&#x3C;node_api.h></span></span>
 <span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">"addon.h"</span></span>
 
-NAPI_MODULE_INIT() {
+NAPI_MODULE_INIT(<span class="hljs-comment">/* napi_env env, napi_value exports */</span>) {
   <span class="hljs-comment">// This function body is expected to return a `napi_value`.</span>
   <span class="hljs-comment">// The variables `napi_env env` and `napi_value exports` may be used within</span>
   <span class="hljs-comment">// the body, as they are provided by the definition of `NAPI_MODULE_INIT()`.</span>
@@ -15313,7 +15328,7 @@ is tied to the life cycle of a Node.js environment.</p>
 <span>Added in: v12.8.0, v10.20.0</span>
 <span>N-API version: 6</span>
 </div>
-<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_set_instance_data</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_set_instance_data</span><span class="hljs-params">(node_api_nogc_env env,
                                    <span class="hljs-type">void</span>* data,
                                    napi_finalize finalize_cb,
                                    <span class="hljs-type">void</span>* finalize_hint)</span>;</code> <button class="copy-button">copy</button></pre>
@@ -15337,7 +15352,7 @@ of a previous call to <code>napi_set_instance_data()</code> will be overwritten.
 <span>Added in: v12.8.0, v10.20.0</span>
 <span>N-API version: 6</span>
 </div>
-<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_get_instance_data</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_get_instance_data</span><span class="hljs-params">(node_api_nogc_env env,
                                    <span class="hljs-type">void</span>** data)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the Node-API call is invoked under.</li>
@@ -15420,6 +15435,19 @@ different <a href="#all_worker_threads_class-worker"><code>Worker</code></a> thr
 when an instance of a native addon is unloaded. Notification of this event is
 delivered through the callbacks given to <a href="#all_n-api_napi_add_env_cleanup_hook"><code>napi_add_env_cleanup_hook</code></a> and
 <a href="#all_n-api_napi_set_instance_data"><code>napi_set_instance_data</code></a>.</p>
+<h4><code>node_api_nogc_env</code><span><a class="mark" href="#all_n-api_node_api_nogc_env" id="all_n-api_node_api_nogc_env">#</a></span><a aria-hidden="true" class="legacy" id="n_api_node_api_nogc_env"></a></h4>
+<p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> - Experimental</div><p></p>
+<p>This variant of <code>napi_env</code> is passed to synchronous finalizers
+(<a href="#all_n-api_node_api_nogc_finalize"><code>node_api_nogc_finalize</code></a>). There is a subset of Node-APIs which accept
+a parameter of type <code>node_api_nogc_env</code> as their first argument. These APIs do
+not access the state of the JavaScript engine and are thus safe to call from
+synchronous finalizers. Passing a parameter of type <code>napi_env</code> to these APIs is
+allowed, however, passing a parameter of type <code>node_api_nogc_env</code> to APIs that
+access the JavaScript engine state is not allowed. Attempting to do so without
+a cast will produce a compiler warning or an error when add-ons are compiled
+with flags which cause them to emit warnings and/or errors when incorrect
+pointer types are passed into a function. Calling such APIs from a synchronous
+finalizer will ultimately result in the termination of the application.</p>
 <h4><code>napi_value</code><span><a class="mark" href="#all_n-api_napi_value" id="all_n-api_napi_value">#</a></span><a aria-hidden="true" class="legacy" id="n_api_napi_value"></a></h4>
 <p>This is an opaque pointer that is used to represent a JavaScript value.</p>
 <h4><code>napi_threadsafe_function</code><span><a class="mark" href="#all_n-api_napi_threadsafe_function" id="all_n-api_napi_threadsafe_function">#</a></span><a aria-hidden="true" class="legacy" id="n_api_napi_threadsafe_function"></a></h4>
@@ -15531,25 +15559,28 @@ following signature:</p>
 <pre><code class="language-c"><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">napi_value</span> <span class="hljs-params">(*napi_callback)</span><span class="hljs-params">(napi_env, napi_callback_info)</span>;</code> <button class="copy-button">copy</button></pre>
 <p>Unless for reasons discussed in <a href="#all_n-api_object-lifetime-management">Object Lifetime Management</a>, creating a
 handle and/or callback scope inside a <code>napi_callback</code> is not necessary.</p>
-<h5><code>napi_finalize</code><span><a class="mark" href="#all_n-api_napi_finalize" id="all_n-api_napi_finalize">#</a></span><a aria-hidden="true" class="legacy" id="n_api_napi_finalize"></a></h5>
+<h5><code>node_api_nogc_finalize</code><span><a class="mark" href="#all_n-api_node_api_nogc_finalize" id="all_n-api_node_api_nogc_finalize">#</a></span><a aria-hidden="true" class="legacy" id="n_api_node_api_nogc_finalize"></a></h5>
 <div class="api_metadata">
-<span>Added in: v8.0.0</span>
-<span>N-API version: 1</span>
+<span>Added in: v18.20.0</span>
 </div>
+<p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> - Experimental</div><p></p>
 <p>Function pointer type for add-on provided functions that allow the user to be
 notified when externally-owned data is ready to be cleaned up because the
-object with which it was associated with has been garbage-collected. The user
-must provide a function satisfying the following signature which would get
-called upon the object's collection. Currently, <code>napi_finalize</code> can be used for
+object it was associated with has been garbage-collected. The user must provide
+a function satisfying the following signature which would get called upon the
+object's collection. Currently, <code>node_api_nogc_finalize</code> can be used for
 finding out when objects that have external data are collected.</p>
-<pre><code class="language-c"><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">void</span> <span class="hljs-params">(*napi_finalize)</span><span class="hljs-params">(napi_env env,
-                              <span class="hljs-type">void</span>* finalize_data,
-                              <span class="hljs-type">void</span>* finalize_hint)</span>;</code> <button class="copy-button">copy</button></pre>
+<pre><code class="language-c"><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">void</span> <span class="hljs-params">(*node_api_nogc_finalize)</span><span class="hljs-params">(node_api_nogc_env env,
+                                      <span class="hljs-type">void</span>* finalize_data,
+                                      <span class="hljs-type">void</span>* finalize_hint)</span>;</code> <button class="copy-button">copy</button></pre>
 <p>Unless for reasons discussed in <a href="#all_n-api_object-lifetime-management">Object Lifetime Management</a>, creating a
 handle and/or callback scope inside the function body is not necessary.</p>
 <p>Since these functions may be called while the JavaScript engine is in a state
-where it cannot execute JavaScript code, some Node-API calls may return
-<code>napi_pending_exception</code> even when there is no exception pending.</p>
+where it cannot execute JavaScript code, only Node-APIs which accept a
+<code>node_api_nogc_env</code> as their first parameter may be called.
+<a href="#all_n-api_node_api_post_finalizer"><code>node_api_post_finalizer</code></a> can be used to schedule Node-API calls that
+require access to the JavaScript engine's state to run after the current
+garbage collection cycle has completed.</p>
 <p>In the case of <a href="#all_n-api_node_api_create_external_string_latin1"><code>node_api_create_external_string_latin1</code></a> and
 <a href="#all_n-api_node_api_create_external_string_utf16"><code>node_api_create_external_string_utf16</code></a> the <code>env</code> parameter may be null,
 because external strings can be collected during the latter part of environment
@@ -15557,10 +15588,33 @@ shutdown.</p>
 <p>Change History:</p>
 <ul>
 <li>
+<p>experimental (<code>NAPI_EXPERIMENTAL</code>):</p>
+<p>Only Node-API calls that accept a <code>node_api_nogc_env</code> as their first
+parameter may be called, otherwise the application will be terminated with an
+appropriate error message. This feature can be turned off by defining
+<code>NODE_API_EXPERIMENTAL_NOGC_ENV_OPT_OUT</code>.</p>
+</li>
+</ul>
+<h5><code>napi_finalize</code><span><a class="mark" href="#all_n-api_napi_finalize" id="all_n-api_napi_finalize">#</a></span><a aria-hidden="true" class="legacy" id="n_api_napi_finalize"></a></h5>
+<div class="api_metadata">
+<span>Added in: v8.0.0</span>
+<span>N-API version: 1</span>
+</div>
+<p>Function pointer type for add-on provided function that allow the user to
+schedule a group of calls to Node-APIs in response to a garbage collection
+event, after the garbage collection cycle has completed. These function
+pointers can be used with <a href="#all_n-api_node_api_post_finalizer"><code>node_api_post_finalizer</code></a>.</p>
+<pre><code class="language-c"><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">void</span> <span class="hljs-params">(*napi_finalize)</span><span class="hljs-params">(napi_env env,
+                              <span class="hljs-type">void</span>* finalize_data,
+                              <span class="hljs-type">void</span>* finalize_hint)</span>;</code> <button class="copy-button">copy</button></pre>
+<p>Change History:</p>
+<ul>
+<li>
 <p>experimental (<code>NAPI_EXPERIMENTAL</code> is defined):</p>
-<p>Node-API calls made from a finalizer will return <code>napi_cannot_run_js</code> when
-the JavaScript engine is unable to execute JavaScript, and will return
-<code>napi_exception_pending</code> if there is a pending exception.</p>
+<p>A function of this type may no longer be used as a finalizer, except with
+<a href="#all_n-api_node_api_post_finalizer"><code>node_api_post_finalizer</code></a>. <a href="#all_n-api_node_api_nogc_finalize"><code>node_api_nogc_finalize</code></a> must be used
+instead. This feature can be turned off by defining
+<code>NODE_API_EXPERIMENTAL_NOGC_ENV_OPT_OUT</code>.</p>
 </li>
 </ul>
 <h5><code>napi_async_execute_callback</code><span><a class="mark" href="#all_n-api_napi_async_execute_callback" id="all_n-api_napi_async_execute_callback">#</a></span><a aria-hidden="true" class="legacy" id="n_api_napi_async_execute_callback"></a></h5>
@@ -15706,7 +15760,7 @@ logging purposes.</p>
 <span>N-API version: 1</span>
 </div>
 <pre><code class="language-c">napi_status
-<span class="hljs-title function_">napi_get_last_error_info</span><span class="hljs-params">(napi_env env,
+<span class="hljs-title function_">napi_get_last_error_info</span><span class="hljs-params">(node_api_nogc_env env,
                          <span class="hljs-type">const</span> napi_extended_error_info** result)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
@@ -16317,7 +16371,7 @@ should be freed up.</p>
 <span>Added in: v10.2.0</span>
 <span>N-API version: 3</span>
 </div>
-<pre><code class="language-c">NODE_EXTERN napi_status <span class="hljs-title function_">napi_add_env_cleanup_hook</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">NODE_EXTERN napi_status <span class="hljs-title function_">napi_add_env_cleanup_hook</span><span class="hljs-params">(node_api_nogc_env env,
                                                   napi_cleanup_hook fun,
                                                   <span class="hljs-type">void</span>* arg)</span>;</code> <button class="copy-button">copy</button></pre>
 <p>Registers <code>fun</code> as a function to be run with the <code>arg</code> parameter once the
@@ -16337,7 +16391,7 @@ is being torn down anyway.</p>
 <span>Added in: v10.2.0</span>
 <span>N-API version: 3</span>
 </div>
-<pre><code class="language-c">NAPI_EXTERN napi_status <span class="hljs-title function_">napi_remove_env_cleanup_hook</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">NAPI_EXTERN napi_status <span class="hljs-title function_">napi_remove_env_cleanup_hook</span><span class="hljs-params">(node_api_nogc_env env,
                                                      <span class="hljs-type">void</span> (*fun)(<span class="hljs-type">void</span>* arg),
                                                      <span class="hljs-type">void</span>* arg)</span>;</code> <button class="copy-button">copy</button></pre>
 <p>Unregisters <code>fun</code> as a function to be run with the <code>arg</code> parameter once the
@@ -16359,7 +16413,7 @@ with <code>napi_add_env_cleanup_hook</code>, otherwise the process will abort.</
 <span>N-API version: 8</span>
 </div>
 <pre><code class="language-c">NAPI_EXTERN napi_status <span class="hljs-title function_">napi_add_async_cleanup_hook</span><span class="hljs-params">(
-    napi_env env,
+    node_api_nogc_env env,
     napi_async_cleanup_hook hook,
     <span class="hljs-type">void</span>* arg,
     napi_async_cleanup_hook_handle* remove_handle)</span>;</code> <button class="copy-button">copy</button></pre>
@@ -16480,7 +16534,7 @@ napi_value <span class="hljs-title function_">Init</span><span class="hljs-param
 }</code> <button class="copy-button">copy</button></pre>
 <p>You can also use the <code>NAPI_MODULE_INIT</code> macro, which acts as a shorthand
 for <code>NAPI_MODULE</code> and defining an <code>Init</code> function:</p>
-<pre><code class="language-c">NAPI_MODULE_INIT() {
+<pre><code class="language-c">NAPI_MODULE_INIT(<span class="hljs-comment">/* napi_env env, napi_value exports */</span>) {
   napi_value answer;
   napi_status result;
 
@@ -16492,6 +16546,8 @@ for <code>NAPI_MODULE</code> and defining an <code>Init</code> function:</p>
 
   <span class="hljs-keyword">return</span> exports;
 }</code> <button class="copy-button">copy</button></pre>
+<p>The parameters <code>env</code> and <code>exports</code> are provided to the body of the
+<code>NAPI_MODULE_INIT</code> macro.</p>
 <p>All Node-API addons are context-aware, meaning they may be loaded multiple
 times. There are a few design considerations when declaring such a module.
 The documentation on <a href="#all_addons_context-aware-addons">context-aware addons</a> provides more details.</p>
@@ -19075,7 +19131,7 @@ matches <code>type_tag</code>, then <code>result</code> is set to <code>true</co
 <pre><code class="language-c">napi_status <span class="hljs-title function_">napi_add_finalizer</span><span class="hljs-params">(napi_env env,
                                napi_value js_object,
                                <span class="hljs-type">void</span>* finalize_data,
-                               napi_finalize finalize_cb,
+                               node_api_nogc_finalize finalize_cb,
                                <span class="hljs-type">void</span>* finalize_hint,
                                napi_ref* result)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
@@ -19104,7 +19160,7 @@ required in order to enable correct disposal of the reference.</p>
 <span>Added in: v18.19.0</span>
 </div>
 <p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> - Experimental</div><p></p>
-<pre><code class="language-c">napi_status <span class="hljs-title function_">node_api_post_finalizer</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">napi_status <span class="hljs-title function_">node_api_post_finalizer</span><span class="hljs-params">(node_api_nogc_env env,
                                     napi_finalize finalize_cb,
                                     <span class="hljs-type">void</span>* finalize_data,
                                     <span class="hljs-type">void</span>* finalize_hint)</span>;</code> <button class="copy-button">copy</button></pre>
@@ -19156,7 +19212,7 @@ addon-provided <code>void*</code> data that was passed into the
 <code>napi_create_async_work</code> call.</p>
 <p>Once created the async worker can be queued
 for execution using the <a href="#all_n-api_napi_queue_async_work"><code>napi_queue_async_work</code></a> function:</p>
-<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_queue_async_work</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_queue_async_work</span><span class="hljs-params">(node_api_nogc_env env,
                                   napi_async_work work)</span>;</code> <button class="copy-button">copy</button></pre>
 <p><a href="#all_n-api_napi_cancel_async_work"><code>napi_cancel_async_work</code></a> can be used if the work needs
 to be cancelled before the work has started execution.</p>
@@ -19230,7 +19286,7 @@ the <a href="#all_async_hooks_type"><code>async_hooks</code> documentation</a> f
 <span>Added in: v8.0.0</span>
 <span>N-API version: 1</span>
 </div>
-<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_queue_async_work</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_queue_async_work</span><span class="hljs-params">(node_api_nogc_env env,
                                   napi_async_work work)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
@@ -19245,7 +19301,7 @@ with the same <code>napi_async_work</code> item or the result will be undefined.
 <span>Added in: v8.0.0</span>
 <span>N-API version: 1</span>
 </div>
-<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_cancel_async_work</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_cancel_async_work</span><span class="hljs-params">(node_api_nogc_env env,
                                    napi_async_work work)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
@@ -19412,7 +19468,7 @@ the required scope.</p>
   <span class="hljs-type">const</span> <span class="hljs-type">char</span>* release;
 } napi_node_version;
 
-napi_status <span class="hljs-title function_">napi_get_node_version</span><span class="hljs-params">(napi_env env,
+napi_status <span class="hljs-title function_">napi_get_node_version</span><span class="hljs-params">(node_api_nogc_env env,
                                   <span class="hljs-type">const</span> napi_node_version** version)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
@@ -19428,7 +19484,7 @@ value of <a href="#all_process_processrelease"><code>process.release.name</code>
 <span>Added in: v8.0.0</span>
 <span>N-API version: 1</span>
 </div>
-<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_get_version</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">napi_status <span class="hljs-title function_">napi_get_version</span><span class="hljs-params">(node_api_nogc_env env,
                              <span class="hljs-type">uint32_t</span>* result)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
@@ -19455,7 +19511,7 @@ that does not use the function.</li>
 <span>Added in: v8.5.0</span>
 <span>N-API version: 1</span>
 </div>
-<pre><code class="language-c">NAPI_EXTERN napi_status <span class="hljs-title function_">napi_adjust_external_memory</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">NAPI_EXTERN napi_status <span class="hljs-title function_">napi_adjust_external_memory</span><span class="hljs-params">(node_api_nogc_env env,
                                                     <span class="hljs-type">int64_t</span> change_in_bytes,
                                                     <span class="hljs-type">int64_t</span>* result)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
@@ -19624,7 +19680,7 @@ a specific <code>napi_env</code>.</p>
 <span>Added in: v9.3.0, v8.10.0</span>
 <span>N-API version: 2</span>
 </div>
-<pre><code class="language-c">NAPI_EXTERN napi_status <span class="hljs-title function_">napi_get_uv_event_loop</span><span class="hljs-params">(napi_env env,
+<pre><code class="language-c">NAPI_EXTERN napi_status <span class="hljs-title function_">napi_get_uv_event_loop</span><span class="hljs-params">(node_api_nogc_env env,
                                                <span class="hljs-keyword">struct</span> uv_loop_s** loop)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
@@ -19889,7 +19945,7 @@ to any thread-safe APIs after having called this API has undefined results, as
 <span>N-API version: 4</span>
 </div>
 <pre><code class="language-c">NAPI_EXTERN napi_status
-<span class="hljs-title function_">napi_ref_threadsafe_function</span><span class="hljs-params">(napi_env env, napi_threadsafe_function func)</span>;</code> <button class="copy-button">copy</button></pre>
+<span class="hljs-title function_">napi_ref_threadsafe_function</span><span class="hljs-params">(node_api_nogc_env env, napi_threadsafe_function func)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
 <li><code>[in] func</code>: The thread-safe function to reference.</li>
@@ -19908,7 +19964,7 @@ being destroyed. <code>napi_acquire_threadsafe_function</code> and
 <span>N-API version: 4</span>
 </div>
 <pre><code class="language-c">NAPI_EXTERN napi_status
-<span class="hljs-title function_">napi_unref_threadsafe_function</span><span class="hljs-params">(napi_env env, napi_threadsafe_function func)</span>;</code> <button class="copy-button">copy</button></pre>
+<span class="hljs-title function_">napi_unref_threadsafe_function</span><span class="hljs-params">(node_api_nogc_env env, napi_threadsafe_function func)</span>;</code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
 <li><code>[in] func</code>: The thread-safe function to unreference.</li>
@@ -19924,7 +19980,7 @@ idempotent.</p>
 <span>N-API version: 9</span>
 </div>
 <pre><code class="language-c">NAPI_EXTERN napi_status
-<span class="hljs-title function_">node_api_get_module_file_name</span><span class="hljs-params">(napi_env env, <span class="hljs-type">const</span> <span class="hljs-type">char</span>** result)</span>;
+<span class="hljs-title function_">node_api_get_module_file_name</span><span class="hljs-params">(node_api_nogc_env env, <span class="hljs-type">const</span> <span class="hljs-type">char</span>** result)</span>;
 </code> <button class="copy-button">copy</button></pre>
 <ul>
 <li><code>[in] env</code>: The environment that the API is invoked under.</li>
@@ -20089,7 +20145,7 @@ and registers it with the platform automatically.</p>
 <section><h2>Child process<span><a class="mark" href="#all_child_process_child-process" id="all_child_process_child-process">#</a></span><a aria-hidden="true" class="legacy" id="child_process_child_process"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/child_process.js">lib/child_process.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/child_process.js">lib/child_process.js</a></p>
 <p>The <code>node:child_process</code> module provides the ability to spawn subprocesses in
 a manner that is similar, but not identical, to <a href="http://man7.org/linux/man-pages/man3/popen.3.html"><code>popen(3)</code></a>. This capability
 is primarily provided by the <a href="#all_child_process_child_processspawncommand-args-options"><code>child_process.spawn()</code></a> function:</p>
@@ -21651,7 +21707,7 @@ or <a href="#all_child_process_child_processforkmodulepath-args-options"><code>c
 <section><h2>Cluster<span><a class="mark" href="#all_cluster_cluster" id="all_cluster_cluster">#</a></span><a aria-hidden="true" class="legacy" id="cluster_cluster"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/cluster.js">lib/cluster.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/cluster.js">lib/cluster.js</a></p>
 <p>Clusters of Node.js processes can be used to run multiple instances of Node.js
 that can distribute workloads among their application threads. When process
 isolation is not needed, use the <a href="worker_threads.html"><code>worker_threads</code></a> module instead, which
@@ -24298,7 +24354,7 @@ max-semi-space-size values when running benchmarks for your application.</p>
 <section><h2>Console<span><a class="mark" href="#all_console_console" id="all_console_console">#</a></span><a aria-hidden="true" class="legacy" id="console_console"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/console.js">lib/console.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/console.js">lib/console.js</a></p>
 <p>The <code>node:console</code> module provides a simple debugging console that is similar to
 the JavaScript console mechanism provided by web browsers.</p>
 <p>The module exports two specific components:</p>
@@ -24898,7 +24954,7 @@ override binaries, but you'll erase the Corepack ones in the process. (Run
 <section><h2>Crypto<span><a class="mark" href="#all_crypto_crypto" id="all_crypto_crypto">#</a></span><a aria-hidden="true" class="legacy" id="crypto_crypto"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/crypto.js">lib/crypto.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/crypto.js">lib/crypto.js</a></p>
 <p>The <code>node:crypto</code> module provides cryptographic functionality that includes a
 set of wrappers for OpenSSL's hash, HMAC, cipher, decipher, sign, and verify
 functions.</p>
@@ -28834,6 +28890,8 @@ random and at least 16 bytes long. See <a href="https://nvlpubs.nist.gov/nistpub
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v21.6.2, v20.11.1, v18.19.1</td>
+<td><p>The <code>RSA_PKCS1_PADDING</code> padding was disabled unless the OpenSSL build supports implicit rejection.</p></td></tr>
 <tr><td>v15.0.0</td>
 <td><p>Added string, ArrayBuffer, and CryptoKey as allowable key types. The oaepLabel can be an ArrayBuffer. The buffer can be a string or ArrayBuffer. All types that accept buffers are limited to a maximum of 2 ** 31 - 1 bytes.</p></td></tr>
 <tr><td>v12.11.0</td>
@@ -28871,6 +28929,10 @@ the corresponding public key, for example using <a href="#all_crypto_cryptopubli
 <code>privateKey</code> had been passed to <a href="#all_crypto_cryptocreateprivatekeykey"><code>crypto.createPrivateKey()</code></a>. If it is an
 object, the <code>padding</code> property can be passed. Otherwise, this function uses
 <code>RSA_PKCS1_OAEP_PADDING</code>.</p>
+<p>Using <code>crypto.constants.RSA_PKCS1_PADDING</code> in <a href="#all_crypto_cryptoprivatedecryptprivatekey-buffer"><code>crypto.privateDecrypt()</code></a>
+requires OpenSSL to support implicit rejection (<code>rsa_pkcs1_implicit_rejection</code>).
+If the version of OpenSSL used by Node.js does not support this feature,
+attempting to use <code>RSA_PKCS1_PADDING</code> will fail.</p>
 <h4><code>crypto.privateEncrypt(privateKey, buffer)</code><span><a class="mark" href="#all_crypto_cryptoprivateencryptprivatekey-buffer" id="all_crypto_cryptoprivateencryptprivatekey-buffer">#</a></span><a aria-hidden="true" class="legacy" id="crypto_crypto_privateencrypt_privatekey_buffer"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -30030,7 +30092,7 @@ specific to OpenSSL.</p>
   </tr>
   <tr>
     <td><code>SSL_OP_CISCO_ANYCONNECT</code></td>
-    <td>Instructs OpenSSL to use Cisco's "speshul" version of DTLS_BAD_VER.</td>
+    <td>Instructs OpenSSL to use Cisco's version identifier of DTLS_BAD_VER.</td>
   </tr>
   <tr>
     <td><code>SSL_OP_COOKIE_EXCHANGE</code></td>
@@ -33244,7 +33306,26 @@ an error in future versions of Node.js, as the <a href="#all_url_the-whatwg-url-
 <p>Type: Documentation-only</p>
 <p>In a future version of Node.js, <a href="#all_http_messageheaders"><code>message.headers</code></a>,
 <a href="#all_http_messageheadersdistinct"><code>message.headersDistinct</code></a>, <a href="#all_http_messagetrailers"><code>message.trailers</code></a>, and
-<a href="#all_http_messagetrailersdistinct"><code>message.trailersDistinct</code></a> will be read-only.</p></section>
+<a href="#all_http_messagetrailersdistinct"><code>message.trailersDistinct</code></a> will be read-only.</p>
+<!-- md-lint skip-deprecation DEP0172 -->
+<!-- md-lint skip-deprecation DEP0173 -->
+<!-- md-lint skip-deprecation DEP0174 -->
+<!-- md-lint skip-deprecation DEP0175 -->
+<!-- md-lint skip-deprecation DEP0176 -->
+<!-- md-lint skip-deprecation DEP0177 -->
+<h4 id="DEP0178">DEP0178: <code>dirent.path</code><span><a class="mark" href="#all_deprecations_dep0178-direntpath" id="all_deprecations_dep0178-direntpath">#</a></span><a aria-hidden="true" class="legacy" id="deprecations_dep0178_dirent_path"></a></h4>
+<div class="api_metadata">
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v18.20.0</td>
+<td><p>Documentation-only deprecation.</p></td></tr>
+</tbody></table>
+</details>
+</div>
+<p>Type: Documentation-only</p>
+<p>The <a href="#all_fs_direntpath"><code>dirent.path</code></a> is deprecated due to its lack of consistency across
+release lines. Please use <a href="#all_fs_direntparentpath"><code>dirent.parentPath</code></a> instead.</p></section>
         </section>
 <section><h2>Diagnostics Channel<span><a class="mark" href="#all_diagnostics_channel_diagnostics-channel" id="all_diagnostics_channel_diagnostics-channel">#</a></span><a aria-hidden="true" class="legacy" id="diagnostics_channel_diagnostics_channel"></a></h2>
 <div class="api_metadata">
@@ -33260,7 +33341,7 @@ an error in future versions of Node.js, as the <a href="#all_url_the-whatwg-url-
 </div>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/diagnostics_channel.js">lib/diagnostics_channel.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/diagnostics_channel.js">lib/diagnostics_channel.js</a></p>
 <p>The <code>node:diagnostics_channel</code> module provides an API to create named channels
 to report arbitrary message data for diagnostics purposes.</p>
 <p>It can be accessed using:</p>
@@ -34124,7 +34205,7 @@ independently.</p>
 <section><h2>DNS<span><a class="mark" href="#all_dns_dns" id="all_dns_dns">#</a></span><a aria-hidden="true" class="legacy" id="dns_dns"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/dns.js">lib/dns.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/dns.js">lib/dns.js</a></p>
 <p>The <code>node:dns</code> module enables name resolution. For example, use it to look up IP
 addresses of host names.</p>
 <p>Although named for the <a href="https://en.wikipedia.org/wiki/Domain_Name_System">Domain Name System (DNS)</a>, it does not always use the
@@ -35694,7 +35775,7 @@ uses. For instance, they do not use the configuration from <code>/etc/hosts</cod
 </div>
 
 <p></p><div class="api_stability api_stability_0"><a href="#all_documentation_stability-index">Stability: 0</a> - Deprecated</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/domain.js">lib/domain.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/domain.js">lib/domain.js</a></p>
 <p><strong>This module is pending deprecation.</strong> Once a replacement API has been
 finalized, this module will be fully deprecated. Most developers should
 <strong>not</strong> have cause to use this module. Users who absolutely must have
@@ -37972,6 +38053,9 @@ the <a href="#all_packages_exports"><code>"exports"</code></a> field of the <a h
 <h4><code>ERR_VALID_PERFORMANCE_ENTRY_TYPE</code><span><a class="mark" href="#all_errors_err_valid_performance_entry_type" id="all_errors_err_valid_performance_entry_type">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_valid_performance_entry_type"></a></h4>
 <p>While using the Performance Timing API (<code>perf_hooks</code>), no valid performance
 entry types are found.</p>
+<p><a id="ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG"></a></p>
+<h4><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG</code><span><a class="mark" href="#all_errors_err_vm_dynamic_import_callback_missing_flag" id="all_errors_err_vm_dynamic_import_callback_missing_flag">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_vm_dynamic_import_callback_missing_flag"></a></h4>
+<p>A dynamic import callback was invoked without <code>--experimental-vm-modules</code>.</p>
 <p><a id="ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING"></a></p>
 <h4><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING</code><span><a class="mark" href="#all_errors_err_vm_dynamic_import_callback_missing" id="all_errors_err_vm_dynamic_import_callback_missing">#</a></span><a aria-hidden="true" class="legacy" id="errors_err_vm_dynamic_import_callback_missing"></a></h4>
 <p>A dynamic import callback was not specified.</p>
@@ -38058,6 +38142,14 @@ nor a relative path starting with <code>./</code> or <code>../</code>.</p>
 malconfigured clients, if more than 8 KiB of HTTP header data is received then
 HTTP parsing will abort without a request or response object being created, and
 an <code>Error</code> with this code will be emitted.</p>
+<p><a id="HPE_CHUNK_EXTENSIONS_OVERFLOW"></a></p>
+<h4><code>HPE_CHUNK_EXTENSIONS_OVERFLOW</code><span><a class="mark" href="#all_errors_hpe_chunk_extensions_overflow" id="all_errors_hpe_chunk_extensions_overflow">#</a></span><a aria-hidden="true" class="legacy" id="errors_hpe_chunk_extensions_overflow"></a></h4>
+<div class="api_metadata">
+<span>Added in: v18.19.1</span>
+</div>
+<p>Too much data was received for a chunk extensions. In order to protect against
+malicious or malconfigured clients, if more than 16 KiB of data is received
+then an <code>Error</code> with this code will be emitted.</p>
 <p><a id="HPE_UNEXPECTED_CONTENT_LENGTH"></a></p>
 <h4><code>HPE_UNEXPECTED_CONTENT_LENGTH</code><span><a class="mark" href="#all_errors_hpe_unexpected_content_length" id="all_errors_hpe_unexpected_content_length">#</a></span><a aria-hidden="true" class="legacy" id="errors_hpe_unexpected_content_length"></a></h4>
 <p>Server is sending both a <code>Content-Length</code> header and <code>Transfer-Encoding: chunked</code>.</p>
@@ -38321,7 +38413,7 @@ closed.</p>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/events.js">lib/events.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/events.js">lib/events.js</a></p>
 <p>Much of the Node.js core API is built around an idiomatic asynchronous
 event-driven architecture in which certain kinds of objects (called "emitters")
 emit named events that cause <code>Function</code> objects ("listeners") to be called.</p>
@@ -40471,7 +40563,7 @@ to the <code>EventTarget</code>.</p></section>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/fs.js">lib/fs.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/fs.js">lib/fs.js</a></p>
 <p>The <code>node:fs</code> module enables interacting with the file system in a
 way modeled on standard POSIX functions.</p>
 <p>To use the promise-based APIs:</p>
@@ -46232,10 +46324,20 @@ directory.</p>
 <p>The file name that this <a href="#all_fs_class-fsdirent" class="type">&#x3C;fs.Dirent></a> object refers to. The type of this
 value is determined by the <code>options.encoding</code> passed to <a href="#all_fs_fsreaddirpath-options-callback"><code>fs.readdir()</code></a> or
 <a href="#all_fs_fsreaddirsyncpath-options"><code>fs.readdirSync()</code></a>.</p>
+<h5><code>dirent.parentPath</code><span><a class="mark" href="#all_fs_direntparentpath" id="all_fs_direntparentpath">#</a></span><a aria-hidden="true" class="legacy" id="fs_dirent_parentpath"></a></h5>
+<div class="api_metadata">
+<span>Added in: v18.20.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> – Experimental</div><p></p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
+</ul>
+<p>The path to the parent directory of the file this <a href="#all_fs_class-fsdirent" class="type">&#x3C;fs.Dirent></a> object refers to.</p>
 <h5><code>dirent.path</code><span><a class="mark" href="#all_fs_direntpath" id="all_fs_direntpath">#</a></span><a aria-hidden="true" class="legacy" id="fs_dirent_path"></a></h5>
 <div class="api_metadata">
-<span>Added in: v18.17.0</span>
+<span>Added in: v18.17.0</span><span>Deprecated since: v18.20.0</span>
 </div>
+<p></p><div class="api_stability api_stability_0"><a href="#all_documentation_stability-index">Stability: 0</a> - Deprecated: Use <a href="#all_fs_direntparentpath"><code>dirent.parentPath</code></a> instead.</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
 </ul>
@@ -47817,7 +47919,7 @@ only if the Node.js binary was compiled with including support for the
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v18.0.0</td>
-<td><p>No longer behind <code>--experimental-global-fetch</code> CLI flag.</p></td></tr>
+<td><p>No longer behind <code>--experimental-fetch</code> CLI flag.</p></td></tr>
 <tr><td>v17.5.0</td>
 <td><p><span>Added in: v17.5.0</span></p></td></tr>
 </tbody></table>
@@ -47832,7 +47934,7 @@ CLI flag.</div><p></p>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v18.0.0</td>
-<td><p>No longer behind <code>--experimental-global-fetch</code> CLI flag.</p></td></tr>
+<td><p>No longer behind <code>--experimental-fetch</code> CLI flag.</p></td></tr>
 <tr><td>v17.6.0</td>
 <td><p><span>Added in: v17.6.0</span></p></td></tr>
 </tbody></table>
@@ -47862,7 +47964,7 @@ module, regardless of whether it is a <a href="modules.html">CommonJS module</a>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v18.0.0</td>
-<td><p>No longer behind <code>--experimental-global-fetch</code> CLI flag.</p></td></tr>
+<td><p>No longer behind <code>--experimental-fetch</code> CLI flag.</p></td></tr>
 <tr><td>v17.5.0</td>
 <td><p><span>Added in: v17.5.0</span></p></td></tr>
 </tbody></table>
@@ -47982,7 +48084,7 @@ within each turn of the Node.js event loop.</p>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v18.0.0</td>
-<td><p>No longer behind <code>--experimental-global-fetch</code> CLI flag.</p></td></tr>
+<td><p>No longer behind <code>--experimental-fetch</code> CLI flag.</p></td></tr>
 <tr><td>v17.5.0</td>
 <td><p><span>Added in: v17.5.0</span></p></td></tr>
 </tbody></table>
@@ -47997,7 +48099,7 @@ CLI flag.</div><p></p>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
 <tr><td>v18.0.0</td>
-<td><p>No longer behind <code>--experimental-global-fetch</code> CLI flag.</p></td></tr>
+<td><p>No longer behind <code>--experimental-fetch</code> CLI flag.</p></td></tr>
 <tr><td>v17.5.0</td>
 <td><p><span>Added in: v17.5.0</span></p></td></tr>
 </tbody></table>
@@ -48126,7 +48228,7 @@ only if the Node.js binary was compiled with including support for the
 <section><h2>HTTP<span><a class="mark" href="#all_http_http" id="all_http_http">#</a></span><a aria-hidden="true" class="legacy" id="http_http"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/http.js">lib/http.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/http.js">lib/http.js</a></p>
 <p>To use the HTTP server and client one must <code>require('node:http')</code>.</p>
 <p>The HTTP interfaces in Node.js are designed to support many features
 of the protocol which have been traditionally difficult to use.
@@ -51485,7 +51587,7 @@ or response. The HTTP module will automatically validate such headers.</p>
 </div>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/http2.js">lib/http2.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/http2.js">lib/http2.js</a></p>
 <p>The <code>node:http2</code> module provides an implementation of the <a href="https://tools.ietf.org/html/rfc7540">HTTP/2</a> protocol.
 It can be accessed using:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> http2 = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:http2'</span>);</code> <button class="copy-button">copy</button></pre>
@@ -54952,7 +55054,7 @@ you need to implement any fall-back behavior yourself.</p></section>
 <section><h2>HTTPS<span><a class="mark" href="#all_https_https" id="all_https_https">#</a></span><a aria-hidden="true" class="legacy" id="https_https"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/https.js">lib/https.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/https.js">lib/https.js</a></p>
 <p>HTTPS is the HTTP protocol over TLS/SSL. In Node.js this is implemented as a
 separate module.</p>
 <section><h3>Determining if crypto support is unavailable<span><a class="mark" href="#all_https_determining-if-crypto-support-is-unavailable" id="all_https_determining-if-crypto-support-is-unavailable">#</a></span><a aria-hidden="true" class="legacy" id="https_determining_if_crypto_support_is_unavailable"></a></h3>
@@ -55410,7 +55512,7 @@ headers: max-age=0; pin-sha256="WoiWRyIOVNa9ihaBciRSC7XHjliYS9VwUGOIud4PB18="; p
 <section><h2>Inspector<span><a class="mark" href="#all_inspector_inspector" id="all_inspector_inspector">#</a></span><a aria-hidden="true" class="legacy" id="inspector_inspector"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/inspector.js">lib/inspector.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/inspector.js">lib/inspector.js</a></p>
 <p>The <code>node:inspector</code> module provides an API for interacting with the V8
 inspector.</p>
 <p>It can be accessed using:</p>
@@ -56701,6 +56803,8 @@ in order to be used.</p>
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v18.20.0</td>
+<td><p>Add experimental support for import attributes.</p></td></tr>
 <tr><td>v18.19.0</td>
 <td><p>Module customization hooks are executed off the main thread.</p></td></tr>
 <tr><td>v18.6.0</td>
@@ -56828,7 +56932,7 @@ details), it is recommended to use <a href="#all_url_urlpathtofileurlpath">url.p
 <li><code>application/wasm</code> for Wasm</li>
 </ul>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-string">'data:text/javascript,console.log("hello!");'</span>;
-<span class="hljs-keyword">import</span> _ <span class="hljs-keyword">from</span> <span class="hljs-string">'data:application/json,"world!"'</span> assert { <span class="hljs-attr">type</span>: <span class="hljs-string">'json'</span> };</code> <button class="copy-button">copy</button></pre>
+<span class="hljs-keyword">import</span> _ <span class="hljs-keyword">from</span> <span class="hljs-string">'data:application/json,"world!"'</span> <span class="hljs-keyword">with</span> { <span class="hljs-attr">type</span>: <span class="hljs-string">'json'</span> };</code> <button class="copy-button">copy</button></pre>
 <p><code>data:</code> URLs only resolve <a href="#all_esm_terminology">bare specifiers</a> for builtin modules
 and <a href="#all_esm_terminology">absolute specifiers</a>. Resolving
 <a href="#all_esm_terminology">relative specifiers</a> does not work because <code>data:</code> is not a
@@ -56857,7 +56961,7 @@ absolute URL strings.</p>
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
-<tr><td>v18.19.0</td>
+<tr><td>v18.20.0</td>
 <td><p>Switch from Import Assertions to Import Attributes.</p></td></tr>
 <tr><td>v17.1.0, v16.14.0</td>
 <td><p><span>Added in: v17.1.0, v16.14.0</span></p></td></tr>
@@ -56867,16 +56971,15 @@ absolute URL strings.</p>
 <p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a>.1 - Active development</div><p></p>
 <blockquote>
 <p>This feature was previously named "Import assertions", and using the <code>assert</code>
-keyword instead of <code>with</code>. Because the version of V8 on this release line does
-not support the <code>with</code> keyword, you need to keep using <code>assert</code> to support
-this version of Node.js.</p>
+keyword instead of <code>with</code>. Any uses in code of the prior <code>assert</code> keyword
+should be updated to use <code>with</code> instead.</p>
 </blockquote>
 <p>The <a href="https://github.com/tc39/proposal-import-attributes">Import Attributes proposal</a> adds an inline syntax for module import
 statements to pass on more information alongside the module specifier.</p>
-<pre><code class="language-js"><span class="hljs-keyword">import</span> fooData <span class="hljs-keyword">from</span> <span class="hljs-string">'./foo.json'</span> assert { <span class="hljs-attr">type</span>: <span class="hljs-string">'json'</span> };
+<pre><code class="language-js"><span class="hljs-keyword">import</span> fooData <span class="hljs-keyword">from</span> <span class="hljs-string">'./foo.json'</span> <span class="hljs-keyword">with</span> { <span class="hljs-attr">type</span>: <span class="hljs-string">'json'</span> };
 
 <span class="hljs-keyword">const</span> { <span class="hljs-attr">default</span>: barData } =
-  <span class="hljs-keyword">await</span> <span class="hljs-keyword">import</span>(<span class="hljs-string">'./bar.json'</span>, { <span class="hljs-attr">assert</span>: { <span class="hljs-attr">type</span>: <span class="hljs-string">'json'</span> } });</code> <button class="copy-button">copy</button></pre>
+  <span class="hljs-keyword">await</span> <span class="hljs-keyword">import</span>(<span class="hljs-string">'./bar.json'</span>, { <span class="hljs-attr">with</span>: { <span class="hljs-attr">type</span>: <span class="hljs-string">'json'</span> } });</code> <button class="copy-button">copy</button></pre>
 <p>Node.js supports the following <code>type</code> values, for which the attribute is
 mandatory:</p>
 
@@ -57085,8 +57188,8 @@ separate cache.</p>
 </section><section><h3>JSON modules<span><a class="mark" href="#all_esm_json-modules" id="all_esm_json-modules">#</a></span><a aria-hidden="true" class="legacy" id="esm_json_modules"></a></h3>
 <p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> - Experimental</div><p></p>
 <p>JSON files can be referenced by <code>import</code>:</p>
-<pre><code class="language-js"><span class="hljs-keyword">import</span> packageConfig <span class="hljs-keyword">from</span> <span class="hljs-string">'./package.json'</span> assert { <span class="hljs-attr">type</span>: <span class="hljs-string">'json'</span> };</code> <button class="copy-button">copy</button></pre>
-<p>The <code>assert { type: 'json' }</code> syntax is mandatory; see <a href="#all_esm_import-attributes">Import Attributes</a>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> packageConfig <span class="hljs-keyword">from</span> <span class="hljs-string">'./package.json'</span> <span class="hljs-keyword">with</span> { <span class="hljs-attr">type</span>: <span class="hljs-string">'json'</span> };</code> <button class="copy-button">copy</button></pre>
+<p>The <code>with { type: 'json' }</code> syntax is mandatory; see <a href="#all_esm_import-attributes">Import Attributes</a>.</p>
 <p>The imported JSON only exposes a <code>default</code> export. There is no support for named
 exports. A cache entry is created in the CommonJS cache to avoid duplication.
 The same object is returned in CommonJS if the JSON module has already been
@@ -59660,7 +59763,7 @@ referenced via <code>require</code> or via <code>import</code>.</p>
 
 <!--lint disable maximum-line-length-->
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/net.js">lib/net.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/net.js">lib/net.js</a></p>
 <p>The <code>node:net</code> module provides an asynchronous network API for creating stream-based
 TCP or <a href="#all_net_ipc-support">IPC</a> servers (<a href="#all_net_netcreateserveroptions-connectionlistener"><code>net.createServer()</code></a>) and clients
 (<a href="#all_net_netcreateconnection"><code>net.createConnection()</code></a>).</p>
@@ -61087,7 +61190,7 @@ net.<span class="hljs-title function_">isIPv6</span>(<span class="hljs-string">'
 <section><h2>OS<span><a class="mark" href="#all_os_os" id="all_os_os">#</a></span><a aria-hidden="true" class="legacy" id="os_os"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/os.js">lib/os.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/os.js">lib/os.js</a></p>
 <p>The <code>node:os</code> module provides operating system-related utility methods and
 properties. It can be accessed using:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> os = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:os'</span>);</code> <button class="copy-button">copy</button></pre>
@@ -62352,7 +62455,7 @@ information.</p>
 <section><h2>Path<span><a class="mark" href="#all_path_path" id="all_path_path">#</a></span><a aria-hidden="true" class="legacy" id="path_path"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/path.js">lib/path.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/path.js">lib/path.js</a></p>
 <p>The <code>node:path</code> module provides utilities for working with file and directory
 paths. It can be accessed using:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:path'</span>);</code> <button class="copy-button">copy</button></pre>
@@ -62817,7 +62920,7 @@ of the <code>path</code> methods.</p>
 <section><h2>Performance measurement APIs<span><a class="mark" href="#all_perf_hooks_performance-measurement-apis" id="all_perf_hooks_performance-measurement-apis">#</a></span><a aria-hidden="true" class="legacy" id="perf_hooks_performance_measurement_apis"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/perf_hooks.js">lib/perf_hooks.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/perf_hooks.js">lib/perf_hooks.js</a></p>
 <p>This module provides an implementation of a subset of the W3C
 <a href="https://w3c.github.io/perf-timing-primer/">Web Performance APIs</a> as well as additional APIs for
 Node.js-specific performance measurements.</p>
@@ -64545,7 +64648,7 @@ not adopt the origin of the <code>blob:</code> URL.</p>
 <section><h2>Process<span><a class="mark" href="#all_process_process" id="all_process_process">#</a></span><a aria-hidden="true" class="legacy" id="process_process"></a></h2>
 
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/process.js">lib/process.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/process.js">lib/process.js</a></p>
 <p>The <code>process</code> object provides information about, and control over, the current
 Node.js process.</p>
 
@@ -67619,7 +67722,7 @@ code will be <code>128</code> + <code>6</code>, or <code>134</code>.</li>
 </div>
 
 <p></p><div class="api_stability api_stability_0"><a href="#all_documentation_stability-index">Stability: 0</a> - Deprecated</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/punycode.js">lib/punycode.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/punycode.js">lib/punycode.js</a></p>
 <p><strong>The version of the punycode module bundled in Node.js is being deprecated.</strong>
 In a future major version of Node.js this module will be removed. Users
 currently depending on the <code>punycode</code> module should switch to using the
@@ -67732,7 +67835,7 @@ punycode.<span class="hljs-property">ucs2</span>.<span class="hljs-title functio
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/querystring.js">lib/querystring.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/querystring.js">lib/querystring.js</a></p>
 <p>The <code>node:querystring</code> module provides utilities for parsing and formatting URL
 query strings. It can be accessed using:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> querystring = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:querystring'</span>);</code> <button class="copy-button">copy</button></pre>
@@ -67870,7 +67973,7 @@ a safer equivalent that does not throw on malformed URLs will be used.</p></sect
 <section><h2>Readline<span><a class="mark" href="#all_readline_readline" id="all_readline_readline">#</a></span><a aria-hidden="true" class="legacy" id="readline_readline"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/readline.js">lib/readline.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/readline.js">lib/readline.js</a></p>
 <p>The <code>node:readline</code> module provides an interface for reading data from a
 <a href="#all_stream_readable-streams">Readable</a> stream (such as <a href="#all_process_processstdin"><code>process.stdin</code></a>) one line at a time.</p>
 <p>To use the promise-based APIs:</p>
@@ -69021,7 +69124,7 @@ flow and speed are both essential, a mixed approach can be applied:</p>
 <section><h2>REPL<span><a class="mark" href="#all_repl_repl" id="all_repl_repl">#</a></span><a aria-hidden="true" class="legacy" id="repl_repl"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/repl.js">lib/repl.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/repl.js">lib/repl.js</a></p>
 <p>The <code>node:repl</code> module provides a Read-Eval-Print-Loop (REPL) implementation
 that is available both as a standalone program or includible in other
 applications. It can be accessed using:</p>
@@ -70209,7 +70312,7 @@ running JavaScript and the event loop are interrupted to generate the report.</p
 <span>Added in: v19.7.0, v18.16.0</span>
 </div>
 <p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> - Experimental: This feature is being designed and will change.</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/src/node_sea.cc">src/node_sea.cc</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/src/node_sea.cc">src/node_sea.cc</a></p>
 <p>This feature allows the distribution of a Node.js application conveniently to a
 system that does not have Node.js installed.</p>
 <p>Node.js supports the creation of <a href="https://github.com/nodejs/single-executable">single executable applications</a> by allowing
@@ -70338,10 +70441,10 @@ used to test this feature on other platforms.</p>
 start a discussion at <a href="https://github.com/nodejs/single-executable/discussions">https://github.com/nodejs/single-executable/discussions</a>
 to help us document them.</p></section>
         </section>
-<section><h2>Stream<a class="srclink" href="https://github.com/nodejs/node/blob/9e0c715518efb028fdabf43994df141fb91fa65f/lib/stream.js#L54">[src]</a><span><a class="mark" href="#all_stream_stream" id="all_stream_stream">#</a></span><a aria-hidden="true" class="legacy" id="stream_stream"></a></h2>
+<section><h2>Stream<a class="srclink" href="https://github.com/nodejs/node/blob/e922fb64b53530af4ad2e3df298a302225645f5b/lib/stream.js#L54">[src]</a><span><a class="mark" href="#all_stream_stream" id="all_stream_stream">#</a></span><a aria-hidden="true" class="legacy" id="stream_stream"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/stream.js">lib/stream.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/stream.js">lib/stream.js</a></p>
 <p>A stream is an abstract interface for working with streaming data in Node.js.
 The <code>node:stream</code> module provides an API for implementing the stream interface.</p>
 <p>There are many stream objects provided by Node.js. For instance, a
@@ -74482,7 +74585,7 @@ contain multi-byte characters.</p></section>
 <section><h2>String decoder<span><a class="mark" href="#all_string_decoder_string-decoder" id="all_string_decoder_string-decoder">#</a></span><a aria-hidden="true" class="legacy" id="string_decoder_string_decoder"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/string_decoder.js">lib/string_decoder.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/string_decoder.js">lib/string_decoder.js</a></p>
 <p>The <code>node:string_decoder</code> module provides an API for decoding <code>Buffer</code> objects
 into strings in a manner that preserves encoded multi-byte UTF-8 and UTF-16
 characters. It can be accessed using:</p>
@@ -74559,7 +74662,7 @@ returned string and stored in an internal buffer for the next call to
 <span>Added in: v18.0.0, v16.17.0</span>
 </div>
 <p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> - Experimental</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/test.js">lib/test.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/test.js">lib/test.js</a></p>
 <p>The <code>node:test</code> module facilitates the creation of JavaScript tests.
 To access it:</p>
 
@@ -76687,7 +76790,7 @@ aborted.</li>
 <section><h2>Timers<span><a class="mark" href="#all_timers_timers" id="all_timers_timers">#</a></span><a aria-hidden="true" class="legacy" id="timers_timers"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/timers.js">lib/timers.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/timers.js">lib/timers.js</a></p>
 <p>The <code>timer</code> module exposes a global API for scheduling functions to
 be called at some future period of time. Because the timer functions are
 globals, there is no need to call <code>require('node:timers')</code> to use the API.</p>
@@ -77143,7 +77246,7 @@ being developed as a standard Web Platform API.</p>
 <section><h2>TLS (SSL)<span><a class="mark" href="#all_tls_tls-ssl" id="all_tls_tls-ssl">#</a></span><a aria-hidden="true" class="legacy" id="tls_tls_ssl"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/tls.js">lib/tls.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/tls.js">lib/tls.js</a></p>
 <p>The <code>node:tls</code> module provides an implementation of the Transport Layer Security
 (TLS) and Secure Socket Layer (SSL) protocols that is built on top of OpenSSL.
 The module can be accessed using:</p>
@@ -79110,7 +79213,7 @@ using <code>--tls-default-ciphers</code>.</li>
 <section><h2>Trace events<span><a class="mark" href="#all_tracing_trace-events" id="all_tracing_trace-events">#</a></span><a aria-hidden="true" class="legacy" id="tracing_trace_events"></a></h2>
 
 <p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> - Experimental</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/trace_events.js">lib/trace_events.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/trace_events.js">lib/trace_events.js</a></p>
 <p>The <code>node:trace_events</code> module provides a mechanism to centralize tracing
 information generated by V8, Node.js core, and userspace code.</p>
 <p>Tracing can be enabled with the <code>--trace-event-categories</code> command-line flag
@@ -79334,7 +79437,7 @@ session.<span class="hljs-title function_">connect</span>();
 <section><h2>TTY<span><a class="mark" href="#all_tty_tty" id="all_tty_tty">#</a></span><a aria-hidden="true" class="legacy" id="tty_tty"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/tty.js">lib/tty.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/tty.js">lib/tty.js</a></p>
 <p>The <code>node:tty</code> module provides the <code>tty.ReadStream</code> and <code>tty.WriteStream</code>
 classes. In most cases, it will not be necessary or possible to use this module
 directly. However, it can be accessed using:</p>
@@ -79606,7 +79709,7 @@ integer.</p></section>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/dgram.js">lib/dgram.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/dgram.js">lib/dgram.js</a></p>
 <p>The <code>node:dgram</code> module provides an implementation of UDP datagram sockets.</p>
 
 <pre class="with-42-chars"><input class="js-flavor-selector" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> dgram <span class="hljs-keyword">from</span> <span class="hljs-string">'node:dgram'</span>;
@@ -80405,7 +80508,7 @@ and <code>udp6</code> sockets). The bound address and port can be retrieved usin
 <section><h2>URL<span><a class="mark" href="#all_url_url" id="all_url_url">#</a></span><a aria-hidden="true" class="legacy" id="url_url"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/url.js">lib/url.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/url.js">lib/url.js</a></p>
 <p>The <code>node:url</code> module provides utilities for URL resolution and parsing. It can
 be accessed using:</p>
 
@@ -81835,7 +81938,7 @@ using the <a href="https://tools.ietf.org/html/rfc5891#section-4.4">Punycode</a>
 <section><h2>Util<span><a class="mark" href="#all_util_util" id="all_util_util">#</a></span><a aria-hidden="true" class="legacy" id="util_util"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/util.js">lib/util.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/util.js">lib/util.js</a></p>
 <p>The <code>node:util</code> module supports the needs of Node.js internal APIs. Many of the
 utilities are useful for application and module developers as well. To access
 it:</p>
@@ -84544,7 +84647,7 @@ util.<span class="hljs-title function_">log</span>(<span class="hljs-string">'Ti
         </section>
 <section><h2>V8<span><a class="mark" href="#all_v8_v8" id="all_v8_v8">#</a></span><a aria-hidden="true" class="legacy" id="v8_v8"></a></h2>
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/v8.js">lib/v8.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/v8.js">lib/v8.js</a></p>
 <p>The <code>node:v8</code> module exposes APIs that are specific to the version of <a href="https://developers.google.com/v8/">V8</a>
 built into the Node.js binary. It can be accessed using:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> v8 = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:v8'</span>);</code> <button class="copy-button">copy</button></pre>
@@ -85475,7 +85578,7 @@ profiler.<span class="hljs-title function_">start</span>();
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/vm.js">lib/vm.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/vm.js">lib/vm.js</a></p>
 <p>The <code>node:vm</code> module enables compiling and running code within V8 Virtual
 Machine contexts.</p>
 <p><strong class="critical">The <code>node:vm</code> module is not a security
@@ -85552,11 +85655,13 @@ This option is <strong>deprecated</strong> in favor of <code>script.createCached
 when <code>import()</code> is called. If this option is not specified, calls to
 <code>import()</code> will reject with <a href="#all_errors_err_vm_dynamic_import_callback_missing"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING</code></a>.
 This option is part of the experimental modules API. We do not recommend
-using it in a production environment.
+using it in a production environment. If <code>--experimental-vm-modules</code> isn't
+set, this callback will be ignored and calls to <code>import()</code> will reject with
+<a href="#all_errors_err_vm_dynamic_import_callback_missing_flag"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG</code></a>.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>script</code> <a href="#all_vm_class-vmscript" class="type">&#x3C;vm.Script></a></li>
-<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"with"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="#all_vm_class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -86056,7 +86161,7 @@ Record</a>s in the ECMAScript specification.</p>
 <p><code>extra</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a></p>
 <ul>
 <li><code>attributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The data from the attribute:
-<pre><code class="language-js mjs"><span class="hljs-keyword">import</span> foo <span class="hljs-keyword">from</span> <span class="hljs-string">'foo'</span> assert { <span class="hljs-attr">name</span>: <span class="hljs-string">'value'</span> };
+<pre><code class="language-js mjs"><span class="hljs-keyword">import</span> foo <span class="hljs-keyword">from</span> <span class="hljs-string">'foo'</span> <span class="hljs-keyword">with</span> { <span class="hljs-attr">name</span>: <span class="hljs-string">'value'</span> };
 <span class="hljs-comment">//                           ^^^^^^^^^^^^^^^^^ the attribute</span></code> <button class="copy-button">copy</button></pre>
 Per ECMA-262, hosts are expected to trigger an error if an
 unsupported attribute is present.</li>
@@ -86190,6 +86295,9 @@ to initialize the <code>import.meta</code>.
 <li><code>importModuleDynamically</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> Called during evaluation of this module
 when <code>import()</code> is called. If this option is not specified, calls to
 <code>import()</code> will reject with <a href="#all_errors_err_vm_dynamic_import_callback_missing"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING</code></a>.
+If <code>--experimental-vm-modules</code> isn't set, this callback will be ignored
+and calls to <code>import()</code> will reject with
+<a href="#all_errors_err_vm_dynamic_import_callback_missing_flag"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG</code></a>.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>module</code> <a href="#all_vm_class-vmmodule" class="type">&#x3C;vm.Module></a></li>
@@ -86405,11 +86513,13 @@ compiling. <strong>Default:</strong> <code>[]</code>.</li>
 when <code>import()</code> is called. If this option is not specified, calls to
 <code>import()</code> will reject with <a href="#all_errors_err_vm_dynamic_import_callback_missing"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING</code></a>.
 This option is part of the experimental modules API, and should not be
-considered stable.
+considered stable.  If <code>--experimental-vm-modules</code> isn't
+set, this callback will be ignored and calls to <code>import()</code> will reject with
+<a href="#all_errors_err_vm_dynamic_import_callback_missing_flag"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG</code></a>.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>function</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a></li>
-<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"with"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="#all_vm_class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -86626,11 +86736,13 @@ source.</li>
 when <code>import()</code> is called. If this option is not specified, calls to
 <code>import()</code> will reject with <a href="#all_errors_err_vm_dynamic_import_callback_missing"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING</code></a>.
 This option is part of the experimental modules API. We do not recommend
-using it in a production environment.
+using it in a production environment.  If <code>--experimental-vm-modules</code> isn't
+set, this callback will be ignored and calls to <code>import()</code> will reject with
+<a href="#all_errors_err_vm_dynamic_import_callback_missing_flag"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG</code></a>.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>script</code> <a href="#all_vm_class-vmscript" class="type">&#x3C;vm.Script></a></li>
-<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"with"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="#all_vm_class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -86725,11 +86837,13 @@ source.</li>
 when <code>import()</code> is called. If this option is not specified, calls to
 <code>import()</code> will reject with <a href="#all_errors_err_vm_dynamic_import_callback_missing"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING</code></a>.
 This option is part of the experimental modules API. We do not recommend
-using it in a production environment.
+using it in a production environment. If <code>--experimental-vm-modules</code> isn't
+set, this callback will be ignored and calls to <code>import()</code> will reject with
+<a href="#all_errors_err_vm_dynamic_import_callback_missing_flag"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG</code></a>.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>script</code> <a href="#all_vm_class-vmscript" class="type">&#x3C;vm.Script></a></li>
-<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"with"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="#all_vm_class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -86804,11 +86918,13 @@ source.</li>
 when <code>import()</code> is called. If this option is not specified, calls to
 <code>import()</code> will reject with <a href="#all_errors_err_vm_dynamic_import_callback_missing"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING</code></a>.
 This option is part of the experimental modules API. We do not recommend
-using it in a production environment.
+using it in a production environment. If <code>--experimental-vm-modules</code> isn't
+set, this callback will be ignored and calls to <code>import()</code> will reject with
+<a href="#all_errors_err_vm_dynamic_import_callback_missing_flag"><code>ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG</code></a>.
 <ul>
 <li><code>specifier</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> specifier passed to <code>import()</code></li>
 <li><code>script</code> <a href="#all_vm_class-vmscript" class="type">&#x3C;vm.Script></a></li>
-<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"assert"</code> value passed to the
+<li><code>importAttributes</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> The <code>"with"</code> value passed to the
 <a href="https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call"><code>optionsExpression</code></a> optional parameter, or an empty object if no value
 was provided.</li>
 <li>Returns: <a href="https://tc39.github.io/ecma262/#sec-module-namespace-exotic-objects" class="type">&#x3C;Module Namespace Object></a> | <a href="#all_vm_class-vmmodule" class="type">&#x3C;vm.Module></a> Returning a <code>vm.Module</code> is
@@ -86937,7 +87053,7 @@ are not controllable through the timeout either.</p></section>
 <section><h2>WebAssembly System Interface (WASI)<span><a class="mark" href="#all_wasi_webassembly-system-interface-wasi" id="all_wasi_webassembly-system-interface-wasi">#</a></span><a aria-hidden="true" class="legacy" id="wasi_webassembly_system_interface_wasi"></a></h2>
 
 <p></p><div class="api_stability api_stability_1"><a href="#all_documentation_stability-index">Stability: 1</a> - Experimental</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/wasi.js">lib/wasi.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/wasi.js">lib/wasi.js</a></p>
 <p>The WASI API provides an implementation of the <a href="https://wasi.dev/">WebAssembly System Interface</a>
 specification. WASI gives sandboxed WebAssembly applications access to the
 underlying operating system via a collection of POSIX-like functions.</p>
@@ -90672,7 +90788,7 @@ UTF-8 encoded string.</li>
 <section><h2>Worker threads<span><a class="mark" href="#all_worker_threads_worker-threads" id="all_worker_threads_worker-threads">#</a></span><a aria-hidden="true" class="legacy" id="worker_threads_worker_threads"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/worker_threads.js">lib/worker_threads.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/worker_threads.js">lib/worker_threads.js</a></p>
 <p>The <code>node:worker_threads</code> module enables the use of threads that execute
 JavaScript in parallel. To access it:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> worker = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:worker_threads'</span>);</code> <button class="copy-button">copy</button></pre>
@@ -91774,7 +91890,7 @@ thread spawned will spawn another until the application crashes.</p></section>
 <section><h2>Zlib<span><a class="mark" href="#all_zlib_zlib" id="all_zlib_zlib">#</a></span><a aria-hidden="true" class="legacy" id="zlib_zlib"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="#all_documentation_stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/zlib.js">lib/zlib.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/zlib.js">lib/zlib.js</a></p>
 <p>The <code>node:zlib</code> module provides compression functionality implemented using
 Gzip, Deflate/Inflate, and Brotli.</p>
 <p>To access it:</p>

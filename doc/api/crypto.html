@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.19.0">
-  <title>Crypto | Node.js v18.19.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.20.4">
+  <title>Crypto | Node.js v18.20.4 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="crypto" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.19.0 documentation</h1>
+          <h1>Node.js v18.20.4 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.19.0</li>
+            <li class="pinned-header">Node.js v18.20.4</li>
             
     <li class="picker-header">
       <a href="#">
@@ -420,7 +420,8 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/crypto.html">21.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v22.x/api/crypto.html">22.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v21.x/api/crypto.html">21.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v20.x/api/crypto.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/crypto.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/crypto.html">18.x <b>LTS</b></a></li>
@@ -678,7 +679,7 @@
         <h2>Crypto<span><a class="mark" href="#crypto" id="crypto">#</a></span><a aria-hidden="true" class="legacy" id="crypto_crypto"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#stability-index">Stability: 2</a> - Stable</div><p></p>
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.19.0/lib/crypto.js">lib/crypto.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v18.20.4/lib/crypto.js">lib/crypto.js</a></p>
 <p>The <code>node:crypto</code> module provides cryptographic functionality that includes a
 set of wrappers for OpenSSL's hash, HMAC, cipher, decipher, sign, and verify
 functions.</p>
@@ -4614,6 +4615,8 @@ random and at least 16 bytes long. See <a href="https://nvlpubs.nist.gov/nistpub
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v21.6.2, v20.11.1, v18.19.1</td>
+<td><p>The <code>RSA_PKCS1_PADDING</code> padding was disabled unless the OpenSSL build supports implicit rejection.</p></td></tr>
 <tr><td>v15.0.0</td>
 <td><p>Added string, ArrayBuffer, and CryptoKey as allowable key types. The oaepLabel can be an ArrayBuffer. The buffer can be a string or ArrayBuffer. All types that accept buffers are limited to a maximum of 2 ** 31 - 1 bytes.</p></td></tr>
 <tr><td>v12.11.0</td>
@@ -4651,6 +4654,10 @@ the corresponding public key, for example using <a href="#cryptopublicencryptkey
 <code>privateKey</code> had been passed to <a href="#cryptocreateprivatekeykey"><code>crypto.createPrivateKey()</code></a>. If it is an
 object, the <code>padding</code> property can be passed. Otherwise, this function uses
 <code>RSA_PKCS1_OAEP_PADDING</code>.</p>
+<p>Using <code>crypto.constants.RSA_PKCS1_PADDING</code> in <a href="#cryptoprivatedecryptprivatekey-buffer"><code>crypto.privateDecrypt()</code></a>
+requires OpenSSL to support implicit rejection (<code>rsa_pkcs1_implicit_rejection</code>).
+If the version of OpenSSL used by Node.js does not support this feature,
+attempting to use <code>RSA_PKCS1_PADDING</code> will fail.</p>
 <h4><code>crypto.privateEncrypt(privateKey, buffer)</code><span><a class="mark" href="#cryptoprivateencryptprivatekey-buffer" id="cryptoprivateencryptprivatekey-buffer">#</a></span><a aria-hidden="true" class="legacy" id="crypto_crypto_privateencrypt_privatekey_buffer"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -5810,7 +5817,7 @@ specific to OpenSSL.</p>
   </tr>
   <tr>
     <td><code>SSL_OP_CISCO_ANYCONNECT</code></td>
-    <td>Instructs OpenSSL to use Cisco's "speshul" version of DTLS_BAD_VER.</td>
+    <td>Instructs OpenSSL to use Cisco's version identifier of DTLS_BAD_VER.</td>
   </tr>
   <tr>
     <td><code>SSL_OP_COOKIE_EXCHANGE</code></td>

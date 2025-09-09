@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.19.0">
-  <title>Deprecated APIs | Node.js v18.19.0 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v18.20.4">
+  <title>Deprecated APIs | Node.js v18.20.4 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -96,7 +96,7 @@
     <div id="column1" data-id="deprecations" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.19.0 documentation</h1>
+          <h1>Node.js v18.20.4 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,7 +111,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.19.0</li>
+            <li class="pinned-header">Node.js v18.20.4</li>
             
     <li class="picker-header">
       <a href="#">
@@ -294,6 +294,7 @@
 <li><a href="#DEP0169">DEP0169: Insecure url.parse()</a></li>
 <li><a href="#DEP0170">DEP0170: Invalid port when using <code>url.parse()</code></a></li>
 <li><a href="#DEP0171">DEP0171: Setters for <code>http.IncomingMessage</code> headers and trailers</a></li>
+<li><a href="#DEP0178">DEP0178: <code>dirent.path</code></a></li>
 </ul>
 </li>
 </ul>
@@ -392,7 +393,8 @@
         <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v21.x/api/deprecations.html">21.x</a></li>
+      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v22.x/api/deprecations.html">22.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v21.x/api/deprecations.html">21.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v20.x/api/deprecations.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/deprecations.html">19.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v18.x/api/deprecations.html">18.x <b>LTS</b></a></li>
@@ -607,6 +609,7 @@
 <li><a href="#DEP0169">DEP0169: Insecure url.parse()</a></li>
 <li><a href="#DEP0170">DEP0170: Invalid port when using <code>url.parse()</code></a></li>
 <li><a href="#DEP0171">DEP0171: Setters for <code>http.IncomingMessage</code> headers and trailers</a></li>
+<li><a href="#DEP0178">DEP0178: <code>dirent.path</code></a></li>
 </ul>
 </li>
 </ul>
@@ -3382,7 +3385,26 @@ an error in future versions of Node.js, as the <a href="url.html#the-whatwg-url-
 <p>Type: Documentation-only</p>
 <p>In a future version of Node.js, <a href="http.html#messageheaders"><code>message.headers</code></a>,
 <a href="http.html#messageheadersdistinct"><code>message.headersDistinct</code></a>, <a href="http.html#messagetrailers"><code>message.trailers</code></a>, and
-<a href="http.html#messagetrailersdistinct"><code>message.trailersDistinct</code></a> will be read-only.</p></section>
+<a href="http.html#messagetrailersdistinct"><code>message.trailersDistinct</code></a> will be read-only.</p>
+<!-- md-lint skip-deprecation DEP0172 -->
+<!-- md-lint skip-deprecation DEP0173 -->
+<!-- md-lint skip-deprecation DEP0174 -->
+<!-- md-lint skip-deprecation DEP0175 -->
+<!-- md-lint skip-deprecation DEP0176 -->
+<!-- md-lint skip-deprecation DEP0177 -->
+<h4 id="DEP0178">DEP0178: <code>dirent.path</code><span><a class="mark" href="#dep0178-direntpath" id="dep0178-direntpath">#</a></span><a aria-hidden="true" class="legacy" id="deprecations_dep0178_dirent_path"></a></h4>
+<div class="api_metadata">
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v18.20.0</td>
+<td><p>Documentation-only deprecation.</p></td></tr>
+</tbody></table>
+</details>
+</div>
+<p>Type: Documentation-only</p>
+<p>The <a href="fs.html#direntpath"><code>dirent.path</code></a> is deprecated due to its lack of consistency across
+release lines. Please use <a href="fs.html#direntparentpath"><code>dirent.parentPath</code></a> instead.</p></section>
         <!-- API END -->
       </div>
     </div>
