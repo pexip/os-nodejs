@@ -2,9 +2,9 @@ Description: some tests fail on mips64el and mipsel
  That architecture support improves over time - node 20.x branch has better support for mips64el
  Meanwhile, let those tests fail.
 Forwarded: not-needed
---- nodejs-18.19.0+dfsg.orig/test/parallel/parallel.status
-+++ nodejs-18.19.0+dfsg/test/parallel/parallel.status
-@@ -97,6 +97,19 @@ test-wasm-web-api: SKIP
+--- a/test/parallel/parallel.status
++++ b/test/parallel/parallel.status
+@@ -101,6 +101,19 @@
  [$arch==mips64el]
  # the debug flag is for hacking v8 internals
  test-debug-args: PASS,FLAKY

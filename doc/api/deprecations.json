@@ -3781,9 +3781,25 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>In a future version of Node.js, <a href=\"http.html#messageheaders\"><code>message.headers</code></a>,\n<a href=\"http.html#messageheadersdistinct\"><code>message.headersDistinct</code></a>, <a href=\"http.html#messagetrailers\"><code>message.trailers</code></a>, and\n<a href=\"http.html#messagetrailersdistinct\"><code>message.trailersDistinct</code></a> will be read-only.</p>",
+              "desc": "<p>Type: Documentation-only</p>\n<p>In a future version of Node.js, <a href=\"http.html#messageheaders\"><code>message.headers</code></a>,\n<a href=\"http.html#messageheadersdistinct\"><code>message.headersDistinct</code></a>, <a href=\"http.html#messagetrailers\"><code>message.trailers</code></a>, and\n<a href=\"http.html#messagetrailersdistinct\"><code>message.trailersDistinct</code></a> will be read-only.</p>\n<!-- md-lint skip-deprecation DEP0172 -->\n<!-- md-lint skip-deprecation DEP0173 -->\n<!-- md-lint skip-deprecation DEP0174 -->\n<!-- md-lint skip-deprecation DEP0175 -->\n<!-- md-lint skip-deprecation DEP0176 -->\n<!-- md-lint skip-deprecation DEP0177 -->",
               "type": "module",
               "displayName": "DEP0171: Setters for `http.IncomingMessage` headers and trailers"
+            },
+            {
+              "textRaw": "DEP0178: `dirent.path`",
+              "name": "dep0178:_`dirent.path`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v18.20.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/51020",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"fs.html#direntpath\"><code>dirent.path</code></a> is deprecated due to its lack of consistency across\nrelease lines. Please use <a href=\"fs.html#direntparentpath\"><code>dirent.parentPath</code></a> instead.</p>",
+              "type": "module",
+              "displayName": "DEP0178: `dirent.path`"
             }
           ],
           "type": "misc",

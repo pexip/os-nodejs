@@ -7,7 +7,7 @@ Last-Update: 2020-03-04
 
 --- a/lib/internal/modules/cjs/loader.js
 +++ b/lib/internal/modules/cjs/loader.js
-@@ -1509,6 +1509,7 @@
+@@ -1517,6 +1517,7 @@
  Module._initPaths = function() {
    const homeDir = isWindows ? process.env.USERPROFILE : safeGetenv('HOME');
    const nodePath = isWindows ? process.env.NODE_PATH : safeGetenv('NODE_PATH');
@@ -15,7 +15,7 @@ Last-Update: 2020-03-04
  
    // process.execPath is $PREFIX/bin/node except on Windows where it is
    // $PREFIX\node.exe where $PREFIX is the root of the Node.js installation.
-@@ -1516,7 +1517,18 @@
+@@ -1524,7 +1525,18 @@
      path.resolve(process.execPath, '..') :
      path.resolve(process.execPath, '..', '..');
  

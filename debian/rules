@@ -39,8 +39,11 @@ DEB_CONFIGURE_EXTRA_FLAGS = \
 --prefix=/usr \
 --openssl-use-def-ca-store \
 --arch-triplet=$(DEB_HOST_MULTIARCH) \
---node-relative-path="lib/$(DEB_HOST_MULTIARCH)/nodejs:share/nodejs" \
---shared-libuv
+--node-relative-path="lib/$(DEB_HOST_MULTIARCH)/nodejs:share/nodejs"
+
+ifneq ($DEB_HOST_ARCH_BITS,32)
+	DEB_CONFIGURE_EXTRA_FLAGS += --shared-libuv
+endif
 
 ifneq ($(filter pkg.nodejs.nobuiltin,$(DEB_BUILD_PROFILES)),)
 	DEB_CONFIGURE_EXTRA_FLAGS += --node-builtin-modules-path=$(builtins)

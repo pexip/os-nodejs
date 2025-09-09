@@ -1,3 +1,34 @@
+nodejs (18.20.4+dfsg-1~deb12u1+pexip24u1) pexip; urgency=medium
+
+  * New upstream release with security fixes
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Tue, 09 Sep 2025 17:12:51 +0100
+
+nodejs (18.20.4+dfsg-1~deb12u1) bookworm-security; urgency=medium
+
+  * New upstream version 18.20.4+dfsg. Closes: #1074047.
+  * M.U.T.: bump ada to 2.7.8, keep node-types to 18.18.14
+    for compatibility with other packages.
+  * test-runner-output is flaky on slow platforms
+  * Disable test-cluster-primary-* flaky/hanging tests.
+  * Fix test failing with openssl 3.0.14. Closes: #1086652.
+  * CVE-2024-22020: Bypass network import restriction via data URL (Medium)
+  * CVE-2024-36138: Bypass incomplete fix of CVE-2024-27980 (High)
+  * CVE-2024-27983: Assertion failed in node::http2::Http2Session::~Http2Session()
+    leads to HTTP/2 server crash (High)
+  * CVE-2024-27982: HTTP Request Smuggling via Content Length Obfuscation (Medium)
+  * CVE-2024-22025: Denial of Service by resource exhaustion in fetch()
+    brotli decoding (Medium)
+  * CVE-2024-21892: Code injection and privilege escalation
+    through Linux capabilities (High)
+  * CVE-2024-22019: Reading unprocessed HTTP request with
+    unbounded chunk extension allows DoS attacks (High)
+  * CVE-2023-46809: Node.js is vulnerable to the Marvin Attack (Medium)
+  * Static link on 32bits architecture libuv. Closes: #922075, #1076350.
+    Thanks to Bastien Roucariès.
+
+ -- Jérémy Lal <kapouer@melix.org>  Tue, 09 Jul 2024 17:36:33 +0200
+
 nodejs (18.19.0+dfsg-6~deb12u2+pexip24u1) pexip; urgency=medium
 
   * New upstream release

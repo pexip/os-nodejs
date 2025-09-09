@@ -1,0 +1,60 @@
+From: =?utf-8?q?Bastien_Roucari=C3=A8s?= <rouca@debian.org>
+Date: Sun, 27 Apr 2025 15:42:15 +0200
+Subject: Get libuv nodejs in sync with libuv/bookworm
+
+forwarded: not-needed
+
+Index: nodejs/deps/uv/include/uv/win.h
+===================================================================
+--- nodejs.orig/deps/uv/include/uv/win.h	2025-04-27 16:34:32.724670119 +0200
++++ nodejs/deps/uv/include/uv/win.h	2025-04-27 16:34:32.704670037 +0200
+@@ -223,7 +223,7 @@
+   AFD_POLL_HANDLE_INFO Handles[1];
+ } AFD_POLL_INFO, *PAFD_POLL_INFO;
+ 
+-#define UV_MSAFD_PROVIDER_COUNT 3
++#define UV_MSAFD_PROVIDER_COUNT 4
+ 
+ 
+ /**
+Index: nodejs/deps/uv/src/idna.c
+===================================================================
+--- nodejs.orig/deps/uv/src/idna.c	2025-04-27 16:34:32.724670119 +0200
++++ nodejs/deps/uv/src/idna.c	2025-04-27 16:34:32.704670037 +0200
+@@ -274,9 +274,6 @@
+   char* ds;
+   int rc;
+ 
+-  if (s == se)
+-    return UV_EINVAL;
+-
+   ds = d;
+ 
+   si = s;
+@@ -311,9 +308,8 @@
+       return rc;
+   }
+ 
+-  if (d >= de)
+-    return UV_EINVAL;
++  if (d < de)
++    *d++ = '\0';
+ 
+-  *d++ = '\0';
+   return d - ds;  /* Number of bytes written. */
+ }
+Index: nodejs/deps/uv/src/win/poll.c
+===================================================================
+--- nodejs.orig/deps/uv/src/win/poll.c	2025-04-27 16:34:32.724670119 +0200
++++ nodejs/deps/uv/src/win/poll.c	2025-04-27 16:34:32.704670037 +0200
+@@ -34,7 +34,9 @@
+   {0xf9eab0c0, 0x26d4, 0x11d0,
+       {0xbb, 0xbf, 0x00, 0xaa, 0x00, 0x6c, 0x34, 0xe4}},
+   {0x9fc48064, 0x7298, 0x43e4,
+-      {0xb7, 0xbd, 0x18, 0x1f, 0x20, 0x89, 0x79, 0x2a}}
++      {0xb7, 0xbd, 0x18, 0x1f, 0x20, 0x89, 0x79, 0x2a}},
++  {0xa00943d9, 0x9c2e, 0x4633,
++      {0x9b, 0x59, 0x00, 0x57, 0xa3, 0x16, 0x09, 0x94}}
+ };
+ 
+ typedef struct uv_single_fd_set_s {

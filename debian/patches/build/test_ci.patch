@@ -33,7 +33,7 @@ Last-Update: 2020-02-09
  	$(info Clean up any leftover processes, error if found.)
 --- a/test/parallel/parallel.status
 +++ b/test/parallel/parallel.status
-@@ -6,6 +6,45 @@
+@@ -6,6 +6,52 @@
  
  [true] # This section applies to all platforms
  
@@ -68,6 +68,10 @@ Last-Update: 2020-02-09
 +test-cluster-shared-handle-bind-privileged-port: PASS,FLAKY
 +test-debugger-preserve-breaks: PASS,FLAKY
 +
++# these are flaky and they hang
++test-cluster-primary-kill: SKIP
++test-cluster-primary-error: SKIP
++
 +# corepack is dfsg-excluded
 +test-corepack-yarn-install: SKIP
 +test-corepack-version: SKIP
@@ -76,10 +80,13 @@ Last-Update: 2020-02-09
 +test-fs-utimes: PASS,FLAKY
 +test-fs-utimes-y2K38: PASS,FLAKY
 +
++# seems to be failing in slow environments
++test-runner-output: PASS,FLAKY
++
  [$system==win32]
  # https://github.com/nodejs/node/issues/41206
  test-crypto-keygen: PASS,FLAKY
-@@ -54,6 +93,10 @@
+@@ -51,6 +97,10 @@
  # https://github.com/nodejs/node/issues/47297
  test-wasm-web-api: SKIP
  
