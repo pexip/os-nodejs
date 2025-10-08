@@ -1,3 +1,9 @@
+nodejs (20.19.2+dfsg+pexip-1+pexip25u1) pexip-trixie; urgency=medium
+
+  * Re-pack orig to include vendored openssl.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Wed, 08 Oct 2025 14:10:07 +0100
+
 nodejs (20.19.2+dfsg-1+pexip25u1) pexip-trixie; urgency=medium
 
   * New upstream release
