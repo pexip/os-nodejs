@@ -39,7 +39,6 @@ DEB_CONFIGURE_EXTRA_FLAGS = \
 --shared-builtin-cjs_module_lexer/lexer-path=/usr/share/nodejs/cjs-module-lexer/lexer.js \
 --shared-builtin-cjs_module_lexer/dist/lexer-path=/usr/share/nodejs/cjs-module-lexer/dist/lexer.js \
 --shared-builtin-minimatch-path=/usr/share/nodejs/minimatch/dist/cjs/index.bundle.js \
---shared-openssl \
 --openssl-use-def-ca-store \
 --with-intl=system-icu \
 --prefix=/usr \
@@ -306,7 +305,7 @@ execute_after_dh_auto_clean:
 	rm -f debian/libnode-dev.links
 	rm -f debian/nodejs.install
 	rm -f debian/nodejs.bash-completion
-	rm -rf deps/openssl/
+	#rm -rf deps/openssl/
 
 # remove *.json files from documentation
 execute_after_dh_installdocs:
@@ -325,7 +324,7 @@ else
 endif
 
 execute_before_dh_auto_build-arch:
-	mkdir -p deps/openssl/ && touch deps/openssl/nodejs-openssl.cnf
+	#mkdir -p deps/openssl/ && touch deps/openssl/nodejs-openssl.cnf
 	pkver=`dpkg-query --showformat='$${source:Upstream-Version}' --show node-acorn | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`; \
 	sed -i -e "s/[0-9]\+\.[0-9]\+\.[0-9]\+/$${pkver}/" src/acorn_version.h
 	pkver=`dpkg-query --showformat='$${source:Upstream-Version}' --show node-cjs-module-lexer | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`; \
@@ -335,7 +334,7 @@ execute_before_dh_auto_build-arch:
 
 execute_after_dh_auto_build-arch:
 ifeq ($(filter nodoc,$(DEB_BUILD_PROFILES)),)
-	./out/Release/node --completion-bash > ./debian/nodejs.bash-completion
+	LD_LIBRARY_PATH=./out/Release ./out/Release/node --completion-bash > ./debian/nodejs.bash-completion
 endif
 
 override_dh_auto_build-indep:
@@ -354,7 +353,7 @@ override_dh_auto_test-indep:
 override_dh_auto_test-arch:
 ifeq ($(filter nocheck,$(DEB_BUILD_PROFILES)),)
 	mkdir -p $(NODE_TEST_DIR)
-	$(MAKE) $(DEB_MAKE_CHECK_TARGET)
+	LD_LIBRARY_PATH=./out/Release $(MAKE) $(DEB_MAKE_CHECK_TARGET)
 	rm -rf $(NODE_TEST_DIR)
 endif
 
