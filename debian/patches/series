@@ -1,4 +1,3 @@
-pexip_no_quic.patch
 build/more_shareable_builtins.patch
 build/builtins_module_paths_not_shareable.patch
 build/doc.patch
@@ -19,4 +18,4 @@ build/ada.patch
 deps/v8-no-static-zlib.patch
 build/no-deps.patch
 pexip_disable_openssl_quic.patch
-
+pexip_no_quic.patch
