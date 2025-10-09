@@ -243,6 +243,22 @@ flakyTests += sequential/test-worker-prof
 flakyTests += sequential/test-cpu-prof-dir-relative
 endif
 
+# Pexip
+# Tests that are flaky in Platform CI
+#
+flakyTests += parallel/test-config-file
+flakyTests += parallel/test-inspector-async-context-brk
+flakyTests += parallel/test-inspector
+flakyTests += parallel/test-inspector-bindings
+flakyTests += parallel/test-inspector-multisession-js
+flakyTests += parallel/test-runner-coverage-source-map
+flakyTests += parallel/test-runner-inspect.mjs
+flakyTests += parallel/test-sqlite
+flakyTests += parallel/test-worker-cli-options
+flakyTests += parallel/test-worker-load-file-with-extension-other-than-js
+flakyTests += parallel/test-worker-syntax-error
+flakyTests += sequential/test-http-server-keep-alive-timeout-slow-client-headers
+
 export HOME = $(CURDIR)/tmp
 export CI_JS_SUITES = message parallel sequential
 export NODE_TEST_DIR = $(CURDIR)/tmp
