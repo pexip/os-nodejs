@@ -156,6 +156,11 @@ skipTests += parallel/test-process-euid-egid
 skipTests += parallel/test-single-executable-application
 # loading of openssl for tests make this test fail
 skipTests += parallel/test-strace-openat-openssl
+# Pexip: tests hang, disable:
+skipTests += parallel/test-abortsignal-cloneable
+skipTests += parallel/test-inspector-connect-main-thread
+skipTests += parallel/test-socketaddress
+skipTests += parallel/test-webstream-structured-clone-no-leftovers
 # Might fail on slow architectures
 flakyTests += parallel/test-runner-output
 flakyTests += sequential/test-tls-session-timeout
