@@ -10,6 +10,7 @@ This a list of all the dependencies:
 
 * [acorn][]
 * [ada][]
+* [amaro][]
 * [base64][]
 * [brotli][]
 * [c-ares][]
@@ -18,6 +19,7 @@ This a list of all the dependencies:
 * [googletest][]
 * [histogram][]
 * [icu-small][]
+* [inspector\_protocol][inspector_protocol]
 * [libuv][]
 * [llhttp][]
 * [minimatch][]
@@ -27,11 +29,14 @@ This a list of all the dependencies:
 * [npm][]
 * [openssl][]
 * [postject][]
+* [simdjson][]
 * [simdutf][]
+* [sqlite][]
 * [undici][]
 * [uvwasi][]
 * [V8][]
 * [zlib][]
+* [zstd][]
 
 Any code which meets one or more of these conditions should
 be managed as a dependency:
@@ -219,6 +224,11 @@ an abstract syntax tree walker for the ESTree format.
 The [ada](https://github.com/ada-url/ada) dependency is a
 fast and spec-compliant URL parser written in C++.
 
+### amaro
+
+The [amaro](https://www.npmjs.com/package/amaro) dependency is a wrapper around the
+WebAssembly version of the SWC JavaScript/TypeScript parser.
+
 ### brotli
 
 The [brotli](https://github.com/google/brotli) dependency is
@@ -262,6 +272,12 @@ The [icu](http://site.icu-project.org) is widely used set of C/C++
 and Java libraries providing Unicode and Globalization
 support for software applications.
 See [maintaining-icu][] for more information.
+
+### inspector\_protocol
+
+The [inspector\_protocol](https://chromium.googlesource.com/deps/inspector_protocol/)
+is Chromium's of code generators and templates for the inspector protocol.
+See [this doc](../../../tools/inspector_protocol/README.md) for more information.
 
 ### libuv
 
@@ -343,10 +359,20 @@ See [maintaining-openssl][] for more information.
 The [postject](https://github.com/nodejs/postject) dependency is used for the
 [Single Executable strategic initiative](https://github.com/nodejs/single-executable).
 
+### simdjson
+
+The [simdjson](https://github.com/simdjson/simdjson) dependency is
+a C++ library for fast JSON parsing.
+
 ### simdutf
 
 The [simdutf](https://github.com/simdutf/simdutf) dependency is
 a C++ library for fast UTF-8 decoding and encoding.
+
+### sqlite
+
+The [sqlite](https://github.com/sqlite/sqlite) dependency is
+an embedded SQL database engine written in C.
 
 ### undici
 
@@ -375,8 +401,14 @@ dependency lossless data-compression library,
 it comes from the Chromium team's zlib fork which incorporated
 performance improvements not currently available in standard zlib.
 
+### zstd
+
+The [zstd](https://github.com/facebook/zstd) dependency is used for compression
+according to [RFC 8878](https://datatracker.ietf.org/doc/html/rfc8878).
+
 [acorn]: #acorn
 [ada]: #ada
+[amaro]: #amaro
 [base64]: #base64
 [brotli]: #brotli
 [c-ares]: #c-ares
@@ -386,6 +418,7 @@ performance improvements not currently available in standard zlib.
 [googletest]: #googletest
 [histogram]: #histogram
 [icu-small]: #icu-small
+[inspector_protocol]: #inspector_protocol
 [libuv]: #libuv
 [llhttp]: #llhttp
 [maintaining-V8]: ./maintaining-V8.md
@@ -401,9 +434,12 @@ performance improvements not currently available in standard zlib.
 [npm]: #npm
 [openssl]: #openssl
 [postject]: #postject
+[simdjson]: #simdjson
 [simdutf]: #simdutf
+[sqlite]: #sqlite
 [undici]: #undici
 [update-openssl-action]: ../../../.github/workflows/update-openssl.yml
 [uvwasi]: #uvwasi
 [v8]: #v8
 [zlib]: #zlib
+[zstd]: #zstd

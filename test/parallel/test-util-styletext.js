@@ -75,6 +75,8 @@ assert.strictEqual(
   styled,
 );
 
+assert.strictEqual(util.styleText('none', 'test'), 'test');
+
 const fd = common.getTTYfd();
 if (fd !== -1) {
   const writeStream = new WriteStream(fd);
@@ -95,8 +97,15 @@ if (fd !== -1) {
       ...process.env,
       ...testCase.env
     };
-    const output = util.styleText('red', 'test', { stream: writeStream });
-    assert.strictEqual(output, testCase.expected);
+    {
+      const output = util.styleText('red', 'test', { stream: writeStream });
+      assert.strictEqual(output, testCase.expected);
+    }
+    {
+      // Check that when passing an array of styles, the output behaves the same
+      const output = util.styleText(['red'], 'test', { stream: writeStream });
+      assert.strictEqual(output, testCase.expected);
+    }
     process.env = originalEnv;
   });
 } else {

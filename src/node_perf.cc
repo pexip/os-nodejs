@@ -191,8 +191,9 @@ void MarkGarbageCollectionEnd(
   }
   env->performance_state()->current_gc_type = 0;
   // If no one is listening to gc performance entries, do not create them.
-  if (LIKELY(!state->observers[NODE_PERFORMANCE_ENTRY_TYPE_GC]))
+  if (!state->observers[NODE_PERFORMANCE_ENTRY_TYPE_GC]) [[likely]] {
     return;
+  }
 
   double start_time =
       (state->performance_last_gc_start_mark - env->time_origin()) /
@@ -409,8 +410,7 @@ void RegisterExternalReferences(ExternalReferenceRegistry* registry) {
   registry->Register(MarkBootstrapComplete);
   registry->Register(UvMetricsInfo);
   registry->Register(SlowPerformanceNow);
-  registry->Register(FastPerformanceNow);
-  registry->Register(fast_performance_now.GetTypeInfo());
+  registry->Register(fast_performance_now);
   HistogramBase::RegisterExternalReferences(registry);
   IntervalHistogram::RegisterExternalReferences(registry);
 }

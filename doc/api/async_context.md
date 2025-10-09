@@ -75,8 +75,8 @@ http.get('http://localhost:8080');
 http.get('http://localhost:8080');
 // Prints:
 //   0: start
-//   1: start
 //   0: finish
+//   1: start
 //   1: finish
 ```
 
@@ -107,8 +107,8 @@ http.get('http://localhost:8080');
 http.get('http://localhost:8080');
 // Prints:
 //   0: start
-//   1: start
 //   0: finish
+//   1: start
 //   1: finish
 ```
 
@@ -123,7 +123,9 @@ added:
  - v13.10.0
  - v12.17.0
 changes:
- - version: v19.7.0
+ - version:
+    - v19.7.0
+    - v18.16.0
    pr-url: https://github.com/nodejs/node/pull/46386
    description: Removed experimental onPropagate option.
  - version:
@@ -139,10 +141,14 @@ Creates a new instance of `AsyncLocalStorage`. Store is only provided within a
 ### Static method: `AsyncLocalStorage.bind(fn)`
 
 <!-- YAML
-added: v19.8.0
+added:
+ - v19.8.0
+ - v18.16.0
+changes:
+ - version: v22.15.0
+   pr-url: https://github.com/nodejs/node/pull/57510
+   description: Marking the API stable.
 -->
-
-> Stability: 1 - Experimental
 
 * `fn` {Function} The function to bind to the current execution context.
 * Returns: {Function} A new function that calls `fn` within the captured
@@ -153,10 +159,14 @@ Binds the given function to the current execution context.
 ### Static method: `AsyncLocalStorage.snapshot()`
 
 <!-- YAML
-added: v19.8.0
+added:
+ - v19.8.0
+ - v18.16.0
+changes:
+ - version: v22.15.0
+   pr-url: https://github.com/nodejs/node/pull/57510
+   description: Marking the API stable.
 -->
-
-> Stability: 1 - Experimental
 
 * Returns: {Function} A new function with the signature
   `(fn: (...args) : R, ...args) : R`.

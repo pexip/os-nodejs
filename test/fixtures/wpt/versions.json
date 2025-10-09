@@ -3,12 +3,16 @@
     "commit": "dbd648158d337580885e70a54f929daf215211a0",
     "path": "common"
   },
+  "compression": {
+    "commit": "67880a4eb83ca9aa732eec4b35a1971ff5bf37ff",
+    "path": "compression"
+  },
   "console": {
-    "commit": "767ae354642bee1e4d90b28df4480475b9260e14",
+    "commit": "e48251b77834f9689e9df3f49b93b3387dee72d6",
     "path": "console"
   },
   "dom/abort": {
-    "commit": "d1f1ecbd52f2eab3b7fe5dc1b20b41174f1341ce",
+    "commit": "dc928169ee38969433af668319a73ed9196ffbee",
     "path": "dom/abort"
   },
   "dom/events": {
@@ -48,11 +52,11 @@
     "path": "html/webappapis/timers"
   },
   "interfaces": {
-    "commit": "df731dab88a1a25c04eb7e6238c11dc28fda0801",
+    "commit": "e1b27be06b43787a001b7297c4e0fabdd276560f",
     "path": "interfaces"
   },
   "performance-timeline": {
-    "commit": "17ebc3aea0d6321e69554067c39ab5855e6fb67e",
+    "commit": "94caab7038b27c16d605fa3547dacbee3a2fde4e",
     "path": "performance-timeline"
   },
   "resource-timing": {
@@ -60,15 +64,15 @@
     "path": "resource-timing"
   },
   "resources": {
-    "commit": "919874f84ff3703365063e749161a34af38c3d2a",
+    "commit": "1e140d63ec885703ce24b3798abd81912696bb85",
     "path": "resources"
   },
   "streams": {
-    "commit": "2bd26e124cf17b2f0a25c150794d640b07b2a870",
+    "commit": "bc9dcbbf1a4c2c741ef47f47d6ede6458f40c4a4",
     "path": "streams"
   },
   "url": {
-    "commit": "67880a4eb83ca9aa732eec4b35a1971ff5bf37ff",
+    "commit": "a23788b77a947304b2b3159d8efda492727ab623",
     "path": "url"
   },
   "user-timing": {
@@ -84,7 +88,7 @@
     "path": "wasm/webapi"
   },
   "WebCryptoAPI": {
-    "commit": "5e042cbc4ecab7b2279a5fd411c6daa24ca886c6",
+    "commit": "591c95ce6174690b92833cd92859ce2807714591",
     "path": "WebCryptoAPI"
   },
   "webidl/ecmascript-binding/es-exceptions": {
@@ -92,7 +96,11 @@
     "path": "webidl/ecmascript-binding/es-exceptions"
   },
   "webmessaging/broadcastchannel": {
-    "commit": "e97fac4791931fb7455ba3fad759d362c7108b09",
+    "commit": "6495c91853a3cf028a401cf4d228fc0b6a5465e4",
     "path": "webmessaging/broadcastchannel"
+  },
+  "webstorage": {
+    "commit": "1291340aaaa6e73db43b412e47401eca3830c556",
+    "path": "webstorage"
   }
 }

@@ -341,6 +341,7 @@ changes:
 * `options` {Object | string | URL} Accepts the same `options` as
   [`https.request()`][], with the method set to GET by default.
 * `callback` {Function}
+* Returns: {http.ClientRequest}
 
 Like [`http.get()`][] but for HTTPS.
 
@@ -404,7 +405,7 @@ a `timeout` of 5 seconds.
 <!-- YAML
 added: v0.3.6
 changes:
-  - version: v20.16.0
+  - version: v22.4.0
     pr-url: https://github.com/nodejs/node/pull/53329
     description: The `clientCertEngine` option depends on custom engine
                  support in OpenSSL which is deprecated in OpenSSL 3.

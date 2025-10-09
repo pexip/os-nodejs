@@ -46,7 +46,7 @@ from utils import SearchFiles
 parser = argparse.ArgumentParser()
 
 valid_os = ('win', 'mac', 'solaris', 'freebsd', 'openbsd', 'linux',
-            'android', 'aix', 'cloudabi', 'os400', 'ios')
+            'android', 'aix', 'cloudabi', 'os400', 'ios', 'openharmony')
 valid_arch = ('arm', 'arm64', 'ia32', 'mips', 'mipsel', 'mips64el', 'ppc',
               'ppc64', 'x64', 'x86', 'x86_64', 's390x', 'riscv64', 'loong64')
 valid_arm_float_abi = ('soft', 'softfp', 'hard')
@@ -57,9 +57,11 @@ valid_mips_float_abi = ('soft', 'hard')
 valid_intl_modes = ('none', 'small-icu', 'full-icu', 'system-icu')
 icu_versions = json.loads((tools_path / 'icu' / 'icu_versions.json').read_text(encoding='utf-8'))
 
+# builtins may be removed later if they have been disabled by options
 shareable_builtins = {'cjs_module_lexer/lexer': 'deps/cjs-module-lexer/lexer.js',
                      'cjs_module_lexer/dist/lexer': 'deps/cjs-module-lexer/dist/lexer.js',
-                     'undici/undici': 'deps/undici/undici.js'
+                     'undici/undici': 'deps/undici/undici.js',
+                     'amaro/dist/index': 'deps/amaro/dist/index.js'
 }
 
 # create option groups
@@ -145,6 +147,12 @@ parser.add_argument('--error-on-warn',
     dest='error_on_warn',
     default=None,
     help='Turn compiler warnings into errors for node core sources.')
+
+parser.add_argument('--suppress-all-error-on-warn',
+    action='store_true',
+    dest='suppress_all_error_on_warn',
+    default=False,
+    help='Suppress cases where compiler warnings are turned into errors by default.')
 
 parser.add_argument('--gdb',
     action='store_true',
@@ -543,6 +551,52 @@ shared_optgroup.add_argument('--shared-cares-libpath',
     dest='shared_cares_libpath',
     help='a directory to search for the shared cares DLL')
 
+shared_optgroup.add_argument('--shared-sqlite',
+    action='store_true',
+    dest='shared_sqlite',
+    default=None,
+    help='link to a shared sqlite DLL instead of static linking')
+
+shared_optgroup.add_argument('--shared-sqlite-includes',
+    action='store',
+    dest='shared_sqlite_includes',
+    help='directory containing sqlite header files')
+
+shared_optgroup.add_argument('--shared-sqlite-libname',
+    action='store',
+    dest='shared_sqlite_libname',
+    default='sqlite3',
+    help='alternative lib name to link to [default: %(default)s]')
+
+shared_optgroup.add_argument('--shared-sqlite-libpath',
+    action='store',
+    dest='shared_sqlite_libpath',
+    help='a directory to search for the shared sqlite DLL')
+
+shared_optgroup.add_argument('--shared-zstd',
+    action='store_true',
+    dest='shared_zstd',
+    default=None,
+    help='link to a shared zstd DLL instead of static linking')
+
+shared_optgroup.add_argument('--shared-zstd-includes',
+    action='store',
+    dest='shared_zstd_includes',
+    help='directory containing zstd header files')
+
+shared_optgroup.add_argument('--shared-zstd-libname',
+    action='store',
+    dest='shared_zstd_libname',
+    default='zstd',
+    help='alternative lib name to link to [default: %(default)s]')
+
+shared_optgroup.add_argument('--shared-zstd-libpath',
+    action='store',
+    dest='shared_zstd_libpath',
+    help='a directory to search for the shared zstd DLL')
+
+parser.add_argument_group(shared_optgroup)
+
 for builtin in shareable_builtins:
   builtin_id = 'shared_builtin_' + builtin + '_path'
   shared_builtin_optgroup.add_argument('--shared-builtin-' + builtin + '-path',
@@ -747,6 +801,12 @@ http2_optgroup.add_argument('--debug-nghttp2',
     default=None,
     help='build nghttp2 with DEBUGBUILD (default is false)')
 
+parser.add_argument('--without-amaro',
+    action='store_true',
+    dest='without_amaro',
+    default=None,
+    help='do not install the bundled Amaro (TypeScript utils)')
+
 parser.add_argument('--without-npm',
     action='store_true',
     dest='without_npm',
@@ -758,6 +818,12 @@ parser.add_argument('--without-corepack',
     dest='without_corepack',
     default=None,
     help='do not install the bundled Corepack')
+
+parser.add_argument('--control-flow-guard',
+    action='store_true',
+    dest='enable_cfg',
+    default=None,
+    help='enable Control Flow Guard (CFG)')
 
 # Dummy option for backwards compatibility
 parser.add_argument('--without-report',
@@ -797,6 +863,12 @@ parser.add_argument('--without-node-options',
     dest='without_node_options',
     default=None,
     help='build without NODE_OPTIONS support')
+
+parser.add_argument('--without-sqlite',
+    action='store_true',
+    dest='without_sqlite',
+    default=None,
+    help='build without SQLite (disables SQLite and Web Storage API)')
 
 parser.add_argument('--ninja',
     action='store_true',
@@ -948,6 +1020,18 @@ parser.add_argument('-C',
     dest='compile_commands_json',
     default=None,
     help=argparse.SUPPRESS)
+
+parser.add_argument('--clang-cl',
+    action='store',
+    dest='clang_cl',
+    default=None,
+    help='Configure for clang-cl on Windows. This flag sets the GYP "clang" ' +
+         'variable to 1 and "llvm_version" to the specified value.')
+parser.add_argument('--use-ccache-win',
+    action='store_true',
+    dest='use_ccache_win',
+    default=None,
+    help='Use ccache for compiling on Windows. ')
 
 (options, args) = parser.parse_known_args()
 
@@ -1124,9 +1208,19 @@ def get_gas_version(cc):
 # check involves checking the build number against an allowlist.  I'm not
 # quite prepared to go that far yet.
 def check_compiler(o):
+  o['variables']['use_ccache_win'] = 0
+
   if sys.platform == 'win32':
-    o['variables']['clang'] = 0
-    o['variables']['llvm_version'] = '0.0'
+    if options.clang_cl:
+      o['variables']['clang'] = 1
+      o['variables']['llvm_version'] = options.clang_cl
+    else:
+      o['variables']['clang'] = 0
+      o['variables']['llvm_version'] = '0.0'
+
+    if options.use_ccache_win:
+      o['variables']['use_ccache_win'] = 1
+
     if not options.openssl_no_asm and options.dest_cpu in ('x86', 'x64'):
       nasm_version = get_nasm_version('nasm')
       o['variables']['nasm_version'] = nasm_version
@@ -1274,6 +1368,9 @@ def host_arch_win():
 
   return matchup.get(arch, 'ia32')
 
+def set_configuration_variable(configs, name, release=None, debug=None):
+  configs['Release'][name] = release
+  configs['Debug'][name] = debug
 
 def configure_arm(o):
   if options.arm_float_abi:
@@ -1340,15 +1437,25 @@ def gcc_version_ge(version_checked):
 def configure_node_lib_files(o):
   o['variables']['node_library_files'] = SearchFiles('lib', 'js')
 
+def configure_node_cctest_sources(o):
+  o['variables']['node_cctest_sources'] = [ 'src/node_snapshot_stub.cc' ] + \
+    SearchFiles('test/cctest', 'cc') + \
+    SearchFiles('test/cctest', 'h')
+
 def configure_node(o):
   if options.dest_os == 'android':
     o['variables']['OS'] = 'android'
   o['variables']['node_prefix'] = options.prefix
   o['variables']['node_install_npm'] = b(not options.without_npm)
   o['variables']['node_install_corepack'] = b(not options.without_corepack)
+  o['variables']['control_flow_guard'] = b(options.enable_cfg)
+  o['variables']['node_use_amaro'] = b(not options.without_amaro)
   o['variables']['debug_node'] = b(options.debug_node)
   o['default_configuration'] = 'Debug' if options.debug else 'Release'
+  if options.error_on_warn and options.suppress_all_error_on_warn:
+    raise Exception('--error_on_warn is incompatible with --suppress_all_error_on_warn.')
   o['variables']['error_on_warn'] = b(options.error_on_warn)
+  o['variables']['suppress_all_error_on_warn'] = b(options.suppress_all_error_on_warn)
   o['variables']['use_prefix_to_find_headers'] = b(options.use_prefix_to_find_headers)
 
   host_arch = host_arch_win() if os.name == 'nt' else host_arch_cc()
@@ -1594,12 +1701,13 @@ def configure_library(lib, output, pkgname=None):
       output['libraries'] += pkg_libs.split()
 
 
-def configure_v8(o):
+def configure_v8(o, configs):
+  set_configuration_variable(configs, 'v8_enable_v8_checks', release=1, debug=0)
+
   o['variables']['v8_enable_webassembly'] = 0 if options.v8_lite_mode else 1
   o['variables']['v8_enable_javascript_promise_hooks'] = 1
   o['variables']['v8_enable_lite_mode'] = 1 if options.v8_lite_mode else 0
   o['variables']['v8_enable_gdbjit'] = 1 if options.gdb else 0
-  o['variables']['v8_no_strict_aliasing'] = 1  # Work around compiler bugs.
   o['variables']['v8_optimized_debug'] = 0 if options.v8_non_optimized_debug else 1
   o['variables']['dcheck_always_on'] = 1 if options.v8_with_dchecks else 0
   o['variables']['v8_enable_object_print'] = 0 if options.v8_disable_object_print else 1
@@ -1608,11 +1716,18 @@ def configure_v8(o):
   o['variables']['v8_use_siphash'] = 0 if options.without_siphash else 1
   o['variables']['v8_enable_maglev'] = 1 if options.v8_enable_maglev else 0
   o['variables']['v8_enable_pointer_compression'] = 1 if options.enable_pointer_compression else 0
-  o['variables']['v8_enable_sandbox'] = 1 if options.enable_pointer_compression else 0
+  # Using the sandbox requires always allocating array buffer backing stores in the sandbox.
+  # We currently have many backing stores tied to pointers from C++ land that are not
+  # even necessarily dynamic (e.g. in static storage) for fast communication between JS and C++.
+  # Until we manage to get rid of all those, v8_enable_sandbox cannot be used.
+  # Note that enabling pointer compression without enabling sandbox is unsupported by V8,
+  # so this can be broken at any time.
+  o['variables']['v8_enable_sandbox'] = 0
+  o['variables']['v8_enable_pointer_compression_shared_cage'] = 1 if options.enable_pointer_compression else 0
+  o['variables']['v8_enable_external_code_space'] = 1 if options.enable_pointer_compression else 0
   o['variables']['v8_enable_31bit_smis_on_64bit_arch'] = 1 if options.enable_pointer_compression else 0
   o['variables']['v8_enable_shared_ro_heap'] = 0 if options.enable_pointer_compression or options.disable_shared_ro_heap else 1
   o['variables']['v8_enable_extensible_ro_snapshot'] = 0
-  o['variables']['v8_enable_v8_checks'] = 1 if options.debug else 0
   o['variables']['v8_trace_maps'] = 1 if options.trace_maps else 0
   o['variables']['node_use_v8_platform'] = b(not options.without_v8_platform)
   o['variables']['node_use_bundled_v8'] = b(not options.without_bundled_v8)
@@ -1635,6 +1750,9 @@ def configure_v8(o):
     raise Exception(
         'Only one of the --v8-enable-object-print or --v8-disable-object-print options '
         'can be specified at a time.')
+  if sys.platform != 'darwin':
+    if o['variables']['v8_enable_webassembly'] and o['variables']['target_arch'] == 'x64':
+      o['variables']['v8_enable_wasm_simd256_revec'] = 1
 
 def configure_openssl(o):
   variables = o['variables']
@@ -1715,6 +1833,16 @@ def configure_openssl(o):
 
   configure_library('openssl', o)
 
+def configure_sqlite(o):
+  o['variables']['node_use_sqlite'] = b(not options.without_sqlite)
+  if options.without_sqlite:
+    def without_sqlite_error(option):
+      error(f'--without-sqlite is incompatible with {option}')
+    if options.shared_sqlite:
+      without_sqlite_error('--shared-sqlite')
+    return
+
+  configure_library('sqlite', o, pkgname='sqlite3')
 
 def configure_static(o):
   if options.fully_static or options.partly_static:
@@ -2090,7 +2218,7 @@ def make_bin_override():
   if sys.platform == 'win32':
     raise Exception('make_bin_override should not be called on win32.')
   # If the system python is not the python we are running (which should be
-  # python 3), then create a directory with a symlink called `python` to our
+  # python 3.8+), then create a directory with a symlink called `python` to our
   # sys.executable. This directory will be prefixed to the PATH, so that
   # other tools that shell out to `python` will use the appropriate python
 
@@ -2128,6 +2256,10 @@ output = {
   'defines': [],
   'cflags': [],
 }
+configurations = {
+  'Release': { 'variables': {} },
+  'Debug': { 'variables': {} },
+}
 
 # Print a warning when the compiler is too old.
 check_compiler(output)
@@ -2141,6 +2273,7 @@ flavor = GetFlavor(flavor_params)
 
 configure_node(output)
 configure_node_lib_files(output)
+configure_node_cctest_sources(output)
 configure_napi(output)
 configure_library('zlib', output)
 configure_library('http_parser', output)
@@ -2153,13 +2286,19 @@ configure_library('cares', output, pkgname='libcares')
 configure_library('nghttp2', output, pkgname='libnghttp2')
 configure_library('nghttp3', output, pkgname='libnghttp3')
 configure_library('ngtcp2', output, pkgname='libngtcp2')
-configure_library('uvwasi', output, pkgname='libuvwasi')
-configure_v8(output)
+configure_sqlite(output);
+configure_library('uvwasi', output)
+configure_library('zstd', output, pkgname='libzstd')
+configure_v8(output, configurations)
 configure_openssl(output)
 configure_intl(output)
 configure_static(output)
 configure_inspector(output)
 configure_section_file(output)
+
+# remove builtins that have been disabled
+if options.without_amaro:
+    del shareable_builtins['amaro/dist/index']
 
 # configure shareable builtins
 output['variables']['node_builtin_shareable_builtins'] = []
@@ -2177,7 +2316,6 @@ output['variables']['ossfuzz'] = b(options.ossfuzz)
 # move everything else to target_defaults
 variables = output['variables']
 del output['variables']
-variables['is_debug'] = B(options.debug)
 
 # make_global_settings should be a root level element too
 if 'make_global_settings' in output:
@@ -2185,6 +2323,9 @@ if 'make_global_settings' in output:
   del output['make_global_settings']
 else:
   make_global_settings = False
+
+# Add configurations to target defaults
+output['configurations'] = configurations
 
 output = {
   'variables': variables,
@@ -2196,7 +2337,7 @@ if make_global_settings:
 print_verbose(output)
 
 write('config.gypi', do_not_edit +
-      pprint.pformat(output, indent=2, width=1024) + '\n')
+      pprint.pformat(output, indent=2, width=128) + '\n')
 
 write('config.status', '#!/bin/sh\nset -x\nexec ./configure ' +
       ' '.join([shlex.quote(arg) for arg in original_argv]) + '\n')

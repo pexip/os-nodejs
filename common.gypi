@@ -27,6 +27,8 @@
 
     'clang%': 0,
     'error_on_warn%': 'false',
+    'suppress_all_error_on_warn%': 'false',
+    'control_flow_guard%': 'false',
 
     'openssl_product': '<(STATIC_LIB_PREFIX)openssl<(STATIC_LIB_SUFFIX)',
     'openssl_no_asm%': 0,
@@ -36,7 +38,7 @@
 
     # Reset this number to 0 on major V8 upgrades.
     # Increment by one for each non-official patch applied to deps/v8.
-    'v8_embedder_string': '-node.26',
+    'v8_embedder_string': '-node.27',
 
     ##### V8 defaults for Node.js #####
 
@@ -80,6 +82,7 @@
     'v8_enable_direct_local%': 0,
     'v8_enable_map_packing%': 0,
     'v8_enable_pointer_compression_shared_cage%': 0,
+    'v8_enable_external_code_space%': 0,
     'v8_enable_sandbox%': 0,
     'v8_enable_v8_checks%': 0,
     'v8_enable_zone_compression%': 0,
@@ -112,13 +115,15 @@
       # V8 pointer compression only supports 64bit architectures.
       ['target_arch in "arm ia32 mips mipsel ppc"', {
         'v8_enable_pointer_compression': 0,
+        'v8_enable_pointer_compression_shared_cage': 0,
         'v8_enable_31bit_smis_on_64bit_arch': 0,
+        'v8_enable_external_code_space': 0,
         'v8_enable_sandbox': 0
       }],
       ['target_arch in "ppc64 s390x"', {
         'v8_enable_backtrace': 1,
       }],
-      ['OS=="linux"', {
+      ['OS=="linux" or OS=="openharmony"', {
         'node_section_ordering_info%': ''
       }],
       ['OS == "zos"', {
@@ -152,6 +157,9 @@
           ['OS == "android"', {
             'cflags': [ '-fPIC' ],
             'ldflags': [ '-fPIC' ]
+          }],
+          ['clang==1', {
+            'msbuild_toolset': 'ClangCL',
           }],
         ],
         'msvs_settings': {
@@ -197,7 +205,7 @@
               'LLVM_LTO': 'YES',
             },
           }],
-          ['OS=="linux"', {
+          ['OS=="linux" or OS=="openharmony"', {
             'conditions': [
               ['node_section_ordering_info!=""', {
                 'cflags': [
@@ -225,7 +233,7 @@
             # frames otherwise, even with --call-graph dwarf.
             'cflags': [ '-fno-omit-frame-pointer' ],
           }],
-          ['OS=="linux"', {
+          ['OS=="linux" or OS=="openharmony"', {
             'conditions': [
               ['enable_pgo_generate=="true"', {
                 'cflags': ['<(pgo_generate)'],
@@ -240,6 +248,9 @@
           ['OS == "android"', {
             'cflags': [ '-fPIC', '-I<(android_ndk_path)/sources/android/cpufeatures' ],
             'ldflags': [ '-fPIC' ]
+          }],
+          ['clang==1', {
+            'msbuild_toolset': 'ClangCL',
           }],
         ],
         'msvs_settings': {
@@ -268,6 +279,9 @@
     # Defines these mostly for node-gyp to pickup.
     'defines': [
       '_GLIBCXX_USE_CXX11_ABI=1',
+      # This help forks when building Node.js on a 32-bit arch as
+      # libuv is always compiled with _FILE_OFFSET_BITS=64
+      '_FILE_OFFSET_BITS=64'
     ],
 
     # Forcibly disable -Werror.  We support a wide range of compilers, it's
@@ -283,9 +297,31 @@
     ],
     'msvs_settings': {
       'VCCLCompilerTool': {
-        'AdditionalOptions': [
-          '/Zc:__cplusplus',
-          '-std:c++17'
+        # TODO(targos): Remove condition and always use LanguageStandard options
+        # once node-gyp supports them.
+        'conditions': [
+          ['clang==1', {
+            'LanguageStandard': 'stdcpp20',
+            'LanguageStandard_C': 'stdc11',
+            'AdditionalOptions': [
+              '/Zc:__cplusplus',
+              # The following option reduces the "error C1060: compiler is out of heap space"
+              '/Zm2000',
+            ],
+          }, {
+            'AdditionalOptions': [
+              '/Zc:__cplusplus',
+              # The following option enables c++20 on Windows. This is needed for V8 v12.4+
+              '-std:c++20',
+              # The following option reduces the "error C1060: compiler is out of heap space"
+              '/Zm2000',
+            ],
+          }],
+          ['control_flow_guard=="true"', {
+            'AdditionalOptions': [
+              '/guard:cf',                        # Control Flow Guard
+            ],
+          }],
         ],
         'BufferSecurityCheck': 'true',
         'DebugInformationFormat': 1,          # /Z7 embed info in .obj files
@@ -311,6 +347,11 @@
           }],
           ['target_arch=="arm64"', {
             'TargetMachine' : 0,              # NotSet. MACHINE:ARM64 is inferred from the input files.
+          }],
+          ['control_flow_guard=="true"', {
+            'AdditionalOptions': [
+              '/guard:cf',                        # Control Flow Guard
+            ],
           }],
         ],
         'GenerateDebugInformation': 'true',
@@ -420,6 +461,9 @@
       ['v8_enable_sandbox == 1', {
         'defines': ['V8_ENABLE_SANDBOX',],
       }],
+      ['v8_enable_external_code_space == 1', {
+        'defines': ['V8_EXTERNAL_CODE_SPACE',],
+      }],
       ['v8_deprecation_warnings == 1', {
         'defines': ['V8_DEPRECATION_WARNINGS',],
       }],
@@ -454,15 +498,24 @@
           '_HAS_EXCEPTIONS=0',
           'BUILDING_V8_SHARED=1',
           'BUILDING_UV_SHARED=1',
+          # Stop <windows.h> from defining macros that conflict with
+          # std::min() and std::max().  We don't use <windows.h> (much)
+          # but we still inherit it from uv.h.
+          'NOMINMAX',
         ],
       }],
-      [ 'OS in "linux freebsd openbsd solaris aix os400"', {
+      [ 'OS in "linux freebsd openbsd solaris aix os400 openharmony"', {
         'cflags': [ '-pthread' ],
         'ldflags': [ '-pthread' ],
       }],
-      [ 'OS in "linux freebsd openbsd solaris android aix os400 cloudabi"', {
+      [ 'OS in "linux freebsd openbsd solaris android aix os400 cloudabi openharmony"', {
         'cflags': [ '-Wall', '-Wextra', '-Wno-unused-parameter', ],
-        'cflags_cc': [ '-fno-rtti', '-fno-exceptions', '-std=gnu++17' ],
+        'cflags_cc': [
+          '-fno-rtti',
+          '-fno-exceptions',
+          '-fno-strict-aliasing',
+          '-std=gnu++17',
+        ],
         'defines': [ '__STDC_FORMAT_MACROS' ],
         'ldflags': [ '-rdynamic' ],
         'target_conditions': [
@@ -593,12 +646,10 @@
           'GCC_ENABLE_CPP_EXCEPTIONS': 'NO',        # -fno-exceptions
           'GCC_ENABLE_CPP_RTTI': 'NO',              # -fno-rtti
           'GCC_ENABLE_PASCAL_STRINGS': 'NO',        # No -mpascal-strings
+          'GCC_STRICT_ALIASING': 'NO',              # -fno-strict-aliasing
           'PREBINDING': 'NO',                       # No -Wl,-prebind
-          'MACOSX_DEPLOYMENT_TARGET': '10.15',      # -mmacosx-version-min=10.15
+          'MACOSX_DEPLOYMENT_TARGET': '11.0',       # -mmacosx-version-min=11.0
           'USE_HEADERMAP': 'NO',
-          'OTHER_CFLAGS': [
-            '-fno-strict-aliasing',
-          ],
           'WARNING_CFLAGS': [
             '-Wall',
             '-Wendif-labels',

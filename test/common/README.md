@@ -1,6 +1,29 @@
 # Node.js Core Test Common Modules
 
 This directory contains modules used to test the Node.js implementation.
+All tests must begin by requiring the `common` module:
+
+```js
+require('../common');
+```
+
+This is not just a convenience for exporting helper functions etc; it also performs
+several other tasks:
+
+* Verifies that no unintended globals have been leaked to ensure that tests
+  don't accidentally pollute the global namespace.
+
+* Some tests assume a default umask of `0o022`. To enforce this assumption,
+  the common module sets the unmask at startup. Tests that require a
+  different umask can override this setting after loading the module.
+
+* Some tests specify runtime flags (example, `--expose-internals`) via a
+  comment at the top of the file: `// Flags: --expose-internals`.
+  If the test is run without those flags, the common module automatically
+  spawns a child process with proper flags. This ensures that the tests
+  always run under the expected conditions. Because of this behaviour, the
+  common module must be loaded first so that any code below it is not
+  executed until the process has been re-spawned with the correct flags.
 
 ## Table of contents
 
@@ -102,15 +125,38 @@ symlinks
 ([SeCreateSymbolicLinkPrivilege](https://msdn.microsoft.com/en-us/library/windows/desktop/bb530716\(v=vs.85\).aspx)).
 On non-Windows platforms, this always returns `true`.
 
-### `createZeroFilledFile(filename)`
-
-Creates a 10 MiB file of all null characters.
-
 ### `enoughTestMem`
 
 * [\<boolean>][<boolean>]
 
 Indicates if there is more than 1gb of total memory.
+
+### ``escapePOSIXShell`shell command` ``
+
+Escapes values in a string template literal to pass them as env variable. On Windows, this function
+does not escape anything (which is fine for most paths, as `"` is not a valid
+char in a path on Windows), so for tests that must pass on Windows, you should
+use it only to escape paths, inside double quotes.
+This function is meant to be used for tagged template strings.
+
+```js
+const { escapePOSIXShell } = require('../common');
+const fixtures = require('../common/fixtures');
+const { execSync } = require('node:child_process');
+const origin = fixtures.path('origin');
+const destination = fixtures.path('destination');
+
+execSync(...escapePOSIXShell`cp "${origin}" "${destination}"`);
+
+// When you need to specify specific options, and/or additional env variables:
+const [cmd, opts] = escapePOSIXShell`cp "${origin}" "${destination}"`;
+console.log(typeof cmd === 'string'); // true
+console.log(opts === undefined || typeof opts.env === 'object'); // true
+execSync(cmd, { ...opts, stdio: 'ignore' });
+execSync(cmd, { stdio: 'ignore', env: { ...opts?.env, KEY: 'value' } });
+```
+
+When possible, avoid using a shell; that way, there's no need to escape values.
 
 ### `expectsError(validator[, exact])`
 
@@ -187,13 +233,6 @@ Returns an instance of all possible `ArrayBufferView`s of the provided Buffer.
 Returns an instance of all possible `BufferSource`s of the provided Buffer,
 consisting of all `ArrayBufferView` and an `ArrayBuffer`.
 
-### `getCallSite(func)`
-
-* `func` [\<Function>][<Function>]
-* return [\<string>][<string>]
-
-Returns the file name and line number for the provided Function.
-
 ### `getTTYfd()`
 
 Attempts to get a valid TTY file descriptor. Returns `-1` if it fails.
@@ -205,17 +244,6 @@ The TTY file descriptor is assumed to be capable of being writable.
 * [\<boolean>][<boolean>]
 
 Indicates whether OpenSSL is available.
-
-### `hasFipsCrypto`
-
-* [\<boolean>][<boolean>]
-
-Indicates that Node.js has been linked with a FIPS compatible OpenSSL library,
-and that FIPS as been enabled using `--enable-fips`.
-
-To only detect if the OpenSSL library is FIPS compatible, regardless if it has
-been enabled or not, then `process.config.variables.openssl_is_fips` can be
-used to determine that situation.
 
 ### `hasIntl`
 
@@ -229,11 +257,11 @@ Indicates if [internationalization][] is supported.
 
 Indicates whether `IPv6` is supported on this platform.
 
-### `hasMultiLocalhost`
+### `hasSQLite`
 
 * [\<boolean>][<boolean>]
 
-Indicates if there are multiple localhosts available.
+Indicates whether SQLite is available.
 
 ### `inFreeBSDJail`
 
@@ -254,10 +282,6 @@ Platform check for Advanced Interactive eXecutive (AIX).
 
 Attempts to 'kill' `pid`
 
-### `isDumbTerminal`
-
-* [\<boolean>][<boolean>]
-
 ### `isFreeBSD`
 
 * [\<boolean>][<boolean>]
@@ -275,12 +299,6 @@ Platform check for IBMi.
 * [\<boolean>][<boolean>]
 
 Platform check for Linux.
-
-### `isLinuxPPCBE`
-
-* [\<boolean>][<boolean>]
-
-Platform check for Linux on PowerPC.
 
 ### `isMacOS`
 
@@ -397,12 +415,6 @@ Returns `true` if the exit code `exitCode` and/or signal name `signal` represent
 the exit code and/or signal name of a node process that aborted, `false`
 otherwise.
 
-### `opensslCli`
-
-* [\<boolean>][<boolean>]
-
-Indicates whether 'opensslCli' is supported.
-
 ### `platformTimeout(ms)`
 
 * `ms` [\<number>][<number>] | [\<bigint>][<bigint>]
@@ -465,29 +477,25 @@ will not be run.
 
 Logs '1..0 # Skipped: ' + `msg` and exits with exit code `0`.
 
-### `skipIfDumbTerminal()`
-
-Skip the rest of the tests if the current terminal is a dumb terminal
-
 ### `skipIfEslintMissing()`
 
 Skip the rest of the tests in the current file when `ESLint` is not available
-at `tools/node_modules/eslint`
+at `tools/eslint/node_modules/eslint`
 
 ### `skipIfInspectorDisabled()`
 
 Skip the rest of the tests in the current file when the Inspector
 was disabled at compile time.
 
+### `skipIfSQLiteMissing()`
+
+Skip the rest of the tests in the current file when the SQLite
+was disabled at compile time.
+
 ### `skipIf32Bits()`
 
 Skip the rest of the tests in the current file when the Node.js executable
 was compiled with a pointer size smaller than 64 bits.
-
-### `skipIfWorker()`
-
-Skip the rest of the tests in the current file when not running on a main
-thread.
 
 ## ArrayStream module
 

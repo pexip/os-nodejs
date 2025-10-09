@@ -74,6 +74,7 @@ template("node_gn_build") {
       "-Wno-implicit-fallthrough",
       "-Wno-macro-redefined",
       "-Wno-missing-braces",
+      "-Wno-range-loop-bind-reference",
       "-Wno-return-type",
       "-Wno-shadow",
       "-Wno-sometimes-uninitialized",
@@ -154,12 +155,15 @@ template("node_gn_build") {
       "deps/cares",
       "deps/histogram",
       "deps/llhttp",
+      "deps/nbytes",
       "deps/nghttp2",
       "deps/ngtcp2",
       "deps/postject",
-      "deps/simdutf",
+      "deps/sqlite",
       "deps/uvwasi",
+      "deps/zstd",
       "//third_party/zlib",
+      "$node_simdutf_path",
       "$node_v8_path:v8_libplatform",
     ]
 
@@ -171,7 +175,10 @@ template("node_gn_build") {
       libs = [ "psapi.lib" ]
     }
     if (is_mac) {
-      frameworks = [ "CoreFoundation.framework" ]
+      frameworks = [
+        "CoreFoundation.framework",
+        "Security.framework",
+      ]
     }
     if (is_posix) {
       configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
@@ -182,17 +189,20 @@ template("node_gn_build") {
       deps += [ "//third_party/icu" ]
     }
     if (node_use_openssl) {
-      public_deps += [ "deps/openssl" ]
+      deps += [ "deps/ncrypto" ]
+      public_deps += [ "$node_openssl_path" ]
       sources += gypi_values.node_crypto_sources
     }
     if (node_enable_inspector) {
       deps += [
+        "$node_inspector_protocol_path:crdtp",
         "src/inspector:node_protocol_generated_sources",
         "src/inspector:v8_inspector_compress_protocol_json",
       ]
       include_dirs = [
         "$target_gen_dir/src",
         "$target_gen_dir/src/inspector",
+        "$node_inspector_protocol_path",
       ]
       node_inspector = exec_script(
           "./tools/gypi_to_gn.py",
@@ -280,8 +290,8 @@ template("node_gn_build") {
 
   executable("node_js2c") {
     deps = [
-      "deps/simdutf",
       "deps/uv",
+      "$node_simdutf_path",
     ]
     sources = [
       "tools/js2c.cc",
@@ -337,15 +347,30 @@ template("node_gn_build") {
       ":libnode",
       "deps/googletest",
       "deps/googletest:gtest_main",
-      "deps/simdutf",
+      "deps/nbytes",
+      "$node_simdutf_path",
     ]
 
-    sources = gypi_values.node_cctest_sources
+    sources = [ "src/node_snapshot_stub.cc" ]
+    sources += exec_script("./tools/search_files.py",
+                           [ rebase_path(".", root_build_dir),
+                             rebase_path("test/cctest", root_build_dir),
+                             "cc" ],
+                           "list lines")
+
     if (node_use_openssl) {
-      sources += gypi_values.node_cctest_openssl_sources
+      deps += [ "deps/ncrypto" ]
+    } else {
+      sources -= gypi_values.node_cctest_openssl_sources
     }
     if (node_enable_inspector) {
-      sources += gypi_values.node_cctest_inspector_sources
+      deps += [ "src/inspector:crdtp" ]
+      include_dirs = [
+        "$target_gen_dir/src",
+        "$target_gen_dir/src/inspector",
+      ]
+    } else {
+      sources -= gypi_values.node_cctest_inspector_sources
     }
   }
 

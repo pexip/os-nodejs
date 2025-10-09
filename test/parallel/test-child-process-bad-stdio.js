@@ -3,7 +3,7 @@
 const common = require('../common');
 
 if (process.argv[2] === 'child') {
-  setTimeout(() => {}, common.platformTimeout(100));
+  setTimeout(() => {}, common.platformTimeout(1000));
   return;
 }
 
@@ -29,7 +29,8 @@ mock.method(ChildProcess.prototype, 'spawn', function() {
 });
 
 function createChild(options, callback) {
-  const cmd = `"${process.execPath}" "${__filename}" child`;
+  const [cmd, opts] = common.escapePOSIXShell`"${process.execPath}" "${__filename}" child`;
+  options = { ...options, env: { ...opts?.env, ...options.env } };
 
   return cp.exec(cmd, options, common.mustCall(callback));
 }

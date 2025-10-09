@@ -4,11 +4,10 @@ import assert from 'node:assert';
 import { execPath } from 'node:process';
 import { describe, it } from 'node:test';
 
-
 // Expect note to be included in the error output
 // Don't match the following sentence because it can change as features are
 // added.
-const expectedNote = 'Warning: To load an ES module';
+const expectedNote = 'Failed to load the ES module';
 
 const mustIncludeMessage = {
   getMessage: (stderr) => `${expectedNote} not found in ${stderr}`,
@@ -19,7 +18,7 @@ const mustNotIncludeMessage = {
   includeNote: false,
 };
 
-describe('ESM: Errors for unexpected exports', { concurrency: true }, () => {
+describe('ESM: Errors for unexpected exports', { concurrency: !process.env.TEST_PARALLEL }, () => {
   for (
     const { errorNeedle, filePath, getMessage, includeNote }
     of [

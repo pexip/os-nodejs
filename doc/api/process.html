@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v20.19.2">
-  <title>Process | Node.js v20.19.2 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v22.18.0">
+  <title>Process | Node.js v22.18.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -23,7 +23,7 @@
         document.documentElement.classList.add('dark-mode');
       }
   </script>
-  <style>@media(max-width:542px){.with-40-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:734px){.with-64-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:550px){.with-41-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:598px){.with-47-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:582px){.with-45-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:566px){.with-43-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:606px){.with-48-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:694px){.with-59-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:750px){.with-66-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:622px){.with-50-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:558px){.with-42-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:574px){.with-44-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}</style>
+  <style>@media(max-width:542px){.with-40-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:734px){.with-64-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:550px){.with-41-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:598px){.with-47-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:582px){.with-45-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:566px){.with-43-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:606px){.with-48-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:614px){.with-49-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:694px){.with-59-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:750px){.with-66-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:622px){.with-50-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:558px){.with-42-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}@media(max-width:574px){.with-44-chars>.js-flavor-toggle{float:none;margin:0 0 1em auto;}}</style>
 </head>
 <body class="alt apidoc" id="api-section-process">
   <a href="#apicontent" class="skip-to-content">Skip to content</a>
@@ -51,7 +51,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -71,6 +70,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -83,6 +83,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -110,7 +111,7 @@
     <div id="column1" data-id="process" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v20.19.2 documentation</h1>
+          <h1>Node.js v22.18.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -125,7 +126,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v20.19.2</li>
+            <li class="pinned-header">Node.js v22.18.0</li>
             
     <li class="picker-header">
       <a href="#toc-picker" aria-controls="toc-picker">
@@ -167,6 +168,7 @@
 <li><a href="#processarch"><code>process.arch</code></a></li>
 <li><a href="#processargv"><code>process.argv</code></a></li>
 <li><a href="#processargv0"><code>process.argv0</code></a></li>
+<li><a href="#processavailablememory"><code>process.availableMemory()</code></a></li>
 <li><a href="#processchannel"><code>process.channel</code></a>
 <ul>
 <li><a href="#processchannelref"><code>process.channel.ref()</code></a></li>
@@ -176,8 +178,7 @@
 <li><a href="#processchdirdirectory"><code>process.chdir(directory)</code></a></li>
 <li><a href="#processconfig"><code>process.config</code></a></li>
 <li><a href="#processconnected"><code>process.connected</code></a></li>
-<li><span class="stability_1"><a href="#processconstrainedmemory"><code>process.constrainedMemory()</code></a></span></li>
-<li><span class="stability_1"><a href="#processavailablememory"><code>process.availableMemory()</code></a></span></li>
+<li><a href="#processconstrainedmemory"><code>process.constrainedMemory()</code></a></li>
 <li><a href="#processcpuusagepreviousvalue"><code>process.cpuUsage([previousValue])</code></a></li>
 <li><a href="#processcwd"><code>process.cwd()</code></a></li>
 <li><a href="#processdebugport"><code>process.debugPort</code></a></li>
@@ -192,19 +193,24 @@
 <li><a href="#processenv"><code>process.env</code></a></li>
 <li><a href="#processexecargv"><code>process.execArgv</code></a></li>
 <li><a href="#processexecpath"><code>process.execPath</code></a></li>
+<li><span class="stability_1"><a href="#processexecvefile-args-env"><code>process.execve(file[, args[, env]])</code></a></span></li>
 <li><a href="#processexitcode"><code>process.exit([code])</code></a></li>
 <li><a href="#processexitcode_1"><code>process.exitCode</code></a></li>
 <li><a href="#processfeaturescached_builtins"><code>process.features.cached_builtins</code></a></li>
 <li><a href="#processfeaturesdebug"><code>process.features.debug</code></a></li>
 <li><a href="#processfeaturesinspector"><code>process.features.inspector</code></a></li>
-<li><a href="#processfeaturesipv6"><code>process.features.ipv6</code></a></li>
+<li><span class="stability_0"><a href="#processfeaturesipv6"><code>process.features.ipv6</code></a></span></li>
 <li><a href="#processfeaturesrequire_module"><code>process.features.require_module</code></a></li>
 <li><a href="#processfeaturestls"><code>process.features.tls</code></a></li>
-<li><a href="#processfeaturestls_alpn"><code>process.features.tls_alpn</code></a></li>
-<li><a href="#processfeaturestls_ocsp"><code>process.features.tls_ocsp</code></a></li>
-<li><a href="#processfeaturestls_sni"><code>process.features.tls_sni</code></a></li>
-<li><a href="#processfeaturesuv"><code>process.features.uv</code></a></li>
-<li><span class="stability_1"><a href="#processgetactiveresourcesinfo"><code>process.getActiveResourcesInfo()</code></a></span></li>
+<li><span class="stability_0"><a href="#processfeaturestls_alpn"><code>process.features.tls_alpn</code></a></span></li>
+<li><span class="stability_0"><a href="#processfeaturestls_ocsp"><code>process.features.tls_ocsp</code></a></span></li>
+<li><span class="stability_0"><a href="#processfeaturestls_sni"><code>process.features.tls_sni</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processfeaturestypescript"><code>process.features.typescript</code></a></span></li>
+<li><span class="stability_0"><a href="#processfeaturesuv"><code>process.features.uv</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processfinalizationregisterref-callback"><code>process.finalization.register(ref, callback)</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processfinalizationregisterbeforeexitref-callback"><code>process.finalization.registerBeforeExit(ref, callback)</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processfinalizationunregisterref"><code>process.finalization.unregister(ref)</code></a></span></li>
+<li><a href="#processgetactiveresourcesinfo"><code>process.getActiveResourcesInfo()</code></a></li>
 <li><a href="#processgetbuiltinmoduleid"><code>process.getBuiltinModule(id)</code></a></li>
 <li><a href="#processgetegid"><code>process.getegid()</code></a></li>
 <li><a href="#processgeteuid"><code>process.geteuid()</code></a></li>
@@ -216,7 +222,7 @@
 <li><a href="#processhrtimebigint"><code>process.hrtime.bigint()</code></a></li>
 <li><a href="#processinitgroupsuser-extragroup"><code>process.initgroups(user, extraGroup)</code></a></li>
 <li><a href="#processkillpid-signal"><code>process.kill(pid[, signal])</code></a></li>
-<li><span class="stability_1"><a href="#processloadenvfilepath"><code>process.loadEnvFile(path)</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processloadenvfilepath"><code>process.loadEnvFile(path)</code></a></span></li>
 <li><span class="stability_0"><a href="#processmainmodule"><code>process.mainModule</code></a></span></li>
 <li><a href="#processmemoryusage"><code>process.memoryUsage()</code></a></li>
 <li><a href="#processmemoryusagerss"><code>process.memoryUsage.rss()</code></a></li>
@@ -234,6 +240,7 @@
 <li><a href="#processpid"><code>process.pid</code></a></li>
 <li><a href="#processplatform"><code>process.platform</code></a></li>
 <li><a href="#processppid"><code>process.ppid</code></a></li>
+<li><span class="stability_1"><a href="#processrefmayberefable"><code>process.ref(maybeRefable)</code></a></span></li>
 <li><a href="#processrelease"><code>process.release</code></a></li>
 <li><a href="#processreport"><code>process.report</code></a>
 <ul>
@@ -244,6 +251,7 @@
 <li><a href="#processreportreportonfatalerror"><code>process.report.reportOnFatalError</code></a></li>
 <li><a href="#processreportreportonsignal"><code>process.report.reportOnSignal</code></a></li>
 <li><a href="#processreportreportonuncaughtexception"><code>process.report.reportOnUncaughtException</code></a></li>
+<li><a href="#processreportexcludeenv"><code>process.report.excludeEnv</code></a></li>
 <li><a href="#processreportsignal"><code>process.report.signal</code></a></li>
 <li><a href="#processreportwritereportfilename-err"><code>process.report.writeReport([filename][, err])</code></a></li>
 </ul>
@@ -279,6 +287,7 @@
 <li><a href="#processtracedeprecation"><code>process.traceDeprecation</code></a></li>
 <li><span class="stability_0"><a href="#processumask"><code>process.umask()</code></a></span></li>
 <li><a href="#processumaskmask"><code>process.umask(mask)</code></a></li>
+<li><span class="stability_1"><a href="#processunrefmayberefable"><code>process.unref(maybeRefable)</code></a></span></li>
 <li><a href="#processuptime"><code>process.uptime()</code></a></li>
 <li><a href="#processversion"><code>process.version</code></a></li>
 <li><a href="#processversions"><code>process.versions</code></a></li>
@@ -317,7 +326,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -337,6 +345,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -349,6 +358,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -461,6 +471,7 @@
 <li><a href="#processarch"><code>process.arch</code></a></li>
 <li><a href="#processargv"><code>process.argv</code></a></li>
 <li><a href="#processargv0"><code>process.argv0</code></a></li>
+<li><a href="#processavailablememory"><code>process.availableMemory()</code></a></li>
 <li><a href="#processchannel"><code>process.channel</code></a>
 <ul>
 <li><a href="#processchannelref"><code>process.channel.ref()</code></a></li>
@@ -470,8 +481,7 @@
 <li><a href="#processchdirdirectory"><code>process.chdir(directory)</code></a></li>
 <li><a href="#processconfig"><code>process.config</code></a></li>
 <li><a href="#processconnected"><code>process.connected</code></a></li>
-<li><span class="stability_1"><a href="#processconstrainedmemory"><code>process.constrainedMemory()</code></a></span></li>
-<li><span class="stability_1"><a href="#processavailablememory"><code>process.availableMemory()</code></a></span></li>
+<li><a href="#processconstrainedmemory"><code>process.constrainedMemory()</code></a></li>
 <li><a href="#processcpuusagepreviousvalue"><code>process.cpuUsage([previousValue])</code></a></li>
 <li><a href="#processcwd"><code>process.cwd()</code></a></li>
 <li><a href="#processdebugport"><code>process.debugPort</code></a></li>
@@ -486,19 +496,24 @@
 <li><a href="#processenv"><code>process.env</code></a></li>
 <li><a href="#processexecargv"><code>process.execArgv</code></a></li>
 <li><a href="#processexecpath"><code>process.execPath</code></a></li>
+<li><span class="stability_1"><a href="#processexecvefile-args-env"><code>process.execve(file[, args[, env]])</code></a></span></li>
 <li><a href="#processexitcode"><code>process.exit([code])</code></a></li>
 <li><a href="#processexitcode_1"><code>process.exitCode</code></a></li>
 <li><a href="#processfeaturescached_builtins"><code>process.features.cached_builtins</code></a></li>
 <li><a href="#processfeaturesdebug"><code>process.features.debug</code></a></li>
 <li><a href="#processfeaturesinspector"><code>process.features.inspector</code></a></li>
-<li><a href="#processfeaturesipv6"><code>process.features.ipv6</code></a></li>
+<li><span class="stability_0"><a href="#processfeaturesipv6"><code>process.features.ipv6</code></a></span></li>
 <li><a href="#processfeaturesrequire_module"><code>process.features.require_module</code></a></li>
 <li><a href="#processfeaturestls"><code>process.features.tls</code></a></li>
-<li><a href="#processfeaturestls_alpn"><code>process.features.tls_alpn</code></a></li>
-<li><a href="#processfeaturestls_ocsp"><code>process.features.tls_ocsp</code></a></li>
-<li><a href="#processfeaturestls_sni"><code>process.features.tls_sni</code></a></li>
-<li><a href="#processfeaturesuv"><code>process.features.uv</code></a></li>
-<li><span class="stability_1"><a href="#processgetactiveresourcesinfo"><code>process.getActiveResourcesInfo()</code></a></span></li>
+<li><span class="stability_0"><a href="#processfeaturestls_alpn"><code>process.features.tls_alpn</code></a></span></li>
+<li><span class="stability_0"><a href="#processfeaturestls_ocsp"><code>process.features.tls_ocsp</code></a></span></li>
+<li><span class="stability_0"><a href="#processfeaturestls_sni"><code>process.features.tls_sni</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processfeaturestypescript"><code>process.features.typescript</code></a></span></li>
+<li><span class="stability_0"><a href="#processfeaturesuv"><code>process.features.uv</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processfinalizationregisterref-callback"><code>process.finalization.register(ref, callback)</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processfinalizationregisterbeforeexitref-callback"><code>process.finalization.registerBeforeExit(ref, callback)</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processfinalizationunregisterref"><code>process.finalization.unregister(ref)</code></a></span></li>
+<li><a href="#processgetactiveresourcesinfo"><code>process.getActiveResourcesInfo()</code></a></li>
 <li><a href="#processgetbuiltinmoduleid"><code>process.getBuiltinModule(id)</code></a></li>
 <li><a href="#processgetegid"><code>process.getegid()</code></a></li>
 <li><a href="#processgeteuid"><code>process.geteuid()</code></a></li>
@@ -510,7 +525,7 @@
 <li><a href="#processhrtimebigint"><code>process.hrtime.bigint()</code></a></li>
 <li><a href="#processinitgroupsuser-extragroup"><code>process.initgroups(user, extraGroup)</code></a></li>
 <li><a href="#processkillpid-signal"><code>process.kill(pid[, signal])</code></a></li>
-<li><span class="stability_1"><a href="#processloadenvfilepath"><code>process.loadEnvFile(path)</code></a></span></li>
+<li><span class="stability_1.1"><a href="#processloadenvfilepath"><code>process.loadEnvFile(path)</code></a></span></li>
 <li><span class="stability_0"><a href="#processmainmodule"><code>process.mainModule</code></a></span></li>
 <li><a href="#processmemoryusage"><code>process.memoryUsage()</code></a></li>
 <li><a href="#processmemoryusagerss"><code>process.memoryUsage.rss()</code></a></li>
@@ -528,6 +543,7 @@
 <li><a href="#processpid"><code>process.pid</code></a></li>
 <li><a href="#processplatform"><code>process.platform</code></a></li>
 <li><a href="#processppid"><code>process.ppid</code></a></li>
+<li><span class="stability_1"><a href="#processrefmayberefable"><code>process.ref(maybeRefable)</code></a></span></li>
 <li><a href="#processrelease"><code>process.release</code></a></li>
 <li><a href="#processreport"><code>process.report</code></a>
 <ul>
@@ -538,6 +554,7 @@
 <li><a href="#processreportreportonfatalerror"><code>process.report.reportOnFatalError</code></a></li>
 <li><a href="#processreportreportonsignal"><code>process.report.reportOnSignal</code></a></li>
 <li><a href="#processreportreportonuncaughtexception"><code>process.report.reportOnUncaughtException</code></a></li>
+<li><a href="#processreportexcludeenv"><code>process.report.excludeEnv</code></a></li>
 <li><a href="#processreportsignal"><code>process.report.signal</code></a></li>
 <li><a href="#processreportwritereportfilename-err"><code>process.report.writeReport([filename][, err])</code></a></li>
 </ul>
@@ -573,6 +590,7 @@
 <li><a href="#processtracedeprecation"><code>process.traceDeprecation</code></a></li>
 <li><span class="stability_0"><a href="#processumask"><code>process.umask()</code></a></span></li>
 <li><a href="#processumaskmask"><code>process.umask(mask)</code></a></li>
+<li><span class="stability_1"><a href="#processunrefmayberefable"><code>process.unref(maybeRefable)</code></a></span></li>
 <li><a href="#processuptime"><code>process.uptime()</code></a></li>
 <li><a href="#processversion"><code>process.version</code></a></li>
 <li><a href="#processversions"><code>process.versions</code></a></li>
@@ -585,13 +603,14 @@
         <h2>Process<span><a class="mark" href="#process" id="process">#</a></span><a aria-hidden="true" class="legacy" id="process_process"></a></h2>
 
 
-<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v20.19.2/lib/process.js">lib/process.js</a></p>
+<p><strong>Source Code:</strong> <a href="https://github.com/nodejs/node/blob/v22.18.0/lib/process.js">lib/process.js</a></p>
 <p>The <code>process</code> object provides information about, and control over, the current
 Node.js process.</p>
 
 <pre class="with-40-chars"><input class="js-flavor-toggle" type="checkbox" checked aria-label="Show modern ES modules syntax"><code class="language-js mjs"><span class="hljs-keyword">import</span> process <span class="hljs-keyword">from</span> <span class="hljs-string">'node:process'</span>;</code><code class="language-js cjs"><span class="hljs-keyword">const</span> process = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);</code><button class="copy-button">copy</button></pre>
 <section><h3>Process events<span><a class="mark" href="#process-events" id="process-events">#</a></span><a aria-hidden="true" class="legacy" id="process_process_events"></a></h3>
 <p>The <code>process</code> object is an instance of <a href="events.html#class-eventemitter"><code>EventEmitter</code></a>.</p>
+<div>
 <h4>Event: <code>'beforeExit'</code><span><a class="mark" href="#event-beforeexit" id="event-beforeexit">#</a></span><a aria-hidden="true" class="legacy" id="process_event_beforeexit"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.11.12</span>
@@ -639,6 +658,7 @@ process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'
 <span class="hljs-comment">// This message is displayed first.</span>
 <span class="hljs-comment">// Process beforeExit event with code: 0</span>
 <span class="hljs-comment">// Process exit event with code: 0</span></code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Event: <code>'disconnect'</code><span><a class="mark" href="#event-disconnect" id="event-disconnect">#</a></span><a aria-hidden="true" class="legacy" id="process_event_disconnect"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.7.7</span>
@@ -646,6 +666,7 @@ process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'
 <p>If the Node.js process is spawned with an IPC channel (see the <a href="child_process.html">Child Process</a>
 and <a href="cluster.html">Cluster</a> documentation), the <code>'disconnect'</code> event will be emitted when
 the IPC channel is closed.</p>
+</div><div>
 <h4>Event: <code>'exit'</code><span><a class="mark" href="#event-exit" id="event-exit">#</a></span><a aria-hidden="true" class="legacy" id="process_event_exit"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.1.7</span>
@@ -692,6 +713,7 @@ process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'
     <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">'This will not run'</span>);
   }, <span class="hljs-number">0</span>);
 });</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Event: <code>'message'</code><span><a class="mark" href="#event-message" id="event-message">#</a></span><a aria-hidden="true" class="legacy" id="process_event_message"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.5.10</span>
@@ -712,6 +734,7 @@ not be the same as what is originally sent.</p>
 process, the <code>message</code> argument can contain data that JSON is not able
 to represent.
 See <a href="child_process.html#advanced-serialization">Advanced serialization for <code>child_process</code></a> for more details.</p>
+</div><div>
 <h4>Event: <code>'multipleResolves'</code><span><a class="mark" href="#event-multipleresolves" id="event-multipleresolves">#</a></span><a aria-hidden="true" class="legacy" id="process_event_multipleresolves"></a></h4>
 <div class="api_metadata">
 <span>Added in: v10.12.0</span><span>Deprecated since: v17.6.0, v16.15.0</span>
@@ -788,6 +811,7 @@ process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'
 <span class="hljs-comment">//     at new Promise (&#x3C;anonymous>)</span>
 <span class="hljs-comment">//     at main (*)</span>
 <span class="hljs-comment">// First call</span></code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Event: <code>'rejectionHandled'</code><span><a class="mark" href="#event-rejectionhandled" id="event-rejectionhandled">#</a></span><a aria-hidden="true" class="legacy" id="process_event_rejectionhandled"></a></h4>
 <div class="api_metadata">
 <span>Added in: v1.4.1</span>
@@ -836,9 +860,10 @@ reflecting rejections that start unhandled and then become handled. It is
 possible to record such errors in an error log, either periodically (which is
 likely best for long-running application) or upon process exit (which is likely
 most convenient for scripts).</p>
+</div><div>
 <h4>Event: <code>'workerMessage'</code><span><a class="mark" href="#event-workermessage" id="event-workermessage">#</a></span><a aria-hidden="true" class="legacy" id="process_event_workermessage"></a></h4>
 <div class="api_metadata">
-<span>Added in: v20.19.0</span>
+<span>Added in: v22.5.0</span>
 </div>
 <ul>
 <li><code>value</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> A value transmitted using <a href="worker_threads.html#workerpostmessagetothreadthreadid-value-transferlist-timeout"><code>postMessageToThread()</code></a>.</li>
@@ -846,6 +871,7 @@ most convenient for scripts).</p>
 </ul>
 <p>The <code>'workerMessage'</code> event is emitted for any incoming message send by the other
 party by using <a href="worker_threads.html#workerpostmessagetothreadthreadid-value-transferlist-timeout"><code>postMessageToThread()</code></a>.</p>
+</div><div>
 <h4>Event: <code>'uncaughtException'</code><span><a class="mark" href="#event-uncaughtexception" id="event-uncaughtexception">#</a></span><a aria-hidden="true" class="legacy" id="process_event_uncaughtexception"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -916,6 +942,7 @@ process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'
 <p>It is possible to monitor <code>'uncaughtException'</code> events without overriding the
 default behavior to exit the process by installing a
 <code>'uncaughtExceptionMonitor'</code> listener.</p>
+<div>
 <h5>Warning: Using <code>'uncaughtException'</code> correctly<span><a class="mark" href="#warning-using-uncaughtexception-correctly" id="warning-using-uncaughtexception-correctly">#</a></span><a aria-hidden="true" class="legacy" id="process_warning_using_uncaughtexception_correctly"></a></h5>
 <p><code>'uncaughtException'</code> is a crude mechanism for exception handling
 intended to be used only as a last resort. The event <em>should not</em> be used as
@@ -937,6 +964,7 @@ down the process. <strong>It is not safe to resume normal operation after
 <code>'uncaughtException'</code> is emitted or not, an external monitor should be employed
 in a separate process to detect application failures and recover or restart as
 needed.</p>
+</div></div><div>
 <h4>Event: <code>'uncaughtExceptionMonitor'</code><span><a class="mark" href="#event-uncaughtexceptionmonitor" id="event-uncaughtexceptionmonitor">#</a></span><a aria-hidden="true" class="legacy" id="process_event_uncaughtexceptionmonitor"></a></h4>
 <div class="api_metadata">
 <span>Added in: v13.7.0, v12.17.0</span>
@@ -975,6 +1003,7 @@ process.<span class="hljs-title function_">on</span>(<span class="hljs-string">'
 <span class="hljs-comment">// Intentionally cause an exception, but don't catch it.</span>
 <span class="hljs-title function_">nonexistentFunc</span>();
 <span class="hljs-comment">// Still crashes Node.js</span></code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Event: <code>'unhandledRejection'</code><span><a class="mark" href="#event-unhandledrejection" id="event-unhandledrejection">#</a></span><a aria-hidden="true" class="legacy" id="process_event_unhandledrejection"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -1047,6 +1076,10 @@ address such failures, a non-operational
 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch"><code>.catch(() => { })</code></a> handler may be attached to
 <code>resource.loaded</code>, which would prevent the <code>'unhandledRejection'</code> event from
 being emitted.</p>
+<p>If an <code>'unhandledRejection'</code> event is emitted but not handled it will
+be raised as an uncaught exception. This alongside other behaviors of
+<code>'unhandledRejection'</code> events can changed via the <a href="cli.html#--unhandled-rejectionsmode"><code>--unhandled-rejections</code></a> flag.</p>
+</div><div>
 <h4>Event: <code>'warning'</code><span><a class="mark" href="#event-warning" id="event-warning">#</a></span><a aria-hidden="true" class="legacy" id="process_event_warning"></a></h4>
 <div class="api_metadata">
 <span>Added in: v6.0.0</span>
@@ -1113,9 +1146,11 @@ deprecation to be printed to <code>stderr</code> along with the stack trace.</p>
 of the custom deprecation.</p>
 <p>The <code>*-deprecation</code> command-line flags only affect warnings that use the name
 <code>'DeprecationWarning'</code>.</p>
+<div>
 <h5>Emitting custom warnings<span><a class="mark" href="#emitting-custom-warnings" id="emitting-custom-warnings">#</a></span><a aria-hidden="true" class="legacy" id="process_emitting_custom_warnings"></a></h5>
 <p>See the <a href="#processemitwarningwarning-type-code-ctor"><code>process.emitWarning()</code></a> method for issuing
 custom or application-specific warnings.</p>
+</div><div>
 <h5>Node.js warning names<span><a class="mark" href="#nodejs-warning-names" id="nodejs-warning-names">#</a></span><a aria-hidden="true" class="legacy" id="process_node_js_warning_names"></a></h5>
 <p>There are no strict guidelines for warning types (as identified by the <code>name</code>
 property) emitted by Node.js. New types of warnings can be added at any time.
@@ -1138,6 +1173,7 @@ or <code>setInterval()</code> functions.</li>
 that will be ignored rather than treated as an error. One example is use of
 the HTTP response status message when using the HTTP/2 compatibility API.</li>
 </ul>
+</div></div><div>
 <h4>Event: <code>'worker'</code><span><a class="mark" href="#event-worker" id="event-worker">#</a></span><a aria-hidden="true" class="legacy" id="process_event_worker"></a></h4>
 <div class="api_metadata">
 <span>Added in: v16.2.0, v14.18.0</span>
@@ -1146,6 +1182,7 @@ the HTTP response status message when using the HTTP/2 compatibility API.</li>
 <li><code>worker</code> <a href="worker_threads.html#class-worker" class="type">&#x3C;Worker></a> The <a href="worker_threads.html#class-worker" class="type">&#x3C;Worker></a> that was created.</li>
 </ul>
 <p>The <code>'worker'</code> event is emitted after a new <a href="worker_threads.html#class-worker" class="type">&#x3C;Worker></a> thread has been created.</p>
+</div><div>
 <h4>Signal events<span><a class="mark" href="#signal-events" id="signal-events">#</a></span><a aria-hidden="true" class="legacy" id="process_signal_events"></a></h4>
 
 
@@ -1234,6 +1271,7 @@ the process was terminated by signal.</li>
 <li>Sending signal <code>0</code> can be used as a platform independent way to test for the
 existence of a process.</li>
 </ul>
+</div>
 </section><section><h3><code>process.abort()</code><span><a class="mark" href="#processabort" id="processabort">#</a></span><a aria-hidden="true" class="legacy" id="process_process_abort"></a></h3>
 <div class="api_metadata">
 <span>Added in: v0.7.0</span>
@@ -1357,6 +1395,25 @@ argv.<span class="hljs-title function_">forEach</span>(<span class="hljs-functio
 '/Volumes/code/external/node/out/Release/node'
 <span class="hljs-meta prompt_">> </span><span class="language-bash">process.argv0</span>
 'customArgv0'</code> <button class="copy-button">copy</button></pre>
+</section><section><h3><code>process.availableMemory()</code><span><a class="mark" href="#processavailablememory" id="processavailablememory">#</a></span><a aria-hidden="true" class="legacy" id="process_process_availablememory"></a></h3>
+<div class="api_metadata">
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v22.16.0</td>
+<td><p>Change stability index for this feature from Experimental to Stable.</p></td></tr>
+<tr><td>v22.0.0</td>
+<td><p><span>Added in: v22.0.0</span></p></td></tr>
+</tbody></table>
+</details>
+</div>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
+</ul>
+<p>Gets the amount of free memory that is still available to the process
+(in bytes).</p>
+<p>See <a href="https://docs.libuv.org/en/v1.x/misc.html#c.uv_get_available_memory"><code>uv_get_available_memory</code></a> for more
+information.</p>
 </section><section><h3><code>process.channel</code><span><a class="mark" href="#processchannel" id="processchannel">#</a></span><a aria-hidden="true" class="legacy" id="process_process_channel"></a></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -1376,6 +1433,7 @@ argv.<span class="hljs-title function_">forEach</span>(<span class="hljs-functio
 <a href="child_process.html">Child Process</a> documentation), the <code>process.channel</code>
 property is a reference to the IPC channel. If no IPC channel exists, this
 property is <code>undefined</code>.</p>
+<div>
 <h4><code>process.channel.ref()</code><span><a class="mark" href="#processchannelref" id="processchannelref">#</a></span><a aria-hidden="true" class="legacy" id="process_process_channel_ref"></a></h4>
 <div class="api_metadata">
 <span>Added in: v7.1.0</span>
@@ -1385,6 +1443,7 @@ running if <code>.unref()</code> has been called before.</p>
 <p>Typically, this is managed through the number of <code>'disconnect'</code> and <code>'message'</code>
 listeners on the <code>process</code> object. However, this method can be used to
 explicitly request a specific behavior.</p>
+</div><div>
 <h4><code>process.channel.unref()</code><span><a class="mark" href="#processchannelunref" id="processchannelunref">#</a></span><a aria-hidden="true" class="legacy" id="process_process_channel_unref"></a></h4>
 <div class="api_metadata">
 <span>Added in: v7.1.0</span>
@@ -1394,6 +1453,7 @@ running, and lets it finish even while the channel is open.</p>
 <p>Typically, this is managed through the number of <code>'disconnect'</code> and <code>'message'</code>
 listeners on the <code>process</code> object. However, this method can be used to
 explicitly request a specific behavior.</p>
+</div>
 </section><section><h3><code>process.chdir(directory)</code><span><a class="mark" href="#processchdirdirectory" id="processchdirdirectory">#</a></span><a aria-hidden="true" class="legacy" id="process_process_chdir_directory"></a></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.17</span>
@@ -1465,7 +1525,6 @@ when running the <code>./configure</code> script.</p>
      <span class="hljs-attr">node_shared_zlib</span>: <span class="hljs-string">'false'</span>,
      <span class="hljs-attr">node_use_openssl</span>: <span class="hljs-string">'true'</span>,
      <span class="hljs-attr">node_shared_openssl</span>: <span class="hljs-string">'false'</span>,
-     <span class="hljs-attr">strict_aliasing</span>: <span class="hljs-string">'true'</span>,
      <span class="hljs-attr">target_arch</span>: <span class="hljs-string">'x64'</span>,
      <span class="hljs-attr">v8_use_snapshot</span>: <span class="hljs-number">1</span>
    }
@@ -1488,14 +1547,15 @@ over the IPC channel using <code>process.send()</code>.</p>
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
-<tr><td>v20.13.0</td>
+<tr><td>v22.16.0</td>
+<td><p>Change stability index for this feature from Experimental to Stable.</p></td></tr>
+<tr><td>v22.0.0</td>
 <td><p>Aligned return value with <code>uv_get_constrained_memory</code>.</p></td></tr>
 <tr><td>v19.6.0, v18.15.0</td>
 <td><p><span>Added in: v19.6.0, v18.15.0</span></p></td></tr>
 </tbody></table>
 </details>
 </div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
 </ul>
@@ -1503,18 +1563,6 @@ over the IPC channel using <code>process.send()</code>.</p>
 limits imposed by the OS. If there is no such constraint, or the constraint
 is unknown, <code>0</code> is returned.</p>
 <p>See <a href="https://docs.libuv.org/en/v1.x/misc.html#c.uv_get_constrained_memory"><code>uv_get_constrained_memory</code></a> for more
-information.</p>
-</section><section><h3><code>process.availableMemory()</code><span><a class="mark" href="#processavailablememory" id="processavailablememory">#</a></span><a aria-hidden="true" class="legacy" id="process_process_availablememory"></a></h3>
-<div class="api_metadata">
-<span>Added in: v20.13.0</span>
-</div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
-<ul>
-<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
-</ul>
-<p>Gets the amount of free memory that is still available to the process
-(in bytes).</p>
-<p>See <a href="https://docs.libuv.org/en/v1.x/misc.html#c.uv_get_available_memory"><code>uv_get_available_memory</code></a> for more
 information.</p>
 </section><section><h3><code>process.cpuUsage([previousValue])</code><span><a class="mark" href="#processcpuusagepreviousvalue" id="processcpuusagepreviousvalue">#</a></span><a aria-hidden="true" class="legacy" id="process_process_cpuusage_previousvalue"></a></h3>
 <div class="api_metadata">
@@ -1809,6 +1857,7 @@ warning is suppressed.</li>
 <li>If the <code>--trace-deprecation</code> command-line flag is used, the deprecation
 warning is printed to <code>stderr</code> along with the full stack trace.</li>
 </ul>
+<div>
 <h4>Avoiding duplicate warnings<span><a class="mark" href="#avoiding-duplicate-warnings" id="avoiding-duplicate-warnings">#</a></span><a aria-hidden="true" class="legacy" id="process_avoiding_duplicate_warnings"></a></h4>
 <p>As a best practice, warnings should be emitted only once per process. To do
 so, place the <code>emitWarning()</code> behind a boolean.</p>
@@ -1836,6 +1885,7 @@ so, place the <code>emitWarning()</code> behind a boolean.</p>
 <span class="hljs-comment">// Emits: (node: 56339) Warning: Only warn once!</span>
 <span class="hljs-title function_">emitMyWarning</span>();
 <span class="hljs-comment">// Emits nothing</span></code><button class="copy-button">copy</button></pre>
+</div>
 </section><section><h3><code>process.env</code><span><a class="mark" href="#processenv" id="processenv">#</a></span><a aria-hidden="true" class="legacy" id="process_process_env"></a></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -1966,6 +2016,26 @@ threads with this property.</p>
 that started the Node.js process. Symbolic links, if any, are resolved.</p>
 <!-- eslint-disable @stylistic/js/semi -->
 <pre><code class="language-js"><span class="hljs-string">'/usr/local/bin/node'</span></code> <button class="copy-button">copy</button></pre>
+</section><section><h3><code>process.execve(file[, args[, env]])</code><span><a class="mark" href="#processexecvefile-args-env" id="processexecvefile-args-env">#</a></span><a aria-hidden="true" class="legacy" id="process_process_execve_file_args_env"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.15.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
+<ul>
+<li><code>file</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> The name or path of the executable file to run.</li>
+<li><code>args</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string[]></a> List of string arguments. No argument can contain a null-byte (<code>\u0000</code>).</li>
+<li><code>env</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> Environment key-value pairs.
+No key or value can contain a null-byte (<code>\u0000</code>).
+<strong>Default:</strong> <code>process.env</code>.</li>
+</ul>
+<p>Replaces the current process with a new process.</p>
+<p>This is achieved by using the <code>execve</code> POSIX function and therefore no memory or other
+resources from the current process are preserved, except for the standard input,
+standard output and standard error file descriptor.</p>
+<p>All other resources are discarded by the system when the processes are swapped, without triggering
+any exit or close events and without running any cleanup handler.</p>
+<p>This function will never return, unless an error occurred.</p>
+<p>This function is not available on Windows or IBM i.</p>
 </section><section><h3><code>process.exit([code])</code><span><a class="mark" href="#processexitcode" id="processexitcode">#</a></span><a aria-hidden="true" class="legacy" id="process_process_exit_code"></a></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -2067,8 +2137,21 @@ integer strings (e.g.,'1') are allowed. <strong>Default:</strong> <code>undefine
 <p>A number which will be the process exit code, when the process either
 exits gracefully, or is exited via <a href="#processexitcode"><code>process.exit()</code></a> without specifying
 a code.</p>
-<p>Specifying a code to <a href="#processexitcode"><code>process.exit(code)</code></a> will override any
-previous setting of <code>process.exitCode</code>.</p>
+<p>The value of <code>process.exitCode</code> can be updated by either assigning a value to
+<code>process.exitCode</code> or by passing an argument to <a href="#processexitcode"><code>process.exit()</code></a>:</p>
+<pre><code class="language-console"><span class="hljs-meta prompt_">$ </span><span class="language-bash">node -e <span class="hljs-string">'process.exitCode = 9'</span>; <span class="hljs-built_in">echo</span> $?</span>
+9
+<span class="hljs-meta prompt_">$ </span><span class="language-bash">node -e <span class="hljs-string">'process.exit(42)'</span>; <span class="hljs-built_in">echo</span> $?</span>
+42
+<span class="hljs-meta prompt_">$ </span><span class="language-bash">node -e <span class="hljs-string">'process.exitCode = 9; process.exit(42)'</span>; <span class="hljs-built_in">echo</span> $?</span>
+42</code> <button class="copy-button">copy</button></pre>
+<p>The value can also be set implicitly by Node.js when unrecoverable errors occur (e.g.
+such as the encountering of an unsettled top-level await). However explicit
+manipulations of the exit code always take precedence over implicit ones:</p>
+<pre><code class="language-console"><span class="hljs-meta prompt_">$ </span><span class="language-bash">node --input-type=module -e <span class="hljs-string">'await new Promise(() => {})'</span>; <span class="hljs-built_in">echo</span> $?</span>
+13
+<span class="hljs-meta prompt_">$ </span><span class="language-bash">node --input-type=module -e <span class="hljs-string">'process.exitCode = 9; await new Promise(() => {})'</span>; <span class="hljs-built_in">echo</span> $?</span>
+9</code> <button class="copy-button">copy</button></pre>
 </section><section><h3><code>process.features.cached_builtins</code><span><a class="mark" href="#processfeaturescached_builtins" id="processfeaturescached_builtins">#</a></span><a aria-hidden="true" class="legacy" id="process_process_features_cached_builtins"></a></h3>
 <div class="api_metadata">
 <span>Added in: v12.0.0</span>
@@ -2095,15 +2178,18 @@ previous setting of <code>process.exitCode</code>.</p>
 <p>A boolean value that is <code>true</code> if the current Node.js build includes the inspector.</p>
 </section><section><h3><code>process.features.ipv6</code><span><a class="mark" href="#processfeaturesipv6" id="processfeaturesipv6">#</a></span><a aria-hidden="true" class="legacy" id="process_process_features_ipv6"></a></h3>
 <div class="api_metadata">
-<span>Added in: v0.5.3</span>
+<span>Added in: v0.5.3</span><span>Deprecated since: v22.13.0</span>
 </div>
+<p></p><div class="api_stability api_stability_0"><a href="documentation.html#stability-index">Stability: 0</a> - Deprecated. This property is always true, and any checks based on it are
+redundant.</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>A boolean value that is <code>true</code> if the current Node.js build includes support for IPv6.</p>
+<p>Since all Node.js builds have IPv6 support, this value is always <code>true</code>.</p>
 </section><section><h3><code>process.features.require_module</code><span><a class="mark" href="#processfeaturesrequire_module" id="processfeaturesrequire_module">#</a></span><a aria-hidden="true" class="legacy" id="process_process_features_require_module"></a></h3>
 <div class="api_metadata">
-<span>Added in: v20.19.0</span>
+<span>Added in: v22.10.0</span>
 </div>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
@@ -2120,45 +2206,258 @@ previous setting of <code>process.exitCode</code>.</p>
 <p>A boolean value that is <code>true</code> if the current Node.js build includes support for TLS.</p>
 </section><section><h3><code>process.features.tls_alpn</code><span><a class="mark" href="#processfeaturestls_alpn" id="processfeaturestls_alpn">#</a></span><a aria-hidden="true" class="legacy" id="process_process_features_tls_alpn"></a></h3>
 <div class="api_metadata">
-<span>Added in: v4.8.0</span>
+<span>Added in: v4.8.0</span><span>Deprecated since: v22.13.0</span>
 </div>
+<p></p><div class="api_stability api_stability_0"><a href="documentation.html#stability-index">Stability: 0</a> - Deprecated. Use <code>process.features.tls</code> instead.</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>A boolean value that is <code>true</code> if the current Node.js build includes support for ALPN in TLS.</p>
-<hr>
+<p>In Node.js 11.0.0 and later versions, the OpenSSL dependencies feature unconditional ALPN support.
+This value is therefore identical to that of <code>process.features.tls</code>.</p>
 </section><section><h3><code>process.features.tls_ocsp</code><span><a class="mark" href="#processfeaturestls_ocsp" id="processfeaturestls_ocsp">#</a></span><a aria-hidden="true" class="legacy" id="process_process_features_tls_ocsp"></a></h3>
 <div class="api_metadata">
-<span>Added in: v0.11.13</span>
+<span>Added in: v0.11.13</span><span>Deprecated since: v22.13.0</span>
 </div>
+<p></p><div class="api_stability api_stability_0"><a href="documentation.html#stability-index">Stability: 0</a> - Deprecated. Use <code>process.features.tls</code> instead.</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>A boolean value that is <code>true</code> if the current Node.js build includes support for OCSP in TLS.</p>
-<hr>
+<p>In Node.js 11.0.0 and later versions, the OpenSSL dependencies feature unconditional OCSP support.
+This value is therefore identical to that of <code>process.features.tls</code>.</p>
 </section><section><h3><code>process.features.tls_sni</code><span><a class="mark" href="#processfeaturestls_sni" id="processfeaturestls_sni">#</a></span><a aria-hidden="true" class="legacy" id="process_process_features_tls_sni"></a></h3>
 <div class="api_metadata">
-<span>Added in: v0.5.3</span>
+<span>Added in: v0.5.3</span><span>Deprecated since: v22.13.0</span>
 </div>
+<p></p><div class="api_stability api_stability_0"><a href="documentation.html#stability-index">Stability: 0</a> - Deprecated. Use <code>process.features.tls</code> instead.</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>A boolean value that is <code>true</code> if the current Node.js build includes support for SNI in TLS.</p>
-<hr>
+<p>In Node.js 11.0.0 and later versions, the OpenSSL dependencies feature unconditional SNI support.
+This value is therefore identical to that of <code>process.features.tls</code>.</p>
+</section><section><h3><code>process.features.typescript</code><span><a class="mark" href="#processfeaturestypescript" id="processfeaturestypescript">#</a></span><a aria-hidden="true" class="legacy" id="process_process_features_typescript"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.10.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1.1</a> - Active development</div><p></p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
+</ul>
+<p>A value that is <code>"strip"</code> by default,
+<code>"transform"</code> if Node.js is run with <code>--experimental-transform-types</code>, and <code>false</code> if
+Node.js is run with <code>--no-experimental-strip-types</code>.</p>
 </section><section><h3><code>process.features.uv</code><span><a class="mark" href="#processfeaturesuv" id="processfeaturesuv">#</a></span><a aria-hidden="true" class="legacy" id="process_process_features_uv"></a></h3>
 <div class="api_metadata">
-<span>Added in: v0.5.3</span>
+<span>Added in: v0.5.3</span><span>Deprecated since: v22.13.0</span>
 </div>
+<p></p><div class="api_stability api_stability_0"><a href="documentation.html#stability-index">Stability: 0</a> - Deprecated. This property is always true, and any checks based on it are
+redundant.</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
-<p>A boolean value that is <code>true</code> if the current Node.js build includes support for libuv.
-Since it's currently not possible to build Node.js without libuv, this value is always <code>true</code>.</p>
+<p>A boolean value that is <code>true</code> if the current Node.js build includes support for libuv.</p>
+<p>Since it's not possible to build Node.js without libuv, this value is always <code>true</code>.</p>
+</section><section><h3><code>process.finalization.register(ref, callback)</code><span><a class="mark" href="#processfinalizationregisterref-callback" id="processfinalizationregisterref-callback">#</a></span><a aria-hidden="true" class="legacy" id="process_process_finalization_register_ref_callback"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.5.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1.1</a> - Active Development</div><p></p>
+<ul>
+<li><code>ref</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> The reference to the resource that is being tracked.</li>
+<li><code>callback</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> The callback function to be called when the resource
+is finalized.
+<ul>
+<li><code>ref</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> The reference to the resource that is being tracked.</li>
+<li><code>event</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> The event that triggered the finalization. Defaults to 'exit'.</li>
+</ul>
+</li>
+</ul>
+<p>This function registers a callback to be called when the process emits the <code>exit</code>
+event if the <code>ref</code> object was not garbage collected. If the object <code>ref</code> was garbage collected
+before the <code>exit</code> event is emitted, the callback will be removed from the finalization registry,
+and it will not be called on process exit.</p>
+<p>Inside the callback you can release the resources allocated by the <code>ref</code> object.
+Be aware that all limitations applied to the <code>beforeExit</code> event are also applied to the <code>callback</code> function,
+this means that there is a possibility that the callback will not be called under special circumstances.</p>
+<p>The idea of ​​this function is to help you free up resources when the starts process exiting,
+but also let the object be garbage collected if it is no longer being used.</p>
+<p>Eg: you can register an object that contains a buffer, you want to make sure that buffer is released
+when the process exit, but if the object is garbage collected before the process exit, we no longer
+need to release the buffer, so in this case we just remove the callback from the finalization registry.</p>
+
+<pre class="with-49-chars"><input class="js-flavor-toggle" type="checkbox" aria-label="Show modern ES modules syntax"><code class="language-js cjs"><span class="hljs-keyword">const</span> { finalization } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
+
+<span class="hljs-comment">// Please make sure that the function passed to finalization.register()</span>
+<span class="hljs-comment">// does not create a closure around unnecessary objects.</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">onFinalize</span>(<span class="hljs-params">obj, event</span>) {
+  <span class="hljs-comment">// You can do whatever you want with the object</span>
+  obj.<span class="hljs-title function_">dispose</span>();
+}
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">setup</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-comment">// This object can be safely garbage collected,</span>
+  <span class="hljs-comment">// and the resulting shutdown function will not be called.</span>
+  <span class="hljs-comment">// There are no leaks.</span>
+  <span class="hljs-keyword">const</span> myDisposableObject = {
+    <span class="hljs-title function_">dispose</span>(<span class="hljs-params"></span>) {
+      <span class="hljs-comment">// Free your resources synchronously</span>
+    },
+  };
+
+  finalization.<span class="hljs-title function_">register</span>(myDisposableObject, onFinalize);
+}
+
+<span class="hljs-title function_">setup</span>();</code><code class="language-js mjs"><span class="hljs-keyword">import</span> { finalization } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:process'</span>;
+
+<span class="hljs-comment">// Please make sure that the function passed to finalization.register()</span>
+<span class="hljs-comment">// does not create a closure around unnecessary objects.</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">onFinalize</span>(<span class="hljs-params">obj, event</span>) {
+  <span class="hljs-comment">// You can do whatever you want with the object</span>
+  obj.<span class="hljs-title function_">dispose</span>();
+}
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">setup</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-comment">// This object can be safely garbage collected,</span>
+  <span class="hljs-comment">// and the resulting shutdown function will not be called.</span>
+  <span class="hljs-comment">// There are no leaks.</span>
+  <span class="hljs-keyword">const</span> myDisposableObject = {
+    <span class="hljs-title function_">dispose</span>(<span class="hljs-params"></span>) {
+      <span class="hljs-comment">// Free your resources synchronously</span>
+    },
+  };
+
+  finalization.<span class="hljs-title function_">register</span>(myDisposableObject, onFinalize);
+}
+
+<span class="hljs-title function_">setup</span>();</code><button class="copy-button">copy</button></pre>
+<p>The code above relies on the following assumptions:</p>
+<ul>
+<li>arrow functions are avoided</li>
+<li>regular functions are recommended to be within the global context (root)</li>
+</ul>
+<p>Regular functions <em>could</em> reference the context where the <code>obj</code> lives, making the <code>obj</code> not garbage collectible.</p>
+<p>Arrow functions will hold the previous context. Consider, for example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Test</span> {
+  <span class="hljs-title function_">constructor</span>(<span class="hljs-params"></span>) {
+    finalization.<span class="hljs-title function_">register</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-function">(<span class="hljs-params">ref</span>) =></span> ref.<span class="hljs-title function_">dispose</span>());
+
+    <span class="hljs-comment">// Even something like this is highly discouraged</span>
+    <span class="hljs-comment">// finalization.register(this, () => this.dispose());</span>
+  }
+  <span class="hljs-title function_">dispose</span>(<span class="hljs-params"></span>) {}
+}</code> <button class="copy-button">copy</button></pre>
+<p>It is very unlikely (not impossible) that this object will be garbage collected,
+but if it is not, <code>dispose</code> will be called when <code>process.exit</code> is called.</p>
+<p>Be careful and avoid relying on this feature for the disposal of critical resources,
+as it is not guaranteed that the callback will be called under all circumstances.</p>
+</section><section><h3><code>process.finalization.registerBeforeExit(ref, callback)</code><span><a class="mark" href="#processfinalizationregisterbeforeexitref-callback" id="processfinalizationregisterbeforeexitref-callback">#</a></span><a aria-hidden="true" class="legacy" id="process_process_finalization_registerbeforeexit_ref_callback"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.5.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1.1</a> - Active Development</div><p></p>
+<ul>
+<li><code>ref</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> The reference
+to the resource that is being tracked.</li>
+<li><code>callback</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> The callback function to be called when the resource
+is finalized.
+<ul>
+<li><code>ref</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> The reference to the resource that is being tracked.</li>
+<li><code>event</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> The event that triggered the finalization. Defaults to 'beforeExit'.</li>
+</ul>
+</li>
+</ul>
+<p>This function behaves exactly like the <code>register</code>, except that the callback will be called
+when the process emits the <code>beforeExit</code> event if <code>ref</code> object was not garbage collected.</p>
+<p>Be aware that all limitations applied to the <code>beforeExit</code> event are also applied to the <code>callback</code> function,
+this means that there is a possibility that the callback will not be called under special circumstances.</p>
+</section><section><h3><code>process.finalization.unregister(ref)</code><span><a class="mark" href="#processfinalizationunregisterref" id="processfinalizationunregisterref">#</a></span><a aria-hidden="true" class="legacy" id="process_process_finalization_unregister_ref"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.5.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1.1</a> - Active Development</div><p></p>
+<ul>
+<li><code>ref</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="type">&#x3C;Function></a> The reference
+to the resource that was registered previously.</li>
+</ul>
+<p>This function remove the register of the object from the finalization
+registry, so the callback will not be called anymore.</p>
+
+<pre class="with-49-chars"><input class="js-flavor-toggle" type="checkbox" aria-label="Show modern ES modules syntax"><code class="language-js cjs"><span class="hljs-keyword">const</span> { finalization } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
+
+<span class="hljs-comment">// Please make sure that the function passed to finalization.register()</span>
+<span class="hljs-comment">// does not create a closure around unnecessary objects.</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">onFinalize</span>(<span class="hljs-params">obj, event</span>) {
+  <span class="hljs-comment">// You can do whatever you want with the object</span>
+  obj.<span class="hljs-title function_">dispose</span>();
+}
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">setup</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-comment">// This object can be safely garbage collected,</span>
+  <span class="hljs-comment">// and the resulting shutdown function will not be called.</span>
+  <span class="hljs-comment">// There are no leaks.</span>
+  <span class="hljs-keyword">const</span> myDisposableObject = {
+    <span class="hljs-title function_">dispose</span>(<span class="hljs-params"></span>) {
+      <span class="hljs-comment">// Free your resources synchronously</span>
+    },
+  };
+
+  finalization.<span class="hljs-title function_">register</span>(myDisposableObject, onFinalize);
+
+  <span class="hljs-comment">// Do something</span>
+
+  myDisposableObject.<span class="hljs-title function_">dispose</span>();
+  finalization.<span class="hljs-title function_">unregister</span>(myDisposableObject);
+}
+
+<span class="hljs-title function_">setup</span>();</code><code class="language-js mjs"><span class="hljs-keyword">import</span> { finalization } <span class="hljs-keyword">from</span> <span class="hljs-string">'node:process'</span>;
+
+<span class="hljs-comment">// Please make sure that the function passed to finalization.register()</span>
+<span class="hljs-comment">// does not create a closure around unnecessary objects.</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">onFinalize</span>(<span class="hljs-params">obj, event</span>) {
+  <span class="hljs-comment">// You can do whatever you want with the object</span>
+  obj.<span class="hljs-title function_">dispose</span>();
+}
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">setup</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-comment">// This object can be safely garbage collected,</span>
+  <span class="hljs-comment">// and the resulting shutdown function will not be called.</span>
+  <span class="hljs-comment">// There are no leaks.</span>
+  <span class="hljs-keyword">const</span> myDisposableObject = {
+    <span class="hljs-title function_">dispose</span>(<span class="hljs-params"></span>) {
+      <span class="hljs-comment">// Free your resources synchronously</span>
+    },
+  };
+
+  <span class="hljs-comment">// Please make sure that the function passed to finalization.register()</span>
+  <span class="hljs-comment">// does not create a closure around unnecessary objects.</span>
+  <span class="hljs-keyword">function</span> <span class="hljs-title function_">onFinalize</span>(<span class="hljs-params">obj, event</span>) {
+    <span class="hljs-comment">// You can do whatever you want with the object</span>
+    obj.<span class="hljs-title function_">dispose</span>();
+  }
+
+  finalization.<span class="hljs-title function_">register</span>(myDisposableObject, onFinalize);
+
+  <span class="hljs-comment">// Do something</span>
+
+  myDisposableObject.<span class="hljs-title function_">dispose</span>();
+  finalization.<span class="hljs-title function_">unregister</span>(myDisposableObject);
+}
+
+<span class="hljs-title function_">setup</span>();</code><button class="copy-button">copy</button></pre>
 </section><section><h3><code>process.getActiveResourcesInfo()</code><span><a class="mark" href="#processgetactiveresourcesinfo" id="processgetactiveresourcesinfo">#</a></span><a aria-hidden="true" class="legacy" id="process_process_getactiveresourcesinfo"></a></h3>
 <div class="api_metadata">
-<span>Added in: v17.3.0, v16.14.0</span>
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v22.16.0</td>
+<td><p>Change stability index for this feature from Experimental to Stable.</p></td></tr>
+<tr><td>v17.3.0, v16.14.0</td>
+<td><p><span>Added in: v17.3.0, v16.14.0</span></p></td></tr>
+</tbody></table>
+</details>
 </div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
 <ul>
 <li>Returns: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string[]></a></li>
 </ul>
@@ -2185,7 +2484,7 @@ event loop alive.</p>
 <span class="hljs-comment">//   After: [ 'TTYWrap', 'TTYWrap', 'TTYWrap', 'Timeout' ]</span></code><button class="copy-button">copy</button></pre>
 </section><section><h3><code>process.getBuiltinModule(id)</code><span><a class="mark" href="#processgetbuiltinmoduleid" id="processgetbuiltinmoduleid">#</a></span><a aria-hidden="true" class="legacy" id="process_process_getbuiltinmodule_id"></a></h3>
 <div class="api_metadata">
-<span>Added in: v20.16.0</span>
+<span>Added in: v22.3.0</span>
 </div>
 <ul>
 <li><code>id</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> ID of the built-in module being requested.</li>
@@ -2317,8 +2616,7 @@ Android).</p>
 <span class="hljs-keyword">if</span> (process.<span class="hljs-property">getuid</span>) {
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Current uid: <span class="hljs-subst">${process.getuid()}</span>`</span>);
 }</code><button class="copy-button">copy</button></pre>
-<p>This function is only available on POSIX platforms (i.e. not Windows or
-Android).</p>
+<p>This function not available on Windows.</p>
 </section><section><h3><code>process.hasUncaughtExceptionCaptureCallback()</code><span><a class="mark" href="#processhasuncaughtexceptioncapturecallback" id="processhasuncaughtexceptioncapturecallback">#</a></span><a aria-hidden="true" class="legacy" id="process_process_hasuncaughtexceptioncapturecallback"></a></h3>
 <div class="api_metadata">
 <span>Added in: v9.3.0</span>
@@ -2490,9 +2788,9 @@ process.<span class="hljs-title function_">kill</span>(process.<span class="hljs
 debugger. See <a href="#signal-events">Signal Events</a>.</p>
 </section><section><h3><code>process.loadEnvFile(path)</code><span><a class="mark" href="#processloadenvfilepath" id="processloadenvfilepath">#</a></span><a aria-hidden="true" class="legacy" id="process_process_loadenvfile_path"></a></h3>
 <div class="api_metadata">
-<span>Added in: v20.12.0</span>
+<span>Added in: v21.7.0, v20.12.0</span>
 </div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a>.1 - Active development</div><p></p>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1.1</a> - Active development</div><p></p>
 <ul>
 <li><code>path</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a> | <a href="url.html#the-whatwg-url-api" class="type">&#x3C;URL></a> | <a href="buffer.html#class-buffer" class="type">&#x3C;Buffer></a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Undefined_type" class="type">&#x3C;undefined></a>. <strong>Default:</strong> <code>'./.env'</code></li>
 </ul>
@@ -2611,7 +2909,7 @@ but <code>process.memoryUsage.rss()</code> is faster.</p>
 <details class="changelog"><summary>History</summary>
 <table>
 <tbody><tr><th>Version</th><th>Changes</th></tr>
-<tr><td>v20.18.0</td>
+<tr><td>v22.7.0</td>
 <td><p>Changed stability to Legacy.</p></td></tr>
 <tr><td>v18.0.0</td>
 <td><p>Passing an invalid callback to the <code>callback</code> argument now throws <code>ERR_INVALID_ARG_TYPE</code> instead of <code>ERR_INVALID_CALLBACK</code>.</p></td></tr>
@@ -2726,6 +3024,7 @@ asynchronous. Consider this example:</p>
 
   fs.<span class="hljs-title function_">stat</span>(<span class="hljs-string">'file'</span>, cb);
 }</code><button class="copy-button">copy</button></pre>
+<div>
 <h4>When to use <code>queueMicrotask()</code> vs. <code>process.nextTick()</code><span><a class="mark" href="#when-to-use-queuemicrotask-vs-processnexttick" id="when-to-use-queuemicrotask-vs-processnexttick">#</a></span><a aria-hidden="true" class="legacy" id="process_when_to_use_queuemicrotask_vs_process_nexttick"></a></h4>
 <p>The <a href="globals.html#queuemicrotaskcallback"><code>queueMicrotask()</code></a> API is an alternative to <code>process.nextTick()</code> that instead of using the
 "next tick queue" defers execution of a function using the same microtask queue used to execute the
@@ -2790,6 +3089,7 @@ not, the <code>process.on('uncaughtException')</code> event handler can be used 
 and handle the errors.</p>
 <p>When in doubt, unless the specific capabilities of <code>process.nextTick()</code> are
 needed, use <code>queueMicrotask()</code>.</p>
+</div>
 </section><section><h3><code>process.noDeprecation</code><span><a class="mark" href="#processnodeprecation" id="processnodeprecation">#</a></span><a aria-hidden="true" class="legacy" id="process_process_nodeprecation"></a></h3>
 <div class="api_metadata">
 <span>Added in: v0.8.0</span>
@@ -2809,10 +3109,11 @@ flag's behavior.</p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="type">&#x3C;Object></a></li>
 </ul>
-<p>This API is available through the <a href="cli.html#--experimental-permission"><code>--experimental-permission</code></a> flag.</p>
+<p>This API is available through the <a href="cli.html#--permission"><code>--permission</code></a> flag.</p>
 <p><code>process.permission</code> is an object whose methods are used to manage permissions
 for the current process. Additional documentation is available in the
 <a href="permissions.html#permission-model">Permission Model</a>.</p>
+<div>
 <h4><code>process.permission.has(scope[, reference])</code><span><a class="mark" href="#processpermissionhasscope-reference" id="processpermissionhasscope-reference">#</a></span><a aria-hidden="true" class="legacy" id="process_process_permission_has_scope_reference"></a></h4>
 <div class="api_metadata">
 <span>Added in: v20.0.0</span>
@@ -2840,6 +3141,7 @@ the reference when the scope is File System means files and folders.</p>
 process.<span class="hljs-property">permission</span>.<span class="hljs-title function_">has</span>(<span class="hljs-string">'fs.read'</span>, <span class="hljs-string">'./README.md'</span>);
 <span class="hljs-comment">// Check if the process has read permission operations</span>
 process.<span class="hljs-property">permission</span>.<span class="hljs-title function_">has</span>(<span class="hljs-string">'fs.read'</span>);</code> <button class="copy-button">copy</button></pre>
+</div>
 </section><section><h3><code>process.pid</code><span><a class="mark" href="#processpid" id="processpid">#</a></span><a aria-hidden="true" class="legacy" id="process_process_pid"></a></h3>
 <div class="api_metadata">
 <span>Added in: v0.1.15</span>
@@ -2897,6 +3199,22 @@ current process.</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`The parent process is pid <span class="hljs-subst">${ppid}</span>`</span>);</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { ppid } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`The parent process is pid <span class="hljs-subst">${ppid}</span>`</span>);</code><button class="copy-button">copy</button></pre>
+</section><section><h3><code>process.ref(maybeRefable)</code><span><a class="mark" href="#processrefmayberefable" id="processrefmayberefable">#</a></span><a aria-hidden="true" class="legacy" id="process_process_ref_mayberefable"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.14.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
+<ul>
+<li><code>maybeRefable</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> An object that may be "refable".</li>
+</ul>
+<p>An object is "refable" if it implements the Node.js "Refable protocol".
+Specifically, this means that the object implements the <code>Symbol.for('nodejs.ref')</code>
+and <code>Symbol.for('nodejs.unref')</code> methods. "Ref'd" objects will keep the Node.js
+event loop alive, while "unref'd" objects will not. Historically, this was
+implemented by using <code>ref()</code> and <code>unref()</code> methods directly on the objects.
+This pattern, however, is being deprecated in favor of the "Refable protocol"
+in order to better support Web Platform API types whose APIs cannot be modified
+to add <code>ref()</code> and <code>unref()</code> methods but still need to support that behavior.</p>
 </section><section><h3><code>process.release</code><span><a class="mark" href="#processrelease" id="processrelease">#</a></span><a aria-hidden="true" class="legacy" id="process_process_release"></a></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -2969,6 +3287,7 @@ relied upon to exist.</p>
 <p><code>process.report</code> is an object whose methods are used to generate diagnostic
 reports for the current process. Additional documentation is available in the
 <a href="report.html">report documentation</a>.</p>
+<div>
 <h4><code>process.report.compact</code><span><a class="mark" href="#processreportcompact" id="processreportcompact">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_compact"></a></h4>
 <div class="api_metadata">
 <span>Added in: v13.12.0, v12.17.0</span>
@@ -2985,6 +3304,7 @@ human consumption.</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Reports are compact? <span class="hljs-subst">${report.compact}</span>`</span>);</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { report } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Reports are compact? <span class="hljs-subst">${report.compact}</span>`</span>);</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4><code>process.report.directory</code><span><a class="mark" href="#processreportdirectory" id="processreportdirectory">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_directory"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -3009,6 +3329,7 @@ Node.js process.</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report directory is <span class="hljs-subst">${report.directory}</span>`</span>);</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { report } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report directory is <span class="hljs-subst">${report.directory}</span>`</span>);</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4><code>process.report.filename</code><span><a class="mark" href="#processreportfilename" id="processreportfilename">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_filename"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -3035,6 +3356,7 @@ the report is written to the stdout or stderr of the process respectively.</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report filename is <span class="hljs-subst">${report.filename}</span>`</span>);</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { report } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report filename is <span class="hljs-subst">${report.filename}</span>`</span>);</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4><code>process.report.getReport([err])</code><span><a class="mark" href="#processreportgetreporterr" id="processreportgetreporterr">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_getreport_err"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -3073,6 +3395,7 @@ fs.<span class="hljs-title function_">writeFileSync</span>(<span class="hljs-str
 <span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:fs'</span>);
 fs.<span class="hljs-title function_">writeFileSync</span>(<span class="hljs-string">'my-report.log'</span>, util.<span class="hljs-title function_">inspect</span>(data), <span class="hljs-string">'utf8'</span>);</code><button class="copy-button">copy</button></pre>
 <p>Additional documentation is available in the <a href="report.html">report documentation</a>.</p>
+</div><div>
 <h4><code>process.report.reportOnFatalError</code><span><a class="mark" href="#processreportreportonfatalerror" id="processreportreportonfatalerror">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_reportonfatalerror"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -3096,6 +3419,7 @@ memory errors or failed C++ assertions.</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on fatal error: <span class="hljs-subst">${report.reportOnFatalError}</span>`</span>);</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { report } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on fatal error: <span class="hljs-subst">${report.reportOnFatalError}</span>`</span>);</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4><code>process.report.reportOnSignal</code><span><a class="mark" href="#processreportreportonsignal" id="processreportreportonsignal">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_reportonsignal"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -3119,6 +3443,7 @@ signal specified by <code>process.report.signal</code>.</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on signal: <span class="hljs-subst">${report.reportOnSignal}</span>`</span>);</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { report } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on signal: <span class="hljs-subst">${report.reportOnSignal}</span>`</span>);</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4><code>process.report.reportOnUncaughtException</code><span><a class="mark" href="#processreportreportonuncaughtexception" id="processreportreportonuncaughtexception">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_reportonuncaughtexception"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -3141,6 +3466,16 @@ signal specified by <code>process.report.signal</code>.</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on exception: <span class="hljs-subst">${report.reportOnUncaughtException}</span>`</span>);</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { report } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report on exception: <span class="hljs-subst">${report.reportOnUncaughtException}</span>`</span>);</code><button class="copy-button">copy</button></pre>
+</div><div>
+<h4><code>process.report.excludeEnv</code><span><a class="mark" href="#processreportexcludeenv" id="processreportexcludeenv">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_excludeenv"></a></h4>
+<div class="api_metadata">
+<span>Added in: v22.13.0</span>
+</div>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
+</ul>
+<p>If <code>true</code>, a diagnostic report is generated without the environment variables.</p>
+</div><div>
 <h4><code>process.report.signal</code><span><a class="mark" href="#processreportsignal" id="processreportsignal">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_signal"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -3164,6 +3499,7 @@ signal specified by <code>process.report.signal</code>.</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report signal: <span class="hljs-subst">${report.signal}</span>`</span>);</code><code class="language-js cjs"><span class="hljs-keyword">const</span> { report } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'node:process'</span>);
 
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Report signal: <span class="hljs-subst">${report.signal}</span>`</span>);</code><button class="copy-button">copy</button></pre>
+</div><div>
 <h4><code>process.report.writeReport([filename][, err])</code><span><a class="mark" href="#processreportwritereportfilename-err" id="processreportwritereportfilename-err">#</a></span><a aria-hidden="true" class="legacy" id="process_process_report_writereport_filename_err"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -3202,6 +3538,7 @@ report.<span class="hljs-title function_">writeReport</span>();</code><code clas
 
 report.<span class="hljs-title function_">writeReport</span>();</code><button class="copy-button">copy</button></pre>
 <p>Additional documentation is available in the <a href="report.html">report documentation</a>.</p>
+</div>
 </section><section><h3><code>process.resourceUsage()</code><span><a class="mark" href="#processresourceusage" id="processresourceusage">#</a></span><a aria-hidden="true" class="legacy" id="process_process_resourceusage"></a></h3>
 <div class="api_metadata">
 <span>Added in: v12.6.0</span>
@@ -3508,16 +3845,18 @@ This feature is not available in <a href="worker_threads.html#class-worker"><cod
 <div class="api_metadata">
 <span>Added in: v16.6.0, v14.18.0</span>
 </div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental: Use <a href="module.html#modulesetsourcemapssupportenabled-options"><code>module.setSourceMapsSupport()</code></a> instead.</div><p></p>
 <ul>
 <li><code>val</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
-<p>This function enables or disables the <a href="https://sourcemaps.info/spec.html">Source Map v3</a> support for
+<p>This function enables or disables the <a href="https://tc39.es/ecma426/">Source Map</a> support for
 stack traces.</p>
 <p>It provides same features as launching Node.js process with commandline options
 <code>--enable-source-maps</code>.</p>
 <p>Only source maps in JavaScript files that are loaded after source maps has been
 enabled will be parsed and loaded.</p>
+<p>This implies calling <code>module.setSourceMapsSupport()</code> with an option
+<code>{ nodeModules: true, generatedCode: true }</code>.</p>
 </section><section><h3><code>process.setUncaughtExceptionCaptureCallback(fn)</code><span><a class="mark" href="#processsetuncaughtexceptioncapturecallbackfn" id="processsetuncaughtexceptioncapturecallbackfn">#</a></span><a aria-hidden="true" class="legacy" id="process_process_setuncaughtexceptioncapturecallback_fn"></a></h3>
 <div class="api_metadata">
 <span>Added in: v9.3.0</span>
@@ -3541,14 +3880,14 @@ throw an error.</p>
 <a href="domain.html"><code>domain</code></a> built-in module.</p>
 </section><section><h3><code>process.sourceMapsEnabled</code><span><a class="mark" href="#processsourcemapsenabled" id="processsourcemapsenabled">#</a></span><a aria-hidden="true" class="legacy" id="process_process_sourcemapsenabled"></a></h3>
 <div class="api_metadata">
-<span>Added in: v20.7.0</span>
+<span>Added in: v20.7.0, v18.19.0</span>
 </div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental: Use <a href="module.html#modulegetsourcemapssupport"><code>module.getSourceMapsSupport()</code></a> instead.</div><p></p>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&#x3C;boolean></a></li>
 </ul>
 <p>The <code>process.sourceMapsEnabled</code> property returns whether the
-<a href="https://sourcemaps.info/spec.html">Source Map v3</a> support for stack traces is enabled.</p>
+<a href="https://tc39.es/ecma426/">Source Map</a> support for stack traces is enabled.</p>
 </section><section><h3><code>process.stderr</code><span><a class="mark" href="#processstderr" id="processstderr">#</a></span><a aria-hidden="true" class="legacy" id="process_process_stderr"></a></h3>
 <ul>
 <li><a href="stream.html#stream" class="type">&#x3C;Stream></a></li>
@@ -3559,6 +3898,7 @@ stream) unless fd <code>2</code> refers to a file, in which case it is
 a <a href="stream.html#writable-streams">Writable</a> stream.</p>
 <p><code>process.stderr</code> differs from other Node.js streams in important ways. See
 <a href="#a-note-on-process-io">note on process I/O</a> for more information.</p>
+<div>
 <h4><code>process.stderr.fd</code><span><a class="mark" href="#processstderrfd" id="processstderrfd">#</a></span><a aria-hidden="true" class="legacy" id="process_process_stderr_fd"></a></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
@@ -3566,6 +3906,7 @@ a <a href="stream.html#writable-streams">Writable</a> stream.</p>
 <p>This property refers to the value of underlying file descriptor of
 <code>process.stderr</code>. The value is fixed at <code>2</code>. In <a href="worker_threads.html#class-worker"><code>Worker</code></a> threads,
 this field does not exist.</p>
+</div>
 </section><section><h3><code>process.stdin</code><span><a class="mark" href="#processstdin" id="processstdin">#</a></span><a aria-hidden="true" class="legacy" id="process_process_stdin"></a></h3>
 <ul>
 <li><a href="stream.html#stream" class="type">&#x3C;Stream></a></li>
@@ -3581,6 +3922,7 @@ For more information see <a href="stream.html#compatibility-with-older-nodejs-ve
 <p>In "old" streams mode the <code>stdin</code> stream is paused by default, so one
 must call <code>process.stdin.resume()</code> to read from it. Note also that calling
 <code>process.stdin.resume()</code> itself would switch stream to "old" mode.</p>
+<div>
 <h4><code>process.stdin.fd</code><span><a class="mark" href="#processstdinfd" id="processstdinfd">#</a></span><a aria-hidden="true" class="legacy" id="process_process_stdin_fd"></a></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
@@ -3588,6 +3930,7 @@ must call <code>process.stdin.resume()</code> to read from it. Note also that ca
 <p>This property refers to the value of underlying file descriptor of
 <code>process.stdin</code>. The value is fixed at <code>0</code>. In <a href="worker_threads.html#class-worker"><code>Worker</code></a> threads,
 this field does not exist.</p>
+</div>
 </section><section><h3><code>process.stdout</code><span><a class="mark" href="#processstdout" id="processstdout">#</a></span><a aria-hidden="true" class="legacy" id="process_process_stdout"></a></h3>
 <ul>
 <li><a href="stream.html#stream" class="type">&#x3C;Stream></a></li>
@@ -3605,6 +3948,7 @@ stdin.<span class="hljs-title function_">pipe</span>(stdout);</code><code class=
 stdin.<span class="hljs-title function_">pipe</span>(stdout);</code><button class="copy-button">copy</button></pre>
 <p><code>process.stdout</code> differs from other Node.js streams in important ways. See
 <a href="#a-note-on-process-io">note on process I/O</a> for more information.</p>
+<div>
 <h4><code>process.stdout.fd</code><span><a class="mark" href="#processstdoutfd" id="processstdoutfd">#</a></span><a aria-hidden="true" class="legacy" id="process_process_stdout_fd"></a></h4>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&#x3C;number></a></li>
@@ -3612,6 +3956,7 @@ stdin.<span class="hljs-title function_">pipe</span>(stdout);</code><button clas
 <p>This property refers to the value of underlying file descriptor of
 <code>process.stdout</code>. The value is fixed at <code>1</code>. In <a href="worker_threads.html#class-worker"><code>Worker</code></a> threads,
 this field does not exist.</p>
+</div><div>
 <h4>A note on process I/O<span><a class="mark" href="#a-note-on-process-io" id="a-note-on-process-io">#</a></span><a aria-hidden="true" class="legacy" id="process_a_note_on_process_i_o"></a></h4>
 <p><code>process.stdout</code> and <code>process.stderr</code> differ from other Node.js streams in
 important ways:</p>
@@ -3653,6 +3998,7 @@ true
 <span class="hljs-meta prompt_">$ </span><span class="language-bash">node -p <span class="hljs-string">"Boolean(process.stdout.isTTY)"</span> | <span class="hljs-built_in">cat</span></span>
 false</code> <button class="copy-button">copy</button></pre>
 <p>See the <a href="tty.html#tty">TTY</a> documentation for more information.</p>
+</div>
 </section><section><h3><code>process.throwDeprecation</code><span><a class="mark" href="#processthrowdeprecation" id="processthrowdeprecation">#</a></span><a aria-hidden="true" class="legacy" id="process_process_throwdeprecation"></a></h3>
 <div class="api_metadata">
 <span>Added in: v0.9.12</span>
@@ -3754,6 +4100,22 @@ processes inherit the mask from the parent process. Returns the previous mask.</
   <span class="hljs-string">`Changed umask from <span class="hljs-subst">${oldmask.toString(<span class="hljs-number">8</span>)}</span> to <span class="hljs-subst">${newmask.toString(<span class="hljs-number">8</span>)}</span>`</span>,
 );</code><button class="copy-button">copy</button></pre>
 <p>In <a href="worker_threads.html#class-worker"><code>Worker</code></a> threads, <code>process.umask(mask)</code> will throw an exception.</p>
+</section><section><h3><code>process.unref(maybeRefable)</code><span><a class="mark" href="#processunrefmayberefable" id="processunrefmayberefable">#</a></span><a aria-hidden="true" class="legacy" id="process_process_unref_mayberefable"></a></h3>
+<div class="api_metadata">
+<span>Added in: v22.14.0</span>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
+<ul>
+<li><code>maybeUnfefable</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_types" class="type">&#x3C;any></a> An object that may be "unref'd".</li>
+</ul>
+<p>An object is "unrefable" if it implements the Node.js "Refable protocol".
+Specifically, this means that the object implements the <code>Symbol.for('nodejs.ref')</code>
+and <code>Symbol.for('nodejs.unref')</code> methods. "Ref'd" objects will keep the Node.js
+event loop alive, while "unref'd" objects will not. Historically, this was
+implemented by using <code>ref()</code> and <code>unref()</code> methods directly on the objects.
+This pattern, however, is being deprecated in favor of the "Refable protocol"
+in order to better support Web Platform API types whose APIs cannot be modified
+to add <code>ref()</code> and <code>unref()</code> methods but still need to support that behavior.</p>
 </section><section><h3><code>process.uptime()</code><span><a class="mark" href="#processuptime" id="processuptime">#</a></span><a aria-hidden="true" class="legacy" id="process_process_uptime"></a></h3>
 <div class="api_metadata">
 <span>Added in: v0.5.0</span>
@@ -3829,6 +4191,7 @@ to load modules that were compiled against a different module ABI version.</p>
   openssl: '3.0.13+quic',
   simdjson: '3.8.0',
   simdutf: '5.2.4',
+  sqlite: '3.46.0',
   tz: '2024a',
   undici: '6.13.0',
   unicode: '15.1',
@@ -3873,8 +4236,8 @@ when the bootstrapping function was called. This is extremely rare,
 and generally can only happen during development of Node.js itself.</li>
 <li><code>12</code> <strong>Invalid Debug Argument</strong>: The <code>--inspect</code> and/or <code>--inspect-brk</code>
 options were set, but the port number chosen was invalid or unavailable.</li>
-<li><code>13</code> <strong>Unfinished Top-Level Await</strong>: <code>await</code> was used outside of a function
-in the top-level code, but the passed <code>Promise</code> never resolved.</li>
+<li><code>13</code> <strong>Unsettled Top-Level Await</strong>: <code>await</code> was used outside of a function
+in the top-level code, but the passed <code>Promise</code> never settled.</li>
 <li><code>14</code> <strong>Snapshot Failure</strong>: Node.js was started to build a V8 startup
 snapshot and it failed because certain requirements of the state of
 the application were not met.</li>

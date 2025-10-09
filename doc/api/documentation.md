@@ -90,8 +90,9 @@ a command-line flag. Experimental features may also emit a [warning][].
 | [HTTP/2](http2.html) | (2) Stable |
 | [HTTPS](https.html) | (2) Stable |
 | [Inspector](inspector.html) | (2) Stable |
-| [Modules: `node:module` API](module.html) | (1) .2 - Release candidate |
+| [Modules: `node:module` API](module.html) | (1) .2 - Release candidate (asynchronous version) Stability: 1.1 - Active development (synchronous version) |
 | [Modules: CommonJS modules](modules.html) | (2) Stable |
+| [Modules: TypeScript](typescript.html) | (1) .1 - Active development |
 | [OS](os.html) | (2) Stable |
 | [Path](path.html) | (2) Stable |
 | [Performance measurement APIs](perf_hooks.html) | (2) Stable |
@@ -100,6 +101,7 @@ a command-line flag. Experimental features may also emit a [warning][].
 | [Readline](readline.html) | (2) Stable |
 | [REPL](repl.html) | (2) Stable |
 | [Single executable applications](single-executable-applications.html) | (1) .1 - Active development |
+| [SQLite](sqlite.html) | (1) .1 - Active development. |
 | [Stream](stream.html) | (2) Stable |
 | [String decoder](string_decoder.html) | (2) Stable |
 | [Test runner](test.html) | (2) Stable |
@@ -112,7 +114,7 @@ a command-line flag. Experimental features may also emit a [warning][].
 | [Util](util.html) | (2) Stable |
 | [VM (executing JavaScript)](vm.html) | (2) Stable |
 | [Web Crypto API](webcrypto.html) | (2) Stable |
-| [Web Streams API](webstreams.html) | (1) Experimental. |
+| [Web Streams API](webstreams.html) | (2) Stable |
 | [WebAssembly System Interface (WASI)](wasi.html) | (1) Experimental |
 | [Worker threads](worker_threads.html) | (2) Stable |
 | [Zlib](zlib.html) | (2) Stable |

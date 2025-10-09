@@ -129,6 +129,7 @@ The following methods from the `node:dns` module are available:
 * [`resolver.resolvePtr()`][`dns.resolvePtr()`]
 * [`resolver.resolveSoa()`][`dns.resolveSoa()`]
 * [`resolver.resolveSrv()`][`dns.resolveSrv()`]
+* [`resolver.resolveTlsa()`][`dns.resolveTlsa()`]
 * [`resolver.resolveTxt()`][`dns.resolveTxt()`]
 * [`resolver.reverse()`][`dns.reverse()`]
 * [`resolver.setServers()`][`dns.setServers()`]
@@ -218,7 +219,7 @@ section if a custom port is used.
 <!-- YAML
 added: v0.1.90
 changes:
-  - version: v20.13.0
+  - version: v22.1.0
     pr-url: https://github.com/nodejs/node/pull/52492
     description: The `verbatim` option is now deprecated in favor of the new `order` option.
   - version: v18.4.0
@@ -442,6 +443,7 @@ records. The type and structure of individual results varies based on `rrtype`:
 | `'PTR'`   | pointer records                | {string}    | [`dns.resolvePtr()`][]   |
 | `'SOA'`   | start of authority records     | {Object}    | [`dns.resolveSoa()`][]   |
 | `'SRV'`   | service records                | {Object}    | [`dns.resolveSrv()`][]   |
+| `'TLSA'`  | certificate associations       | {Object}    | [`dns.resolveTlsa()`][]  |
 | `'TXT'`   | text records                   | {string\[]} | [`dns.resolveTxt()`][]   |
 
 On error, `err` is an [`Error`][] object, where `err.code` is one of the
@@ -541,6 +543,7 @@ will be present on the object:
 | `'PTR'`   | `value`                                                                                                                                          |
 | `'SOA'`   | Refer to [`dns.resolveSoa()`][]                                                                                                                  |
 | `'SRV'`   | Refer to [`dns.resolveSrv()`][]                                                                                                                  |
+| `'TLSA'`  | Refer to [`dns.resolveTlsa()`][]                                                                                                                 |
 | `'TXT'`   | This type of record contains an array property called `entries` which refers to [`dns.resolveTxt()`][], e.g. `{ entries: ['...'], type: 'TXT' }` |
 
 Here is an example of the `ret` object passed to the callback:
@@ -800,6 +803,41 @@ be an array of objects with the following properties:
 }
 ```
 
+## `dns.resolveTlsa(hostname, callback)`
+
+<!-- YAML
+added: v22.15.0
+-->
+
+<!--lint disable no-undefined-references list-item-bullet-indent-->
+
+* `hostname` {string}
+* `callback` {Function}
+  * `err` {Error}
+  * `records` {Object\[]}
+
+<!--lint enable no-undefined-references list-item-bullet-indent-->
+
+Uses the DNS protocol to resolve certificate associations (`TLSA` records) for
+the `hostname`. The `records` argument passed to the `callback` function is an
+array of objects with these properties:
+
+* `certUsage`
+* `selector`
+* `match`
+* `data`
+
+<!-- eslint-skip -->
+
+```js
+{
+  certUsage: 3,
+  selector: 1,
+  match: 1,
+  data: [ArrayBuffer]
+}
+```
+
 ## `dns.resolveTxt(hostname, callback)`
 
 <!-- YAML
@@ -852,7 +890,7 @@ added:
   - v16.4.0
   - v14.18.0
 changes:
-  - version: v20.13.0
+  - version: v22.1.0
     pr-url: https://github.com/nodejs/node/pull/52492
     description: The `ipv6first` value is supported now.
   - version: v17.0.0
@@ -881,7 +919,7 @@ added:
   - v20.1.0
   - v18.17.0
 changes:
-  - version: v20.13.0
+  - version: v22.1.0
     pr-url: https://github.com/nodejs/node/pull/52492
     description: The `ipv6first` value is supported now.
 -->
@@ -1002,6 +1040,7 @@ The following methods from the `dnsPromises` API are available:
 * [`resolver.resolvePtr()`][`dnsPromises.resolvePtr()`]
 * [`resolver.resolveSoa()`][`dnsPromises.resolveSoa()`]
 * [`resolver.resolveSrv()`][`dnsPromises.resolveSrv()`]
+* [`resolver.resolveTlsa()`][`dnsPromises.resolveTlsa()`]
 * [`resolver.resolveTxt()`][`dnsPromises.resolveTxt()`]
 * [`resolver.reverse()`][`dnsPromises.reverse()`]
 * [`resolver.setServers()`][`dnsPromises.setServers()`]
@@ -1045,7 +1084,7 @@ section if a custom port is used.
 <!-- YAML
 added: v10.6.0
 changes:
-  - version: v20.13.0
+  - version: v22.1.0
     pr-url: https://github.com/nodejs/node/pull/52492
     description: The `verbatim` option is now deprecated in favor of the new `order` option.
 -->
@@ -1204,6 +1243,7 @@ based on `rrtype`:
 | `'PTR'`   | pointer records                | {string}    | [`dnsPromises.resolvePtr()`][]   |
 | `'SOA'`   | start of authority records     | {Object}    | [`dnsPromises.resolveSoa()`][]   |
 | `'SRV'`   | service records                | {Object}    | [`dnsPromises.resolveSrv()`][]   |
+| `'TLSA'`  | certificate associations       | {Object}    | [`dnsPromises.resolveTlsa()`][]  |
 | `'TXT'`   | text records                   | {string\[]} | [`dnsPromises.resolveTxt()`][]   |
 
 On error, the `Promise` is rejected with an [`Error`][] object, where `err.code`
@@ -1268,6 +1308,7 @@ present on the object:
 | `'PTR'`   | `value`                                                                                                                                                  |
 | `'SOA'`   | Refer to [`dnsPromises.resolveSoa()`][]                                                                                                                  |
 | `'SRV'`   | Refer to [`dnsPromises.resolveSrv()`][]                                                                                                                  |
+| `'TLSA'`  | Refer to [`dnsPromises.resolveTlsa()`][]                                                                                                                 |
 | `'TXT'`   | This type of record contains an array property called `entries` which refers to [`dnsPromises.resolveTxt()`][], e.g. `{ entries: ['...'], type: 'TXT' }` |
 
 Here is an example of the result object:
@@ -1450,6 +1491,34 @@ the following properties:
 }
 ```
 
+### `dnsPromises.resolveTlsa(hostname)`
+
+<!-- YAML
+added: v22.15.0
+-->
+
+* `hostname` {string}
+
+Uses the DNS protocol to resolve certificate associations (`TLSA` records) for
+the `hostname`. On success, the `Promise` is resolved with an array of objects
+with these properties:
+
+* `certUsage`
+* `selector`
+* `match`
+* `data`
+
+<!-- eslint-skip -->
+
+```js
+{
+  certUsage: 3,
+  selector: 1,
+  match: 1,
+  data: [ArrayBuffer]
+}
+```
+
 ### `dnsPromises.resolveTxt(hostname)`
 
 <!-- YAML
@@ -1486,7 +1555,7 @@ added:
   - v16.4.0
   - v14.18.0
 changes:
-  - version: v20.13.0
+  - version: v22.1.0
     pr-url: https://github.com/nodejs/node/pull/52492
     description: The `ipv6first` value is supported now.
   - version: v17.0.0
@@ -1511,7 +1580,9 @@ default dns orders in workers.
 ### `dnsPromises.getDefaultResultOrder()`
 
 <!-- YAML
-added: v20.1.0
+added:
+  - v20.1.0
+  - v18.17.0
 -->
 
 Get the value of `dnsOrder`.
@@ -1646,6 +1717,7 @@ uses. For instance, they do not use the configuration from `/etc/hosts`.
 [`dns.resolvePtr()`]: #dnsresolveptrhostname-callback
 [`dns.resolveSoa()`]: #dnsresolvesoahostname-callback
 [`dns.resolveSrv()`]: #dnsresolvesrvhostname-callback
+[`dns.resolveTlsa()`]: #dnsresolvetlsahostname-callback
 [`dns.resolveTxt()`]: #dnsresolvetxthostname-callback
 [`dns.reverse()`]: #dnsreverseip-callback
 [`dns.setDefaultResultOrder()`]: #dnssetdefaultresultorderorder
@@ -1664,6 +1736,7 @@ uses. For instance, they do not use the configuration from `/etc/hosts`.
 [`dnsPromises.resolvePtr()`]: #dnspromisesresolveptrhostname
 [`dnsPromises.resolveSoa()`]: #dnspromisesresolvesoahostname
 [`dnsPromises.resolveSrv()`]: #dnspromisesresolvesrvhostname
+[`dnsPromises.resolveTlsa()`]: #dnspromisesresolvetlsahostname
 [`dnsPromises.resolveTxt()`]: #dnspromisesresolvetxthostname
 [`dnsPromises.reverse()`]: #dnspromisesreverseip
 [`dnsPromises.setDefaultResultOrder()`]: #dnspromisessetdefaultresultorderorder

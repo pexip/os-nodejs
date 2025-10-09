@@ -1068,6 +1068,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v21.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/47202",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": "v16.6.0",
                     "pr-url": "https://github.com/nodejs/node/pull/38444",
                     "description": "Added support for `--pending-deprecation`."
@@ -1079,7 +1084,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only (supports <a href=\"cli.html#--pending-deprecation\"><code>--pending-deprecation</code></a>)</p>\n<p>The <a href=\"punycode.html\"><code>punycode</code></a> module is deprecated. Please use a userland alternative\ninstead.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"punycode.html\"><code>punycode</code></a> module is deprecated. Please use a userland alternative\ninstead.</p>",
               "type": "module",
               "displayName": "DEP0040: `node:punycode` module"
             },
@@ -1137,7 +1142,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: End-of-Life</p>\n<p>The <a href=\"tls.html#class-tlscryptostream\"><code>tls.CryptoStream</code></a> class was removed. Please use\n<a href=\"tls.html#class-tlstlssocket\"><code>tls.TLSSocket</code></a> instead.</p>",
+              "desc": "<p>Type: End-of-Life</p>\n<p>The <code>tls.CryptoStream</code> class was removed. Please use\n<a href=\"tls.html#class-tlstlssocket\"><code>tls.TLSSocket</code></a> instead.</p>",
               "type": "module",
               "displayName": "DEP0042: `tls.CryptoStream`"
             },
@@ -1186,6 +1191,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1203,7 +1213,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisarrayobject\"><code>util.isArray()</code></a> API is deprecated. Please use <code>Array.isArray()</code>\ninstead.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisarrayobject\"><code>util.isArray()</code></a> API is deprecated. Please use <code>Array.isArray()</code>\ninstead.</p>",
               "type": "module",
               "displayName": "DEP0044: `util.isArray()`"
             },
@@ -1213,6 +1223,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1230,7 +1245,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisbooleanobject\"><code>util.isBoolean()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisbooleanobject\"><code>util.isBoolean()</code></a> API is deprecated. Please use\n<code>typeof arg === 'boolean'</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0045: `util.isBoolean()`"
             },
@@ -1240,6 +1255,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1257,7 +1277,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisbufferobject\"><code>util.isBuffer()</code></a> API is deprecated. Please use\n<a href=\"buffer.html#static-method-bufferisbufferobj\"><code>Buffer.isBuffer()</code></a> instead.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisbufferobject\"><code>util.isBuffer()</code></a> API is deprecated. Please use\n<a href=\"buffer.html#static-method-bufferisbufferobj\"><code>Buffer.isBuffer()</code></a> instead.</p>",
               "type": "module",
               "displayName": "DEP0046: `util.isBuffer()`"
             },
@@ -1267,6 +1287,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1284,7 +1309,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisdateobject\"><code>util.isDate()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisdateobject\"><code>util.isDate()</code></a> API is deprecated. Please use\n<code>arg instanceof Date</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0047: `util.isDate()`"
             },
@@ -1294,6 +1319,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1311,7 +1341,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utiliserrorobject\"><code>util.isError()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utiliserrorobject\"><code>util.isError()</code></a> API is deprecated. Please use\n<code>Object.prototype.toString(arg) === '[object Error]' || arg instanceof Error</code>\ninstead.</p>",
               "type": "module",
               "displayName": "DEP0048: `util.isError()`"
             },
@@ -1321,6 +1351,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1338,7 +1373,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisfunctionobject\"><code>util.isFunction()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisfunctionobject\"><code>util.isFunction()</code></a> API is deprecated. Please use\n<code>typeof arg === 'function'</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0049: `util.isFunction()`"
             },
@@ -1348,6 +1383,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1365,7 +1405,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisnullobject\"><code>util.isNull()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisnullobject\"><code>util.isNull()</code></a> API is deprecated. Please use\n<code>arg === null</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0050: `util.isNull()`"
             },
@@ -1375,6 +1415,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1392,7 +1437,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisnullorundefinedobject\"><code>util.isNullOrUndefined()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisnullorundefinedobject\"><code>util.isNullOrUndefined()</code></a> API is deprecated. Please use\n<code>arg === null || arg === undefined</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0051: `util.isNullOrUndefined()`"
             },
@@ -1402,6 +1447,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1419,7 +1469,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisnumberobject\"><code>util.isNumber()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisnumberobject\"><code>util.isNumber()</code></a> API is deprecated. Please use\n<code>typeof arg === 'number'</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0052: `util.isNumber()`"
             },
@@ -1429,6 +1479,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1446,7 +1501,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisobjectobject\"><code>util.isObject()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisobjectobject\"><code>util.isObject()</code></a> API is deprecated. Please use\n<code>arg &#x26;&#x26; typeof arg === 'object'</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0053: `util.isObject()`"
             },
@@ -1456,6 +1511,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1473,7 +1533,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisprimitiveobject\"><code>util.isPrimitive()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisprimitiveobject\"><code>util.isPrimitive()</code></a> API is deprecated. Please use\n<code>arg === null || (typeof arg !=='object' &#x26;&#x26; typeof arg !== 'function')</code>\ninstead.</p>",
               "type": "module",
               "displayName": "DEP0054: `util.isPrimitive()`"
             },
@@ -1483,6 +1543,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1500,7 +1565,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisregexpobject\"><code>util.isRegExp()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisregexpobject\"><code>util.isRegExp()</code></a> API is deprecated. Please use\n<code>arg instanceof RegExp</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0055: `util.isRegExp()`"
             },
@@ -1510,6 +1575,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1527,7 +1597,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisstringobject\"><code>util.isString()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisstringobject\"><code>util.isString()</code></a> API is deprecated. Please use\n<code>typeof arg === 'string'</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0056: `util.isString()`"
             },
@@ -1537,6 +1607,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1554,7 +1629,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilissymbolobject\"><code>util.isSymbol()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilissymbolobject\"><code>util.isSymbol()</code></a> API is deprecated. Please use\n<code>typeof arg === 'symbol'</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0057: `util.isSymbol()`"
             },
@@ -1564,6 +1639,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v6.12.0",
                       "v4.8.6"
@@ -1581,7 +1661,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utilisundefinedobject\"><code>util.isUndefined()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utilisundefinedobject\"><code>util.isUndefined()</code></a> API is deprecated. Please use\n<code>arg === undefined</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0058: `util.isUndefined()`"
             },
@@ -1590,6 +1670,11 @@
               "name": "dep0059:_`util.log()`",
               "meta": {
                 "changes": [
+                  {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
                   {
                     "version": "v6.12.0",
                     "pr-url": "https://github.com/nodejs/node/pull/10116",
@@ -1602,7 +1687,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#utillogstring\"><code>util.log()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#utillogstring\"><code>util.log()</code></a> API has been deprecated because it's an unmaintained\nlegacy API that was exposed to user land by accident. Instead,\nconsider the following alternatives based on your specific needs:</p>\n<ul>\n<li>\n<p><strong>Third-Party Logging Libraries</strong></p>\n</li>\n<li>\n<p><strong>Use <code>console.log(new Date().toLocaleString(), message)</code></strong></p>\n</li>\n</ul>\n<p>By adopting one of these alternatives, you can transition away from <code>util.log()</code>\nand choose a logging strategy that aligns with the specific\nrequirements and complexity of your application.</p>",
               "type": "module",
               "displayName": "DEP0059: `util.log()`"
             },
@@ -1611,6 +1696,11 @@
               "name": "dep0060:_`util._extend()`",
               "meta": {
                 "changes": [
+                  {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50488",
+                    "description": "Runtime deprecation."
+                  },
                   {
                     "version": "v6.12.0",
                     "pr-url": "https://github.com/nodejs/node/pull/10116",
@@ -1623,7 +1713,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"util.html#util_extendtarget-source\"><code>util._extend()</code></a> API is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"util.html#util_extendtarget-source\"><code>util._extend()</code></a> API is deprecated because it's an unmaintained\nlegacy API that was exposed to user land by accident.\nPlease use <code>target = Object.assign(target, source)</code> instead.</p>",
               "type": "module",
               "displayName": "DEP0060: `util._extend()`"
             },
@@ -2119,7 +2209,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: End-of-Life.</p>\n<p>The <code>ecdhCurve</code> option to <code>tls.createSecureContext()</code> and <code>tls.TLSSocket</code> could\nbe set to <code>false</code> to disable ECDH entirely on the server only. This mode was\ndeprecated in preparation for migrating to OpenSSL 1.1.0 and consistency with\nthe client and is now unsupported. Use the <code>ciphers</code> parameter instead.</p>",
+              "desc": "<p>Type: End-of-Life</p>\n<p>The <code>ecdhCurve</code> option to <code>tls.createSecureContext()</code> and <code>tls.TLSSocket</code> could\nbe set to <code>false</code> to disable ECDH entirely on the server only. This mode was\ndeprecated in preparation for migrating to OpenSSL 1.1.0 and consistency with\nthe client and is now unsupported. Use the <code>ciphers</code> parameter instead.</p>",
               "type": "module",
               "displayName": "DEP0083: Disabling ECDH by setting `ecdhCurve` to `false`"
             },
@@ -2476,7 +2566,7 @@
                   {
                     "version": "v10.0.0",
                     "pr-url": "https://github.com/nodejs/node/pull/18990",
-                    "description": "Documentation-only deprecation."
+                    "description": "Documentation-only deprecation with `--pending-deprecation` support."
                   }
                 ]
               },
@@ -2511,6 +2601,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/50973",
+                    "description": "End-of-Life."
+                  },
+                  {
                     "version": "v11.0.0",
                     "pr-url": "https://github.com/nodejs/node/pull/22089",
                     "description": "Runtime deprecation."
@@ -2522,7 +2617,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Runtime</p>\n<p>Using <a href=\"crypto.html#cryptocreatecipheralgorithm-password-options\"><code>crypto.createCipher()</code></a> and <a href=\"crypto.html#cryptocreatedecipheralgorithm-password-options\"><code>crypto.createDecipher()</code></a> must be\navoided as they use a weak key derivation function (MD5 with no salt) and static\ninitialization vectors. It is recommended to derive a key using\n<a href=\"crypto.html#cryptopbkdf2password-salt-iterations-keylen-digest-callback\"><code>crypto.pbkdf2()</code></a> or <a href=\"crypto.html#cryptoscryptpassword-salt-keylen-options-callback\"><code>crypto.scrypt()</code></a> with random salts and to use\n<a href=\"crypto.html#cryptocreatecipherivalgorithm-key-iv-options\"><code>crypto.createCipheriv()</code></a> and <a href=\"crypto.html#cryptocreatedecipherivalgorithm-key-iv-options\"><code>crypto.createDecipheriv()</code></a> to obtain the\n<a href=\"crypto.html#class-cipher\"><code>Cipher</code></a> and <a href=\"crypto.html#class-decipher\"><code>Decipher</code></a> objects respectively.</p>",
+              "desc": "<p>Type: End-of-Life</p>\n<p><code>crypto.createCipher()</code> and <code>crypto.createDecipher()</code> have been removed\nas they use a weak key derivation function (MD5 with no salt) and static\ninitialization vectors.\nIt is recommended to derive a key using\n<a href=\"crypto.html#cryptopbkdf2password-salt-iterations-keylen-digest-callback\"><code>crypto.pbkdf2()</code></a> or <a href=\"crypto.html#cryptoscryptpassword-salt-keylen-options-callback\"><code>crypto.scrypt()</code></a> with random salts and to use\n<a href=\"crypto.html#cryptocreatecipherivalgorithm-key-iv-options\"><code>crypto.createCipheriv()</code></a> and <a href=\"crypto.html#cryptocreatedecipherivalgorithm-key-iv-options\"><code>crypto.createDecipheriv()</code></a> to obtain the\n<a href=\"crypto.html#class-cipher\"><code>Cipher</code></a> and <a href=\"crypto.html#class-decipher\"><code>Decipher</code></a> objects respectively.</p>",
               "type": "module",
               "displayName": "DEP0106: `crypto.createCipher` and `crypto.createDecipher`"
             },
@@ -2622,7 +2717,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only (supports <a href=\"cli.html#--pending-deprecation\"><code>--pending-deprecation</code></a>)</p>\n<p><code>process.binding()</code> is for use by Node.js internal code only.</p>\n<p>While <code>process.binding()</code> has not reached End-of-Life status in general, it is\nunavailable when <a href=\"permissions.html#policies\">policies</a> or the <a href=\"permissions.html#permission-model\">permission model</a> are enabled.</p>",
+              "desc": "<p>Type: Documentation-only (supports <a href=\"cli.html#--pending-deprecation\"><code>--pending-deprecation</code></a>)</p>\n<p><code>process.binding()</code> is for use by Node.js internal code only.</p>\n<p>While <code>process.binding()</code> has not reached End-of-Life status in general, it is\nunavailable when the <a href=\"permissions.html#permission-model\">permission model</a> is enabled.</p>",
               "type": "module",
               "displayName": "DEP0111: `process.binding()`"
             },
@@ -2695,7 +2790,7 @@
                       "https://github.com/nodejs/node/pull/22519",
                       "https://github.com/nodejs/node/pull/23017"
                     ],
-                    "description": "Added documentation-only deprecation with `--pending-deprecation` support."
+                    "description": "Documentation-only deprecation with `--pending-deprecation` support."
                   }
                 ]
               },
@@ -2780,7 +2875,7 @@
                   {
                     "version": "v11.0.0",
                     "pr-url": "https://github.com/nodejs/node/pull/23597",
-                    "description": "Documentation-only deprecation."
+                    "description": "Documentation-only deprecation with `--pending-deprecation` support."
                   }
                 ]
               },
@@ -3060,7 +3155,7 @@
                   {
                     "version": "v12.12.0",
                     "pr-url": "https://github.com/nodejs/node/pull/29781",
-                    "description": "Documentation-only deprecation."
+                    "description": "Documentation-only deprecation with `--pending-deprecation` support."
                   }
                 ]
               },
@@ -3181,7 +3276,7 @@
                   {
                     "version": "v14.3.0",
                     "pr-url": "https://github.com/nodejs/node/pull/33294",
-                    "description": "Documentation-only (supports [`--pending-deprecation`][])."
+                    "description": "Documentation-only deprecation with `--pending-deprecation` support."
                   }
                 ]
               },
@@ -3197,11 +3292,11 @@
                   {
                     "version": "v14.3.0",
                     "pr-url": "https://github.com/nodejs/node/pull/33294",
-                    "description": "Documentation-only (supports [`--pending-deprecation`][])."
+                    "description": "Documentation-only deprecation with `--pending-deprecation` support."
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <code>node:repl</code> module exports a <code>_builtinLibs</code> property that contains an array\nof built-in modules. It was incomplete so far and instead it's better to rely\nupon <code>require('node:module').builtinModules</code>.</p>",
+              "desc": "<p>Type: Documentation-only (supports <a href=\"cli.html#--pending-deprecation\"><code>--pending-deprecation</code></a>)</p>\n<p>The <code>node:repl</code> module exports a <code>_builtinLibs</code> property that contains an array\nof built-in modules. It was incomplete so far and instead it's better to rely\nupon <code>require('node:module').builtinModules</code>.</p>",
               "type": "module",
               "displayName": "DEP0142: `repl._builtinLibs`"
             },
@@ -3211,13 +3306,18 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v15.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/33105",
+                    "description": "End-of-Life."
+                  },
+                  {
                     "version": "v14.5.0",
                     "pr-url": "https://github.com/nodejs/node/pull/33126",
                     "description": "Runtime deprecation."
                   }
                 ]
               },
-              "desc": "<p>Type: Runtime\n<code>Transform._transformState</code> will be removed in future versions where it is\nno longer required due to simplification of the implementation.</p>",
+              "desc": "<p>Type: End-of-Life</p>\n<p><code>Transform._transformState</code> will be removed in future versions where it is\nno longer required due to simplification of the implementation.</p>",
               "type": "module",
               "displayName": "DEP0143: `Transform._transformState`"
             },
@@ -3325,7 +3425,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Runtime</p>\n<p>Using a trailing <code>\"/\"</code> to define subpath folder mappings in the\n<a href=\"packages.html#subpath-exports\">subpath exports</a> or <a href=\"packages.html#subpath-imports\">subpath imports</a> fields is deprecated. Use\n<a href=\"packages.html#subpath-patterns\">subpath patterns</a> instead.</p>",
+              "desc": "<p>Type: End-of-Life</p>\n<p>Using a trailing <code>\"/\"</code> to define subpath folder mappings in the\n<a href=\"packages.html#subpath-exports\">subpath exports</a> or <a href=\"packages.html#subpath-imports\">subpath imports</a> fields is no longer supported.\nUse <a href=\"packages.html#subpath-patterns\">subpath patterns</a> instead.</p>",
               "type": "module",
               "displayName": "DEP0148: Folder mappings in `\"exports\"` (trailing `\"/\"`)"
             },
@@ -3341,7 +3441,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only.</p>\n<p>Prefer <a href=\"http.html#messagesocket\"><code>message.socket</code></a> over <a href=\"http.html#messageconnection\"><code>message.connection</code></a>.</p>",
+              "desc": "<p>Type: Documentation-only</p>\n<p>Prefer <a href=\"http.html#messagesocket\"><code>message.socket</code></a> over <a href=\"http.html#messageconnection\"><code>message.connection</code></a>.</p>",
               "type": "module",
               "displayName": "DEP0149: `http.IncomingMessage#connection`"
             },
@@ -3572,7 +3672,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Runtime.</p>\n<p>This event was deprecated because it did not work with V8 promise combinators\nwhich diminished its usefulness.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>This event was deprecated because it did not work with V8 promise combinators\nwhich diminished its usefulness.</p>",
               "type": "module",
               "displayName": "DEP0160: `process.on('multipleResolves', handler)`"
             },
@@ -3686,6 +3786,11 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/51179",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": [
                       "v18.8.0",
                       "v16.18.0"
@@ -3695,7 +3800,7 @@
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>The <a href=\"cli.html#--trace-atomics-wait\"><code>--trace-atomics-wait</code></a> flag is deprecated.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>The <a href=\"cli.html#--trace-atomics-wait\"><code>--trace-atomics-wait</code></a> flag is deprecated because\nit uses the V8 hook <code>SetAtomicsWaitCallback</code>,\nthat will be removed in a future V8 release.</p>",
               "type": "module",
               "displayName": "DEP0165: `--trace-atomics-wait`"
             },
@@ -3764,7 +3869,10 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v19.9.0",
+                    "version": [
+                      "v19.9.0",
+                      "v18.17.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/47203",
                     "description": "Added support for `--pending-deprecation`."
                   },
@@ -3851,11 +3959,11 @@
                   {
                     "version": "v20.1.0",
                     "pr-url": "https://github.com/nodejs/node/pull/47740",
-                    "description": "Documentation-only deprecation."
+                    "description": "Runtime deprecation."
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>In a future version of Node.js, <a href=\"assert.html#class-assertcalltracker\"><code>assert.CallTracker</code></a>,\nwill be removed.\nConsider using alternatives such as the <a href=\"test.html#mocking\"><code>mock</code></a> helper function.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>In a future version of Node.js, <a href=\"assert.html#class-assertcalltracker\"><code>assert.CallTracker</code></a>,\nwill be removed.\nConsider using alternatives such as the <a href=\"test.html#mocking\"><code>mock</code></a> helper function.</p>",
               "type": "module",
               "displayName": "DEP0173: the `assert.CallTracker` class"
             },
@@ -3865,13 +3973,18 @@
               "meta": {
                 "changes": [
                   {
+                    "version": "v21.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/49609",
+                    "description": "Runtime deprecation."
+                  },
+                  {
                     "version": "v20.8.0",
                     "pr-url": "https://github.com/nodejs/node/pull/49647",
                     "description": "Documentation-only deprecation."
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>Calling <a href=\"util.html#utilpromisifyoriginal\"><code>util.promisify</code></a> on a function that returns a <Promise> will ignore\nthe result of said promise, which can lead to unhandled promise rejections.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>Calling <a href=\"util.html#utilpromisifyoriginal\"><code>util.promisify</code></a> on a function that returns a <code>Promise</code> will ignore\nthe result of said promise, which can lead to unhandled promise rejections.</p>",
               "type": "module",
               "displayName": "DEP0174: calling `promisify` on a function that returns a `Promise`"
             },
@@ -3913,12 +4026,16 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.12.0",
+                    "version": [
+                      "v21.7.0",
+                      "v20.12.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/51442",
                     "description": "End-of-Life."
                   },
                   {
                     "version": [
+                      "v21.3.0",
                       "v20.11.0"
                     ],
                     "pr-url": "https://github.com/nodejs/node/pull/50486",
@@ -3941,7 +4058,11 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.12.0",
+                    "version": [
+                      "v21.5.0",
+                      "v20.12.0",
+                      "v18.20.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/51020",
                     "description": "Documentation-only deprecation."
                   }
@@ -3957,13 +4078,21 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.12.0",
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/51880",
+                    "description": "Runtime deprecation."
+                  },
+                  {
+                    "version": [
+                      "v21.5.0",
+                      "v20.12.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/51077",
                     "description": "Documentation-only deprecation."
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>Calling <code>Hash</code> class directly with <code>Hash()</code> or <code>new Hash()</code> is\ndeprecated due to being internals, not intended for public use.\nPlease use the <a href=\"crypto.html#cryptocreatehashalgorithm-options\"><code>crypto.createHash()</code></a> method to create Hash instances.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>Calling <code>Hash</code> class directly with <code>Hash()</code> or <code>new Hash()</code> is\ndeprecated due to being internals, not intended for public use.\nPlease use the <a href=\"crypto.html#cryptocreatehashalgorithm-options\"><code>crypto.createHash()</code></a> method to create Hash instances.</p>",
               "type": "module",
               "displayName": "DEP0179: `Hash` constructor"
             },
@@ -3973,13 +4102,18 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.13.0",
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/52067",
+                    "description": "Runtime deprecation."
+                  },
+                  {
+                    "version": "v22.0.0",
                     "pr-url": "https://github.com/nodejs/node/pull/51879",
                     "description": "Documentation-only deprecation."
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>Calling <code>fs.Stats</code> class directly with <code>Stats()</code> or <code>new Stats()</code> is\ndeprecated due to being internals, not intended for public use.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>Calling <code>fs.Stats</code> class directly with <code>Stats()</code> or <code>new Stats()</code> is\ndeprecated due to being internals, not intended for public use.</p>",
               "type": "module",
               "displayName": "DEP0180: `fs.Stats` constructor"
             },
@@ -3989,13 +4123,18 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.13.0",
+                    "version": "v22.0.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/52071",
+                    "description": "Runtime deprecation."
+                  },
+                  {
+                    "version": "v22.0.0",
                     "pr-url": "https://github.com/nodejs/node/pull/51881",
                     "description": "Documentation-only deprecation."
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>Calling <code>Hmac</code> class directly with <code>Hmac()</code> or <code>new Hmac()</code> is\ndeprecated due to being internals, not intended for public use.\nPlease use the <a href=\"crypto.html#cryptocreatehmacalgorithm-key-options\"><code>crypto.createHmac()</code></a> method to create Hmac instances.</p>",
+              "desc": "<p>Type: Runtime</p>\n<p>Calling <code>Hmac</code> class directly with <code>Hmac()</code> or <code>new Hmac()</code> is\ndeprecated due to being internals, not intended for public use.\nPlease use the <a href=\"crypto.html#cryptocreatehmacalgorithm-key-options\"><code>crypto.createHmac()</code></a> method to create Hmac instances.</p>",
               "type": "module",
               "displayName": "DEP0181: `Hmac` constructor"
             },
@@ -4005,7 +4144,7 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.13.0",
+                    "version": "v22.0.0",
                     "pr-url": "https://github.com/nodejs/node/pull/52345",
                     "description": "Documentation-only deprecation."
                   }
@@ -4021,7 +4160,7 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.16.0",
+                    "version": "v22.4.0",
                     "pr-url": "https://github.com/nodejs/node/pull/53329",
                     "description": "Documentation-only deprecation."
                   }
@@ -4037,7 +4176,7 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.18.0",
+                    "version": "v22.9.0",
                     "pr-url": "https://github.com/nodejs/node/pull/54708",
                     "description": "Documentation-only deprecation."
                   }
@@ -4053,15 +4192,193 @@
               "meta": {
                 "changes": [
                   {
-                    "version": "v20.18.0",
+                    "version": "v22.9.0",
                     "pr-url": "https://github.com/nodejs/node/pull/54842",
                     "description": "Documentation-only deprecation."
                   }
                 ]
               },
-              "desc": "<p>Type: Documentation-only</p>\n<p>Instantiating classes without the <code>new</code> qualifier exported by the <code>node:repl</code> module is deprecated.\nIt is recommended to use the <code>new</code> qualifier instead. This applies to all REPL classes, including\n<code>REPLServer</code> and <code>Recoverable</code>.</p>",
+              "desc": "<p>Type: Documentation-only</p>\n<p>Instantiating classes without the <code>new</code> qualifier exported by the <code>node:repl</code> module is deprecated.\nIt is recommended to use the <code>new</code> qualifier instead. This applies to all REPL classes, including\n<code>REPLServer</code> and <code>Recoverable</code>.</p>\n<!-- md-lint skip-deprecation DEP0186 -->",
               "type": "module",
               "displayName": "DEP0185: Instantiating `node:repl` classes without `new`"
+            },
+            {
+              "textRaw": "DEP0187: Passing invalid argument types to `fs.existsSync`",
+              "name": "dep0187:_passing_invalid_argument_types_to_`fs.existssync`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.13.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/55892",
+                    "description": "Documentation-only."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>Passing non-supported argument types is deprecated and, instead of returning <code>false</code>,\nwill throw an error in a future version.</p>",
+              "type": "module",
+              "displayName": "DEP0187: Passing invalid argument types to `fs.existsSync`"
+            },
+            {
+              "textRaw": "DEP0188: `process.features.ipv6` and `process.features.uv`",
+              "name": "dep0188:_`process.features.ipv6`_and_`process.features.uv`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.13.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/55545",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>These properties are unconditionally <code>true</code>. Any checks based on these properties are redundant.</p>",
+              "type": "module",
+              "displayName": "DEP0188: `process.features.ipv6` and `process.features.uv`"
+            },
+            {
+              "textRaw": "DEP0189: `process.features.tls_*`",
+              "name": "dep0189:_`process.features.tls_*`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.13.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/55545",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p><code>process.features.tls_alpn</code>, <code>process.features.tls_ocsp</code>, and <code>process.features.tls_sni</code> are\ndeprecated, as their values are guaranteed to be identical to that of <code>process.features.tls</code>.</p>",
+              "type": "module",
+              "displayName": "DEP0189: `process.features.tls_*`"
+            },
+            {
+              "textRaw": "DEP0190: Passing `args` to `node:child_process` `execFile`/`spawn` with `shell` option `true`",
+              "name": "dep0190:_passing_`args`_to_`node:child_process`_`execfile`/`spawn`_with_`shell`_option_`true`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": [
+                      "v22.15.0"
+                    ],
+                    "pr-url": "https://github.com/nodejs/node/pull/57389",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>When an <code>args</code> array is passed to <a href=\"child_process.html#child_processexecfilefile-args-options-callback\"><code>child_process.execFile</code></a> or <a href=\"child_process.html#child_processspawncommand-args-options\"><code>child_process.spawn</code></a> with the option\n<code>{ shell: true }</code>, the values are not escaped, only space-separated, which can lead to shell injection.</p>",
+              "type": "module",
+              "displayName": "DEP0190: Passing `args` to `node:child_process` `execFile`/`spawn` with `shell` option `true`"
+            },
+            {
+              "textRaw": "DEP0191: `repl.builtinModules`",
+              "name": "dep0191:_`repl.builtinmodules`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.16.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57508",
+                    "description": "Documentation-only deprecation with `--pending-deprecation` support."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only (supports <a href=\"cli.html#--pending-deprecation\"><code>--pending-deprecation</code></a>)</p>\n<p>The <code>node:repl</code> module exports a <code>builtinModules</code> property that contains an array\nof built-in modules. This was incomplete and matched the already deprecated\n<code>repl._builtinLibs</code> (<a href=\"#dep0142-repl_builtinlibs\">DEP0142</a>) instead it's better to rely\nupon <code>require('node:module').builtinModules</code>.</p>",
+              "type": "module",
+              "displayName": "DEP0191: `repl.builtinModules`"
+            },
+            {
+              "textRaw": "DEP0192: `require('node:_tls_common')` and `require('node:_tls_wrap')`",
+              "name": "dep0192:_`require('node:_tls_common')`_and_`require('node:_tls_wrap')`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57643",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>The <code>node:_tls_common</code> and <code>node:_tls_wrap</code> modules are deprecated as they should be considered\nan internal nodejs implementation rather than a public facing API, use <code>node:tls</code> instead.</p>",
+              "type": "module",
+              "displayName": "DEP0192: `require('node:_tls_common')` and `require('node:_tls_wrap')`"
+            },
+            {
+              "textRaw": "DEP0193: `require('node:_stream_*')`",
+              "name": "dep0193:_`require('node:_stream_*')`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/58337",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>The <code>node:_stream_duplex</code>, <code>node:_stream_passthrough</code>, <code>node:_stream_readable</code>, <code>node:_stream_transform</code>,\n<code>node:_stream_wrap</code> and <code>node:_stream_writable</code> modules are deprecated as they should be considered\nan internal nodejs implementation rather than a public facing API, use <code>node:stream</code> instead.</p>",
+              "type": "module",
+              "displayName": "DEP0193: `require('node:_stream_*')`"
+            },
+            {
+              "textRaw": "DEP0194: HTTP/2 priority signaling",
+              "name": "dep0194:_http/2_priority_signaling",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/58313",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>The support for priority signaling has been deprecated in the <a href=\"https://datatracker.ietf.org/doc/html/rfc9113#section-5.3.1\">RFC 9113</a>, and\nwill be removed in future versions of Node.js.</p>",
+              "type": "module",
+              "displayName": "DEP0194: HTTP/2 priority signaling"
+            },
+            {
+              "textRaw": "DEP0195: Instantiating `node:http` classes without `new`",
+              "name": "dep0195:_instantiating_`node:http`_classes_without_`new`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/58518",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>Instantiating classes without the <code>new</code> qualifier exported by the <code>node:http</code> module is deprecated.\nIt is recommended to use the <code>new</code> qualifier instead. This applies to all http classes, such as\n<code>OutgoingMessage</code>, <code>IncomingMessage</code>, <code>ServerResponse</code> and <code>ClientRequest</code>.</p>",
+              "type": "module",
+              "displayName": "DEP0195: Instantiating `node:http` classes without `new`"
+            },
+            {
+              "textRaw": "DEP0196: Calling `node:child_process` functions with `options.shell` as an empty string",
+              "name": "dep0196:_calling_`node:child_process`_functions_with_`options.shell`_as_an_empty_string",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/58564",
+                    "description": "Documentation-only deprecation."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only</p>\n<p>Calling the process-spawning functions with <code>{ shell: '' }</code> is almost certainly\nunintentional, and can cause aberrant behavior.</p>\n<p>To make <a href=\"child_process.html#child_processexecfilefile-args-options-callback\"><code>child_process.execFile</code></a> or <a href=\"child_process.html#child_processspawncommand-args-options\"><code>child_process.spawn</code></a> invoke the\ndefault shell, use <code>{ shell: true }</code>. If the intention is not to invoke a shell\n(default behavior), either omit the <code>shell</code> option, or set it to <code>false</code> or a\nnullish value.</p>\n<p>To make <a href=\"child_process.html#child_processexeccommand-options-callback\"><code>child_process.exec</code></a> invoke the default shell, either omit the\n<code>shell</code> option, or set it to a nullish value. If the intention is not to invoke\na shell, use <a href=\"child_process.html#child_processexecfilefile-args-options-callback\"><code>child_process.execFile</code></a> instead.</p>\n<!-- md-lint skip-deprecation DEP0197 -->",
+              "type": "module",
+              "displayName": "DEP0196: Calling `node:child_process` functions with `options.shell` as an empty string"
+            },
+            {
+              "textRaw": "DEP0198: Creating SHAKE-128 and SHAKE-256 digests without an explicit `options.outputLength`",
+              "name": "dep0198:_creating_shake-128_and_shake-256_digests_without_an_explicit_`options.outputlength`",
+              "meta": {
+                "changes": [
+                  {
+                    "version": "v22.18.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/58942",
+                    "description": "Documentation-only deprecation with support for `--pending-deprecation`."
+                  }
+                ]
+              },
+              "desc": "<p>Type: Documentation-only (supports <a href=\"cli.html#--pending-deprecation\"><code>--pending-deprecation</code></a>)</p>\n<p>Creating SHAKE-128 and SHAKE-256 digests without an explicit <code>options.outputLength</code> is deprecated.</p>",
+              "type": "module",
+              "displayName": "DEP0198: Creating SHAKE-128 and SHAKE-256 digests without an explicit `options.outputLength`"
             }
           ],
           "type": "misc",

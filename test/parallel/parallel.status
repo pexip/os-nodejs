@@ -16,17 +16,25 @@ test-worker-arraybuffer-zerofill: PASS, FLAKY
 # https://github.com/nodejs/node/issues/51862
 test-fs-read-stream-concurrent-reads: PASS, FLAKY
 
-# https://github.com/nodejs/node/issues/52630
-test-error-serdes: PASS, FLAKY
-
-# https://github.com/nodejs/node/issues/54006
-test-sqlite: PASS, FLAKY
+# Until V8 provides a better way to check for flag mismatch without
+# making the code cache/snapshot unreproducible, disable the test
+# for a preemptive check now. It should ideally fail more gracefully
+# with a better checking mechanism.
+# https://github.com/nodejs/build/issues/3043
+test-snapshot-incompatible: SKIP
 
 [$system==win32]
 # https://github.com/nodejs/node/issues/54807
 test-runner-watch-mode-complex: PASS, FLAKY
 # https://github.com/nodejs/node/issues/54808
 test-async-context-frame: PASS, FLAKY
+# https://github.com/nodejs/node/issues/54534
+test-runner-run-watch: PASS, FLAKY
+# https://github.com/nodejs/node/issues/56794
+test-fs-cp: PASS, FLAKY
+
+# https://github.com/nodejs/node/issues/56751
+test-without-async-context-frame: PASS, FLAKY
 
 # Windows on x86
 [$system==win32 && $arch==ia32]
@@ -42,6 +50,10 @@ test-performance-function: PASS, FLAKY
 test-esm-loader-hooks-inspect-wait: PASS, FLAKY
 # https://github.com/nodejs/node/issues/54534
 test-runner-run-watch: PASS, FLAKY
+
+[$system==linux && $arch==s390x]
+# https://github.com/nodejs/node/issues/58353
+test-http2-debug: PASS, FLAKY
 
 [$system==linux || $system==win32]
 # https://github.com/nodejs/node/issues/49605
@@ -66,8 +78,6 @@ test-pipe-file-to-http: PASS, FLAKY
 test-debugger-heap-profiler: PASS, FLAKY
 
 [$system==solaris] # Also applies to SmartOS
-# https://github.com/nodejs/node/issues/56726
-test-buffer-tostring-range: SKIP
 # https://github.com/nodejs/node/issues/43457
 test-domain-no-error-handler-abort-on-uncaught-0: PASS, FLAKY
 test-domain-no-error-handler-abort-on-uncaught-1: PASS,FLAKY
@@ -81,14 +91,29 @@ test-domain-no-error-handler-abort-on-uncaught-8: PASS, FLAKY
 test-domain-no-error-handler-abort-on-uncaught-9: PASS, FLAKY
 test-domain-throw-error-then-throw-from-uncaught-exception-handler: PASS, FLAKY
 test-domain-with-abort-on-uncaught-exception: PASS, FLAKY
+# https://github.com/nodejs/node/issues/54346
+test-esm-loader-hooks-inspect-wait: PASS, FLAKY
+test-fs-promises-watch-iterator: SKIP
+# https://github.com/nodejs/node/issues/50050
+test-tick-processor-arguments: SKIP
+# https://github.com/nodejs/node/issues/54534
+test-runner-run-watch: PASS, FLAKY
 
 [$system==freebsd]
+# https://github.com/nodejs/node/issues/54346
+test-esm-loader-hooks-inspect-wait: PASS, FLAKY
+test-fs-promises-watch-iterator: SKIP
+
+[$system==aix]
+# https://github.com/nodejs/node/issues/54346
+test-esm-loader-hooks-inspect-wait: PASS, FLAKY
 
 [$system==ibmi]
 # https://github.com/nodejs/node/pull/30819
 test-child-process-fork-net-server: SKIP
 test-cli-node-options: SKIP
 test-cluster-shared-leak: SKIP
+test-fs-promises-watch-iterator: SKIP
 test-http-writable-true-after-close: SKIP
 test-http2-connect-method: SKIP
 test-net-error-twice: SKIP
@@ -117,6 +142,14 @@ test-tls-client-mindhsize: PASS, FLAKY
 test-tls-write-error: PASS, FLAKY
 # https://github.com/nodejs/node/issues/48047
 test-http-pipeline-flood: SKIP
+# https://github.com/nodejs/node/issues/58582
+test-http-proxy-fetch: PASS, FLAKY
+test-https-proxy-fetch: PASS, FLAKY
+test-inspector-network-fetch:  PASS, FLAKY
+test-fetch:  PASS, FLAKY
+test-without-async-context-frame: PASS, FLAKY
+test-process-cpuUsage: PASS, FLAKY
+
 
 [$asan==on]
 # https://github.com/nodejs/node/issues/39655

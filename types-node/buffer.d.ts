@@ -46,7 +46,7 @@ type _File = typeof globalThis extends { onmessage: any; File: any } ? {} : impo
  * // Creates a Buffer containing the Latin-1 bytes [0x74, 0xe9, 0x73, 0x74].
  * const buf7 = Buffer.from('tést', 'latin1');
  * ```
- * @see [source](https://github.com/nodejs/node/blob/v20.13.1/lib/buffer.js)
+ * @see [source](https://github.com/nodejs/node/blob/v22.x/lib/buffer.js)
  */
 declare module "buffer" {
     import { BinaryLike } from "node:crypto";
@@ -118,7 +118,6 @@ declare module "buffer" {
      * Resolves a `'blob:nodedata:...'` an associated `Blob` object registered using
      * a prior call to `URL.createObjectURL()`.
      * @since v16.7.0
-     * @experimental
      * @param id A `'blob:nodedata:...` URL string returned by a prior call to `URL.createObjectURL()`.
      */
     export function resolveObjectURL(id: string): Blob | undefined;
@@ -129,7 +128,7 @@ declare module "buffer" {
     export interface BlobOptions {
         /**
          * One of either `'transparent'` or `'native'`. When set to `'native'`, line endings in string source parts
-         * will be converted to the platform native line-ending as specified by `import { EOL } from 'node:node:os'`.
+         * will be converted to the platform native line-ending as specified by `import { EOL } from 'node:os'`.
          */
         endings?: "transparent" | "native";
         /**
@@ -179,7 +178,6 @@ declare module "buffer" {
          *   console.log(bytes); // Outputs: Uint8Array(5) [ 104, 101, 108, 108, 111 ]
          * });
          * ```
-         * @since v20.16.0
          */
         bytes(): Promise<Uint8Array>;
         /**
@@ -206,7 +204,7 @@ declare module "buffer" {
     export interface FileOptions {
         /**
          * One of either `'transparent'` or `'native'`. When set to `'native'`, line endings in string source parts will be
-         * converted to the platform native line-ending as specified by `import { EOL } from 'node:node:os'`.
+         * converted to the platform native line-ending as specified by `import { EOL } from 'node:os'`.
          */
         endings?: "native" | "transparent";
         /** The File content-type. */
@@ -1703,6 +1701,8 @@ declare module "buffer" {
              * @return A reference to `buf`.
              */
             fill(value: string | Uint8Array | number, offset?: number, end?: number, encoding?: BufferEncoding): this;
+            fill(value: string | Uint8Array | number, offset: number, encoding: BufferEncoding): this;
+            fill(value: string | Uint8Array | number, encoding: BufferEncoding): this;
             /**
              * If `value` is:
              *
@@ -1772,6 +1772,7 @@ declare module "buffer" {
              * @return The index of the first occurrence of `value` in `buf`, or `-1` if `buf` does not contain `value`.
              */
             indexOf(value: string | number | Uint8Array, byteOffset?: number, encoding?: BufferEncoding): number;
+            indexOf(value: string | number | Uint8Array, encoding: BufferEncoding): number;
             /**
              * Identical to `buf.indexOf()`, except the last occurrence of `value` is found
              * rather than the first occurrence.
@@ -1840,6 +1841,7 @@ declare module "buffer" {
              * @return The index of the last occurrence of `value` in `buf`, or `-1` if `buf` does not contain `value`.
              */
             lastIndexOf(value: string | number | Uint8Array, byteOffset?: number, encoding?: BufferEncoding): number;
+            lastIndexOf(value: string | number | Uint8Array, encoding: BufferEncoding): number;
             /**
              * Equivalent to `buf.indexOf() !== -1`.
              *
@@ -1870,6 +1872,7 @@ declare module "buffer" {
              * @return `true` if `value` was found in `buf`, `false` otherwise.
              */
             includes(value: string | number | Buffer, byteOffset?: number, encoding?: BufferEncoding): boolean;
+            includes(value: string | number | Buffer, encoding: BufferEncoding): boolean;
         }
         var Buffer: BufferConstructor;
         /**
@@ -1906,7 +1909,7 @@ declare module "buffer" {
         function btoa(data: string): string;
         interface Blob extends _Blob {}
         /**
-         * `Blob` class is a global reference for `import { Blob } from 'node:node:buffer'`
+         * `Blob` class is a global reference for `import { Blob } from 'node:buffer'`
          * https://nodejs.org/api/buffer.html#class-blob
          * @since v18.0.0
          */
@@ -1914,7 +1917,7 @@ declare module "buffer" {
             : typeof import("buffer").Blob;
         interface File extends _File {}
         /**
-         * `File` class is a global reference for `import { File } from 'node:node:buffer'`
+         * `File` class is a global reference for `import { File } from 'node:buffer'`
          * https://nodejs.org/api/buffer.html#class-file
          * @since v20.0.0
          */

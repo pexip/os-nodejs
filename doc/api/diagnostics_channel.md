@@ -236,6 +236,7 @@ diagnostics_channel.unsubscribe('my-channel', onMessage);
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
 
 > Stability: 1 - Experimental
@@ -466,6 +467,7 @@ channel.unsubscribe(onMessage);
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
 
 > Stability: 1 - Experimental
@@ -510,6 +512,7 @@ channel.bindStore(store, (data) => {
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
 
 > Stability: 1 - Experimental
@@ -549,6 +552,7 @@ channel.unbindStore(store);
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
 
 > Stability: 1 - Experimental
@@ -610,6 +614,7 @@ channel.runStores({ some: 'message' }, () => {
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
 
 > Stability: 1 - Experimental
@@ -627,9 +632,8 @@ dynamically.
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
-
-> Stability: 1 - Experimental
 
 * `subscribers` {Object} Set of [TracingChannel Channels][] subscribers
   * `start` {Function} The [`start` event][] subscriber
@@ -695,9 +699,8 @@ channels.subscribe({
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
-
-> Stability: 1 - Experimental
 
 * `subscribers` {Object} Set of [TracingChannel Channels][] subscribers
   * `start` {Function} The [`start` event][] subscriber
@@ -765,9 +768,8 @@ channels.unsubscribe({
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
-
-> Stability: 1 - Experimental
 
 * `fn` {Function} Function to wrap a trace around
 * `context` {Object} Shared object to correlate events through
@@ -815,9 +817,8 @@ channels.traceSync(() => {
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
-
-> Stability: 1 - Experimental
 
 * `fn` {Function} Promise-returning function to wrap a trace around
 * `context` {Object} Shared object to correlate trace events through
@@ -868,9 +869,8 @@ channels.tracePromise(async () => {
 <!-- YAML
 added:
  - v19.9.0
+ - v18.19.0
 -->
-
-> Stability: 1 - Experimental
 
 * `fn` {Function} callback using function to wrap a trace around
 * `position` {number} Zero-indexed argument position of expected callback
@@ -973,8 +973,6 @@ channels.asyncStart.bindStore(myStore, (data) => {
 added:
  - v22.0.0
 -->
-
-> Stability: 1 - Experimental
 
 * Returns: {boolean} `true` if any of the individual channels has a subscriber,
   `false` if not.
@@ -1104,13 +1102,55 @@ for the sync error and one for the async error.
 
 ### Built-in Channels
 
+#### Console
+
 > Stability: 1 - Experimental
 
-While the diagnostics\_channel API is now considered stable, the built-in
-channels currently available are not. Each channel must be declared stable
-independently.
+`console.log`
+
+* `args` {any\[]}
+
+Emitted when `console.log()` is called. Receives and array of the arguments
+passed to `console.log()`.
+
+`console.info`
+
+* `args` {any\[]}
+
+Emitted when `console.info()` is called. Receives and array of the arguments
+passed to `console.info()`.
+
+`console.debug`
+
+* `args` {any\[]}
+
+Emitted when `console.debug()` is called. Receives and array of the arguments
+passed to `console.debug()`.
+
+`console.warn`
+
+* `args` {any\[]}
+
+Emitted when `console.warn()` is called. Receives and array of the arguments
+passed to `console.warn()`.
+
+`console.error`
+
+* `args` {any\[]}
+
+Emitted when `console.error()` is called. Receives and array of the arguments
+passed to `console.error()`.
 
 #### HTTP
+
+> Stability: 1 - Experimental
+
+`http.client.request.created`
+
+* `request` {http.ClientRequest}
+
+Emitted when client creates a request object.
+Unlike `http.client.request.start`, this event is emitted before the request has been sent.
 
 `http.client.request.start`
 
@@ -1141,6 +1181,14 @@ Emitted when client receives a response.
 
 Emitted when server receives a request.
 
+`http.server.response.created`
+
+* `request` {http.IncomingMessage}
+* `response` {http.ServerResponse}
+
+Emitted when server creates a response.
+The event is emitted before the response is sent.
+
 `http.server.response.finish`
 
 * `request` {http.IncomingMessage}
@@ -1150,13 +1198,145 @@ Emitted when server receives a request.
 
 Emitted when server sends a response.
 
+#### HTTP/2
+
+> Stability: 1 - Experimental
+
+`http2.client.stream.created`
+
+* `stream` {ClientHttp2Stream}
+* `headers` {HTTP/2 Headers Object}
+
+Emitted when a stream is created on the client.
+
+`http2.client.stream.start`
+
+* `stream` {ClientHttp2Stream}
+* `headers` {HTTP/2 Headers Object}
+
+Emitted when a stream is started on the client.
+
+`http2.client.stream.error`
+
+* `stream` {ClientHttp2Stream}
+* `error` {Error}
+
+Emitted when an error occurs during the processing of a stream on the client.
+
+`http2.client.stream.finish`
+
+* `stream` {ClientHttp2Stream}
+* `headers` {HTTP/2 Headers Object}
+* `flags` {number}
+
+Emitted when a stream is received on the client.
+
+`http2.client.stream.close`
+
+* `stream` {ClientHttp2Stream}
+
+Emitted when a stream is closed on the client. The HTTP/2 error code used when
+closing the stream can be retrieved using the `stream.rstCode` property.
+
+`http2.server.stream.created`
+
+* `stream` {ServerHttp2Stream}
+* `headers` {HTTP/2 Headers Object}
+
+Emitted when a stream is created on the server.
+
+`http2.server.stream.start`
+
+* `stream` {ServerHttp2Stream}
+* `headers` {HTTP/2 Headers Object}
+
+Emitted when a stream is started on the server.
+
+`http2.server.stream.error`
+
+* `stream` {ServerHttp2Stream}
+* `error` {Error}
+
+Emitted when an error occurs during the processing of a stream on the server.
+
+`http2.server.stream.finish`
+
+* `stream` {ServerHttp2Stream}
+* `headers` {HTTP/2 Headers Object}
+* `flags` {number}
+
+Emitted when a stream is sent on the server.
+
+`http2.server.stream.close`
+
+* `stream` {ServerHttp2Stream}
+
+Emitted when a stream is closed on the server. The HTTP/2 error code used when
+closing the stream can be retrieved using the `stream.rstCode` property.
+
+#### Modules
+
+> Stability: 1 - Experimental
+
+`module.require.start`
+
+* `event` {Object} containing the following properties
+  * `id` - Argument passed to `require()`. Module name.
+  * `parentFilename` - Name of the module that attempted to require(id).
+
+Emitted when `require()` is executed. See [`start` event][].
+
+`module.require.end`
+
+* `event` {Object} containing the following properties
+  * `id` - Argument passed to `require()`. Module name.
+  * `parentFilename` - Name of the module that attempted to require(id).
+
+Emitted when a `require()` call returns. See [`end` event][].
+
+`module.require.error`
+
+* `event` {Object} containing the following properties
+  * `id` - Argument passed to `require()`. Module name.
+  * `parentFilename` - Name of the module that attempted to require(id).
+* `error` {Error}
+
+Emitted when a `require()` throws an error. See [`error` event][].
+
+`module.import.asyncStart`
+
+* `event` {Object} containing the following properties
+  * `id` - Argument passed to `import()`. Module name.
+  * `parentURL` - URL object of the module that attempted to import(id).
+
+Emitted when `import()` is invoked. See [`asyncStart` event][].
+
+`module.import.asyncEnd`
+
+* `event` {Object} containing the following properties
+  * `id` - Argument passed to `import()`. Module name.
+  * `parentURL` - URL object of the module that attempted to import(id).
+
+Emitted when `import()` has completed. See [`asyncEnd` event][].
+
+`module.import.error`
+
+* `event` {Object} containing the following properties
+  * `id` - Argument passed to `import()`. Module name.
+  * `parentURL` - URL object of the module that attempted to import(id).
+* `error` {Error}
+
+Emitted when a `import()` throws an error. See [`error` event][].
+
 #### NET
+
+> Stability: 1 - Experimental
 
 `net.client.socket`
 
-* `socket` {net.Socket}
+* `socket` {net.Socket|tls.TLSSocket}
 
-Emitted when a new TCP or pipe client socket is created.
+Emitted when a new TCP or pipe client socket connection is created.
 
 `net.server.socket`
 
@@ -1186,6 +1366,8 @@ Emitted when [`net.Server.listen()`][] is returning an error.
 
 #### UDP
 
+> Stability: 1 - Experimental
+
 `udp.socket`
 
 * `socket` {dgram.Socket}
@@ -1193,6 +1375,8 @@ Emitted when [`net.Server.listen()`][] is returning an error.
 Emitted when a new UDP socket is created.
 
 #### Process
+
+> Stability: 1 - Experimental
 
 <!-- YAML
 added: v16.18.0
@@ -1204,7 +1388,17 @@ added: v16.18.0
 
 Emitted when a new process is created.
 
+`execve`
+
+* `execPath` {string}
+* `args` {string\[]}
+* `env` {string\[]}
+
+Emitted when [`process.execve()`][] is invoked.
+
 #### Worker Thread
+
+> Stability: 1 - Experimental
 
 <!-- YAML
 added: v16.18.0
@@ -1233,5 +1427,6 @@ Emitted when a new thread is created.
 [`end` event]: #endevent
 [`error` event]: #errorevent
 [`net.Server.listen()`]: net.md#serverlisten
+[`process.execve()`]: process.md#processexecvefile-args-env
 [`start` event]: #startevent
 [context loss]: async_context.md#troubleshooting-context-loss

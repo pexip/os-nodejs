@@ -48,7 +48,7 @@ By default, pipes for `stdin`, `stdout`, and `stderr` are established between
 the parent Node.js process and the spawned subprocess. These pipes have
 limited (and platform-specific) capacity. If the subprocess writes to
 stdout in excess of that limit without the output being captured, the
-subprocess blocks waiting for the pipe buffer to accept more data. This is
+subprocess blocks, waiting for the pipe buffer to accept more data. This is
 identical to the behavior of pipes in the shell. Use the `{ stdio: 'ignore' }`
 option if the output will not be consumed.
 
@@ -138,7 +138,7 @@ exec('my.bat', (err, stdout, stderr) => {
 });
 
 // Script with spaces in the filename:
-const bat = spawn('"my script.cmd"', ['a', 'b'], { shell: true });
+const bat = spawn('"my script.cmd" a b', { shell: true });
 // or:
 exec('"my script.cmd" a b', (err, stdout, stderr) => {
   // ...
@@ -158,7 +158,7 @@ exec('my.bat', (err, stdout, stderr) => {
 });
 
 // Script with spaces in the filename:
-const bat = spawn('"my script.cmd"', ['a', 'b'], { shell: true });
+const bat = spawn('"my script.cmd" a b', { shell: true });
 // or:
 exec('"my script.cmd" a b', (err, stdout, stderr) => {
   // ...
@@ -348,6 +348,10 @@ controller.abort();
 <!-- YAML
 added: v0.1.91
 changes:
+  - version:
+      - v22.15.0
+    pr-url: https://github.com/nodejs/node/pull/57389
+    description: Passing `args` when `shell` is set to `true` is deprecated.
   - version:
       - v16.4.0
       - v14.18.0
@@ -641,6 +645,10 @@ if (process.argv[2] === 'child') {
 <!-- YAML
 added: v0.1.90
 changes:
+  - version:
+      - v22.15.0
+    pr-url: https://github.com/nodejs/node/pull/57389
+    description: Passing `args` when `shell` is set to `true` is deprecated.
   - version:
       - v16.4.0
       - v14.18.0
@@ -1438,14 +1446,21 @@ instances of `ChildProcess`.
 added: v0.7.7
 -->
 
-* `code` {number} The exit code if the child process exited on its own.
-* `signal` {string} The signal by which the child process was terminated.
+* `code` {number} The exit code if the child process exited on its own, or
+  `null` if the child process terminated due to a signal.
+* `signal` {string} The signal by which the child process was terminated, or
+  `null` if the child process did not terminated due to a signal.
 
 The `'close'` event is emitted after a process has ended _and_ the stdio
 streams of a child process have been closed. This is distinct from the
 [`'exit'`][] event, since multiple processes might share the same stdio
 streams. The `'close'` event will always emit after [`'exit'`][] was
 already emitted, or [`'error'`][] if the child process failed to spawn.
+
+If the process exited, `code` is the final exit code of the process, otherwise
+`null`. If the process terminated due to receipt of a signal, `signal` is the
+string name of the signal, otherwise `null`. One of the two will always be
+non-`null`.
 
 ```cjs
 const { spawn } = require('node:child_process');
@@ -1516,8 +1531,10 @@ See also [`subprocess.kill()`][] and [`subprocess.send()`][].
 added: v0.1.90
 -->
 
-* `code` {number} The exit code if the child process exited on its own.
-* `signal` {string} The signal by which the child process was terminated.
+* `code` {number} The exit code if the child process exited on its own, or
+  `null` if the child process terminated due to a signal.
+* `signal` {string} The signal by which the child process was terminated, or
+  `null` if the child process did not terminated due to a signal.
 
 The `'exit'` event is emitted after the child process ends. If the process
 exited, `code` is the final exit code of the process, otherwise `null`. If the
@@ -1751,7 +1768,9 @@ setTimeout(() => {
 ### `subprocess[Symbol.dispose]()`
 
 <!-- YAML
-added: v20.5.0
+added:
+ - v20.5.0
+ - v18.18.0
 -->
 
 > Stability: 1 - Experimental
