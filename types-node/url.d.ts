@@ -5,7 +5,7 @@
  * ```js
  * import url from 'node:url';
  * ```
- * @see [source](https://github.com/nodejs/node/blob/v20.13.1/lib/url.js)
+ * @see [source](https://github.com/nodejs/node/blob/v22.x/lib/url.js)
  */
 declare module "url" {
     import { Blob as NodeBlob } from "node:buffer";
@@ -50,10 +50,18 @@ declare module "url" {
         /**
          * `true` if the `path` should be return as a windows filepath, `false` for posix, and `undefined` for the system default.
          * @default undefined
+         * @since v22.1.0
          */
         windows?: boolean | undefined;
     }
-    interface PathToFileUrlOptions extends FileUrlToPathOptions {}
+    interface PathToFileUrlOptions {
+        /**
+         * `true` if the `path` should be return as a windows filepath, `false` for posix, and `undefined` for the system default.
+         * @default undefined
+         * @since v22.1.0
+         */
+        windows?: boolean | undefined;
+    }
     /**
      * The `url.parse()` method takes a URL string, parses it, and returns a URL
      * object.
@@ -412,14 +420,12 @@ declare module "url" {
          * Threads, `Blob` objects registered within one Worker will not be available
          * to other workers or the main thread.
          * @since v16.7.0
-         * @experimental
          */
         static createObjectURL(blob: NodeBlob): string;
         /**
          * Removes the stored `Blob` identified by the given ID. Attempting to revoke a
          * ID that isn't registered will silently fail.
          * @since v16.7.0
-         * @experimental
          * @param id A `'blob:nodedata:...` URL string returned by a prior call to `URL.createObjectURL()`.
          */
         static revokeObjectURL(id: string): void;
@@ -437,6 +443,15 @@ declare module "url" {
          * @param base The base URL to resolve against if the `input` is not absolute. If `base` is not a string, it is `converted to a string` first.
          */
         static canParse(input: string, base?: string): boolean;
+        /**
+         * Parses a string as a URL. If `base` is provided, it will be used as the base URL for the purpose of resolving non-absolute `input` URLs.
+         * Returns `null` if `input` is not a valid.
+         * @param input The absolute or relative input URL to parse. If `input` is relative, then `base` is required. If `input` is absolute, the `base` is ignored. If `input` is not a string, it is
+         * `converted to a string` first.
+         * @param base The base URL to resolve against if the `input` is not absolute. If `base` is not a string, it is `converted to a string` first.
+         * @since v22.1.0
+         */
+        static parse(input: string, base?: string): URL | null;
         constructor(input: string | { toString: () => string }, base?: string | URL);
         /**
          * Gets and sets the fragment portion of the URL.
@@ -811,7 +826,7 @@ declare module "url" {
          * Returns an ES6 `Iterator` over each of the name-value pairs in the query.
          * Each item of the iterator is a JavaScript `Array`. The first item of the `Array` is the `name`, the second item of the `Array` is the `value`.
          *
-         * Alias for `urlSearchParams[@@iterator]()`.
+         * Alias for `urlSearchParams[Symbol.iterator]()`.
          */
         entries(): URLSearchParamsIterator<[string, string]>;
         /**
@@ -929,7 +944,7 @@ declare module "url" {
             URLSearchParams: typeof _URLSearchParams;
         }
         /**
-         * `URL` class is a global reference for `import { URL } from 'node:url'`
+         * `URL` class is a global reference for `import { URL } from 'url'`
          * https://nodejs.org/api/url.html#the-whatwg-url-api
          * @since v10.0.0
          */

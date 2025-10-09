@@ -1,5 +1,7 @@
 build/more_shareable_builtins.patch
+build/system_builtins.patch
 build/builtins_module_paths_not_shareable.patch
+build/allow_amaro_external_builtin.patch
 build/doc.patch
 build/flag_atomic.patch
 build/test_ci.patch
@@ -12,10 +14,7 @@ dfsg/privacy_breach.patch
 build/skip-buffer-nan-internal-check.patch
 armel/configure.patch
 build/doc_template_home.html
-build/test_process_versions.patch
 arm64/stacksize.patch
 build/ada.patch
 deps/v8-no-static-zlib.patch
-build/no-deps.patch
 pexip_disable_openssl_quic.patch
-pexip_no_quic.patch

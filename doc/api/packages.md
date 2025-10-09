@@ -123,7 +123,7 @@ added:
   - v20.10.0
 changes:
   - version:
-    - v20.19.0
+    - v22.7.0
     pr-url: https://github.com/nodejs/node/pull/53619
     description: Syntax detection is enabled by default.
 -->
@@ -171,7 +171,7 @@ There is the CommonJS module loader:
   `process.dlopen()`.
 * It treats all files that lack `.json` or `.node` extensions as JavaScript
   text files.
-* It can only be used to [load ECMASCript modules from CommonJS modules][] if
+* It can only be used to [load ECMAScript modules from CommonJS modules][] if
   the module graph is synchronous (that contains no top-level `await`).
   When used to load a JavaScript text file that is not an ECMAScript module,
   the file will be loaded as a CommonJS module.
@@ -185,7 +185,7 @@ There is the ECMAScript module loader:
   `'./startup/index.js'`) must be fully specified.
 * It does no extension searching. A file extension must be provided
   when the specifier is a relative or absolute file URL.
-* It can load JSON modules, but an import assertion is required.
+* It can load JSON modules, but an import type attribute is required.
 * It accepts only `.js`, `.mjs`, and `.cjs` extensions for JavaScript text
   files.
 * It can be used to load JavaScript CommonJS modules. Such modules
@@ -269,21 +269,6 @@ echo "import { sep } from 'node:path'; console.log(sep);" | node --input-type=mo
 For completeness there is also `--input-type=commonjs`, for explicitly running
 string input as CommonJS. This is the default behavior if `--input-type` is
 unspecified.
-
-## Determining package manager
-
-> Stability: 1 - Experimental
-
-While all Node.js projects are expected to be installable by all package
-managers once published, their development teams are often required to use one
-specific package manager. To make this process easier, Node.js ships with a
-tool called [Corepack][] that aims to make all package managers transparently
-available in your environment - provided you have Node.js installed.
-
-By default Corepack won't enforce any specific package manager and will use
-the generic "Last Known Good" versions associated with each Node.js release,
-but you can improve this experience by setting the [`"packageManager"`][] field
-in your project's `package.json`.
 
 ## Package entry points
 
@@ -458,6 +443,59 @@ enabling the import map to utilize a [packages folder mapping][] to map multiple
 subpaths where possible instead of a separate map entry per package subpath
 export. This also mirrors the requirement of using [the full specifier path][]
 in relative and absolute import specifiers.
+
+#### Path Rules and Validation for Export Targets
+
+When defining paths as targets in the [`"exports"`][] field, Node.js enforces
+several rules to ensure security, predictability, and proper encapsulation.
+Understanding these rules is crucial for authors publishing packages.
+
+##### Targets must be relative URLs
+
+All target paths in the [`"exports"`][] map (the values associated with export
+keys) must be relative URL strings starting with `./`.
+
+```json
+// package.json
+{
+  "name": "my-package",
+  "exports": {
+    ".": "./dist/main.js",          // Correct
+    "./feature": "./lib/feature.js", // Correct
+    // "./origin-relative": "/dist/main.js", // Incorrect: Must start with ./
+    // "./absolute": "file:///dev/null", // Incorrect: Must start with ./
+    // "./outside": "../common/util.js" // Incorrect: Must start with ./
+  }
+}
+```
+
+Reasons for this behavior include:
+
+* **Security:** Prevents exporting arbitrary files from outside the
+  package's own directory.
+* **Encapsulation:** Ensures all exported paths are resolved relative to
+  the package root, making the package self-contained.
+
+##### No path traversal or invalid segments
+
+Export targets must not resolve to a location outside the package's root
+directory. Additionally, path segments like `.` (single dot), `..` (double dot),
+or `node_modules` (and their URL-encoded equivalents) are generally disallowed
+within the `target` string after the initial `./` and in any `subpath` part
+substituted into a target pattern.
+
+```json
+// package.json
+{
+  "name": "my-package",
+  "exports": {
+    // ".": "./dist/../../elsewhere/file.js", // Invalid: path traversal
+    // ".": "././dist/main.js",             // Invalid: contains "." segment
+    // ".": "./dist/../dist/main.js",       // Invalid: contains ".." segment
+    // "./utils/./helper.js": "./utils/helper.js" // Key has invalid segment
+  }
+}
+```
 
 ### Exports sugar
 
@@ -916,8 +954,6 @@ The following fields in `package.json` files are used in Node.js:
   by package managers as the name of the package.
 * [`"main"`][] - The default module when loading the package, if exports is not
   specified, and in versions of Node.js prior to the introduction of exports.
-* [`"packageManager"`][] - The package manager recommended when contributing to
-  the package. Leveraged by the [Corepack][] shims.
 * [`"type"`][] - The package type determining whether to load `.js` files as
   CommonJS or ES modules.
 * [`"exports"`][] - Package exports and conditional exports. When present,
@@ -981,33 +1017,6 @@ via `require()`](modules.md#folders-as-modules).
 // This resolves to ./path/to/directory/index.js.
 require('./path/to/directory');
 ```
-
-### `"packageManager"`
-
-<!-- YAML
-added:
-  - v16.9.0
-  - v14.19.0
--->
-
-> Stability: 1 - Experimental
-
-* Type: {string}
-
-```json
-{
-  "packageManager": "<package manager name>@<version>"
-}
-```
-
-The `"packageManager"` field defines which package manager is expected to be
-used when working on the current project. It can be set to any of the
-[supported package managers][], and will ensure that your teams use the exact
-same package manager versions without having to install anything else other than
-Node.js.
-
-This field is currently experimental and needs to be opted-in; check the
-[Corepack][] page for details about the procedure.
 
 ### `"type"`
 
@@ -1148,7 +1157,6 @@ This field defines [subpath imports][] for the current package.
 
 [CommonJS]: modules.md
 [Conditional exports]: #conditional-exports
-[Corepack]: corepack.md
 [ES module]: esm.md
 [ES modules]: esm.md
 [Node.js documentation for this section]: https://github.com/nodejs/node/blob/HEAD/doc/api/packages.md#conditions-definitions
@@ -1159,7 +1167,6 @@ This field defines [subpath imports][] for the current package.
 [`"imports"`]: #imports
 [`"main"`]: #main
 [`"name"`]: #name
-[`"packageManager"`]: #packagemanager
 [`"type"`]: #type
 [`--conditions` / `-C` flag]: #resolving-user-conditions
 [`--experimental-default-type`]: cli.md#--experimental-default-typetype
@@ -1169,13 +1176,12 @@ This field defines [subpath imports][] for the current package.
 [entry points]: #package-entry-points
 [folders as modules]: modules.md#folders-as-modules
 [import maps]: https://github.com/WICG/import-maps
-[load ECMASCript modules from CommonJS modules]: modules.md#loading-ecmascript-modules-using-require
+[load ECMAScript modules from CommonJS modules]: modules.md#loading-ecmascript-modules-using-require
 [loader hooks]: esm.md#loaders
 [packages folder mapping]: https://github.com/WICG/import-maps#packages-via-trailing-slashes
 [self-reference]: #self-referencing-a-package-using-its-name
 [subpath exports]: #subpath-exports
 [subpath imports]: #subpath-imports
-[supported package managers]: corepack.md#supported-package-managers
 [the dual CommonJS/ES module packages section]: #dual-commonjses-module-packages
 [the full specifier path]: esm.md#mandatory-file-extensions
 [the package examples repository]: https://github.com/nodejs/package-examples

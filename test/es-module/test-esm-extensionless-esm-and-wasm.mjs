@@ -1,10 +1,12 @@
 // Flags: --experimental-wasm-modules
-import { mustNotCall, spawnPromisified } from '../common/index.mjs';
+import { spawnPromisified } from '../common/index.mjs';
 import * as fixtures from '../common/fixtures.mjs';
 import { describe, it } from 'node:test';
-import { match, ok, strictEqual } from 'node:assert';
+import { match, strictEqual } from 'node:assert';
 
-describe('extensionless ES modules within a "type": "module" package scope', { concurrency: true }, () => {
+describe('extensionless ES modules within a "type": "module" package scope', {
+  concurrency: !process.env.TEST_PARALLEL,
+}, () => {
   it('should run as the entry point', async () => {
     const { code, signal, stdout, stderr } = await spawnPromisified(process.execPath, [
       fixtures.path('es-modules/package-type-module/noext-esm'),
@@ -29,7 +31,9 @@ describe('extensionless ES modules within a "type": "module" package scope', { c
     strictEqual(defaultExport, 'module');
   });
 });
-describe('extensionless Wasm modules within a "type": "module" package scope', { concurrency: true }, () => {
+describe('extensionless Wasm modules within a "type": "module" package scope', {
+  concurrency: !process.env.TEST_PARALLEL,
+}, () => {
   it('should run as the entry point', async () => {
     const { code, signal, stdout, stderr } = await spawnPromisified(process.execPath, [
       '--experimental-wasm-modules',
@@ -72,7 +76,7 @@ describe('extensionless ES modules within no package scope', { concurrency: !pro
   });
 });
 
-describe('extensionless Wasm within no package scope', { concurrency: true }, () => {
+describe('extensionless Wasm within no package scope', { concurrency: !process.env.TEST_PARALLEL }, () => {
   // This succeeds with `--experimental-default-type=module`
   it('should error as the entry point', async () => {
     const { code, signal, stdout, stderr } = await spawnPromisified(process.execPath, [
@@ -87,13 +91,7 @@ describe('extensionless Wasm within no package scope', { concurrency: true }, ()
     strictEqual(signal, null);
   });
 
-  // This succeeds with `--experimental-default-type=module`
-  it('should error on import', async () => {
-    try {
-      await import(fixtures.fileURL('es-modules/noext-wasm'));
-      mustNotCall();
-    } catch (err) {
-      ok(err instanceof SyntaxError);
-    }
+  it('should run on import', async () => {
+    await import(fixtures.fileURL('es-modules/noext-wasm'));
   });
 });

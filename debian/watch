@@ -3,7 +3,7 @@ opts=downloadurlmangle=s/.*v(.*)\//https\:\/\/nodejs\.org\/dist\/v$1\/node\-v$1\
 filenamemangle=s/.*v(.*)\/$/nodejs-$1\.tar\.xz/,\
 dversionmangle=auto,\
 repacksuffix=+dfsg \
-https://nodejs.org/dist v(20\.\d+\.\d+)/ group
+https://nodejs.org/dist v(22\.\d+\.\d+)/ group
 
 # IMPORTANT: do NOT upgrade @types/node when target is debian/stable,
 # it will break some debian packages, and some users packages too.
@@ -11,7 +11,7 @@ https://nodejs.org/dist v(20\.\d+\.\d+)/ group
 # It is not recommended use npmregistry. Please investigate more.
 # Take a look at https://wiki.debian.org/debian/watch/
 opts="searchmode=plain,ctype=nodejs,component=types-node,pgpmode=none" \
- https://registry.npmjs.org/@types/node https://registry.npmjs.org/@types/node/-/node-(20\.\d+\.\d+)@ARCHIVE_EXT@ ignore
+ https://registry.npmjs.org/@types/node https://registry.npmjs.org/@types/node/-/node-(22\.\d+\.\d+)@ARCHIVE_EXT@ checksum
 
 opts="component=ada,filenamemangle=s%(?:.*?)?v?@ANY_VERSION@(@ARCHIVE_EXT@)%ada-$1$2%" \
  https://github.com/ada-url/ada/tags?after=v3.0.0 \

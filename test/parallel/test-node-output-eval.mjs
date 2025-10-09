@@ -1,6 +1,7 @@
 import '../common/index.mjs';
 import * as fixtures from '../common/fixtures.mjs';
 import * as snapshot from '../common/assertSnapshot.js';
+import { basename } from 'node:path';
 import { describe, it } from 'node:test';
 
 describe('eval output', { concurrency: true }, () => {
@@ -10,20 +11,33 @@ describe('eval output', { concurrency: true }, () => {
   }
 
   const defaultTransform = snapshot.transform(
-    removeStackTraces,
     normalize,
     snapshot.replaceWindowsLineEndings,
     snapshot.replaceWindowsPaths,
-    snapshot.replaceNodeVersion
+    snapshot.replaceNodeVersion,
+    removeStackTraces,
+    filterEmptyLines,
+    generalizeProcessName,
   );
 
   function removeStackTraces(output) {
     return output.replaceAll(/^ *at .+$/gm, '');
   }
 
+  function filterEmptyLines(output) {
+    return output.replaceAll(/^\s*$/gm, '');
+  }
+
+  function generalizeProcessName(output) {
+    const baseName = basename(process.argv0 || 'node', '.exe');
+    return output.replaceAll(`${baseName} --`, '* --');
+  }
+
   const tests = [
     { name: 'eval/eval_messages.js' },
     { name: 'eval/stdin_messages.js' },
+    { name: 'eval/stdin_typescript.js' },
+    { name: 'eval/eval_typescript.js' },
   ];
 
   for (const { name } of tests) {

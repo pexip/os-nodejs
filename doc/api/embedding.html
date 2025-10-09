@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v20.19.2">
-  <title>C++ embedder API | Node.js v20.19.2 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v22.18.0">
+  <title>C++ embedder API | Node.js v22.18.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
@@ -51,7 +51,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -71,6 +70,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -83,6 +83,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -110,7 +111,7 @@
     <div id="column1" data-id="embedding" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v20.19.2 documentation</h1>
+          <h1>Node.js v22.18.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -125,7 +126,7 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v20.19.2</li>
+            <li class="pinned-header">Node.js v22.18.0</li>
             
     <li class="picker-header">
       <a href="#toc-picker" aria-controls="toc-picker">
@@ -176,7 +177,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -196,6 +196,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -208,6 +209,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -307,6 +309,7 @@ to create an application from scratch that will perform the equivalent of
 <code>node -e &#x3C;code></code>, i.e. that will take a piece of JavaScript and run it in
 a Node.js-specific environment.</p>
 <p>The full code can be found <a href="https://github.com/nodejs/node/blob/HEAD/test/embedding/embedtest.cc">in the Node.js source tree</a>.</p>
+<div>
 <h4>Setting up a per-process state<span><a class="mark" href="#setting-up-a-per-process-state" id="setting-up-a-per-process-state">#</a></span><a aria-hidden="true" class="legacy" id="embedding_setting_up_a_per_process_state"></a></h4>
 <p>Node.js requires some per-process state management in order to run:</p>
 <ul>
@@ -351,6 +354,7 @@ the <code>node</code> and <code>v8</code> C++ namespaces, respectively.</p>
   node::<span class="hljs-built_in">TearDownOncePerProcess</span>();
   <span class="hljs-keyword">return</span> ret;
 }</code> <button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Setting up a per-instance state<span><a class="mark" href="#setting-up-a-per-instance-state" id="setting-up-a-per-instance-state">#</a></span><a aria-hidden="true" class="legacy" id="embedding_setting_up_a_per_instance_state"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -439,7 +443,7 @@ and registers it with the platform automatically.</p>
   }
 
   <span class="hljs-keyword">return</span> exit_code;
-}</code> <button class="copy-button">copy</button></pre></section>
+}</code> <button class="copy-button">copy</button></pre></div></section>
         <!-- API END -->
       </div>
     </div>

@@ -3,6 +3,7 @@ const common = require('../common');
 if (!common.hasCrypto)
   common.skip('missing crypto');
 
+const { hasOpenSSL3 } = require('../common/crypto');
 const assert = require('assert');
 const util = require('util');
 const crypto = require('crypto');
@@ -149,7 +150,7 @@ MCowBQYDK2VuAyEA6pwGRbadNQAI/tYN8+/p/0/hbsdHfOEGr1ADiLVk/Gc=
   const data = crypto.randomBytes(32);
   const signature = crypto.randomBytes(16);
 
-  const expected = common.hasOpenSSL3 ?
+  const expected = hasOpenSSL3 ?
     /operation not supported for this keytype/ : /no default digest/;
 
   crypto.verify(undefined, data, untrustedKey, signature, common.mustCall((err) => {

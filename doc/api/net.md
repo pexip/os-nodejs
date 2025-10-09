@@ -170,6 +170,15 @@ added:
 
 The list of rules added to the blocklist.
 
+### `BlockList.isBlockList(value)`
+
+<!-- YAML
+added: v22.13.0
+-->
+
+* `value` {any} Any JS value
+* Returns `true` if the `value` is a `net.BlockList`.
+
 ## Class: `net.SocketAddress`
 
 <!-- YAML
@@ -234,6 +243,17 @@ added:
 -->
 
 * Type {number}
+
+### `SocketAddress.parse(input)`
+
+<!-- YAML
+added: v22.13.0
+-->
+
+* `input` {string} An input string containing an IP address and optional port,
+  e.g. `123.1.2.3:1234` or `[1::1]:1234`.
+* Returns: {net.SocketAddress} Returns a `SocketAddress` if parsing was successful.
+  Otherwise returns `undefined`.
 
 ## Class: `net.Server`
 
@@ -375,7 +395,9 @@ was not open when it was closed.
 ### `server[Symbol.asyncDispose]()`
 
 <!-- YAML
-added: v20.5.0
+added:
+ - v20.5.0
+ - v18.18.0
 -->
 
 > Stability: 1 - Experimental
@@ -469,6 +491,9 @@ Listening on a file descriptor is not supported on Windows.
 <!-- YAML
 added: v0.11.14
 changes:
+  - version: v22.12.0
+    pr-url: https://github.com/nodejs/node/pull/55408
+    description: The `reusePort` option is supported.
   - version: v15.6.0
     pr-url: https://github.com/nodejs/node/pull/36623
     description: AbortSignal support was added.
@@ -485,6 +510,11 @@ changes:
   * `ipv6Only` {boolean} For TCP servers, setting `ipv6Only` to `true` will
     disable dual-stack support, i.e., binding to host `::` won't make
     `0.0.0.0` be bound. **Default:** `false`.
+  * `reusePort` {boolean} For TCP servers, setting `reusePort` to `true` allows
+    multiple sockets on the same host to bind to the same port. Incoming connections
+    are distributed by the operating system to listening sockets. This option is
+    available only on some platforms, such as Linux 3.9+, DragonFlyBSD 3.6+, FreeBSD 12.0+,
+    Solaris 11.4, and AIX 7.2.5+. **Default:** `false`.
   * `path` {string} Will be ignored if `port` is specified. See
     [Identifying paths for IPC connections][].
   * `port` {number}
@@ -592,15 +622,33 @@ added: v5.7.0
 
 <!-- YAML
 added: v0.2.0
+changes:
+  - version: v21.0.0
+    pr-url: https://github.com/nodejs/node/pull/48276
+    description: Setting `maxConnections` to `0` drops all the incoming
+                 connections. Previously, it was interpreted as `Infinity`.
 -->
 
 * {integer}
 
-Set this property to reject connections when the server's connection count gets
-high.
+When the number of connections reaches the `server.maxConnections` threshold:
+
+1. If the process is not running in cluster mode, Node.js will close the connection.
+
+2. If the process is running in cluster mode, Node.js will, by default, route the connection to another worker process. To close the connection instead, set \[`server.dropMaxConnection`]\[] to `true`.
 
 It is not recommended to use this option once a socket has been sent to a child
 with [`child_process.fork()`][].
+
+### `server.dropMaxConnection`
+
+<!-- YAML
+added: v22.12.0
+-->
+
+* {boolean}
+
+Set this property to `true` to begin closing connections once the number of connections reaches the \[`server.maxConnections`]\[] threshold. This setting is only effective in cluster mode.
 
 ### `server.ref()`
 
@@ -716,7 +764,9 @@ See [`net.createConnection()`][].
 ### Event: `'connectionAttempt'`
 
 <!-- YAML
-added: v20.12.0
+added:
+  - v21.6.0
+  - v20.12.0
 -->
 
 * `ip` {string} The IP which the socket is attempting to connect to.
@@ -729,7 +779,9 @@ if the family autoselection algorithm is enabled in [`socket.connect(options)`][
 ### Event: `'connectionAttemptFailed'`
 
 <!-- YAML
-added: v20.12.0
+added:
+  - v21.6.0
+  - v20.12.0
 -->
 
 * `ip` {string} The IP which the socket attempted to connect to.
@@ -743,7 +795,9 @@ if the family autoselection algorithm is enabled in [`socket.connect(options)`][
 ### Event: `'connectionAttemptTimeout'`
 
 <!-- YAML
-added: v20.12.0
+added:
+  - v21.6.0
+  - v20.12.0
 -->
 
 * `ip` {string} The IP which the socket attempted to connect to.
@@ -867,7 +921,9 @@ socket as reported by the operating system:
 ### `socket.autoSelectFamilyAttemptedAddresses`
 
 <!-- YAML
-added: v19.4.0
+added:
+ - v19.4.0
+ - v18.18.0
 -->
 
 * {string\[]}
@@ -954,7 +1010,9 @@ behavior.
 <!-- YAML
 added: v0.1.90
 changes:
-  - version: v20.0.0
+  - version:
+      - v20.0.0
+      - v18.18.0
     pr-url: https://github.com/nodejs/node/pull/46790
     description: The default value for the autoSelectFamily option is now true.
                  The `--enable-network-family-autoselection` CLI flag has been renamed
@@ -1031,6 +1089,8 @@ For TCP connections, available `options` are:
 * `noDelay` {boolean} If set to `true`, it disables the use of Nagle's algorithm
   immediately after the socket is established. **Default:** `false`.
 * `port` {number} Required. Port the socket should connect to.
+* `blockList` {net.BlockList} `blockList` can be used for disabling outbound
+  access to specific IP addresses, IP ranges, or IP subnets.
 
 For [IPC][] connections, available `options` are:
 
@@ -1643,7 +1703,9 @@ then returns the `net.Socket` that starts the connection.
 <!-- YAML
 added: v0.5.0
 changes:
-  - version: v20.1.0
+  - version:
+    - v20.1.0
+    - v18.17.0
     pr-url: https://github.com/nodejs/node/pull/47405
     description: The `highWaterMark` option is supported now.
   - version:
@@ -1673,6 +1735,11 @@ changes:
     **Default:** `false`.
   * `pauseOnConnect` {boolean} Indicates whether the socket should be
     paused on incoming connections. **Default:** `false`.
+  * `blockList` {net.BlockList} `blockList` can be used for disabling inbound
+    access to specific IP addresses, IP ranges, or IP subnets. This does not
+    work if the server is behind a reverse proxy, NAT, etc. because the address
+    checked against the block list is the address of the proxy, or the one
+    specified by the NAT.
 
 * `connectionListener` {Function} Automatically set as a listener for the
   [`'connection'`][] event.
@@ -1786,7 +1853,9 @@ Sets the default value of the `autoSelectFamily` option of [`socket.connect(opti
 ## `net.getDefaultAutoSelectFamilyAttemptTimeout()`
 
 <!-- YAML
-added: v19.8.0
+added:
+ - v19.8.0
+ - v18.18.0
 -->
 
 Gets the current default value of the `autoSelectFamilyAttemptTimeout` option of [`socket.connect(options)`][].
@@ -1798,7 +1867,9 @@ option `--network-family-autoselection-attempt-timeout`.
 ## `net.setDefaultAutoSelectFamilyAttemptTimeout(value)`
 
 <!-- YAML
-added: v19.8.0
+added:
+ - v19.8.0
+ - v18.18.0
 -->
 
 Sets the default value of the `autoSelectFamilyAttemptTimeout` option of [`socket.connect(options)`][].

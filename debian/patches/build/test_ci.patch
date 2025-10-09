@@ -9,27 +9,26 @@ Last-Update: 2025-02-12
 
 --- a/Makefile
 +++ b/Makefile
-@@ -547,15 +547,15 @@
- test-ci-native: LOGLEVEL := info
- test-ci-native: | benchmark/napi/.buildstamp test/addons/.buildstamp test/js-native-api/.buildstamp test/node-api/.buildstamp
+@@ -579,7 +579,7 @@
+ test-ci-native: LOGLEVEL := info ## Build and test addons without building anything else.
+ test-ci-native: | benchmark/napi/.buildstamp test/addons/.buildstamp test/js-native-api/.buildstamp test/node-api/.buildstamp test/sqlite/.buildstamp
  	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
 -		--mode=$(BUILDTYPE_LOWER) --flaky-tests=$(FLAKY_TESTS) \
 +		--mode=$(BUILDTYPE_LOWER) --flaky-tests-mode=$(FLAKY_TESTS) \
  		$(TEST_CI_ARGS) $(CI_NATIVE_SUITES)
  
  .PHONY: test-ci-js
- # This target should not use a native compiler at all
+@@ -587,7 +587,7 @@
  # Related CI job: node-test-commit-arm-fanned
- test-ci-js: | clear-stalled
--	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
+ test-ci-js: | clear-stalled ## Build and test JavaScript with building anything else.
+ 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
 -		--mode=$(BUILDTYPE_LOWER) --flaky-tests=$(FLAKY_TESTS) \
-+	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap \
 +		--mode=$(BUILDTYPE_LOWER) --flaky-tests-mode=$(FLAKY_TESTS) \
  		--skip-tests=$(CI_SKIP_TESTS) \
  		$(TEST_CI_ARGS) $(CI_JS_SUITES)
  	$(info Clean up any leftover processes, error if found.)
-@@ -571,7 +571,7 @@
- test-ci: | clear-stalled bench-addons-build build-addons build-js-native-api-tests build-node-api-tests doc-only
+@@ -603,7 +603,7 @@
+ test-ci: | clear-stalled bench-addons-build build-addons build-js-native-api-tests build-node-api-tests build-sqlite-tests doc-only
  	out/Release/cctest --gtest_output=xml:out/junit/cctest.xml
  	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
 -		--mode=$(BUILDTYPE_LOWER) --flaky-tests=$(FLAKY_TESTS) \
@@ -39,52 +38,51 @@ Last-Update: 2025-02-12
  	$(info Clean up any leftover processes, error if found.)
 --- a/test/common/index.js
 +++ b/test/common/index.js
-@@ -278,16 +278,15 @@
- 
+@@ -251,21 +251,7 @@
  function platformTimeout(ms) {
    const multipliers = typeof ms === 'bigint' ?
--    { two: 2n, four: 4n, seven: 7n } : { two: 2, four: 4, seven: 7 };
-+    { fast: 2n, slow: 4n } : { fast: 3, slow: 5 };
-+ 
-+  if (process.arch.startsWith('arm') || process.arch.startsWith('mips') || process.arch.startsWith('riscv'))
-+    ms = multipliers.slow * ms;
-+  else
-+    ms = multipliers.fast * ms;
- 
-   if (process.features.debug)
+     { two: 2n, four: 4n, seven: 7n } : { two: 2, four: 4, seven: 7 };
+-
+-  if (isDebug)
 -    ms = multipliers.two * ms;
 -
 -  if (exports.isAIX || exports.isIBMi)
 -    return multipliers.two * ms; // Default localhost speed is slower on AIX
 -
--  if (isPi)
+-  if (isPi())
 -    return multipliers.two * ms;  // Raspberry Pi devices
-+    ms = multipliers.slow * ms;
- 
-   return ms;
+-
+-  if (isRiscv64) {
+-    return multipliers.four * ms;
+-  }
+-
+-  return ms;
++  return multipliers.seven * ms;
  }
+ 
+ const knownGlobals = new Set([
 --- a/tools/test.py
 +++ b/tools/test.py
-@@ -1404,7 +1404,7 @@
+@@ -1402,7 +1402,7 @@
        default=False, action="store_true")
-   result.add_option("--cat", help="Print the source of the tests",
+   result.add_argument("--cat", help="Print the source of the tests",
        default=False, action="store_true")
--  result.add_option("--flaky-tests",
-+  result.add_option("--flaky-tests-mode",
+-  result.add_argument("--flaky-tests",
++  result.add_argument("--flaky-tests-mode",
        help="Regard tests marked as flaky (run|skip|dontcare|keep_retrying)",
        default="run")
-   result.add_option("--measure-flakiness",
-@@ -1413,6 +1413,9 @@
-   result.add_option("--skip-tests",
+   result.add_argument("--measure-flakiness",
+@@ -1411,6 +1411,9 @@
+   result.add_argument("--skip-tests",
        help="Tests that should not be executed (comma-separated)",
        default="")
-+  result.add_option("--flaky-tests",
++  result.add_argument("--flaky-tests",
 +      help="Tests that are flaky (comma-separated)",
 +      default="")
-   result.add_option("--warn-unused", help="Report unused rules",
+   result.add_argument("--warn-unused", help="Report unused rules",
        default=False, action="store_true")
-   result.add_option("-j", help="The number of parallel tasks to run, 0=use number of cores",
-@@ -1459,6 +1462,7 @@
+   result.add_argument("-j", help="The number of parallel tasks to run, 0=use number of cores",
+@@ -1460,6 +1463,7 @@
    options.run = options.run.split(',')
    # Split at commas and filter out all the empty strings.
    options.skip_tests = [test for test in options.skip_tests.split(',') if test]
@@ -92,7 +90,7 @@ Last-Update: 2025-02-12
    if options.run == [""]:
      options.run = None
    elif len(options.run) != 2:
-@@ -1486,8 +1490,8 @@
+@@ -1487,8 +1491,8 @@
      # -j and ignoring -J, which is the opposite of what we used to do before -J
      # became a legacy no-op.
      print('Warning: Legacy -J option is ignored. Using the -j option.')
@@ -103,7 +101,7 @@ Last-Update: 2025-02-12
      return False
    return True
  
-@@ -1761,11 +1765,13 @@
+@@ -1772,11 +1776,13 @@
          sys.exit(1)
  
    def should_keep(case):
@@ -118,7 +116,7 @@ Last-Update: 2025-02-12
        return False
      else:
        return True
-@@ -1798,7 +1804,7 @@
+@@ -1809,7 +1815,7 @@
    else:
      try:
        start = time.time()

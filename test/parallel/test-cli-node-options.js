@@ -12,6 +12,7 @@ const { Worker } = require('worker_threads');
 
 const fixtures = require('../common/fixtures');
 const tmpdir = require('../common/tmpdir');
+const { hasOpenSSL3 } = require('../common/crypto');
 tmpdir.refresh();
 
 const printA = path.relative(tmpdir.path, fixtures.path('printA.js'));
@@ -64,8 +65,11 @@ if (common.isLinux) {
 if (common.hasCrypto) {
   expectNoWorker('--use-openssl-ca', 'B\n');
   expectNoWorker('--use-bundled-ca', 'B\n');
-  if (!common.hasOpenSSL3)
+  if (!hasOpenSSL3)
     expectNoWorker('--openssl-config=_ossl_cfg', 'B\n');
+  if (common.isMacOS) {
+    expectNoWorker('--use-system-ca', 'B\n');
+  }
 }
 
 // V8 options
@@ -95,7 +99,12 @@ function expectNoWorker(opt, want, command, wantsError) {
 function expect(
   opt, want, command = 'console.log("B")', wantsError = false, testWorker = true
 ) {
-  const argv = ['-e', command];
+  const argv = [
+    // --perf-basic-prof and --perf-basic-prof-only-functions write to /tmp by default.
+    `--perf-basic-prof-path=${tmpdir.path}`,
+    '-e',
+    command,
+  ];
   const opts = {
     cwd: tmpdir.path,
     env: Object.assign({}, process.env, { NODE_OPTIONS: opt }),

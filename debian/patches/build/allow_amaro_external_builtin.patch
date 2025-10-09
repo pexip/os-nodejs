@@ -1,0 +1,31 @@
+Description: process.versions.amaro is empty when loading it from external builtin
+ So just try to load it to know if it's loadable.
+Forwarded: not-needed
+Last-Update: 2025-03-19
+Author: Jérémy Lal <kapouer@melix.org>
+--- a/lib/internal/modules/typescript.js
++++ b/lib/internal/modules/typescript.js
+@@ -15,6 +15,7 @@
+         isUnderNodeModules,
+         kEmptyObject } = require('internal/util');
+ const {
++	ERR_NO_TYPESCRIPT,
+   ERR_INVALID_TYPESCRIPT_SYNTAX,
+   ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING,
+   ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX,
+@@ -38,9 +39,12 @@
+  * @returns {Function} The TypeScript parser function.
+  */
+ const loadTypeScriptParser = getLazy(() => {
+-  assertTypeScript();
+-  const amaro = require('internal/deps/amaro/dist/index');
+-  return amaro.transformSync;
++	try {
++  	const amaro = require('internal/deps/amaro/dist/index');
++  	return amaro.transformSync;
++	} catch {
++		throw ERR_NO_TYPESCRIPT();
++	}
+ });
+ 
+ /**

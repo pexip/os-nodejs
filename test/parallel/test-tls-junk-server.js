@@ -1,8 +1,11 @@
 'use strict';
 const common = require('../common');
 
-if (!common.hasCrypto)
+if (!common.hasCrypto) {
   common.skip('missing crypto');
+}
+
+const { hasOpenSSL } = require('../common/crypto');
 
 const assert = require('assert');
 const https = require('https');
@@ -21,9 +24,9 @@ server.listen(0, function() {
   req.end();
 
   let expectedErrorMessage = new RegExp('wrong version number');
-  if (common.hasOpenSSL(3, 2)) {
+  if (hasOpenSSL(3, 2)) {
     expectedErrorMessage = new RegExp('packet length too long');
-  }
+  };
   req.once('error', common.mustCall(function(err) {
     assert(expectedErrorMessage.test(err.message));
     server.close();

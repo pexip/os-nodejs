@@ -9,7 +9,6 @@ import util from 'node:util';
 const testFixtures = fixtures.path('test-runner');
 
 describe('require(\'node:test\').run', { concurrency: true }, () => {
-
   it('should run with no tests', async () => {
     const stream = run({ files: [] });
     stream.on('test:fail', common.mustNotCall());
@@ -30,6 +29,38 @@ describe('require(\'node:test\').run', { concurrency: true }, () => {
     const stream = run({ files: [join(testFixtures, 'default-behavior/test/random.cjs')] });
     stream.on('test:fail', common.mustNotCall());
     stream.on('test:pass', common.mustCall(1));
+    // eslint-disable-next-line no-unused-vars
+    for await (const _ of stream);
+  });
+
+  it('should emit diagnostic events with level parameter', async () => {
+    const diagnosticEvents = [];
+
+    const stream = run({
+      files: [join(testFixtures, 'coverage.js')],
+      reporter: 'spec',
+    });
+
+    stream.on('test:diagnostic', (event) => {
+      diagnosticEvents.push(event);
+    });
+    // eslint-disable-next-line no-unused-vars
+    for await (const _ of stream);
+    assert(diagnosticEvents.length > 0, 'No diagnostic events were emitted');
+    const infoEvent = diagnosticEvents.find((e) => e.level === 'info');
+    assert(infoEvent, 'No diagnostic events with level "info" were emitted');
+  });
+
+  const argPrintingFile = join(testFixtures, 'print-arguments.js');
+  it('should allow custom arguments via execArgv', async () => {
+    const result = await run({ files: [argPrintingFile], execArgv: ['-p', '"Printed"'] }).compose(spec).toArray();
+    assert.strictEqual(result[0].toString(), 'Printed\n');
+  });
+
+  it('should allow custom arguments via argv', async () => {
+    const stream = run({ files: [argPrintingFile], argv: ['--a-custom-argument'] });
+    stream.on('test:fail', common.mustNotCall());
+    stream.on('test:pass', common.mustCall());
     // eslint-disable-next-line no-unused-vars
     for await (const _ of stream);
   });
@@ -64,13 +95,6 @@ describe('require(\'node:test\').run', { concurrency: true }, () => {
     stream.on('test:pass', common.mustNotCall());
     // eslint-disable-next-line no-unused-vars
     for await (const _ of stream);
-  });
-
-  it('should validate files', async () => {
-    [Symbol(), {}, () => {}, 0, 1, 0n, 1n, '', '1', Promise.resolve([]), true, false]
-      .forEach((files) => assert.throws(() => run({ files }), {
-        code: 'ERR_INVALID_ARG_TYPE'
-      }));
   });
 
   it('should be piped with dot', async () => {
@@ -144,8 +168,10 @@ describe('require(\'node:test\').run', { concurrency: true }, () => {
     })
       .compose(tap)
       .toArray();
-    assert.strictEqual(result[2], 'ok 1 - this should be skipped # SKIP test name does not match pattern\n');
-    assert.strictEqual(result[5], 'ok 2 - this should be executed\n');
+
+    assert.strictEqual(result[2], 'ok 1 - this should be executed\n');
+    assert.strictEqual(result[4], '1..1\n');
+    assert.strictEqual(result[5], '# tests 1\n');
   });
 
   it('should skip tests not matching testNamePatterns - string', async () => {
@@ -155,8 +181,9 @@ describe('require(\'node:test\').run', { concurrency: true }, () => {
     })
       .compose(tap)
       .toArray();
-    assert.strictEqual(result[2], 'ok 1 - this should be skipped # SKIP test name does not match pattern\n');
-    assert.strictEqual(result[5], 'ok 2 - this should be executed\n');
+    assert.strictEqual(result[2], 'ok 1 - this should be executed\n');
+    assert.strictEqual(result[4], '1..1\n');
+    assert.strictEqual(result[5], '# tests 1\n');
   });
 
   it('should pass only to children', async () => {
@@ -167,8 +194,9 @@ describe('require(\'node:test\').run', { concurrency: true }, () => {
       .compose(tap)
       .toArray();
 
-    assert.strictEqual(result[2], 'ok 1 - this should be skipped # SKIP \'only\' option not set\n');
-    assert.strictEqual(result[5], 'ok 2 - this should be executed\n');
+    assert.strictEqual(result[2], 'ok 1 - this should be executed\n');
+    assert.strictEqual(result[4], '1..1\n');
+    assert.strictEqual(result[5], '# tests 1\n');
   });
 
   it('should emit "test:watch:drained" event on watch mode', async () => {
@@ -182,6 +210,33 @@ describe('require(\'node:test\').run', { concurrency: true }, () => {
         controller.abort();
       }
     });
+  });
+
+  it('should include test type in enqueue, dequeue events', async (t) => {
+    const stream = await run({
+      files: [join(testFixtures, 'default-behavior/test/suite_and_test.cjs')],
+    });
+    t.plan(4);
+
+    stream.on('test:enqueue', common.mustCall((data) => {
+      if (data.name === 'this is a suite') {
+        t.assert.strictEqual(data.type, 'suite');
+      }
+      if (data.name === 'this is a test') {
+        t.assert.strictEqual(data.type, 'test');
+      }
+    }, 2));
+    stream.on('test:dequeue', common.mustCall((data) => {
+      if (data.name === 'this is a suite') {
+        t.assert.strictEqual(data.type, 'suite');
+      }
+      if (data.name === 'this is a test') {
+        t.assert.strictEqual(data.type, 'test');
+      }
+    }, 2));
+
+    // eslint-disable-next-line no-unused-vars
+    for await (const _ of stream);
   });
 
   describe('AbortSignal', () => {
@@ -466,6 +521,33 @@ describe('require(\'node:test\').run', { concurrency: true }, () => {
   });
 
   describe('validation', () => {
+    it('should only allow array in options.files', async () => {
+      [Symbol(), {}, () => {}, 0, 1, 0n, 1n, '', '1', Promise.resolve([]), true, false]
+        .forEach((files) => assert.throws(() => run({ files }), {
+          code: 'ERR_INVALID_ARG_TYPE'
+        }));
+    });
+
+    it('should only allow array in options.globPatterns', async () => {
+      [Symbol(), {}, () => {}, 0, 1, 0n, 1n, '', '1', Promise.resolve([]), true, false]
+        .forEach((globPatterns) => assert.throws(() => run({ globPatterns }), {
+          code: 'ERR_INVALID_ARG_TYPE'
+        }));
+    });
+
+    it('should not allow files and globPatterns used together', () => {
+      assert.throws(() => run({ files: ['a.js'], globPatterns: ['*.js'] }), {
+        code: 'ERR_INVALID_ARG_VALUE'
+      });
+    });
+
+    it('should only allow object as options', () => {
+      [Symbol(), [], () => {}, 0, 1, 0n, 1n, '', '1', true, false]
+        .forEach((options) => assert.throws(() => run(options), {
+          code: 'ERR_INVALID_ARG_TYPE'
+        }));
+    });
+
     it('should pass instance of stream to setup', async () => {
       const stream = run({
         files: [join(testFixtures, 'default-behavior/test/random.cjs')],
@@ -478,39 +560,6 @@ describe('require(\'node:test\').run', { concurrency: true }, () => {
       // eslint-disable-next-line no-unused-vars
       for await (const _ of stream);
     });
-  });
-
-  it('should run with no files', async () => {
-    const stream = run({
-      files: undefined
-    }).compose(tap);
-    stream.on('test:fail', common.mustNotCall());
-    stream.on('test:pass', common.mustNotCall());
-
-    // eslint-disable-next-line no-unused-vars
-    for await (const _ of stream);
-  });
-
-  it('should run with no files and use spec reporter', async () => {
-    const stream = run({
-      files: undefined
-    }).compose(spec);
-    stream.on('test:fail', common.mustNotCall());
-    stream.on('test:pass', common.mustNotCall());
-
-    // eslint-disable-next-line no-unused-vars
-    for await (const _ of stream);
-  });
-
-  it('should run with no files and use dot reporter', async () => {
-    const stream = run({
-      files: undefined
-    }).compose(dot);
-    stream.on('test:fail', common.mustNotCall());
-    stream.on('test:pass', common.mustNotCall());
-
-    // eslint-disable-next-line no-unused-vars
-    for await (const _ of stream);
   });
 
   it('should avoid running recursively', async () => {

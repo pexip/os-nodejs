@@ -8,7 +8,7 @@
       "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
-      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v20.19.2/lib/stream.js\">lib/stream.js</a></p>\n<p>A stream is an abstract interface for working with streaming data in Node.js.\nThe <code>node:stream</code> module provides an API for implementing the stream interface.</p>\n<p>There are many stream objects provided by Node.js. For instance, a\n<a href=\"http.html#class-httpincomingmessage\">request to an HTTP server</a> and <a href=\"process.html#processstdout\"><code>process.stdout</code></a>\nare both stream instances.</p>\n<p>Streams can be readable, writable, or both. All streams are instances of\n<a href=\"events.html#class-eventemitter\"><code>EventEmitter</code></a>.</p>\n<p>To access the <code>node:stream</code> module:</p>\n<pre><code class=\"language-js\">const stream = require('node:stream');\n</code></pre>\n<p>The <code>node:stream</code> module is useful for creating new types of stream instances.\nIt is usually not necessary to use the <code>node:stream</code> module to consume streams.</p>",
+      "desc": "<p><strong>Source Code:</strong> <a href=\"https://github.com/nodejs/node/blob/v22.18.0/lib/stream.js\">lib/stream.js</a></p>\n<p>A stream is an abstract interface for working with streaming data in Node.js.\nThe <code>node:stream</code> module provides an API for implementing the stream interface.</p>\n<p>There are many stream objects provided by Node.js. For instance, a\n<a href=\"http.html#class-httpincomingmessage\">request to an HTTP server</a> and <a href=\"process.html#processstdout\"><code>process.stdout</code></a>\nare both stream instances.</p>\n<p>Streams can be readable, writable, or both. All streams are instances of\n<a href=\"events.html#class-eventemitter\"><code>EventEmitter</code></a>.</p>\n<p>To access the <code>node:stream</code> module:</p>\n<pre><code class=\"language-js\">const stream = require('node:stream');\n</code></pre>\n<p>The <code>node:stream</code> module is useful for creating new types of stream instances.\nIt is usually not necessary to use the <code>node:stream</code> module to consume streams.</p>",
       "modules": [
         {
           "textRaw": "Organization of this document",
@@ -270,6 +270,14 @@
                     ],
                     "pr-url": "https://github.com/nodejs/node/pull/46205",
                     "description": "Added support for `ReadableStream` and `WritableStream`."
+                  },
+                  {
+                    "version": [
+                      "v19.1.0",
+                      "v18.13.0"
+                    ],
+                    "pr-url": "https://github.com/nodejs/node/pull/44862",
+                    "description": "The `cleanup` option was added."
                   }
                 ]
               },
@@ -309,16 +317,23 @@
                           "type": "boolean|undefined"
                         },
                         {
-                          "textRaw": "`signal`: {AbortSignal|undefined}",
+                          "textRaw": "`signal` {AbortSignal|undefined}",
                           "name": "signal",
                           "type": "AbortSignal|undefined"
+                        },
+                        {
+                          "textRaw": "`cleanup` {boolean|undefined} If `true`, removes the listeners registered by this function before the promise is fulfilled. **Default:** `false`.",
+                          "name": "cleanup",
+                          "type": "boolean|undefined",
+                          "default": "`false`",
+                          "desc": "If `true`, removes the listeners registered by this function before the promise is fulfilled."
                         }
                       ]
                     }
                   ]
                 }
               ],
-              "desc": "<pre><code class=\"language-cjs\">const { finished } = require('node:stream/promises');\nconst fs = require('node:fs');\n\nconst rs = fs.createReadStream('archive.tar');\n\nasync function run() {\n  await finished(rs);\n  console.log('Stream is done reading.');\n}\n\nrun().catch(console.error);\nrs.resume(); // Drain the stream.\n</code></pre>\n<pre><code class=\"language-mjs\">import { finished } from 'node:stream/promises';\nimport { createReadStream } from 'node:fs';\n\nconst rs = createReadStream('archive.tar');\n\nasync function run() {\n  await finished(rs);\n  console.log('Stream is done reading.');\n}\n\nrun().catch(console.error);\nrs.resume(); // Drain the stream.\n</code></pre>\n<p>The <code>finished</code> API also provides a <a href=\"#streamfinishedstream-options-callback\">callback version</a>.</p>"
+              "desc": "<pre><code class=\"language-cjs\">const { finished } = require('node:stream/promises');\nconst fs = require('node:fs');\n\nconst rs = fs.createReadStream('archive.tar');\n\nasync function run() {\n  await finished(rs);\n  console.log('Stream is done reading.');\n}\n\nrun().catch(console.error);\nrs.resume(); // Drain the stream.\n</code></pre>\n<pre><code class=\"language-mjs\">import { finished } from 'node:stream/promises';\nimport { createReadStream } from 'node:fs';\n\nconst rs = createReadStream('archive.tar');\n\nasync function run() {\n  await finished(rs);\n  console.log('Stream is done reading.');\n}\n\nrun().catch(console.error);\nrs.resume(); // Drain the stream.\n</code></pre>\n<p>The <code>finished</code> API also provides a <a href=\"#streamfinishedstream-options-callback\">callback version</a>.</p>\n<p><code>stream.finished()</code> leaves dangling event listeners (in particular\n<code>'error'</code>, <code>'end'</code>, <code>'finish'</code> and <code>'close'</code>) after the returned promise is\nresolved or rejected. The reason for this is so that unexpected <code>'error'</code>\nevents (due to incorrect stream implementations) do not cause unexpected\ncrashes. If this is unwanted behavior then <code>options.cleanup</code> should be set to\n<code>true</code>:</p>\n<pre><code class=\"language-mjs\">await finished(rs, { cleanup: true });\n</code></pre>"
             }
           ],
           "miscs": [
@@ -416,13 +431,6 @@
                       "name": "signal",
                       "type": "AbortSignal",
                       "desc": "allows aborting the wait for the stream finish. The underlying stream will _not_ be aborted if the signal is aborted. The callback will get called with an `AbortError`. All registered listeners added by this function will also be removed."
-                    },
-                    {
-                      "textRaw": "`cleanup` {boolean} remove all registered stream listeners. **Default:** `false`.",
-                      "name": "cleanup",
-                      "type": "boolean",
-                      "default": "`false`",
-                      "desc": "remove all registered stream listeners."
                     }
                   ]
                 },
@@ -447,7 +455,10 @@
             ],
             "changes": [
               {
-                "version": "v19.7.0",
+                "version": [
+                  "v19.7.0",
+                  "v18.16.0"
+                ],
                 "pr-url": "https://github.com/nodejs/node/pull/46307",
                 "description": "Added support for webstreams."
               },
@@ -560,7 +571,10 @@
             ],
             "changes": [
               {
-                "version": "v19.7.0",
+                "version": [
+                  "v19.7.0",
+                  "v18.16.0"
+                ],
                 "pr-url": "https://github.com/nodejs/node/pull/46307",
                 "description": "Added support for webstreams."
               },
@@ -673,7 +687,10 @@
             ],
             "changes": [
               {
-                "version": "v20.10.0",
+                "version": [
+                  "v21.1.0",
+                  "v20.10.0"
+                ],
                 "pr-url": "https://github.com/nodejs/node/pull/50187",
                 "description": "Added support for stream class."
               },
@@ -706,6 +723,76 @@
             }
           ],
           "desc": "<p>Combines two or more streams into a <code>Duplex</code> stream that writes to the\nfirst stream and reads from the last. Each provided stream is piped into\nthe next, using <code>stream.pipeline</code>. If any of the streams error then all\nare destroyed, including the outer <code>Duplex</code> stream.</p>\n<p>Because <code>stream.compose</code> returns a new stream that in turn can (and\nshould) be piped into other streams, it enables composition. In contrast,\nwhen passing streams to <code>stream.pipeline</code>, typically the first stream is\na readable stream and the last a writable stream, forming a closed\ncircuit.</p>\n<p>If passed a <code>Function</code> it must be a factory method taking a <code>source</code>\n<code>Iterable</code>.</p>\n<pre><code class=\"language-mjs\">import { compose, Transform } from 'node:stream';\n\nconst removeSpaces = new Transform({\n  transform(chunk, encoding, callback) {\n    callback(null, String(chunk).replace(' ', ''));\n  },\n});\n\nasync function* toUpper(source) {\n  for await (const chunk of source) {\n    yield String(chunk).toUpperCase();\n  }\n}\n\nlet res = '';\nfor await (const buf of compose(removeSpaces, toUpper).end('hello world')) {\n  res += buf;\n}\n\nconsole.log(res); // prints 'HELLOWORLD'\n</code></pre>\n<p><code>stream.compose</code> can be used to convert async iterables, generators and\nfunctions into streams.</p>\n<ul>\n<li><code>AsyncIterable</code> converts into a readable <code>Duplex</code>. Cannot yield\n<code>null</code>.</li>\n<li><code>AsyncGeneratorFunction</code> converts into a readable/writable transform <code>Duplex</code>.\nMust take a source <code>AsyncIterable</code> as first parameter. Cannot yield\n<code>null</code>.</li>\n<li><code>AsyncFunction</code> converts into a writable <code>Duplex</code>. Must return\neither <code>null</code> or <code>undefined</code>.</li>\n</ul>\n<pre><code class=\"language-mjs\">import { compose } from 'node:stream';\nimport { finished } from 'node:stream/promises';\n\n// Convert AsyncIterable into readable Duplex.\nconst s1 = compose(async function*() {\n  yield 'Hello';\n  yield 'World';\n}());\n\n// Convert AsyncGenerator into transform Duplex.\nconst s2 = compose(async function*(source) {\n  for await (const chunk of source) {\n    yield String(chunk).toUpperCase();\n  }\n});\n\nlet res = '';\n\n// Convert AsyncFunction into writable Duplex.\nconst s3 = compose(async function(source) {\n  for await (const chunk of source) {\n    res += chunk;\n  }\n});\n\nawait finished(compose(s1, s2, s3));\n\nconsole.log(res); // prints 'HELLOWORLD'\n</code></pre>\n<p>See <a href=\"#readablecomposestream-options\"><code>readable.compose(stream)</code></a> for <code>stream.compose</code> as operator.</p>"
+        },
+        {
+          "textRaw": "`stream.isErrored(stream)`",
+          "type": "method",
+          "name": "isErrored",
+          "meta": {
+            "added": [
+              "v17.3.0",
+              "v16.14.0"
+            ],
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              }
+            ]
+          },
+          "signatures": [
+            {
+              "return": {
+                "textRaw": "Returns: {boolean}",
+                "name": "return",
+                "type": "boolean"
+              },
+              "params": [
+                {
+                  "textRaw": "`stream` {Readable|Writable|Duplex|WritableStream|ReadableStream}",
+                  "name": "stream",
+                  "type": "Readable|Writable|Duplex|WritableStream|ReadableStream"
+                }
+              ]
+            }
+          ],
+          "desc": "<p>Returns whether the stream has encountered an error.</p>"
+        },
+        {
+          "textRaw": "`stream.isReadable(stream)`",
+          "type": "method",
+          "name": "isReadable",
+          "meta": {
+            "added": [
+              "v17.4.0",
+              "v16.14.0"
+            ],
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              }
+            ]
+          },
+          "signatures": [
+            {
+              "return": {
+                "textRaw": "Returns: {boolean}",
+                "name": "return",
+                "type": "boolean"
+              },
+              "params": [
+                {
+                  "textRaw": "`stream` {Readable|Duplex|ReadableStream}",
+                  "name": "stream",
+                  "type": "Readable|Duplex|ReadableStream"
+                }
+              ]
+            }
+          ],
+          "desc": "<p>Returns whether the stream is readable.</p>"
         },
         {
           "textRaw": "`stream.Readable.from(iterable[, options])`",
@@ -751,10 +838,14 @@
             "added": [
               "v17.0.0"
             ],
-            "changes": []
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              }
+            ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "return": {
@@ -807,10 +898,14 @@
             "added": [
               "v16.8.0"
             ],
-            "changes": []
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              }
+            ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "return": {
@@ -830,68 +925,6 @@
           "desc": "<p>Returns whether the stream has been read from or cancelled.</p>"
         },
         {
-          "textRaw": "`stream.isErrored(stream)`",
-          "type": "method",
-          "name": "isErrored",
-          "meta": {
-            "added": [
-              "v17.3.0",
-              "v16.14.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental",
-          "signatures": [
-            {
-              "return": {
-                "textRaw": "Returns: {boolean}",
-                "name": "return",
-                "type": "boolean"
-              },
-              "params": [
-                {
-                  "textRaw": "`stream` {Readable|Writable|Duplex|WritableStream|ReadableStream}",
-                  "name": "stream",
-                  "type": "Readable|Writable|Duplex|WritableStream|ReadableStream"
-                }
-              ]
-            }
-          ],
-          "desc": "<p>Returns whether the stream has encountered an error.</p>"
-        },
-        {
-          "textRaw": "`stream.isReadable(stream)`",
-          "type": "method",
-          "name": "isReadable",
-          "meta": {
-            "added": [
-              "v17.4.0",
-              "v16.14.0"
-            ],
-            "changes": []
-          },
-          "stability": 1,
-          "stabilityText": "Experimental",
-          "signatures": [
-            {
-              "return": {
-                "textRaw": "Returns: {boolean}",
-                "name": "return",
-                "type": "boolean"
-              },
-              "params": [
-                {
-                  "textRaw": "`stream` {Readable|Duplex|ReadableStream}",
-                  "name": "stream",
-                  "type": "Readable|Duplex|ReadableStream"
-                }
-              ]
-            }
-          ],
-          "desc": "<p>Returns whether the stream is readable.</p>"
-        },
-        {
           "textRaw": "`stream.Readable.toWeb(streamReadable[, options])`",
           "type": "method",
           "name": "toWeb",
@@ -899,10 +932,21 @@
             "added": [
               "v17.0.0"
             ],
-            "changes": []
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              },
+              {
+                "version": [
+                  "v18.7.0"
+                ],
+                "pr-url": "https://github.com/nodejs/node/pull/43515",
+                "description": "include strategy options on Readable."
+              }
+            ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "return": {
@@ -966,10 +1010,14 @@
             "added": [
               "v17.0.0"
             ],
-            "changes": []
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              }
+            ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "return": {
@@ -1022,10 +1070,14 @@
             "added": [
               "v17.0.0"
             ],
-            "changes": []
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              }
+            ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "return": {
@@ -1053,7 +1105,10 @@
             ],
             "changes": [
               {
-                "version": "v19.5.0",
+                "version": [
+                  "v19.5.0",
+                  "v18.17.0"
+                ],
                 "pr-url": "https://github.com/nodejs/node/pull/46190",
                 "description": "The `src` argument can now be a `ReadableStream` or `WritableStream`."
               }
@@ -1080,10 +1135,14 @@
             "added": [
               "v17.0.0"
             ],
-            "changes": []
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              }
+            ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "return": {
@@ -1159,10 +1218,14 @@
             "added": [
               "v17.0.0"
             ],
-            "changes": []
+            "changes": [
+              {
+                "version": "v22.17.0",
+                "pr-url": "https://github.com/nodejs/node/pull/57513",
+                "description": "Marking the API stable."
+              }
+            ]
           },
-          "stability": 1,
-          "stabilityText": "Experimental",
           "signatures": [
             {
               "return": {
@@ -1203,7 +1266,10 @@
             ],
             "changes": [
               {
-                "version": "v19.7.0",
+                "version": [
+                  "v19.7.0",
+                  "v18.16.0"
+                ],
                 "pr-url": "https://github.com/nodejs/node/pull/46273",
                 "description": "Added support for `ReadableStream` and `WritableStream`."
               }
@@ -1235,7 +1301,8 @@
           "name": "getDefaultHighWaterMark",
           "meta": {
             "added": [
-              "v19.9.0"
+              "v19.9.0",
+              "v18.17.0"
             ],
             "changes": []
           },
@@ -1263,7 +1330,8 @@
           "name": "setDefaultHighWaterMark",
           "meta": {
             "added": [
-              "v19.9.0"
+              "v19.9.0",
+              "v18.17.0"
             ],
             "changes": []
           },
@@ -1499,7 +1567,7 @@
                         ],
                         "changes": [
                           {
-                            "version": "v20.13.0",
+                            "version": "v22.0.0",
                             "pr-url": "https://github.com/nodejs/node/pull/51866",
                             "description": "The `chunk` argument can now be a `TypedArray` or `DataView` instance."
                           },
@@ -1614,7 +1682,7 @@
                       "name": "[Symbol.asyncDispose]",
                       "meta": {
                         "added": [
-                          "v20.16.0"
+                          "v22.4.0"
                         ],
                         "changes": []
                       },
@@ -1637,7 +1705,7 @@
                         ],
                         "changes": [
                           {
-                            "version": "v20.13.0",
+                            "version": "v22.0.0",
                             "pr-url": "https://github.com/nodejs/node/pull/51866",
                             "description": "The `chunk` argument can now be a `TypedArray` or `DataView` instance."
                           },
@@ -1733,10 +1801,14 @@
                           "v18.0.0",
                           "v16.17.0"
                         ],
-                        "changes": []
+                        "changes": [
+                          {
+                            "version": "v22.17.0",
+                            "pr-url": "https://github.com/nodejs/node/pull/57513",
+                            "description": "Marking the API stable."
+                          }
+                        ]
                       },
-                      "stability": 1,
-                      "stabilityText": "Experimental",
                       "desc": "<p>Returns whether the stream was destroyed or errored before emitting <code>'finish'</code>.</p>"
                     },
                     {
@@ -2253,7 +2325,7 @@
                         ],
                         "changes": [
                           {
-                            "version": "v20.13.0",
+                            "version": "v22.0.0",
                             "pr-url": "https://github.com/nodejs/node/pull/51866",
                             "description": "The `chunk` argument can now be a `TypedArray` or `DataView` instance."
                           },
@@ -2348,7 +2420,8 @@
                       "name": "[Symbol.asyncDispose]",
                       "meta": {
                         "added": [
-                          "v20.4.0"
+                          "v20.4.0",
+                          "v18.18.0"
                         ],
                         "changes": []
                       },
@@ -2370,10 +2443,14 @@
                           "v19.1.0",
                           "v18.13.0"
                         ],
-                        "changes": []
+                        "changes": [
+                          {
+                            "version": "v22.17.0",
+                            "pr-url": "https://github.com/nodejs/node/pull/57513",
+                            "description": "Marking the API stable."
+                          }
+                        ]
                       },
-                      "stability": 1,
-                      "stabilityText": "Experimental",
                       "signatures": [
                         {
                           "return": {
@@ -2414,10 +2491,14 @@
                         "added": [
                           "v16.3.0"
                         ],
-                        "changes": []
+                        "changes": [
+                          {
+                            "version": "v22.17.0",
+                            "pr-url": "https://github.com/nodejs/node/pull/57513",
+                            "description": "Marking the API stable."
+                          }
+                        ]
                       },
-                      "stability": 1,
-                      "stabilityText": "Experimental",
                       "signatures": [
                         {
                           "return": {
@@ -2457,7 +2538,10 @@
                         ],
                         "changes": [
                           {
-                            "version": "v20.7.0",
+                            "version": [
+                              "v20.7.0",
+                              "v18.19.0"
+                            ],
                             "pr-url": "https://github.com/nodejs/node/pull/49249",
                             "description": "added `highWaterMark` in options."
                           }
@@ -2544,7 +2628,10 @@
                         ],
                         "changes": [
                           {
-                            "version": "v20.7.0",
+                            "version": [
+                              "v20.7.0",
+                              "v18.19.0"
+                            ],
                             "pr-url": "https://github.com/nodejs/node/pull/49249",
                             "description": "added `highWaterMark` in options."
                           }
@@ -2692,7 +2779,7 @@
                           ]
                         }
                       ],
-                      "desc": "<p>This method allows iterating a stream. For each chunk in the stream the\n<code>fn</code> function will be called. If the <code>fn</code> function returns a promise - that\npromise will be <code>await</code>ed.</p>\n<p>This method is different from <code>for await...of</code> loops in that it can optionally\nprocess chunks concurrently. In addition, a <code>forEach</code> iteration can only be\nstopped by having passed a <code>signal</code> option and aborting the related\n<code>AbortController</code> while <code>for await...of</code> can be stopped with <code>break</code> or\n<code>return</code>. In either case the stream will be destroyed.</p>\n<p>This method is different from listening to the <a href=\"#event-data\"><code>'data'</code></a> event in that it\nuses the <a href=\"#class-streamreadable\"><code>readable</code></a> event in the underlying machinary and can limit the\nnumber of concurrent <code>fn</code> calls.</p>\n<pre><code class=\"language-mjs\">import { Readable } from 'node:stream';\nimport { Resolver } from 'node:dns/promises';\n\n// With a synchronous predicate.\nfor await (const chunk of Readable.from([1, 2, 3, 4]).filter((x) => x > 2)) {\n  console.log(chunk); // 3, 4\n}\n// With an asynchronous predicate, making at most 2 queries at a time.\nconst resolver = new Resolver();\nconst dnsResults = Readable.from([\n  'nodejs.org',\n  'openjsf.org',\n  'www.linuxfoundation.org',\n]).map(async (domain) => {\n  const { address } = await resolver.resolve4(domain, { ttl: true });\n  return address;\n}, { concurrency: 2 });\nawait dnsResults.forEach((result) => {\n  // Logs result, similar to `for await (const result of dnsResults)`\n  console.log(result);\n});\nconsole.log('done'); // Stream has finished\n</code></pre>"
+                      "desc": "<p>This method allows iterating a stream. For each chunk in the stream the\n<code>fn</code> function will be called. If the <code>fn</code> function returns a promise - that\npromise will be <code>await</code>ed.</p>\n<p>This method is different from <code>for await...of</code> loops in that it can optionally\nprocess chunks concurrently. In addition, a <code>forEach</code> iteration can only be\nstopped by having passed a <code>signal</code> option and aborting the related\n<code>AbortController</code> while <code>for await...of</code> can be stopped with <code>break</code> or\n<code>return</code>. In either case the stream will be destroyed.</p>\n<p>This method is different from listening to the <a href=\"#event-data\"><code>'data'</code></a> event in that it\nuses the <a href=\"#class-streamreadable\"><code>readable</code></a> event in the underlying machinery and can limit the\nnumber of concurrent <code>fn</code> calls.</p>\n<pre><code class=\"language-mjs\">import { Readable } from 'node:stream';\nimport { Resolver } from 'node:dns/promises';\n\n// With a synchronous predicate.\nfor await (const chunk of Readable.from([1, 2, 3, 4]).filter((x) => x > 2)) {\n  console.log(chunk); // 3, 4\n}\n// With an asynchronous predicate, making at most 2 queries at a time.\nconst resolver = new Resolver();\nconst dnsResults = Readable.from([\n  'nodejs.org',\n  'openjsf.org',\n  'www.linuxfoundation.org',\n]).map(async (domain) => {\n  const { address } = await resolver.resolve4(domain, { ttl: true });\n  return address;\n}, { concurrency: 2 });\nawait dnsResults.forEach((result) => {\n  // Logs result, similar to `for await (const result of dnsResults)`\n  console.log(result);\n});\nconsole.log('done'); // Stream has finished\n</code></pre>"
                     },
                     {
                       "textRaw": "`readable.toArray([options])`",
@@ -3123,52 +3210,6 @@
                       "desc": "<p>This method returns a new stream with the first <code>limit</code> chunks.</p>\n<pre><code class=\"language-mjs\">import { Readable } from 'node:stream';\n\nawait Readable.from([1, 2, 3, 4]).take(2).toArray(); // [1, 2]\n</code></pre>"
                     },
                     {
-                      "textRaw": "`readable.asIndexedPairs([options])`",
-                      "type": "method",
-                      "name": "asIndexedPairs",
-                      "meta": {
-                        "added": [
-                          "v17.5.0",
-                          "v16.15.0"
-                        ],
-                        "changes": [
-                          {
-                            "version": "v20.3.0",
-                            "pr-url": "https://github.com/nodejs/node/pull/48102",
-                            "description": "Using the `asIndexedPairs` method emits a runtime warning that it will be removed in a future version."
-                          }
-                        ]
-                      },
-                      "stability": 1,
-                      "stabilityText": "Experimental",
-                      "signatures": [
-                        {
-                          "return": {
-                            "textRaw": "Returns: {Readable} a stream of indexed pairs.",
-                            "name": "return",
-                            "type": "Readable",
-                            "desc": "a stream of indexed pairs."
-                          },
-                          "params": [
-                            {
-                              "textRaw": "`options` {Object}",
-                              "name": "options",
-                              "type": "Object",
-                              "options": [
-                                {
-                                  "textRaw": "`signal` {AbortSignal} allows destroying the stream if the signal is aborted.",
-                                  "name": "signal",
-                                  "type": "AbortSignal",
-                                  "desc": "allows destroying the stream if the signal is aborted."
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "desc": "<p>This method returns a new stream with chunks of the underlying stream paired\nwith a counter in the form <code>[index, chunk]</code>. The first index value is 0 and it\nincreases by 1 for each chunk produced.</p>\n<pre><code class=\"language-mjs\">import { Readable } from 'node:stream';\n\nconst pairs = await Readable.from(['a', 'b', 'c']).asIndexedPairs().toArray();\nconsole.log(pairs); // [[0, 'a'], [1, 'b'], [2, 'c']]\n</code></pre>"
-                    },
-                    {
                       "textRaw": "`readable.reduce(fn[, initial[, options]])`",
                       "type": "method",
                       "name": "reduce",
@@ -3293,10 +3334,14 @@
                         "added": [
                           "v16.8.0"
                         ],
-                        "changes": []
+                        "changes": [
+                          {
+                            "version": "v22.17.0",
+                            "pr-url": "https://github.com/nodejs/node/pull/57513",
+                            "description": "Marking the API stable."
+                          }
+                        ]
                       },
-                      "stability": 1,
-                      "stabilityText": "Experimental",
                       "desc": "<p>Returns whether the stream was destroyed or errored before emitting <code>'end'</code>.</p>"
                     },
                     {
@@ -3308,10 +3353,14 @@
                           "v16.7.0",
                           "v14.18.0"
                         ],
-                        "changes": []
+                        "changes": [
+                          {
+                            "version": "v22.17.0",
+                            "pr-url": "https://github.com/nodejs/node/pull/57513",
+                            "description": "Marking the API stable."
+                          }
+                        ]
                       },
-                      "stability": 1,
-                      "stabilityText": "Experimental",
                       "desc": "<p>Returns whether <code>'data'</code> has been emitted.</p>"
                     },
                     {
@@ -3496,7 +3545,7 @@
                   "name": "duplexPair",
                   "meta": {
                     "added": [
-                      "v20.17.0"
+                      "v22.6.0"
                     ],
                     "changes": []
                   },
@@ -3608,13 +3657,6 @@
                           "name": "signal",
                           "type": "AbortSignal",
                           "desc": "allows aborting the wait for the stream finish. The underlying stream will _not_ be aborted if the signal is aborted. The callback will get called with an `AbortError`. All registered listeners added by this function will also be removed."
-                        },
-                        {
-                          "textRaw": "`cleanup` {boolean} remove all registered stream listeners. **Default:** `false`.",
-                          "name": "cleanup",
-                          "type": "boolean",
-                          "default": "`false`",
-                          "desc": "remove all registered stream listeners."
                         }
                       ]
                     },
@@ -3639,7 +3681,10 @@
                 ],
                 "changes": [
                   {
-                    "version": "v19.7.0",
+                    "version": [
+                      "v19.7.0",
+                      "v18.16.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/46307",
                     "description": "Added support for webstreams."
                   },
@@ -3752,7 +3797,10 @@
                 ],
                 "changes": [
                   {
-                    "version": "v19.7.0",
+                    "version": [
+                      "v19.7.0",
+                      "v18.16.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/46307",
                     "description": "Added support for webstreams."
                   },
@@ -3865,7 +3913,10 @@
                 ],
                 "changes": [
                   {
-                    "version": "v20.10.0",
+                    "version": [
+                      "v21.1.0",
+                      "v20.10.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/50187",
                     "description": "Added support for stream class."
                   },
@@ -3898,6 +3949,76 @@
                 }
               ],
               "desc": "<p>Combines two or more streams into a <code>Duplex</code> stream that writes to the\nfirst stream and reads from the last. Each provided stream is piped into\nthe next, using <code>stream.pipeline</code>. If any of the streams error then all\nare destroyed, including the outer <code>Duplex</code> stream.</p>\n<p>Because <code>stream.compose</code> returns a new stream that in turn can (and\nshould) be piped into other streams, it enables composition. In contrast,\nwhen passing streams to <code>stream.pipeline</code>, typically the first stream is\na readable stream and the last a writable stream, forming a closed\ncircuit.</p>\n<p>If passed a <code>Function</code> it must be a factory method taking a <code>source</code>\n<code>Iterable</code>.</p>\n<pre><code class=\"language-mjs\">import { compose, Transform } from 'node:stream';\n\nconst removeSpaces = new Transform({\n  transform(chunk, encoding, callback) {\n    callback(null, String(chunk).replace(' ', ''));\n  },\n});\n\nasync function* toUpper(source) {\n  for await (const chunk of source) {\n    yield String(chunk).toUpperCase();\n  }\n}\n\nlet res = '';\nfor await (const buf of compose(removeSpaces, toUpper).end('hello world')) {\n  res += buf;\n}\n\nconsole.log(res); // prints 'HELLOWORLD'\n</code></pre>\n<p><code>stream.compose</code> can be used to convert async iterables, generators and\nfunctions into streams.</p>\n<ul>\n<li><code>AsyncIterable</code> converts into a readable <code>Duplex</code>. Cannot yield\n<code>null</code>.</li>\n<li><code>AsyncGeneratorFunction</code> converts into a readable/writable transform <code>Duplex</code>.\nMust take a source <code>AsyncIterable</code> as first parameter. Cannot yield\n<code>null</code>.</li>\n<li><code>AsyncFunction</code> converts into a writable <code>Duplex</code>. Must return\neither <code>null</code> or <code>undefined</code>.</li>\n</ul>\n<pre><code class=\"language-mjs\">import { compose } from 'node:stream';\nimport { finished } from 'node:stream/promises';\n\n// Convert AsyncIterable into readable Duplex.\nconst s1 = compose(async function*() {\n  yield 'Hello';\n  yield 'World';\n}());\n\n// Convert AsyncGenerator into transform Duplex.\nconst s2 = compose(async function*(source) {\n  for await (const chunk of source) {\n    yield String(chunk).toUpperCase();\n  }\n});\n\nlet res = '';\n\n// Convert AsyncFunction into writable Duplex.\nconst s3 = compose(async function(source) {\n  for await (const chunk of source) {\n    res += chunk;\n  }\n});\n\nawait finished(compose(s1, s2, s3));\n\nconsole.log(res); // prints 'HELLOWORLD'\n</code></pre>\n<p>See <a href=\"#readablecomposestream-options\"><code>readable.compose(stream)</code></a> for <code>stream.compose</code> as operator.</p>"
+            },
+            {
+              "textRaw": "`stream.isErrored(stream)`",
+              "type": "method",
+              "name": "isErrored",
+              "meta": {
+                "added": [
+                  "v17.3.0",
+                  "v16.14.0"
+                ],
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  }
+                ]
+              },
+              "signatures": [
+                {
+                  "return": {
+                    "textRaw": "Returns: {boolean}",
+                    "name": "return",
+                    "type": "boolean"
+                  },
+                  "params": [
+                    {
+                      "textRaw": "`stream` {Readable|Writable|Duplex|WritableStream|ReadableStream}",
+                      "name": "stream",
+                      "type": "Readable|Writable|Duplex|WritableStream|ReadableStream"
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Returns whether the stream has encountered an error.</p>"
+            },
+            {
+              "textRaw": "`stream.isReadable(stream)`",
+              "type": "method",
+              "name": "isReadable",
+              "meta": {
+                "added": [
+                  "v17.4.0",
+                  "v16.14.0"
+                ],
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  }
+                ]
+              },
+              "signatures": [
+                {
+                  "return": {
+                    "textRaw": "Returns: {boolean}",
+                    "name": "return",
+                    "type": "boolean"
+                  },
+                  "params": [
+                    {
+                      "textRaw": "`stream` {Readable|Duplex|ReadableStream}",
+                      "name": "stream",
+                      "type": "Readable|Duplex|ReadableStream"
+                    }
+                  ]
+                }
+              ],
+              "desc": "<p>Returns whether the stream is readable.</p>"
             },
             {
               "textRaw": "`stream.Readable.from(iterable[, options])`",
@@ -3943,10 +4064,14 @@
                 "added": [
                   "v17.0.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {
@@ -3999,10 +4124,14 @@
                 "added": [
                   "v16.8.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {
@@ -4022,68 +4151,6 @@
               "desc": "<p>Returns whether the stream has been read from or cancelled.</p>"
             },
             {
-              "textRaw": "`stream.isErrored(stream)`",
-              "type": "method",
-              "name": "isErrored",
-              "meta": {
-                "added": [
-                  "v17.3.0",
-                  "v16.14.0"
-                ],
-                "changes": []
-              },
-              "stability": 1,
-              "stabilityText": "Experimental",
-              "signatures": [
-                {
-                  "return": {
-                    "textRaw": "Returns: {boolean}",
-                    "name": "return",
-                    "type": "boolean"
-                  },
-                  "params": [
-                    {
-                      "textRaw": "`stream` {Readable|Writable|Duplex|WritableStream|ReadableStream}",
-                      "name": "stream",
-                      "type": "Readable|Writable|Duplex|WritableStream|ReadableStream"
-                    }
-                  ]
-                }
-              ],
-              "desc": "<p>Returns whether the stream has encountered an error.</p>"
-            },
-            {
-              "textRaw": "`stream.isReadable(stream)`",
-              "type": "method",
-              "name": "isReadable",
-              "meta": {
-                "added": [
-                  "v17.4.0",
-                  "v16.14.0"
-                ],
-                "changes": []
-              },
-              "stability": 1,
-              "stabilityText": "Experimental",
-              "signatures": [
-                {
-                  "return": {
-                    "textRaw": "Returns: {boolean}",
-                    "name": "return",
-                    "type": "boolean"
-                  },
-                  "params": [
-                    {
-                      "textRaw": "`stream` {Readable|Duplex|ReadableStream}",
-                      "name": "stream",
-                      "type": "Readable|Duplex|ReadableStream"
-                    }
-                  ]
-                }
-              ],
-              "desc": "<p>Returns whether the stream is readable.</p>"
-            },
-            {
               "textRaw": "`stream.Readable.toWeb(streamReadable[, options])`",
               "type": "method",
               "name": "toWeb",
@@ -4091,10 +4158,21 @@
                 "added": [
                   "v17.0.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  },
+                  {
+                    "version": [
+                      "v18.7.0"
+                    ],
+                    "pr-url": "https://github.com/nodejs/node/pull/43515",
+                    "description": "include strategy options on Readable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {
@@ -4158,10 +4236,14 @@
                 "added": [
                   "v17.0.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {
@@ -4214,10 +4296,14 @@
                 "added": [
                   "v17.0.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {
@@ -4245,7 +4331,10 @@
                 ],
                 "changes": [
                   {
-                    "version": "v19.5.0",
+                    "version": [
+                      "v19.5.0",
+                      "v18.17.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/46190",
                     "description": "The `src` argument can now be a `ReadableStream` or `WritableStream`."
                   }
@@ -4272,10 +4361,14 @@
                 "added": [
                   "v17.0.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {
@@ -4351,10 +4444,14 @@
                 "added": [
                   "v17.0.0"
                 ],
-                "changes": []
+                "changes": [
+                  {
+                    "version": "v22.17.0",
+                    "pr-url": "https://github.com/nodejs/node/pull/57513",
+                    "description": "Marking the API stable."
+                  }
+                ]
               },
-              "stability": 1,
-              "stabilityText": "Experimental",
               "signatures": [
                 {
                   "return": {
@@ -4395,7 +4492,10 @@
                 ],
                 "changes": [
                   {
-                    "version": "v19.7.0",
+                    "version": [
+                      "v19.7.0",
+                      "v18.16.0"
+                    ],
                     "pr-url": "https://github.com/nodejs/node/pull/46273",
                     "description": "Added support for `ReadableStream` and `WritableStream`."
                   }
@@ -4427,7 +4527,8 @@
               "name": "getDefaultHighWaterMark",
               "meta": {
                 "added": [
-                  "v19.9.0"
+                  "v19.9.0",
+                  "v18.17.0"
                 ],
                 "changes": []
               },
@@ -4455,7 +4556,8 @@
               "name": "setDefaultHighWaterMark",
               "meta": {
                 "added": [
-                  "v19.9.0"
+                  "v19.9.0",
+                  "v18.17.0"
                 ],
                 "changes": []
               },
@@ -4511,6 +4613,11 @@
                   "meta": {
                     "changes": [
                       {
+                        "version": "v22.0.0",
+                        "pr-url": "https://github.com/nodejs/node/pull/52037",
+                        "description": "bump default highWaterMark."
+                      },
+                      {
                         "version": "v15.5.0",
                         "pr-url": "https://github.com/nodejs/node/pull/36431",
                         "description": "support passing in an AbortSignal."
@@ -4544,10 +4651,10 @@
                           "type": "Object",
                           "options": [
                             {
-                              "textRaw": "`highWaterMark` {number} Buffer level when [`stream.write()`][stream-write] starts returning `false`. **Default:** `16384` (16 KiB), or `16` for `objectMode` streams.",
+                              "textRaw": "`highWaterMark` {number} Buffer level when [`stream.write()`][stream-write] starts returning `false`. **Default:** `65536` (64 KiB), or `16` for `objectMode` streams.",
                               "name": "highWaterMark",
                               "type": "number",
-                              "default": "`16384` (16 KiB), or `16` for `objectMode` streams",
+                              "default": "`65536` (64 KiB), or `16` for `objectMode` streams",
                               "desc": "Buffer level when [`stream.write()`][stream-write] starts returning `false`."
                             },
                             {
@@ -4804,7 +4911,7 @@
                 {
                   "textRaw": "Decoding buffers in a writable stream",
                   "name": "decoding_buffers_in_a_writable_stream",
-                  "desc": "<p>Decoding buffers is a common task, for instance, when using transformers whose\ninput is a string. This is not a trivial process when using multi-byte\ncharacters encoding, such as UTF-8. The following example shows how to decode\nmulti-byte strings using <code>StringDecoder</code> and <a href=\"#class-streamwritable\"><code>Writable</code></a>.</p>\n<pre><code class=\"language-js\">const { Writable } = require('node:stream');\nconst { StringDecoder } = require('node:string_decoder');\n\nclass StringWritable extends Writable {\n  constructor(options) {\n    super(options);\n    this._decoder = new StringDecoder(options &#x26;&#x26; options.defaultEncoding);\n    this.data = '';\n  }\n  _write(chunk, encoding, callback) {\n    if (encoding === 'buffer') {\n      chunk = this._decoder.write(chunk);\n    }\n    this.data += chunk;\n    callback();\n  }\n  _final(callback) {\n    this.data += this._decoder.end();\n    callback();\n  }\n}\n\nconst euro = [[0xE2, 0x82], [0xAC]].map(Buffer.from);\nconst w = new StringWritable();\n\nw.write('currency: ');\nw.write(euro[0]);\nw.end(euro[1]);\n\nconsole.log(w.data); // currency: €\n</code></pre>",
+                  "desc": "<p>Decoding buffers is a common task, for instance, when using transformers whose\ninput is a string. This is not a trivial process when using multi-byte\ncharacters encoding, such as UTF-8. The following example shows how to decode\nmulti-byte strings using <code>StringDecoder</code> and <a href=\"#class-streamwritable\"><code>Writable</code></a>.</p>\n<pre><code class=\"language-js\">const { Writable } = require('node:stream');\nconst { StringDecoder } = require('node:string_decoder');\n\nclass StringWritable extends Writable {\n  constructor(options) {\n    super(options);\n    this._decoder = new StringDecoder(options?.defaultEncoding);\n    this.data = '';\n  }\n  _write(chunk, encoding, callback) {\n    if (encoding === 'buffer') {\n      chunk = this._decoder.write(chunk);\n    }\n    this.data += chunk;\n    callback();\n  }\n  _final(callback) {\n    this.data += this._decoder.end();\n    callback();\n  }\n}\n\nconst euro = [[0xE2, 0x82], [0xAC]].map(Buffer.from);\nconst w = new StringWritable();\n\nw.write('currency: ');\nw.write(euro[0]);\nw.end(euro[1]);\n\nconsole.log(w.data); // currency: €\n</code></pre>",
                   "type": "module",
                   "displayName": "Decoding buffers in a writable stream"
                 }
@@ -4823,6 +4930,11 @@
                   "name": "stream.Readable",
                   "meta": {
                     "changes": [
+                      {
+                        "version": "v22.0.0",
+                        "pr-url": "https://github.com/nodejs/node/pull/52037",
+                        "description": "bump default highWaterMark."
+                      },
                       {
                         "version": "v15.5.0",
                         "pr-url": "https://github.com/nodejs/node/pull/36431",
@@ -4852,10 +4964,10 @@
                           "type": "Object",
                           "options": [
                             {
-                              "textRaw": "`highWaterMark` {number} The maximum [number of bytes][hwm-gotcha] to store in the internal buffer before ceasing to read from the underlying resource. **Default:** `16384` (16 KiB), or `16` for `objectMode` streams.",
+                              "textRaw": "`highWaterMark` {number} The maximum [number of bytes][hwm-gotcha] to store in the internal buffer before ceasing to read from the underlying resource. **Default:** `65536` (64 KiB), or `16` for `objectMode` streams.",
                               "name": "highWaterMark",
                               "type": "number",
-                              "default": "`16384` (16 KiB), or `16` for `objectMode` streams",
+                              "default": "`65536` (64 KiB), or `16` for `objectMode` streams",
                               "desc": "The maximum [number of bytes][hwm-gotcha] to store in the internal buffer before ceasing to read from the underlying resource."
                             },
                             {
@@ -5004,7 +5116,7 @@
                   "meta": {
                     "changes": [
                       {
-                        "version": "v20.13.0",
+                        "version": "v22.0.0",
                         "pr-url": "https://github.com/nodejs/node/pull/51866",
                         "description": "The `chunk` argument can now be a `TypedArray` or `DataView` instance."
                       },

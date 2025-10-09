@@ -7,13 +7,21 @@
 <!-- YAML
 added: v8.5.0
 changes:
-  - version: v20.18.3
+  - version: v22.12.0
     pr-url: https://github.com/nodejs/node/pull/55333
     description: Import attributes are no longer experimental.
-  - version: v20.10.0
+  - version: v22.0.0
+    pr-url: https://github.com/nodejs/node/pull/52104
+    description: Drop support for import assertions.
+  - version:
+    - v21.0.0
+    - v20.10.0
+    - v18.20.0
     pr-url: https://github.com/nodejs/node/pull/50140
     description: Add experimental support for import attributes.
-  - version: v20.0.0
+  - version:
+    - v20.0.0
+    - v18.19.0
     pr-url: https://github.com/nodejs/node/pull/44710
     description: Module customization hooks are executed off the main thread.
   - version:
@@ -260,12 +268,13 @@ added:
   - v17.1.0
   - v16.14.0
 changes:
-  - version: v20.10.0
+  - version:
+    - v21.0.0
+    - v20.10.0
+    - v18.20.0
     pr-url: https://github.com/nodejs/node/pull/50140
     description: Switch from Import Assertions to Import Attributes.
 -->
-
-> Stability: 2 - Stable
 
 [Import attributes][Import Attributes MDN] are an inline syntax for module import
 statements to pass on more information alongside the module specifier.
@@ -335,28 +344,37 @@ properties. It is only supported in ES modules.
 ### `import.meta.dirname`
 
 <!-- YAML
-added: v20.11.0
+added:
+  - v21.2.0
+  - v20.11.0
+changes:
+  - version: v22.16.0
+    pr-url: https://github.com/nodejs/node/pull/58011
+    description: This property is no longer experimental.
 -->
 
-> Stability: 1.2 - Release candidate
+* {string} The directory name of the current module.
 
-* {string} The directory name of the current module. This is the same as the
-  [`path.dirname()`][] of the [`import.meta.filename`][].
+This is the same as the [`path.dirname()`][] of the [`import.meta.filename`][].
 
 > **Caveat**: only present on `file:` modules.
 
 ### `import.meta.filename`
 
 <!-- YAML
-added: v20.11.0
+added:
+  - v21.2.0
+  - v20.11.0
+changes:
+  - version: v22.16.0
+    pr-url: https://github.com/nodejs/node/pull/58011
+    description: This property is no longer experimental.
 -->
-
-> Stability: 1.2 - Release candidate
 
 * {string} The full absolute path and filename of the current module, with
   symlinks resolved.
-* This is the same as the [`url.fileURLToPath()`][] of the
-  [`import.meta.url`][].
+
+This is the same as the [`url.fileURLToPath()`][] of the [`import.meta.url`][].
 
 > **Caveat** only local modules support this property. Modules not using the
 > `file:` protocol will not provide it.
@@ -375,6 +393,35 @@ import { readFileSync } from 'node:fs';
 const buffer = readFileSync(new URL('./data.proto', import.meta.url));
 ```
 
+### `import.meta.main`
+
+<!-- YAML
+added:
+  - v22.18.0
+-->
+
+> Stability: 1.0 - Early development
+
+* {boolean} `true` when the current module is the entry point of the current process; `false` otherwise.
+
+Equivalent to `require.main === module` in CommonJS.
+
+Analogous to Python's `__name__ == "__main__"`.
+
+```js
+export function foo() {
+  return 'Hello, world';
+}
+
+function main() {
+  const message = foo();
+  console.log(message);
+}
+
+if (import.meta.main) main();
+// `foo` can be imported from another module without possible side-effects from `main`
+```
+
 ### `import.meta.resolve(specifier)`
 
 <!-- YAML
@@ -382,15 +429,21 @@ added:
   - v13.9.0
   - v12.16.2
 changes:
-  - version: v20.6.0
+  - version:
+    - v20.6.0
+    - v18.19.0
     pr-url: https://github.com/nodejs/node/pull/49028
-    description: Unflag `import.meta.resolve`, with `parentURL` parameter still
-                 flagged.
-  - version: v20.6.0
+    description: No longer behind `--experimental-import-meta-resolve` CLI flag,
+                 except for the non-standard `parentURL` parameter.
+  - version:
+    - v20.6.0
+    - v18.19.0
     pr-url: https://github.com/nodejs/node/pull/49038
     description: This API no longer throws when targeting `file:` URLs that do
                  not map to an existing file on the local FS.
-  - version: v20.0.0
+  - version:
+    - v20.0.0
+    - v18.19.0
     pr-url: https://github.com/nodejs/node/pull/44710
     description: This API now returns a string synchronously instead of a Promise.
   - version:
@@ -563,6 +616,10 @@ These CommonJS variables are not available in ES modules.
 They can instead be loaded with [`module.createRequire()`][] or
 [`process.dlopen`][].
 
+#### No `require.main`
+
+To replace `require.main === module`, there is the [`import.meta.main`][] API.
+
 #### No `require.resolve`
 
 Relative resolution can be handled via `new URL('./local', import.meta.url)`.
@@ -593,12 +650,10 @@ separate cache.
 
 <!-- YAML
 changes:
-  - version: v20.18.3
+  - version: v22.12.0
     pr-url: https://github.com/nodejs/node/pull/55333
     description: JSON modules are no longer experimental.
 -->
-
-> Stability: 2 - Stable
 
 JSON files can be referenced by `import`:
 
@@ -686,71 +741,6 @@ spawn(execPath, [
 });
 ```
 
-## HTTPS and HTTP imports
-
-> Stability: 1 - Experimental
-
-Importing network based modules using `https:` and `http:` is supported under
-the `--experimental-network-imports` flag. This allows web browser-like imports
-to work in Node.js with a few differences due to application stability and
-security concerns that are different when running in a privileged environment
-instead of a browser sandbox.
-
-### Imports are limited to HTTP/1
-
-Automatic protocol negotiation for HTTP/2 and HTTP/3 is not yet supported.
-
-### HTTP is limited to loopback addresses
-
-`http:` is vulnerable to man-in-the-middle attacks and is not allowed to be
-used for addresses outside of the IPv4 address `127.0.0.0/8` (`127.0.0.1` to
-`127.255.255.255`) and the IPv6 address `::1`. Support for `http:` is intended
-to be used for local development.
-
-### Authentication is never sent to the destination server.
-
-`Authorization`, `Cookie`, and `Proxy-Authorization` headers are not sent to the
-server. Avoid including user info in parts of imported URLs. A security model
-for safely using these on the server is being worked on.
-
-### CORS is never checked on the destination server
-
-CORS is designed to allow a server to limit the consumers of an API to a
-specific set of hosts. This is not supported as it does not make sense for a
-server-based implementation.
-
-### Cannot load non-network dependencies
-
-These modules cannot access other modules that are not over `http:` or `https:`.
-To still access local modules while avoiding the security concern, pass in
-references to the local dependencies:
-
-```mjs
-// file.mjs
-import worker_threads from 'node:worker_threads';
-import { configure, resize } from 'https://example.com/imagelib.mjs';
-configure({ worker_threads });
-```
-
-```mjs
-// https://example.com/imagelib.mjs
-let worker_threads;
-export function configure(opts) {
-  worker_threads = opts.worker_threads;
-}
-export function resize(img, size) {
-  // Perform resizing in worker_thread to avoid main thread blocking
-}
-```
-
-### Network-based loading is not enabled by default
-
-For now, the `--experimental-network-imports` flag is required to enable loading
-resources over `http:` or `https:`. In the future, a different mechanism will be
-used to enforce this. Opt-in is required to prevent transitive dependencies
-inadvertently using potentially mutable state that could affect reliability
-of Node.js applications.
-
 <i id="esm_experimental_loaders"></i>
 
 ## Loaders
@@ -793,8 +783,7 @@ does not determine whether the resolved URL protocol can be loaded,
 or whether the file extensions are permitted, instead these validations
 are applied by Node.js during the load phase
 (for example, if it was asked to load a URL that has a protocol that is
-not `file:`, `data:`, `node:`, or if `--experimental-network-imports`
-is enabled, `https:`).
+not `file:`, `data:` or `node:`.
 
 The algorithm also tries to determine the format of the file based
 on the extension (see `ESM_FILE_FORMAT` algorithm below). If it does
@@ -885,14 +874,12 @@ The resolver can throw the following errors:
 >    1. Throw an _Invalid Module Specifier_ error.
 > 7. Let _packageSubpath_ be _"."_ concatenated with the substring of
 >    _packageSpecifier_ from the position at the length of _packageName_.
-> 8. If _packageSubpath_ ends in _"/"_, then
->    1. Throw an _Invalid Module Specifier_ error.
-> 9. Let _selfUrl_ be the result of
+> 8. Let _selfUrl_ be the result of
 >    **PACKAGE\_SELF\_RESOLVE**(_packageName_, _packageSubpath_, _parentURL_).
-> 10. If _selfUrl_ is not **undefined**, return _selfUrl_.
-> 11. While _parentURL_ is not the file system root,
+> 9. If _selfUrl_ is not **undefined**, return _selfUrl_.
+> 10. While _parentURL_ is not the file system root,
 >     1. Let _packageURL_ be the URL resolution of _"node\_modules/"_
->        concatenated with _packageSpecifier_, relative to _parentURL_.
+>        concatenated with _packageName_, relative to _parentURL_.
 >     2. Set _parentURL_ to the parent folder URL of _parentURL_.
 >     3. If the folder at _packageURL_ does not exist, then
 >        1. Continue the next loop iteration.
@@ -906,7 +893,7 @@ The resolver can throw the following errors:
 >           1. Return the URL resolution of _main_ in _packageURL_.
 >     7. Otherwise,
 >        1. Return the URL resolution of _packageSubpath_ in _packageURL_.
-> 12. Throw a _Module Not Found_ error.
+> 11. Throw a _Module Not Found_ error.
 
 **PACKAGE\_SELF\_RESOLVE**(_packageName_, _packageSubpath_, _parentURL_)
 
@@ -923,6 +910,8 @@ The resolver can throw the following errors:
 > 6. Otherwise, return **undefined**.
 
 **PACKAGE\_EXPORTS\_RESOLVE**(_packageURL_, _subpath_, _exports_, _conditions_)
+
+Note: This function is directly invoked by the CommonJS resolution algorithm.
 
 > 1. If _exports_ is an Object with both a key starting with _"."_ and a key not
 >    starting with _"."_, throw an _Invalid Package Configuration_ error.
@@ -947,6 +936,8 @@ The resolver can throw the following errors:
 
 **PACKAGE\_IMPORTS\_RESOLVE**(_specifier_, _parentURL_, _conditions_)
 
+Note: This function is directly invoked by the CommonJS resolution algorithm.
+
 > 1. Assert: _specifier_ begins with _"#"_.
 > 2. If _specifier_ is exactly equal to _"#"_ or starts with _"#/"_, then
 >    1. Throw an _Invalid Module Specifier_ error.
@@ -963,14 +954,16 @@ The resolver can throw the following errors:
 **PACKAGE\_IMPORTS\_EXPORTS\_RESOLVE**(_matchKey_, _matchObj_, _packageURL_,
 _isImports_, _conditions_)
 
-> 1. If _matchKey_ is a key of _matchObj_ and does not contain _"\*"_, then
+> 1. If _matchKey_ ends in _"/"_, then
+>    1. Throw an _Invalid Module Specifier_ error.
+> 2. If _matchKey_ is a key of _matchObj_ and does not contain _"\*"_, then
 >    1. Let _target_ be the value of _matchObj_\[_matchKey_].
 >    2. Return the result of **PACKAGE\_TARGET\_RESOLVE**(_packageURL_,
 >       _target_, **null**, _isImports_, _conditions_).
-> 2. Let _expansionKeys_ be the list of keys of _matchObj_ containing only a
+> 3. Let _expansionKeys_ be the list of keys of _matchObj_ containing only a
 >    single _"\*"_, sorted by the sorting function **PATTERN\_KEY\_COMPARE**
 >    which orders in descending order of specificity.
-> 3. For each key _expansionKey_ in _expansionKeys_, do
+> 4. For each key _expansionKey_ in _expansionKeys_, do
 >    1. Let _patternBase_ be the substring of _expansionKey_ up to but excluding
 >       the first _"\*"_ character.
 >    2. If _matchKey_ starts with but is not equal to _patternBase_, then
@@ -985,7 +978,7 @@ _isImports_, _conditions_)
 >             _matchKey_ minus the length of _patternTrailer_.
 >          3. Return the result of **PACKAGE\_TARGET\_RESOLVE**(_packageURL_,
 >             _target_, _patternMatch_, _isImports_, _conditions_).
-> 4. Return **null**.
+> 5. Return **null**.
 
 **PATTERN\_KEY\_COMPARE**(_keyA_, _keyB_)
 
@@ -1150,6 +1143,7 @@ resolution for ESM specifiers is [commonjs-extension-resolution-loader][].
 [`import()`]: #import-expressions
 [`import.meta.dirname`]: #importmetadirname
 [`import.meta.filename`]: #importmetafilename
+[`import.meta.main`]: #importmetamain
 [`import.meta.resolve`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta/resolve
 [`import.meta.url`]: #importmetaurl
 [`import`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
@@ -1159,7 +1153,7 @@ resolution for ESM specifiers is [commonjs-extension-resolution-loader][].
 [`path.dirname()`]: path.md#pathdirnamepath
 [`process.dlopen`]: process.md#processdlopenmodule-filename-flags
 [`url.fileURLToPath()`]: url.md#urlfileurltopathurl-options
-[cjs-module-lexer]: https://github.com/nodejs/cjs-module-lexer/tree/1.2.2
+[cjs-module-lexer]: https://github.com/nodejs/cjs-module-lexer/tree/2.0.0
 [commonjs-extension-resolution-loader]: https://github.com/nodejs/loaders-test/tree/main/commonjs-extension-resolution-loader
 [custom https loader]: module.md#import-from-https
 [import.meta.resolve]: #importmetaresolvespecifier

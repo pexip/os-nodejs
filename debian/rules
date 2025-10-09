@@ -23,16 +23,20 @@ export LANG
 DEB_CONFIGURE_NORMAL_ARGS =
 DEB_CONFIGURE_EXTRA_FLAGS = \
 --verbose \
+--without-amaro \
 --without-npm \
 --without-corepack \
 --shared \
 --shared-zlib \
+--shared-zstd \
 --shared-cares \
 --shared-ngtcp2 \
 --shared-nghttp3 \
 --shared-nghttp2 \
 --shared-brotli \
 --shared-simdjson \
+--shared-sqlite \
+--shared-builtin-amaro/dist/index-path=/usr/share/nodejs/amaro/dist/index.js \
 --shared-builtin-undici/undici-path=/usr/share/nodejs/undici/undici-fetch.js \
 --shared-builtin-acorn-path=/usr/share/nodejs/acorn/dist/acorn.js \
 --shared-builtin-acorn_walk-path=/usr/share/nodejs/acorn-walk/dist/walk.js \
@@ -78,12 +82,12 @@ endif
 
 # mips32r1 or greater, detected at runtime
 ifeq (mips64el, $(DEB_HOST_ARCH))
-DEB_CONFIGURE_EXTRA_FLAGS += --with-mips-arch-variant=rx --with-mips-fpu-mode=fp64
+DEB_CONFIGURE_EXTRA_FLAGS += --with-mips-arch-variant=r2 --with-mips-fpu-mode=fp64
 CFLAGS += -gsplit-dwarf
 CPPFLAGS += -gsplit-dwarf
 endif
 ifeq (mips64r6el, $(DEB_HOST_ARCH))
-DEB_CONFIGURE_EXTRA_FLAGS += --with-mips-arch-variant=rx --with-mips-fpu-mode=fp64
+DEB_CONFIGURE_EXTRA_FLAGS += --with-mips-arch-variant=r6 --with-mips-fpu-mode=fp64
 CFLAGS += -gsplit-dwarf
 CPPFLAGS += -gsplit-dwarf
 endif
@@ -116,6 +120,10 @@ endif
 
 DEB_DESTDIR = $(CURDIR)/debian/tmp
 
+# Compiled without amaro - no ts support
+skipTests += parallel/test-util-getcallsites
+skipTests += parallel/test-worker-eval-typescript
+skipTests += parallel/test-node-output-eval
 # tests using npm
 skipTests += parallel/test-npm-install
 skipTests += parallel/test-npm-version

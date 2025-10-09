@@ -78,7 +78,7 @@ describe('Module syntax detection', { concurrency: !process.env.TEST_PARALLEL },
     });
   });
 
-  describe('.js file input in a typeless package', { concurrency: true }, () => {
+  describe('.js file input in a typeless package', { concurrency: !process.env.TEST_PARALLEL }, () => {
     for (const { testName, entryPath } of [
       {
         testName: 'permits CommonJS syntax in a .js entry point',
@@ -119,7 +119,7 @@ describe('Module syntax detection', { concurrency: !process.env.TEST_PARALLEL },
     }
   });
 
-  describe('extensionless file input in a typeless package', { concurrency: true }, () => {
+  describe('extensionless file input in a typeless package', { concurrency: !process.env.TEST_PARALLEL }, () => {
     for (const { testName, entryPath } of [
       {
         testName: 'permits CommonJS syntax in an extensionless entry point',
@@ -182,7 +182,7 @@ describe('Module syntax detection', { concurrency: !process.env.TEST_PARALLEL },
     });
   });
 
-  describe('file input in a "type": "commonjs" package', { concurrency: true }, () => {
+  describe('file input in a "type": "commonjs" package', { concurrency: !process.env.TEST_PARALLEL }, () => {
     for (const { testName, entryPath } of [
       {
         testName: 'disallows ESM syntax in a .js entry point',
@@ -210,7 +210,7 @@ describe('Module syntax detection', { concurrency: !process.env.TEST_PARALLEL },
     }
   });
 
-  describe('file input in a "type": "module" package', { concurrency: true }, () => {
+  describe('file input in a "type": "module" package', { concurrency: !process.env.TEST_PARALLEL }, () => {
     for (const { testName, entryPath } of [
       {
         testName: 'disallows CommonJS syntax in a .js entry point',
@@ -239,7 +239,7 @@ describe('Module syntax detection', { concurrency: !process.env.TEST_PARALLEL },
   });
 
   // https://github.com/nodejs/node/issues/50917
-  describe('syntax that errors in CommonJS but works in ESM', { concurrency: true }, () => {
+  describe('syntax that errors in CommonJS but works in ESM', { concurrency: !process.env.TEST_PARALLEL }, () => {
     it('permits top-level `await`', async () => {
       const { stdout, stderr, code, signal } = await spawnPromisified(process.execPath, [
         '--eval',
@@ -294,7 +294,10 @@ describe('Module syntax detection', { concurrency: !process.env.TEST_PARALLEL },
         'const fs = require("node:fs"); await Promise.resolve();',
       ]);
 
-      match(stderr, /ReferenceError: require is not defined in ES module scope/);
+      match(
+        stderr,
+        /ReferenceError: Cannot determine intended module format because both require\(\) and top-level await are present\. If the code is intended to be CommonJS, wrap await in an async function\. If the code is intended to be an ES module, replace require\(\) with import\./
+      );
       strictEqual(stdout, '');
       strictEqual(code, 1);
       strictEqual(signal, null);
@@ -433,6 +436,27 @@ describe('when working with Worker threads', () => {
     strictEqual(stderr, '');
     strictEqual(stdout, '');
     strictEqual(code, 0);
+    strictEqual(signal, null);
+  });
+});
+
+describe('cjs & esm ambiguous syntax case', () => {
+  it('should throw an ambiguous syntax error when using top-level await with require', async () => {
+    const { stderr, code, signal } = await spawnPromisified(
+      process.execPath,
+      [
+        '--input-type=module',
+        '--eval',
+        `await 1;\nconst fs = require('fs');`,
+      ]
+    );
+
+    match(
+      stderr,
+      /ReferenceError: Cannot determine intended module format because both require\(\) and top-level await are present\. If the code is intended to be CommonJS, wrap await in an async function\. If the code is intended to be an ES module, replace require\(\) with import\./
+    );
+
+    strictEqual(code, 1);
     strictEqual(signal, null);
   });
 });

@@ -59,6 +59,7 @@ executed in specific contexts.
 added: v0.3.1
 changes:
   - version:
+    - v21.7.0
     - v20.12.0
     pr-url: https://github.com/nodejs/node/pull/51244
     description: Added support for
@@ -228,7 +229,7 @@ overhead.
 <!-- YAML
 added: v0.3.1
 changes:
-  - version: v20.18.0
+  - version: v22.8.0
     pr-url: https://github.com/nodejs/node/pull/54394
     description: The `contextObject` argument now accepts `vm.constants.DONT_CONTEXTIFY`.
   - version: v14.6.0
@@ -633,7 +634,10 @@ The identifier of the current module, as set in the constructor.
 
 <!-- YAML
 changes:
-  - version: v20.10.0
+  - version:
+    - v21.1.0
+    - v20.10.0
+    - v18.19.0
     pr-url: https://github.com/nodejs/node/pull/50141
     description: The option `extra.assert` is renamed to `extra.attributes`. The
                  former name is still provided for backward compatibility.
@@ -985,6 +989,7 @@ const vm = require('node:vm');
 added: v10.10.0
 changes:
   - version:
+    - v21.7.0
     - v20.12.0
     pr-url: https://github.com/nodejs/node/pull/51244
     description: Added support for
@@ -1037,13 +1042,13 @@ changes:
   * `contextExtensions` {Object\[]} An array containing a collection of context
     extensions (objects wrapping the current scope) to be applied while
     compiling. **Default:** `[]`.
-* `importModuleDynamically`
-  {Function|vm.constants.USE\_MAIN\_CONTEXT\_DEFAULT\_LOADER}
-  Used to specify the how the modules should be loaded during the evaluation of
-  this function when `import()` is called. This option is part of the
-  experimental modules API. We do not recommend using it in a production
-  environment. For detailed information, see
-  [Support of dynamic `import()` in compilation APIs][].
+  * `importModuleDynamically`
+    {Function|vm.constants.USE\_MAIN\_CONTEXT\_DEFAULT\_LOADER}
+    Used to specify the how the modules should be loaded during the evaluation of
+    this function when `import()` is called. This option is part of the
+    experimental modules API. We do not recommend using it in a production
+    environment. For detailed information, see
+    [Support of dynamic `import()` in compilation APIs][].
 * Returns: {Function}
 
 Compiles the given code into the provided context (if no context is
@@ -1053,7 +1058,9 @@ function with the given `params`.
 ## `vm.constants`
 
 <!-- YAML
-added: v20.12.0
+added:
+  - v21.7.0
+  - v20.12.0
 -->
 
 * {Object}
@@ -1063,7 +1070,9 @@ Returns an object containing commonly used constants for VM operations.
 ### `vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER`
 
 <!-- YAML
-added: v20.12.0
+added:
+  - v21.7.0
+  - v20.12.0
 -->
 
 > Stability: 1.1 - Active development
@@ -1081,15 +1090,17 @@ For detailed information, see
 added: v0.3.1
 changes:
   - version:
-    - v20.18.0
+    - v22.8.0
     pr-url: https://github.com/nodejs/node/pull/54394
     description: The `contextObject` argument now accepts `vm.constants.DONT_CONTEXTIFY`.
   - version:
+    - v21.7.0
     - v20.12.0
     pr-url: https://github.com/nodejs/node/pull/51244
     description: Added support for
                  `vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER`.
   - version:
+    - v21.2.0
     - v20.11.0
     pr-url: https://github.com/nodejs/node/pull/50360
     description: The `importModuleDynamically` option is supported now.
@@ -1274,6 +1285,7 @@ vm.measureMemory({ mode: 'detailed', execution: 'eager' })
 added: v0.3.1
 changes:
   - version:
+    - v21.7.0
     - v20.12.0
     pr-url: https://github.com/nodejs/node/pull/51244
     description: Added support for
@@ -1350,10 +1362,11 @@ console.log(contextObject);
 added: v0.3.1
 changes:
   - version:
-    - v20.18.0
+    - v22.8.0
     pr-url: https://github.com/nodejs/node/pull/54394
     description: The `contextObject` argument now accepts `vm.constants.DONT_CONTEXTIFY`.
   - version:
+    - v21.7.0
     - v20.12.0
     pr-url: https://github.com/nodejs/node/pull/51244
     description: Added support for
@@ -1470,6 +1483,7 @@ const frozenContext = vm.runInNewContext('Object.freeze(globalThis); globalThis;
 added: v0.3.1
 changes:
   - version:
+    - v21.7.0
     - v20.12.0
     pr-url: https://github.com/nodejs/node/pull/51244
     description: Added support for
@@ -1541,8 +1555,8 @@ console.log(`evalResult: '${evalResult}', localVar: '${localVar}'`);
 ```
 
 Because `vm.runInThisContext()` does not have access to the local scope,
-`localVar` is unchanged. In contrast, [`eval()`][] _does_ have access to the
-local scope, so the value `localVar` is changed. In this way
+`localVar` is unchanged. In contrast, a direct `eval()` call _does_ have access
+to the local scope, so the value `localVar` is changed. In this way
 `vm.runInThisContext()` is much like an [indirect `eval()` call][], e.g.
 `(0,eval)('code')`.
 
@@ -1940,10 +1954,10 @@ const { Script, SyntheticModule } = require('node:vm');
 [GetModuleNamespace]: https://tc39.es/ecma262/#sec-getmodulenamespace
 [HostResolveImportedModule]: https://tc39.es/ecma262/#sec-hostresolveimportedmodule
 [Link() concrete method]: https://tc39.es/ecma262/#sec-moduledeclarationlinking
-[Module Record]: https://262.ecma-international.org/14.0/#sec-abstract-module-records
+[Module Record]: https://tc39.es/ecma262/#sec-abstract-module-records
 [Source Text Module Record]: https://tc39.es/ecma262/#sec-source-text-module-records
 [Support of dynamic `import()` in compilation APIs]: #support-of-dynamic-import-in-compilation-apis
-[Synthetic Module Record]: https://heycam.github.io/webidl/#synthetic-module-records
+[Synthetic Module Record]: https://tc39.es/ecma262/#sec-synthetic-module-records
 [V8 Embedder's Guide]: https://v8.dev/docs/embed#contexts
 [`ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG`]: errors.md#err_vm_dynamic_import_callback_missing_flag
 [`ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`]: errors.md#err_vm_dynamic_import_callback_missing
@@ -1961,6 +1975,6 @@ const { Script, SyntheticModule } = require('node:vm');
 [`vm.runInContext()`]: #vmrunincontextcode-contextifiedobject-options
 [`vm.runInThisContext()`]: #vmruninthiscontextcode-options
 [contextified]: #what-does-it-mean-to-contextify-an-object
-[global object]: https://es5.github.io/#x15.1
-[indirect `eval()` call]: https://es5.github.io/#x10.4.2
+[global object]: https://tc39.es/ecma262/#sec-global-object
+[indirect `eval()` call]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval#direct_and_indirect_eval
 [origin]: https://developer.mozilla.org/en-US/docs/Glossary/Origin

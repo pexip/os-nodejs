@@ -13,12 +13,12 @@ Forwarded: no, todo
  #ifdef NODE_SHARED_BUILTIN_CJS_MODULE_LEXER_LEXER_PATH
    AddExternalizedBuiltin(
        "internal/deps/cjs-module-lexer/lexer",
-@@ -69,7 +70,7 @@
-     "internal/deps/minimatch/index",
-     STRINGIFY(NODE_SHARED_BUILTIN_MINIMATCH_PATH));
- #endif  // NODE_SHARED_BUILTIN_MINIMATCH_PATH
--
-+#endif
+@@ -76,6 +77,8 @@
+                          STRINGIFY(NODE_SHARED_BUILTIN_AMARO_DIST_INDEX_PATH));
+ #endif  // NODE_SHARED_BUILTIN_AMARO_DIST_INDEX_PATH
+ #endif  // HAVE_AMARO
++
++#endif  // NOT NODE_BUILTIN_MODULES_PATH
  }
  
  bool BuiltinLoader::Exists(const char* id) {
