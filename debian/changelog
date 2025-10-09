@@ -1,3 +1,10 @@
+nodejs (22.18.0+dfsg+~cs22.17.2-2+pexip25u1) pexip-trixie; urgency=medium
+
+  * Backport node22 to trixie
+  * Restore openssl directory and disable QUIC.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 09 Oct 2025 17:15:00 +0100
+
 nodejs (22.18.0+dfsg+~cs22.17.2-2) experimental; urgency=medium
 
   * Fix flag syntax. ಠಠ
