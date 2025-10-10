@@ -1,4 +1,4 @@
-nodejs (22.18.0+dfsg+~cs22.17.2-2+pexip24u1) pexip-nodejs22; urgency=medium
+nodejs (22.18.0+dfsg+~cs22.17.2-2+pexip24u1) pexip-bookworm-nodejs22; urgency=medium
 
   * Backport node22 to bookworm (based on trixie backport)
   * Restore openssl directory and disable QUIC.
