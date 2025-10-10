@@ -3,18 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.20.4">
-  <title>Modules: Packages | Node.js v18.20.4 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v22.18.0">
+  <title>Modules: Packages | Node.js v22.18.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
   <link rel="canonical" href="https://nodejs.org/api/packages.html">
   <script async defer src="assets/api.js" type="text/javascript"></script>
+  <script>
+      const storedTheme = localStorage.getItem('theme');
+
+      // Follow operating system theme preference
+      if (storedTheme === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if (mq.matches) {
+          document.documentElement.classList.add('dark-mode');
+        }
+      } else if (storedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+  </script>
   
 </head>
 <body class="alt apidoc" id="api-section-packages">
+  <a href="#apicontent" class="skip-to-content">Skip to content</a>
   <div id="content" class="clearfix">
-    <div id="column2" class="interior">
+    <div role="navigation" id="column2" class="interior">
       <div id="intro" class="interior">
         <a href="/" title="Go back to the home page">
           Node.js
@@ -37,7 +51,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -57,6 +70,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages active">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -69,6 +83,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -96,7 +111,7 @@
     <div id="column1" data-id="packages" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.20.4 documentation</h1>
+          <h1>Node.js v22.18.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,33 +126,39 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.20.4</li>
+            <li class="pinned-header">Node.js v22.18.0</li>
             
     <li class="picker-header">
-      <a href="#">
-        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
+      <a href="#toc-picker" aria-controls="toc-picker">
+        <span class="picker-arrow"></span>
         Table of contents
       </a>
 
-      <div class="picker"><div class="toc"><ul>
+      <div class="picker" tabindex="-1"><div class="toc"><ul id="toc-picker">
 <li><a href="#modules-packages">Modules: Packages</a>
 <ul>
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#determining-module-system">Determining module system</a>
 <ul>
 <li><a href="#introduction_1">Introduction</a></li>
+<li><span class="stability_1.2"><a href="#syntax-detection">Syntax detection</a></span></li>
 <li><a href="#modules-loaders">Modules loaders</a></li>
 <li><a href="#packagejson-and-file-extensions"><code>package.json</code> and file extensions</a></li>
 <li><a href="#--input-type-flag"><code>--input-type</code> flag</a></li>
 </ul>
 </li>
-<li><span class="stability_1"><a href="#determining-package-manager">Determining package manager</a></span></li>
 <li><a href="#package-entry-points">Package entry points</a>
 <ul>
 <li><a href="#main-entry-point-export">Main entry point export</a></li>
 <li><a href="#subpath-exports">Subpath exports</a>
 <ul>
 <li><a href="#extensions-in-subpaths">Extensions in subpaths</a></li>
+<li><a href="#path-rules-and-validation-for-export-targets">Path Rules and Validation for Export Targets</a>
+<ul>
+<li><a href="#targets-must-be-relative-urls">Targets must be relative URLs</a></li>
+<li><a href="#no-path-traversal-or-invalid-segments">No path traversal or invalid segments</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#exports-sugar">Exports sugar</a></li>
@@ -150,22 +171,11 @@
 <li><a href="#self-referencing-a-package-using-its-name">Self-referencing a package using its name</a></li>
 </ul>
 </li>
-<li><a href="#dual-commonjses-module-packages">Dual CommonJS/ES module packages</a>
-<ul>
-<li><a href="#dual-package-hazard">Dual package hazard</a></li>
-<li><a href="#writing-dual-packages-while-avoiding-or-minimizing-hazards">Writing dual packages while avoiding or minimizing hazards</a>
-<ul>
-<li><a href="#approach-1-use-an-es-module-wrapper">Approach #1: Use an ES module wrapper</a></li>
-<li><a href="#approach-2-isolate-state">Approach #2: Isolate state</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li><a href="#dual-commonjses-module-packages">Dual CommonJS/ES module packages</a></li>
 <li><a href="#nodejs-packagejson-field-definitions">Node.js <code>package.json</code> field definitions</a>
 <ul>
 <li><a href="#name"><code>"name"</code></a></li>
 <li><a href="#main"><code>"main"</code></a></li>
-<li><span class="stability_1"><a href="#packagemanager"><code>"packageManager"</code></a></span></li>
 <li><a href="#type"><code>"type"</code></a></li>
 <li><a href="#exports"><code>"exports"</code></a></li>
 <li><a href="#imports"><code>"imports"</code></a></li>
@@ -178,12 +188,12 @@
   
             
     <li class="picker-header">
-      <a href="#">
-        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
+      <a href="#gtoc-picker" aria-controls="gtoc-picker">
+        <span class="picker-arrow"></span>
         Index
       </a>
 
-      <div class="picker"><ul>
+      <div class="picker" tabindex="-1" id="gtoc-picker"><ul>
 <li><a href="documentation.html" class="nav-documentation">About this documentation</a></li>
 <li><a href="synopsis.html" class="nav-synopsis">Usage and example</a></li>
 
@@ -205,7 +215,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -225,6 +234,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages active">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -237,6 +247,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -263,15 +274,17 @@
   
             
     <li class="picker-header">
-      <a href="#">
-        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
+      <a href="#alt-docs" aria-controls="alt-docs">
+        <span class="picker-arrow"></span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v22.x/api/packages.html">22.x</a></li>
+      <div class="picker" tabindex="-1"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v24.x/api/packages.html">24.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v23.x/api/packages.html">23.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v22.x/api/packages.html">22.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v21.x/api/packages.html">21.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v20.x/api/packages.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/packages.html">19.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v18.x/api/packages.html">18.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v18.x/api/packages.html">18.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/packages.html">17.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v16.x/api/packages.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/packages.html">15.x</a></li>
@@ -281,13 +294,13 @@
     </li>
   
             <li class="picker-header">
-              <a href="#">
-                <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
+              <a href="#options-picker" aria-controls="options-picker">
+                <span class="picker-arrow"></span>
                 Options
               </a>
         
-              <div class="picker">
-                <ul>
+              <div class="picker" tabindex="-1">
+                <ul id="options-picker">
                   <li>
                     <a href="all.html">View on single page</a>
                   </li>
@@ -303,25 +316,31 @@
         <hr>
       </header>
 
-      <details id="toc" open><summary>Table of contents</summary><ul>
+      <details role="navigation" id="toc" open><summary>Table of contents</summary><ul>
 <li><a href="#modules-packages">Modules: Packages</a>
 <ul>
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#determining-module-system">Determining module system</a>
 <ul>
 <li><a href="#introduction_1">Introduction</a></li>
+<li><span class="stability_1.2"><a href="#syntax-detection">Syntax detection</a></span></li>
 <li><a href="#modules-loaders">Modules loaders</a></li>
 <li><a href="#packagejson-and-file-extensions"><code>package.json</code> and file extensions</a></li>
 <li><a href="#--input-type-flag"><code>--input-type</code> flag</a></li>
 </ul>
 </li>
-<li><span class="stability_1"><a href="#determining-package-manager">Determining package manager</a></span></li>
 <li><a href="#package-entry-points">Package entry points</a>
 <ul>
 <li><a href="#main-entry-point-export">Main entry point export</a></li>
 <li><a href="#subpath-exports">Subpath exports</a>
 <ul>
 <li><a href="#extensions-in-subpaths">Extensions in subpaths</a></li>
+<li><a href="#path-rules-and-validation-for-export-targets">Path Rules and Validation for Export Targets</a>
+<ul>
+<li><a href="#targets-must-be-relative-urls">Targets must be relative URLs</a></li>
+<li><a href="#no-path-traversal-or-invalid-segments">No path traversal or invalid segments</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#exports-sugar">Exports sugar</a></li>
@@ -334,22 +353,11 @@
 <li><a href="#self-referencing-a-package-using-its-name">Self-referencing a package using its name</a></li>
 </ul>
 </li>
-<li><a href="#dual-commonjses-module-packages">Dual CommonJS/ES module packages</a>
-<ul>
-<li><a href="#dual-package-hazard">Dual package hazard</a></li>
-<li><a href="#writing-dual-packages-while-avoiding-or-minimizing-hazards">Writing dual packages while avoiding or minimizing hazards</a>
-<ul>
-<li><a href="#approach-1-use-an-es-module-wrapper">Approach #1: Use an ES module wrapper</a></li>
-<li><a href="#approach-2-isolate-state">Approach #2: Isolate state</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li><a href="#dual-commonjses-module-packages">Dual CommonJS/ES module packages</a></li>
 <li><a href="#nodejs-packagejson-field-definitions">Node.js <code>package.json</code> field definitions</a>
 <ul>
 <li><a href="#name"><code>"name"</code></a></li>
 <li><a href="#main"><code>"main"</code></a></li>
-<li><span class="stability_1"><a href="#packagemanager"><code>"packageManager"</code></a></span></li>
 <li><a href="#type"><code>"type"</code></a></li>
 <li><a href="#exports"><code>"exports"</code></a></li>
 <li><a href="#imports"><code>"imports"</code></a></li>
@@ -359,7 +367,7 @@
 </li>
 </ul></details>
 
-      <div id="apicontent">
+      <div role="main" id="apicontent">
         <h2>Modules: Packages<span><a class="mark" href="#modules-packages" id="modules-packages">#</a></span><a aria-hidden="true" class="legacy" id="packages_modules_packages"></a></h2>
 
 
@@ -392,6 +400,7 @@ named <code>node_modules</code>.</p>
 <p>This page provides guidance for package authors writing <code>package.json</code> files
 along with a reference for the <a href="#nodejs-packagejson-field-definitions"><code>package.json</code></a> fields defined by Node.js.</p>
 </section><section><h3>Determining module system<span><a class="mark" href="#determining-module-system" id="determining-module-system">#</a></span><a aria-hidden="true" class="legacy" id="packages_determining_module_system"></a></h3>
+<div>
 <h4>Introduction<span><a class="mark" href="#introduction_1" id="introduction_1">#</a></span><a aria-hidden="true" class="legacy" id="packages_introduction_1"></a></h4>
 <p>Node.js will treat the following as <a href="esm.html">ES modules</a> when passed to <code>node</code> as the
 initial input, or when referenced by <code>import</code> statements or <code>import()</code>
@@ -407,6 +416,16 @@ contains a top-level <a href="#type"><code>"type"</code></a> field with a value 
 <li>
 <p>Strings passed in as an argument to <code>--eval</code>, or piped to <code>node</code> via <code>STDIN</code>,
 with the flag <code>--input-type=module</code>.</p>
+</li>
+<li>
+<p>Code containing syntax only successfully parsed as <a href="esm.html">ES modules</a>, such as
+<code>import</code> or <code>export</code> statements or <code>import.meta</code>, with no explicit marker of
+how it should be interpreted. Explicit markers are <code>.mjs</code> or <code>.cjs</code>
+extensions, <code>package.json</code> <code>"type"</code> fields with either <code>"module"</code> or
+<code>"commonjs"</code> values, or <code>--input-type</code> or <code>--experimental-default-type</code> flags.
+Dynamic <code>import()</code> expressions are supported in either CommonJS or ES modules
+and would not force a file to be treated as an ES module. See
+<a href="#syntax-detection">Syntax detection</a>.</p>
 </li>
 </ul>
 <p>Node.js will treat the following as <a href="modules.html">CommonJS</a> when passed to <code>node</code> as the
@@ -453,6 +472,43 @@ CommonJS. Being explicit about the <code>type</code> of the package will future-
 package in case the default type of Node.js ever changes, and it will also make
 things easier for build tools and loaders to determine how the files in the
 package should be interpreted.</p>
+</div><div>
+<h4>Syntax detection<span><a class="mark" href="#syntax-detection" id="syntax-detection">#</a></span><a aria-hidden="true" class="legacy" id="packages_syntax_detection"></a></h4>
+<div class="api_metadata">
+<details class="changelog"><summary>History</summary>
+<table>
+<tbody><tr><th>Version</th><th>Changes</th></tr>
+<tr><td>v22.7.0</td>
+<td><p>Syntax detection is enabled by default.</p></td></tr>
+<tr><td>v21.1.0, v20.10.0</td>
+<td><p><span>Added in: v21.1.0, v20.10.0</span></p></td></tr>
+</tbody></table>
+</details>
+</div>
+<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1.2</a> - Release candidate</div><p></p>
+<p>Node.js will inspect the source code of ambiguous input to determine whether it
+contains ES module syntax; if such syntax is detected, the input will be treated
+as an ES module.</p>
+<p>Ambiguous input is defined as:</p>
+<ul>
+<li>Files with a <code>.js</code> extension or no extension; and either no controlling
+<code>package.json</code> file or one that lacks a <code>type</code> field; and
+<code>--experimental-default-type</code> is not specified.</li>
+<li>String input (<code>--eval</code> or STDIN) when neither <code>--input-type</code> nor
+<code>--experimental-default-type</code> are specified.</li>
+</ul>
+<p>ES module syntax is defined as syntax that would throw when evaluated as
+CommonJS. This includes the following:</p>
+<ul>
+<li><code>import</code> statements (but <em>not</em> <code>import()</code> expressions, which are valid in
+CommonJS).</li>
+<li><code>export</code> statements.</li>
+<li><code>import.meta</code> references.</li>
+<li><code>await</code> at the top level of a module.</li>
+<li>Lexical redeclarations of the CommonJS wrapper variables (<code>require</code>, <code>module</code>,
+<code>exports</code>, <code>__dirname</code>, <code>__filename</code>).</li>
+</ul>
+</div><div>
 <h4>Modules loaders<span><a class="mark" href="#modules-loaders" id="modules-loaders">#</a></span><a aria-hidden="true" class="legacy" id="packages_modules_loaders"></a></h4>
 <p>Node.js has two systems for resolving a specifier and loading modules.</p>
 <p>There is the CommonJS module loader:</p>
@@ -469,21 +525,21 @@ extensions (<code>.js</code>, <code>.json</code>, and finally <code>.node</code>
 <code>process.dlopen()</code>.</li>
 <li>It treats all files that lack <code>.json</code> or <code>.node</code> extensions as JavaScript
 text files.</li>
-<li>It cannot be used to load ECMAScript modules (although it is possible to
-<a href="modules.html#the-mjs-extension">load ECMASCript modules from CommonJS modules</a>). When used to load a
-JavaScript text file that is not an ECMAScript module, it loads it as a
-CommonJS module.</li>
+<li>It can only be used to <a href="modules.html#loading-ecmascript-modules-using-require">load ECMAScript modules from CommonJS modules</a> if
+the module graph is synchronous (that contains no top-level <code>await</code>).
+When used to load a JavaScript text file that is not an ECMAScript module,
+the file will be loaded as a CommonJS module.</li>
 </ul>
 <p>There is the ECMAScript module loader:</p>
 <ul>
-<li>It is asynchronous.</li>
+<li>It is asynchronous, unless it's being used to load modules for <code>require()</code>.</li>
 <li>It is responsible for handling <code>import</code> statements and <code>import()</code> expressions.</li>
 <li>It is not monkey patchable, can be customized using <a href="esm.html#loaders">loader hooks</a>.</li>
 <li>It does not support folders as modules, directory indexes (e.g.
 <code>'./startup/index.js'</code>) must be fully specified.</li>
 <li>It does no extension searching. A file extension must be provided
 when the specifier is a relative or absolute file URL.</li>
-<li>It can load JSON modules, but an import assertion is required.</li>
+<li>It can load JSON modules, but an import type attribute is required.</li>
 <li>It accepts only <code>.js</code>, <code>.mjs</code>, and <code>.cjs</code> extensions for JavaScript text
 files.</li>
 <li>It can be used to load JavaScript CommonJS modules. Such modules
@@ -492,6 +548,7 @@ which are available if they can be determined through static analysis.
 Imported CommonJS modules have their URLs converted to absolute
 paths and are then loaded via the CommonJS module loader.</li>
 </ul>
+</div><div>
 <h4><code>package.json</code> and file extensions<span><a class="mark" href="#packagejson-and-file-extensions" id="packagejson-and-file-extensions">#</a></span><a aria-hidden="true" class="legacy" id="packages_package_json_and_file_extensions"></a></h4>
 <p>Within a package, the <a href="#nodejs-packagejson-field-definitions"><code>package.json</code></a> <a href="#type"><code>"type"</code></a> field defines how
 Node.js should interpret <code>.js</code> files. If a <code>package.json</code> file does not have a
@@ -539,6 +596,7 @@ extension (since both <code>.js</code> and <code>.cjs</code> files are treated a
 <code>"commonjs"</code> package).</p>
 </li>
 </ul>
+</div><div>
 <h4><code>--input-type</code> flag<span><a class="mark" href="#--input-type-flag" id="--input-type-flag">#</a></span><a aria-hidden="true" class="legacy" id="packages_input_type_flag"></a></h4>
 <div class="api_metadata">
 <span>Added in: v12.0.0</span>
@@ -552,17 +610,7 @@ is set.</p>
 <p>For completeness there is also <code>--input-type=commonjs</code>, for explicitly running
 string input as CommonJS. This is the default behavior if <code>--input-type</code> is
 unspecified.</p>
-</section><section><h3>Determining package manager<span><a class="mark" href="#determining-package-manager" id="determining-package-manager">#</a></span><a aria-hidden="true" class="legacy" id="packages_determining_package_manager"></a></h3>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
-<p>While all Node.js projects are expected to be installable by all package
-managers once published, their development teams are often required to use one
-specific package manager. To make this process easier, Node.js ships with a
-tool called <a href="corepack.html">Corepack</a> that aims to make all package managers transparently
-available in your environment - provided you have Node.js installed.</p>
-<p>By default Corepack won't enforce any specific package manager and will use
-the generic "Last Known Good" versions associated with each Node.js release,
-but you can improve this experience by setting the <a href="#packagemanager"><code>"packageManager"</code></a> field
-in your project's <code>package.json</code>.</p>
+</div>
 </section><section><h3>Package entry points<span><a class="mark" href="#package-entry-points" id="package-entry-points">#</a></span><a aria-hidden="true" class="legacy" id="packages_package_entry_points"></a></h3>
 <p>In a package's <code>package.json</code> file, two fields can define entry points for a
 package: <a href="#main"><code>"main"</code></a> and <a href="#exports"><code>"exports"</code></a>. Both fields apply to both ES module
@@ -586,7 +634,7 @@ both CommonJS and ES modules in a single package please consult
 <a href="#dual-commonjses-module-packages">the dual CommonJS/ES module packages section</a>.</p>
 <p>Existing packages introducing the <a href="#exports"><code>"exports"</code></a> field will prevent consumers
 of the package from using any entry points that are not defined, including the
-<a href="#nodejs-packagejson-field-definitions"><code>package.json</code></a> (e.g. <code>require('your-package/package.json')</code>. <strong>This will
+<a href="#nodejs-packagejson-field-definitions"><code>package.json</code></a> (e.g. <code>require('your-package/package.json')</code>). <strong>This will
 likely be a breaking change.</strong></p>
 <p>To make the introduction of <a href="#exports"><code>"exports"</code></a> non-breaking, ensure that every
 previously supported entry point is exported. It is best to explicitly specify
@@ -632,6 +680,7 @@ to only the specific feature exports exposed:</p>
     <span class="hljs-attr">"./feature/internal/*"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">null</span></span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
+<div>
 <h4>Main entry point export<span><a class="mark" href="#main-entry-point-export" id="main-entry-point-export">#</a></span><a aria-hidden="true" class="legacy" id="packages_main_entry_point_export"></a></h4>
 <p>When writing a new package, it is recommended to use the <a href="#exports"><code>"exports"</code></a> field:</p>
 <pre><code class="language-json"><span class="hljs-punctuation">{</span>
@@ -654,6 +703,7 @@ alongside <code>"exports"</code> pointing to the same module:</p>
   <span class="hljs-attr">"main"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.js"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"exports"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.js"</span>
 <span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Subpath exports<span><a class="mark" href="#subpath-exports" id="subpath-exports">#</a></span><a aria-hidden="true" class="legacy" id="packages_subpath_exports"></a></h4>
 <div class="api_metadata">
 <span>Added in: v12.7.0</span>
@@ -673,6 +723,7 @@ with the main entry point by treating the main entry point as the
 <p>While other subpaths will error:</p>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> submodule <span class="hljs-keyword">from</span> <span class="hljs-string">'es-module-package/private-module.js'</span>;
 <span class="hljs-comment">// Throws ERR_PACKAGE_PATH_NOT_EXPORTED</span></code> <button class="copy-button">copy</button></pre>
+<div>
 <h5>Extensions in subpaths<span><a class="mark" href="#extensions-in-subpaths" id="extensions-in-subpaths">#</a></span><a aria-hidden="true" class="legacy" id="packages_extensions_in_subpaths"></a></h5>
 <p>Package authors should provide either extensioned (<code>import 'pkg/subpath.js'</code>) or
 extensionless (<code>import 'pkg/subpath'</code>) subpaths in their exports. This ensures
@@ -689,6 +740,51 @@ enabling the import map to utilize a <a href="https://github.com/WICG/import-map
 subpaths where possible instead of a separate map entry per package subpath
 export. This also mirrors the requirement of using <a href="esm.html#mandatory-file-extensions">the full specifier path</a>
 in relative and absolute import specifiers.</p>
+</div><div>
+<h5>Path Rules and Validation for Export Targets<span><a class="mark" href="#path-rules-and-validation-for-export-targets" id="path-rules-and-validation-for-export-targets">#</a></span><a aria-hidden="true" class="legacy" id="packages_path_rules_and_validation_for_export_targets"></a></h5>
+<p>When defining paths as targets in the <a href="#exports"><code>"exports"</code></a> field, Node.js enforces
+several rules to ensure security, predictability, and proper encapsulation.
+Understanding these rules is crucial for authors publishing packages.</p>
+<div>
+<h6>Targets must be relative URLs<span><a class="mark" href="#targets-must-be-relative-urls" id="targets-must-be-relative-urls">#</a></span><a aria-hidden="true" class="legacy" id="packages_targets_must_be_relative_urls"></a></h6>
+<p>All target paths in the <a href="#exports"><code>"exports"</code></a> map (the values associated with export
+keys) must be relative URL strings starting with <code>./</code>.</p>
+<pre><code class="language-json"><span class="hljs-comment">// package.json</span>
+<span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"my-package"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"exports"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"."</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./dist/main.js"</span><span class="hljs-punctuation">,</span>          <span class="hljs-comment">// Correct</span>
+    <span class="hljs-attr">"./feature"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./lib/feature.js"</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// Correct</span>
+    <span class="hljs-comment">// "./origin-relative": "/dist/main.js", // Incorrect: Must start with ./</span>
+    <span class="hljs-comment">// "./absolute": "file:///dev/null", // Incorrect: Must start with ./</span>
+    <span class="hljs-comment">// "./outside": "../common/util.js" // Incorrect: Must start with ./</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
+<p>Reasons for this behavior include:</p>
+<ul>
+<li><strong>Security:</strong> Prevents exporting arbitrary files from outside the
+package's own directory.</li>
+<li><strong>Encapsulation:</strong> Ensures all exported paths are resolved relative to
+the package root, making the package self-contained.</li>
+</ul>
+</div><div>
+<h6>No path traversal or invalid segments<span><a class="mark" href="#no-path-traversal-or-invalid-segments" id="no-path-traversal-or-invalid-segments">#</a></span><a aria-hidden="true" class="legacy" id="packages_no_path_traversal_or_invalid_segments"></a></h6>
+<p>Export targets must not resolve to a location outside the package's root
+directory. Additionally, path segments like <code>.</code> (single dot), <code>..</code> (double dot),
+or <code>node_modules</code> (and their URL-encoded equivalents) are generally disallowed
+within the <code>target</code> string after the initial <code>./</code> and in any <code>subpath</code> part
+substituted into a target pattern.</p>
+<pre><code class="language-json"><span class="hljs-comment">// package.json</span>
+<span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"my-package"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"exports"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-comment">// ".": "./dist/../../elsewhere/file.js", // Invalid: path traversal</span>
+    <span class="hljs-comment">// ".": "././dist/main.js",             // Invalid: contains "." segment</span>
+    <span class="hljs-comment">// ".": "./dist/../dist/main.js",       // Invalid: contains ".." segment</span>
+    <span class="hljs-comment">// "./utils/./helper.js": "./utils/helper.js" // Key has invalid segment</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
+</div></div></div><div>
 <h4>Exports sugar<span><a class="mark" href="#exports-sugar" id="exports-sugar">#</a></span><a aria-hidden="true" class="legacy" id="packages_exports_sugar"></a></h4>
 <div class="api_metadata">
 <span>Added in: v12.11.0</span>
@@ -704,6 +800,7 @@ for this case being the direct <a href="#exports"><code>"exports"</code></a> fie
 <pre><code class="language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"exports"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.js"</span>
 <span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Subpath imports<span><a class="mark" href="#subpath-imports" id="subpath-imports">#</a></span><a aria-hidden="true" class="legacy" id="packages_subpath_imports"></a></h4>
 <div class="api_metadata">
 <span>Added in: v14.6.0, v12.19.0</span>
@@ -734,6 +831,7 @@ file <code>./dep-polyfill.js</code> relative to the package in other environment
 packages.</p>
 <p>The resolution rules for the imports field are otherwise analogous to the
 exports field.</p>
+</div><div>
 <h4>Subpath patterns<span><a class="mark" href="#subpath-patterns" id="subpath-patterns">#</a></span><a aria-hidden="true" class="legacy" id="packages_subpath_patterns"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -795,6 +893,7 @@ targets, this expansion is dependent on only the files of the package itself.</p
 
 <span class="hljs-keyword">import</span> featureX <span class="hljs-keyword">from</span> <span class="hljs-string">'es-module-package/features/x.js'</span>;
 <span class="hljs-comment">// Loads ./node_modules/es-module-package/src/features/x.js</span></code> <button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Conditional exports<span><a class="mark" href="#conditional-exports" id="conditional-exports">#</a></span><a aria-hidden="true" class="legacy" id="packages_conditional_exports"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -837,9 +936,12 @@ target file. <em>Always mutually exclusive with <code>"require"</code>.</em></li
 <li><code>"require"</code> - matches when the package is loaded via <code>require()</code>. The
 referenced file should be loadable with <code>require()</code> although the condition
 matches regardless of the module format of the target file. Expected
-formats include CommonJS, JSON, and native addons but not ES modules as
-<code>require()</code> doesn't support them. <em>Always mutually exclusive with
-<code>"import"</code>.</em></li>
+formats include CommonJS, JSON, native addons, and ES modules. <em>Always mutually
+exclusive with <code>"import"</code>.</em></li>
+<li><code>"module-sync"</code> - matches no matter the package is loaded via <code>import</code>,
+<code>import()</code> or <code>require()</code>. The format is expected to be ES modules that does
+not contain top-level await in its module graph - if it does,
+<code>ERR_REQUIRE_ASYNC_MODULE</code> will be thrown when the module is <code>require()</code>-ed.</li>
 <li><code>"default"</code> - the generic fallback that always matches. Can be a CommonJS
 or ES module file. <em>This condition should always come last.</em></li>
 </ul>
@@ -874,6 +976,7 @@ these JS environments from having to pretend to be existing environments in
 order to support packages with conditional exports. For this reason, using
 <code>"node"</code> and <code>"default"</code> condition branches is usually preferable to using
 <code>"node"</code> and <code>"browser"</code> condition branches.</p>
+</div><div>
 <h4>Nested conditions<span><a class="mark" href="#nested-conditions" id="nested-conditions">#</a></span><a aria-hidden="true" class="legacy" id="packages_nested_conditions"></a></h4>
 <p>In addition to direct mappings, Node.js also supports nested condition objects.</p>
 <p>For example, to define a package that only has dual mode entry points for
@@ -891,6 +994,7 @@ use in Node.js but not the browser:</p>
 a nested condition does not have any mapping it will continue checking
 the remaining conditions of the parent condition. In this way nested
 conditions behave analogously to nested JavaScript <code>if</code> statements.</p>
+</div><div>
 <h4>Resolving user conditions<span><a class="mark" href="#resolving-user-conditions" id="resolving-user-conditions">#</a></span><a aria-hidden="true" class="legacy" id="packages_resolving_user_conditions"></a></h4>
 <div class="api_metadata">
 <span>Added in: v14.9.0, v12.19.0</span>
@@ -902,8 +1006,22 @@ conditions behave analogously to nested JavaScript <code>if</code> statements.</
 exports, while resolving the existing <code>"node"</code>, <code>"node-addons"</code>, <code>"default"</code>,
 <code>"import"</code>, and <code>"require"</code> conditions as appropriate.</p>
 <p>Any number of custom conditions can be set with repeat flags.</p>
+<p>Typical conditions should only contain alphanumerical characters,
+using ":", "-", or "=" as separators if necessary. Anything else may run
+into compability issues outside of node.</p>
+<p>In node, conditions have very few restrictions, but specifically these include:</p>
+<ol>
+<li>They must contain at least one character.</li>
+<li>They cannot start with "." since they may appear in places that also
+allow relative paths.</li>
+<li>They cannot contain "," since they may be parsed as a comma-separated
+list by some CLI tools.</li>
+<li>They cannot be integer property keys like "10" since that can have
+unexpected effects on property key ordering for JS objects.</li>
+</ol>
+</div><div>
 <h4>Community Conditions Definitions<span><a class="mark" href="#community-conditions-definitions" id="community-conditions-definitions">#</a></span><a aria-hidden="true" class="legacy" id="packages_community_conditions_definitions"></a></h4>
-<p>Condition strings other than the <code>"import"</code>, <code>"require"</code>, <code>"node"</code>,
+<p>Condition strings other than the <code>"import"</code>, <code>"require"</code>, <code>"node"</code>, <code>"module-sync"</code>,
 <code>"node-addons"</code> and <code>"default"</code> conditions
 <a href="#conditional-exports">implemented in Node.js core</a> are ignored by default.</p>
 <p>Other platforms may implement other conditions and user conditions can be
@@ -944,6 +1062,7 @@ here in the Node.js docs.</li>
 </ul>
 <p>The above definitions may be moved to a dedicated conditions registry in due
 course.</p>
+</div><div>
 <h4>Self-referencing a package using its name<span><a class="mark" href="#self-referencing-a-package-using-its-name" id="self-referencing-a-package-using-its-name">#</a></span><a aria-hidden="true" class="legacy" id="packages_self_referencing_a_package_using_its_name"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -997,214 +1116,9 @@ code will also work:</p>
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-built_in">require</span>(<span class="hljs-string">'@my/package'</span>));</code> <button class="copy-button">copy</button></pre>
 <pre><code class="language-console"><span class="hljs-meta prompt_">$ </span><span class="language-bash">node other.js</span>
 42</code> <button class="copy-button">copy</button></pre>
+</div>
 </section><section><h3>Dual CommonJS/ES module packages<span><a class="mark" href="#dual-commonjses-module-packages" id="dual-commonjses-module-packages">#</a></span><a aria-hidden="true" class="legacy" id="packages_dual_commonjs_es_module_packages"></a></h3>
-<p>Prior to the introduction of support for ES modules in Node.js, it was a common
-pattern for package authors to include both CommonJS and ES module JavaScript
-sources in their package, with <code>package.json</code> <a href="#main"><code>"main"</code></a> specifying the
-CommonJS entry point and <code>package.json</code> <code>"module"</code> specifying the ES module
-entry point.
-This enabled Node.js to run the CommonJS entry point while build tools such as
-bundlers used the ES module entry point, since Node.js ignored (and still
-ignores) the top-level <code>"module"</code> field.</p>
-<p>Node.js can now run ES module entry points, and a package can contain both
-CommonJS and ES module entry points (either via separate specifiers such as
-<code>'pkg'</code> and <code>'pkg/es-module'</code>, or both at the same specifier via <a href="#conditional-exports">Conditional
-exports</a>). Unlike in the scenario where <code>"module"</code> is only used by bundlers,
-or ES module files are transpiled into CommonJS on the fly before evaluation by
-Node.js, the files referenced by the ES module entry point are evaluated as ES
-modules.</p>
-<h4>Dual package hazard<span><a class="mark" href="#dual-package-hazard" id="dual-package-hazard">#</a></span><a aria-hidden="true" class="legacy" id="packages_dual_package_hazard"></a></h4>
-<p>When an application is using a package that provides both CommonJS and ES module
-sources, there is a risk of certain bugs if both versions of the package get
-loaded. This potential comes from the fact that the <code>pkgInstance</code> created by
-<code>const pkgInstance = require('pkg')</code> is not the same as the <code>pkgInstance</code>
-created by <code>import pkgInstance from 'pkg'</code> (or an alternative main path like
-<code>'pkg/module'</code>). This is the “dual package hazard,” where two versions of the
-same package can be loaded within the same runtime environment. While it is
-unlikely that an application or package would intentionally load both versions
-directly, it is common for an application to load one version while a dependency
-of the application loads the other version. This hazard can happen because
-Node.js supports intermixing CommonJS and ES modules, and can lead to unexpected
-behavior.</p>
-<p>If the package main export is a constructor, an <code>instanceof</code> comparison of
-instances created by the two versions returns <code>false</code>, and if the export is an
-object, properties added to one (like <code>pkgInstance.foo = 3</code>) are not present on
-the other. This differs from how <code>import</code> and <code>require</code> statements work in
-all-CommonJS or all-ES module environments, respectively, and therefore is
-surprising to users. It also differs from the behavior users are familiar with
-when using transpilation via tools like <a href="https://babeljs.io/">Babel</a> or <a href="https://github.com/standard-things/esm#readme"><code>esm</code></a>.</p>
-<h4>Writing dual packages while avoiding or minimizing hazards<span><a class="mark" href="#writing-dual-packages-while-avoiding-or-minimizing-hazards" id="writing-dual-packages-while-avoiding-or-minimizing-hazards">#</a></span><a aria-hidden="true" class="legacy" id="packages_writing_dual_packages_while_avoiding_or_minimizing_hazards"></a></h4>
-<p>First, the hazard described in the previous section occurs when a package
-contains both CommonJS and ES module sources and both sources are provided for
-use in Node.js, either via separate main entry points or exported paths. A
-package might instead be written where any version of Node.js receives only
-CommonJS sources, and any separate ES module sources the package might contain
-are intended only for other environments such as browsers. Such a package
-would be usable by any version of Node.js, since <code>import</code> can refer to CommonJS
-files; but it would not provide any of the advantages of using ES module syntax.</p>
-<p>A package might also switch from CommonJS to ES module syntax in a <a href="https://semver.org/">breaking
-change</a> version bump. This has the disadvantage that the
-newest version of the package would only be usable in ES module-supporting
-versions of Node.js.</p>
-<p>Every pattern has tradeoffs, but there are two broad approaches that satisfy the
-following conditions:</p>
-<ol>
-<li>The package is usable via both <code>require</code> and <code>import</code>.</li>
-<li>The package is usable in both current Node.js and older versions of Node.js
-that lack support for ES modules.</li>
-<li>The package main entry point, e.g. <code>'pkg'</code> can be used by both <code>require</code> to
-resolve to a CommonJS file and by <code>import</code> to resolve to an ES module file.
-(And likewise for exported paths, e.g. <code>'pkg/feature'</code>.)</li>
-<li>The package provides named exports, e.g. <code>import { name } from 'pkg'</code> rather
-than <code>import pkg from 'pkg'; pkg.name</code>.</li>
-<li>The package is potentially usable in other ES module environments such as
-browsers.</li>
-<li>The hazards described in the previous section are avoided or minimized.</li>
-</ol>
-<h5>Approach #1: Use an ES module wrapper<span><a class="mark" href="#approach-1-use-an-es-module-wrapper" id="approach-1-use-an-es-module-wrapper">#</a></span><a aria-hidden="true" class="legacy" id="packages_approach_1_use_an_es_module_wrapper"></a></h5>
-<p>Write the package in CommonJS or transpile ES module sources into CommonJS, and
-create an ES module wrapper file that defines the named exports. Using
-<a href="#conditional-exports">Conditional exports</a>, the ES module wrapper is used for <code>import</code> and the
-CommonJS entry point for <code>require</code>.</p>
-<pre><code class="language-json"><span class="hljs-comment">// ./node_modules/pkg/package.json</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"module"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"exports"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">"import"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./wrapper.mjs"</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"require"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.cjs"</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
-<p>The preceding example uses explicit extensions <code>.mjs</code> and <code>.cjs</code>.
-If your files use the <code>.js</code> extension, <code>"type": "module"</code> will cause such files
-to be treated as ES modules, just as <code>"type": "commonjs"</code> would cause them
-to be treated as CommonJS.
-See <a href="esm.html#enabling">Enabling</a>.</p>
-<pre><code class="language-js cjs"><span class="hljs-comment">// ./node_modules/pkg/index.cjs</span>
-<span class="hljs-built_in">exports</span>.<span class="hljs-property">name</span> = <span class="hljs-string">'value'</span>;</code> <button class="copy-button">copy</button></pre>
-<pre><code class="language-js"><span class="hljs-comment">// ./node_modules/pkg/wrapper.mjs</span>
-<span class="hljs-keyword">import</span> cjsModule <span class="hljs-keyword">from</span> <span class="hljs-string">'./index.cjs'</span>;
-<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> name = cjsModule.<span class="hljs-property">name</span>;</code> <button class="copy-button">copy</button></pre>
-<p>In this example, the <code>name</code> from <code>import { name } from 'pkg'</code> is the same
-singleton as the <code>name</code> from <code>const { name } = require('pkg')</code>. Therefore <code>===</code>
-returns <code>true</code> when comparing the two <code>name</code>s and the divergent specifier hazard
-is avoided.</p>
-<p>If the module is not simply a list of named exports, but rather contains a
-unique function or object export like <code>module.exports = function () { ... }</code>,
-or if support in the wrapper for the <code>import pkg from 'pkg'</code> pattern is desired,
-then the wrapper would instead be written to export the default optionally
-along with any named exports as well:</p>
-<pre><code class="language-js"><span class="hljs-keyword">import</span> cjsModule <span class="hljs-keyword">from</span> <span class="hljs-string">'./index.cjs'</span>;
-<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> name = cjsModule.<span class="hljs-property">name</span>;
-<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> cjsModule;</code> <button class="copy-button">copy</button></pre>
-<p>This approach is appropriate for any of the following use cases:</p>
-<ul>
-<li>The package is currently written in CommonJS and the author would prefer not
-to refactor it into ES module syntax, but wishes to provide named exports for
-ES module consumers.</li>
-<li>The package has other packages that depend on it, and the end user might
-install both this package and those other packages. For example a <code>utilities</code>
-package is used directly in an application, and a <code>utilities-plus</code> package
-adds a few more functions to <code>utilities</code>. Because the wrapper exports
-underlying CommonJS files, it doesn't matter if <code>utilities-plus</code> is written in
-CommonJS or ES module syntax; it will work either way.</li>
-<li>The package stores internal state, and the package author would prefer not to
-refactor the package to isolate its state management. See the next section.</li>
-</ul>
-<p>A variant of this approach not requiring conditional exports for consumers could
-be to add an export, e.g. <code>"./module"</code>, to point to an all-ES module-syntax
-version of the package. This could be used via <code>import 'pkg/module'</code> by users
-who are certain that the CommonJS version will not be loaded anywhere in the
-application, such as by dependencies; or if the CommonJS version can be loaded
-but doesn't affect the ES module version (for example, because the package is
-stateless):</p>
-<pre><code class="language-json"><span class="hljs-comment">// ./node_modules/pkg/package.json</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"module"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"exports"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">"."</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.cjs"</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"./module"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./wrapper.mjs"</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
-<h5>Approach #2: Isolate state<span><a class="mark" href="#approach-2-isolate-state" id="approach-2-isolate-state">#</a></span><a aria-hidden="true" class="legacy" id="packages_approach_2_isolate_state"></a></h5>
-<p>A <a href="#nodejs-packagejson-field-definitions"><code>package.json</code></a> file can define the separate CommonJS and ES module entry
-points directly:</p>
-<pre><code class="language-json"><span class="hljs-comment">// ./node_modules/pkg/package.json</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"module"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"exports"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">"import"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.mjs"</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"require"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.cjs"</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
-<p>This can be done if both the CommonJS and ES module versions of the package are
-equivalent, for example because one is the transpiled output of the other; and
-the package's management of state is carefully isolated (or the package is
-stateless).</p>
-<p>The reason that state is an issue is because both the CommonJS and ES module
-versions of the package might get used within an application; for example, the
-user's application code could <code>import</code> the ES module version while a dependency
-<code>require</code>s the CommonJS version. If that were to occur, two copies of the
-package would be loaded in memory and therefore two separate states would be
-present. This would likely cause hard-to-troubleshoot bugs.</p>
-<p>Aside from writing a stateless package (if JavaScript's <code>Math</code> were a package,
-for example, it would be stateless as all of its methods are static), there are
-some ways to isolate state so that it's shared between the potentially loaded
-CommonJS and ES module instances of the package:</p>
-<ol>
-<li>
-<p>If possible, contain all state within an instantiated object. JavaScript's
-<code>Date</code>, for example, needs to be instantiated to contain state; if it were a
-package, it would be used like this:</p>
-<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">Date</span> <span class="hljs-keyword">from</span> <span class="hljs-string">'date'</span>;
-<span class="hljs-keyword">const</span> someDate = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>();
-<span class="hljs-comment">// someDate contains state; Date does not</span></code> <button class="copy-button">copy</button></pre>
-<p>The <code>new</code> keyword isn't required; a package's function can return a new
-object, or modify a passed-in object, to keep the state external to the
-package.</p>
-</li>
-<li>
-<p>Isolate the state in one or more CommonJS files that are shared between the
-CommonJS and ES module versions of the package. For example, if the CommonJS
-and ES module entry points are <code>index.cjs</code> and <code>index.mjs</code>, respectively:</p>
-<pre><code class="language-js cjs"><span class="hljs-comment">// ./node_modules/pkg/index.cjs</span>
-<span class="hljs-keyword">const</span> state = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./state.cjs'</span>);
-<span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span>.<span class="hljs-property">state</span> = state;</code> <button class="copy-button">copy</button></pre>
-<pre><code class="language-js"><span class="hljs-comment">// ./node_modules/pkg/index.mjs</span>
-<span class="hljs-keyword">import</span> state <span class="hljs-keyword">from</span> <span class="hljs-string">'./state.cjs'</span>;
-<span class="hljs-keyword">export</span> {
-  state,
-};</code> <button class="copy-button">copy</button></pre>
-<p>Even if <code>pkg</code> is used via both <code>require</code> and <code>import</code> in an application (for
-example, via <code>import</code> in application code and via <code>require</code> by a dependency)
-each reference of <code>pkg</code> will contain the same state; and modifying that
-state from either module system will apply to both.</p>
-</li>
-</ol>
-<p>Any plugins that attach to the package's singleton would need to separately
-attach to both the CommonJS and ES module singletons.</p>
-<p>This approach is appropriate for any of the following use cases:</p>
-<ul>
-<li>The package is currently written in ES module syntax and the package author
-wants that version to be used wherever such syntax is supported.</li>
-<li>The package is stateless or its state can be isolated without too much
-difficulty.</li>
-<li>The package is unlikely to have other public packages that depend on it, or if
-it does, the package is stateless or has state that need not be shared between
-dependencies or with the overall application.</li>
-</ul>
-<p>Even with isolated state, there is still the cost of possible extra code
-execution between the CommonJS and ES module versions of a package.</p>
-<p>As with the previous approach, a variant of this approach not requiring
-conditional exports for consumers could be to add an export, e.g.
-<code>"./module"</code>, to point to an all-ES module-syntax version of the package:</p>
-<pre><code class="language-json"><span class="hljs-comment">// ./node_modules/pkg/package.json</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"module"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"exports"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">"."</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.cjs"</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"./module"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"./index.mjs"</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
+<p>See <a href="https://github.com/nodejs/package-examples">the package examples repository</a> for details.</p>
 </section><section><h3>Node.js <code>package.json</code> field definitions<span><a class="mark" href="#nodejs-packagejson-field-definitions" id="nodejs-packagejson-field-definitions">#</a></span><a aria-hidden="true" class="legacy" id="packages_node_js_package_json_field_definitions"></a></h3>
 <p>This section describes the fields used by the Node.js runtime. Other tools (such
 as <a href="https://docs.npmjs.com/cli/v8/configuring-npm/package-json">npm</a>) use
@@ -1215,8 +1129,6 @@ additional fields which are ignored by Node.js and not documented here.</p>
 by package managers as the name of the package.</li>
 <li><a href="#main"><code>"main"</code></a> - The default module when loading the package, if exports is not
 specified, and in versions of Node.js prior to the introduction of exports.</li>
-<li><a href="#packagemanager"><code>"packageManager"</code></a> - The package manager recommended when contributing to
-the package. Leveraged by the <a href="corepack.html">Corepack</a> shims.</li>
 <li><a href="#type"><code>"type"</code></a> - The package type determining whether to load <code>.js</code> files as
 CommonJS or ES modules.</li>
 <li><a href="#exports"><code>"exports"</code></a> - Package exports and conditional exports. When present,
@@ -1224,6 +1136,7 @@ limits which submodules can be loaded from within the package.</li>
 <li><a href="#imports"><code>"imports"</code></a> - Package imports, for use by modules within the package
 itself.</li>
 </ul>
+<div>
 <h4><code>"name"</code><span><a class="mark" href="#name" id="name">#</a></span><a aria-hidden="true" class="legacy" id="packages_name"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -1247,6 +1160,7 @@ itself.</li>
 <a href="https://docs.npmjs.com/files/package.json#name">certain requirements</a>.</p>
 <p>The <code>"name"</code> field can be used in addition to the <a href="#exports"><code>"exports"</code></a> field to
 <a href="#self-referencing-a-package-using-its-name">self-reference</a> a package using its name.</p>
+</div><div>
 <h4><code>"main"</code><span><a class="mark" href="#main" id="main">#</a></span><a aria-hidden="true" class="legacy" id="packages_main"></a></h4>
 <div class="api_metadata">
 <span>Added in: v0.4.0</span>
@@ -1265,24 +1179,7 @@ via a <code>node_modules</code> lookup.  Its value is a path.</p>
 via <code>require()</code></a>.</p>
 <pre><code class="language-js cjs"><span class="hljs-comment">// This resolves to ./path/to/directory/index.js.</span>
 <span class="hljs-built_in">require</span>(<span class="hljs-string">'./path/to/directory'</span>);</code> <button class="copy-button">copy</button></pre>
-<h4><code>"packageManager"</code><span><a class="mark" href="#packagemanager" id="packagemanager">#</a></span><a aria-hidden="true" class="legacy" id="packages_packagemanager"></a></h4>
-<div class="api_metadata">
-<span>Added in: v16.9.0, v14.19.0</span>
-</div>
-<p></p><div class="api_stability api_stability_1"><a href="documentation.html#stability-index">Stability: 1</a> - Experimental</div><p></p>
-<ul>
-<li>Type: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&#x3C;string></a></li>
-</ul>
-<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"packageManager"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"&#x3C;package manager name>@&#x3C;version>"</span>
-<span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
-<p>The <code>"packageManager"</code> field defines which package manager is expected to be
-used when working on the current project. It can be set to any of the
-<a href="corepack.html#supported-package-managers">supported package managers</a>, and will ensure that your teams use the exact
-same package manager versions without having to install anything else other than
-Node.js.</p>
-<p>This field is currently experimental and needs to be opted-in; check the
-<a href="corepack.html">Corepack</a> page for details about the procedure.</p>
+</div><div>
 <h4><code>"type"</code><span><a class="mark" href="#type" id="type">#</a></span><a aria-hidden="true" class="legacy" id="packages_type"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -1322,6 +1219,7 @@ parent <code>package.json</code> contains <code>"type": "module"</code>.</p>
 <span class="hljs-keyword">import</span> <span class="hljs-string">'./startup.js'</span>; <span class="hljs-comment">// Loaded as ES module because of package.json</span></code> <button class="copy-button">copy</button></pre>
 <p>Regardless of the value of the <code>"type"</code> field, <code>.mjs</code> files are always treated
 as ES modules and <code>.cjs</code> files are always treated as CommonJS.</p>
+</div><div>
 <h4><code>"exports"</code><span><a class="mark" href="#exports" id="exports">#</a></span><a aria-hidden="true" class="legacy" id="packages_exports"></a></h4>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -1358,6 +1256,7 @@ package entry points per environment, including whether the package is
 referenced via <code>require</code> or via <code>import</code>.</p>
 <p>All paths defined in the <code>"exports"</code> must be relative file URLs starting with
 <code>./</code>.</p>
+</div><div>
 <h4><code>"imports"</code><span><a class="mark" href="#imports" id="imports">#</a></span><a aria-hidden="true" class="legacy" id="packages_imports"></a></h4>
 <div class="api_metadata">
 <span>Added in: v14.6.0, v12.19.0</span>
@@ -1379,7 +1278,7 @@ referenced via <code>require</code> or via <code>import</code>.</p>
 <span class="hljs-punctuation">}</span></code> <button class="copy-button">copy</button></pre>
 <p>Entries in the imports field must be strings starting with <code>#</code>.</p>
 <p>Package imports permit mapping to external packages.</p>
-<p>This field defines <a href="#subpath-imports">subpath imports</a> for the current package.</p></section>
+<p>This field defines <a href="#subpath-imports">subpath imports</a> for the current package.</p></div></section>
         <!-- API END -->
       </div>
     </div>

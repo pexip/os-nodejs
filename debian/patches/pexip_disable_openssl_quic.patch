@@ -1,0 +1,18 @@
+Index: nodejs/configure.py
+===================================================================
+--- nodejs.orig/configure.py
++++ nodejs/configure.py
+@@ -1862,9 +1862,10 @@ def configure_openssl(o):
+   else:
+     has_quic = getsharedopensslhasquic.get_has_quic('deps/openssl/openssl/include')
+ 
+-  variables['openssl_quic'] = b(has_quic)
+-  if has_quic:
+-    o['defines'] += ['NODE_OPENSSL_HAS_QUIC']
++  variables['openssl_quic'] = b(False)
++  # Pexip: remove OPENSSL_HAS_QUIC as we don't want it to avoid ngtcp2/openssl issues
++  #if has_quic:
++  #  o['defines'] += ['NODE_OPENSSL_HAS_QUIC']
+ 
+   configure_library('openssl', o)
+ 

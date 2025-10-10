@@ -1,0 +1,24 @@
+Description: disable shared builtins when loading deps on demand
+ This is to avoid preloading potentially missing files.
+Author: Jérémy Lal <kapouer@melix.org>
+Last-Update: 2023-12-10
+Forwarded: no, todo
+--- a/src/node_builtins.cc
++++ b/src/node_builtins.cc
+@@ -35,6 +35,7 @@
+ BuiltinLoader::BuiltinLoader()
+     : config_(GetConfig()), code_cache_(std::make_shared<BuiltinCodeCache>()) {
+   LoadJavaScriptSource();
++#ifndef NODE_BUILTIN_MODULES_PATH
+ #ifdef NODE_SHARED_BUILTIN_CJS_MODULE_LEXER_LEXER_PATH
+   AddExternalizedBuiltin(
+       "internal/deps/cjs-module-lexer/lexer",
+@@ -76,6 +77,8 @@
+                          STRINGIFY(NODE_SHARED_BUILTIN_AMARO_DIST_INDEX_PATH));
+ #endif  // NODE_SHARED_BUILTIN_AMARO_DIST_INDEX_PATH
+ #endif  // HAVE_AMARO
++
++#endif  // NOT NODE_BUILTIN_MODULES_PATH
+ }
+ 
+ bool BuiltinLoader::Exists(const char* id) {

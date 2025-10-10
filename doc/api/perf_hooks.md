@@ -17,8 +17,8 @@ Node.js supports the following [Web Performance APIs][]:
 * [User Timing][]
 * [Resource Timing][]
 
-```js
-const { PerformanceObserver, performance } = require('node:perf_hooks');
+```mjs
+import { performance, PerformanceObserver } from 'node:perf_hooks';
 
 const obs = new PerformanceObserver((items) => {
   console.log(items.getEntries()[0].duration);
@@ -36,6 +36,25 @@ doSomeLongRunningProcess(() => {
 });
 ```
 
+```cjs
+const { PerformanceObserver, performance } = require('node:perf_hooks');
+
+const obs = new PerformanceObserver((items) => {
+  console.log(items.getEntries()[0].duration);
+});
+obs.observe({ type: 'measure' });
+performance.measure('Start to Now');
+
+performance.mark('A');
+(async function doSomeLongRunningProcess() {
+  await new Promise((r) => setTimeout(r, 5000));
+  performance.measure('A to Now', 'A');
+
+  performance.mark('B');
+  performance.measure('A to B', 'A', 'B');
+})();
+```
+
 ## `perf_hooks.performance`
 
 <!-- YAML
@@ -49,6 +68,11 @@ Node.js instance. It is similar to [`window.performance`][] in browsers.
 
 <!-- YAML
 added: v8.5.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 * `name` {string}
@@ -60,6 +84,11 @@ Performance Timeline. If `name` is provided, removes only the named mark.
 
 <!-- YAML
 added: v16.7.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 * `name` {string}
@@ -70,7 +99,14 @@ Performance Timeline. If `name` is provided, removes only the named measure.
 ### `performance.clearResourceTimings([name])`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 * `name` {string}
@@ -90,7 +126,7 @@ added:
   `eventLoopUtilization()`.
 * `utilization2` {Object} The result of a previous call to
   `eventLoopUtilization()` prior to `utilization1`.
-* Returns {Object}
+* Returns: {Object}
   * `idle` {number}
   * `active` {number}
   * `utilization` {number}
@@ -121,7 +157,18 @@ loop has spent outside the event loop's event provider (e.g. `epoll_wait`).
 No other CPU idle time is taken into consideration. The following is an example
 of how a mostly idle process will have a high ELU.
 
-```js
+```mjs
+import { eventLoopUtilization } from 'node:perf_hooks';
+import { spawnSync } from 'node:child_process';
+
+setImmediate(() => {
+  const elu = eventLoopUtilization();
+  spawnSync('sleep', ['5']);
+  console.log(eventLoopUtilization(elu).utilization);
+});
+```
+
+```cjs
 'use strict';
 const { eventLoopUtilization } = require('node:perf_hooks').performance;
 const { spawnSync } = require('node:child_process');
@@ -145,6 +192,11 @@ are not guaranteed to reflect any correct state of the event loop.
 
 <!-- YAML
 added: v16.7.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 * Returns: {PerformanceEntry\[]}
@@ -158,6 +210,11 @@ performance entries of certain types or that have certain names, see
 
 <!-- YAML
 added: v16.7.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 * `name` {string}
@@ -173,6 +230,11 @@ equal to `name`, and optionally, whose `performanceEntry.entryType` is equal to
 
 <!-- YAML
 added: v16.7.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 * `type` {string}
@@ -182,11 +244,15 @@ Returns a list of `PerformanceEntry` objects in chronological order
 with respect to `performanceEntry.startTime` whose `performanceEntry.entryType`
 is equal to `type`.
 
-### `performance.mark([name[, options]])`
+### `performance.mark(name[, options])`
 
 <!-- YAML
 added: v8.5.0
 changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver. The name argument is no longer optional.
   - version: v16.0.0
     pr-url: https://github.com/nodejs/node/pull/37136
     description: Updated to conform to the User Timing Level 3 specification.
@@ -210,10 +276,16 @@ and can be queried with `performance.getEntries`,
 observation is performed, the entries should be cleared from the global
 Performance Timeline manually with `performance.clearMarks`.
 
-### `performance.markResourceTiming(timingInfo, requestedUrl, initiatorType, global, cacheMode)`
+### `performance.markResourceTiming(timingInfo, requestedUrl, initiatorType, global, cacheMode, bodyInfo, responseStatus[, deliveryType])`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v22.2.0
+    pr-url: https://github.com/nodejs/node/pull/51589
+    description: Added bodyInfo, responseStatus, and deliveryType arguments.
 -->
 
 * `timingInfo` {Object} [Fetch Timing Info][]
@@ -221,6 +293,9 @@ added: v18.2.0
 * `initiatorType` {string} The initiator name, e.g: 'fetch'
 * `global` {Object}
 * `cacheMode` {string} The cache mode must be an empty string ('') or 'local'
+* `bodyInfo` {Object} [Fetch Response Body Info][]
+* `responseStatus` {number} The response's status code
+* `deliveryType` {string} The delivery type.  **Default:** `''`.
 
 _This property is an extension by Node.js. It is not available in Web browsers._
 
@@ -240,6 +315,10 @@ Performance Timeline manually with `performance.clearResourceTimings`.
 <!-- YAML
 added: v8.5.0
 changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
   - version: v16.0.0
     pr-url: https://github.com/nodejs/node/pull/37136
     description: Updated to conform to the User Timing Level 3 specification.
@@ -301,6 +380,11 @@ metrics for specific Node.js operational milestones.
 
 <!-- YAML
 added: v8.5.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 * Returns: {number}
@@ -312,6 +396,11 @@ the start of the current `node` process.
 
 <!-- YAML
 added: v18.8.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 Sets the global performance resource timing buffer size to the specified number
@@ -356,7 +445,29 @@ Wraps a function within a new function that measures the running time of the
 wrapped function. A `PerformanceObserver` must be subscribed to the `'function'`
 event type in order for the timing details to be accessed.
 
-```js
+```mjs
+import { performance, PerformanceObserver } from 'node:perf_hooks';
+
+function someFunction() {
+  console.log('hello world');
+}
+
+const wrapped = performance.timerify(someFunction);
+
+const obs = new PerformanceObserver((list) => {
+  console.log(list.getEntries()[0].duration);
+
+  performance.clearMarks();
+  performance.clearMeasures();
+  obs.disconnect();
+});
+obs.observe({ entryTypes: ['function'] });
+
+// A performance timeline entry will be created
+wrapped();
+```
+
+```cjs
 const {
   performance,
   PerformanceObserver,
@@ -389,6 +500,11 @@ invoked.
 
 <!-- YAML
 added: v16.1.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the `performance` object as
+                 the receiver.
 -->
 
 An object which is JSON representation of the `performance` object. It
@@ -412,20 +528,17 @@ more entries to be added to the performance timeline buffer.
 added: v8.5.0
 -->
 
-### `performanceEntry.detail`
-
-<!-- YAML
-added: v16.0.0
--->
-
-* {any}
-
-Additional detail specific to the `entryType`.
+The constructor of this class is not exposed to users directly.
 
 ### `performanceEntry.duration`
 
 <!-- YAML
 added: v8.5.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceEntry` object as the receiver.
 -->
 
 * {number}
@@ -437,21 +550,145 @@ be meaningful for all Performance Entry types.
 
 <!-- YAML
 added: v8.5.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceEntry` object as the receiver.
 -->
 
 * {string}
 
 The type of the performance entry. It may be one of:
 
-* `'node'` (Node.js only)
-* `'mark'` (available on the Web)
-* `'measure'` (available on the Web)
-* `'gc'` (Node.js only)
+* `'dns'` (Node.js only)
 * `'function'` (Node.js only)
+* `'gc'` (Node.js only)
 * `'http2'` (Node.js only)
 * `'http'` (Node.js only)
+* `'mark'` (available on the Web)
+* `'measure'` (available on the Web)
+* `'net'` (Node.js only)
+* `'node'` (Node.js only)
+* `'resource'` (available on the Web)
 
-### `performanceEntry.flags`
+### `performanceEntry.name`
+
+<!-- YAML
+added: v8.5.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceEntry` object as the receiver.
+-->
+
+* {string}
+
+The name of the performance entry.
+
+### `performanceEntry.startTime`
+
+<!-- YAML
+added: v8.5.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceEntry` object as the receiver.
+-->
+
+* {number}
+
+The high resolution millisecond timestamp marking the starting time of the
+Performance Entry.
+
+## Class: `PerformanceMark`
+
+<!-- YAML
+added:
+  - v18.2.0
+  - v16.17.0
+-->
+
+* Extends: {PerformanceEntry}
+
+Exposes marks created via the `Performance.mark()` method.
+
+### `performanceMark.detail`
+
+<!-- YAML
+added: v16.0.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceMark` object as the receiver.
+-->
+
+* {any}
+
+Additional detail specified when creating with `Performance.mark()` method.
+
+## Class: `PerformanceMeasure`
+
+<!-- YAML
+added:
+  - v18.2.0
+  - v16.17.0
+-->
+
+* Extends: {PerformanceEntry}
+
+Exposes measures created via the `Performance.measure()` method.
+
+The constructor of this class is not exposed to users directly.
+
+### `performanceMeasure.detail`
+
+<!-- YAML
+added: v16.0.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceMeasure` object as the receiver.
+-->
+
+* {any}
+
+Additional detail specified when creating with `Performance.measure()` method.
+
+## Class: `PerformanceNodeEntry`
+
+<!-- YAML
+added: v19.0.0
+-->
+
+* Extends: {PerformanceEntry}
+
+_This class is an extension by Node.js. It is not available in Web browsers._
+
+Provides detailed Node.js timing data.
+
+The constructor of this class is not exposed to users directly.
+
+### `performanceNodeEntry.detail`
+
+<!-- YAML
+added: v16.0.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceNodeEntry` object as the receiver.
+-->
+
+* {any}
+
+Additional detail specific to the `entryType`.
+
+### `performanceNodeEntry.flags`
 
 <!-- YAML
 added:
@@ -464,9 +701,9 @@ changes:
                  when entryType is 'gc'.
 -->
 
-* {number}
+> Stability: 0 - Deprecated: Use `performanceNodeEntry.detail` instead.
 
-_This property is an extension by Node.js. It is not available in Web browsers._
+* {number}
 
 When `performanceEntry.entryType` is equal to `'gc'`, the `performance.flags`
 property contains additional information about garbage collection operation.
@@ -480,17 +717,7 @@ The value may be one of:
 * `perf_hooks.constants.NODE_PERFORMANCE_GC_FLAGS_ALL_EXTERNAL_MEMORY`
 * `perf_hooks.constants.NODE_PERFORMANCE_GC_FLAGS_SCHEDULE_IDLE`
 
-### `performanceEntry.name`
-
-<!-- YAML
-added: v8.5.0
--->
-
-* {string}
-
-The name of the performance entry.
-
-### `performanceEntry.kind`
+### `performanceNodeEntry.kind`
 
 <!-- YAML
 added: v8.5.0
@@ -501,9 +728,9 @@ changes:
                  when entryType is 'gc'.
 -->
 
-* {number}
+> Stability: 0 - Deprecated: Use `performanceNodeEntry.detail` instead.
 
-_This property is an extension by Node.js. It is not available in Web browsers._
+* {number}
 
 When `performanceEntry.entryType` is equal to `'gc'`, the `performance.kind`
 property identifies the type of garbage collection operation that occurred.
@@ -514,21 +741,10 @@ The value may be one of:
 * `perf_hooks.constants.NODE_PERFORMANCE_GC_INCREMENTAL`
 * `perf_hooks.constants.NODE_PERFORMANCE_GC_WEAKCB`
 
-### `performanceEntry.startTime`
-
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp marking the starting time of the
-Performance Entry.
-
 ### Garbage Collection ('gc') Details
 
-When `performanceEntry.type` is equal to `'gc'`, the `performanceEntry.detail`
-property will be an {Object} with two properties:
+When `performanceEntry.type` is equal to `'gc'`, the
+`performanceNodeEntry.detail` property will be an {Object} with two properties:
 
 * `kind` {number} One of:
   * `perf_hooks.constants.NODE_PERFORMANCE_GC_MAJOR`
@@ -546,8 +762,9 @@ property will be an {Object} with two properties:
 
 ### HTTP ('http') Details
 
-When `performanceEntry.type` is equal to `'http'`, the `performanceEntry.detail`
-property will be an {Object} containing additional information.
+When `performanceEntry.type` is equal to `'http'`, the
+`performanceNodeEntry.detail` property will be an {Object} containing
+additional information.
 
 If `performanceEntry.name` is equal to `HttpClient`, the `detail`
 will contain the following properties: `req`, `res`. And the `req` property
@@ -565,7 +782,7 @@ diagnostic purposes, not left turned on in production by default.
 ### HTTP/2 ('http2') Details
 
 When `performanceEntry.type` is equal to `'http2'`, the
-`performanceEntry.detail` property will be an {Object} containing
+`performanceNodeEntry.detail` property will be an {Object} containing
 additional performance information.
 
 If `performanceEntry.name` is equal to `Http2Stream`, the `detail`
@@ -606,13 +823,13 @@ contain the following properties:
 ### Timerify ('function') Details
 
 When `performanceEntry.type` is equal to `'function'`, the
-`performanceEntry.detail` property will be an {Array} listing
+`performanceNodeEntry.detail` property will be an {Array} listing
 the input arguments to the timed function.
 
 ### Net ('net') Details
 
 When `performanceEntry.type` is equal to `'net'`, the
-`performanceEntry.detail` property will be an {Object} containing
+`performanceNodeEntry.detail` property will be an {Object} containing
 additional information.
 
 If `performanceEntry.name` is equal to `connect`, the `detail`
@@ -621,7 +838,7 @@ will contain the following properties: `host`, `port`.
 ### DNS ('dns') Details
 
 When `performanceEntry.type` is equal to `'dns'`, the
-`performanceEntry.detail` property will be an {Object} containing
+`performanceNodeEntry.detail` property will be an {Object} containing
 additional information.
 
 If `performanceEntry.name` is equal to `lookup`, the `detail`
@@ -722,6 +939,40 @@ added: v8.5.0
 The high resolution millisecond timestamp at which the Node.js process was
 initialized.
 
+### `performanceNodeTiming.uvMetricsInfo`
+
+<!-- YAML
+added: v22.8.0
+-->
+
+* Returns: {Object}
+  * `loopCount` {number} Number of event loop iterations.
+  * `events` {number} Number of events that have been processed by the event handler.
+  * `eventsWaiting` {number} Number of events that were waiting to be processed when the event provider was called.
+
+This is a wrapper to the `uv_metrics_info` function.
+It returns the current set of event loop metrics.
+
+It is recommended to use this property inside a function whose execution was
+scheduled using `setImmediate` to avoid collecting metrics before finishing all
+operations scheduled during the current loop iteration.
+
+```cjs
+const { performance } = require('node:perf_hooks');
+
+setImmediate(() => {
+  console.log(performance.nodeTiming.uvMetricsInfo);
+});
+```
+
+```mjs
+import { performance } from 'node:perf_hooks';
+
+setImmediate(() => {
+  console.log(performance.nodeTiming.uvMetricsInfo);
+});
+```
+
 ### `performanceNodeTiming.v8Start`
 
 <!-- YAML
@@ -736,7 +987,9 @@ initialized.
 ## Class: `PerformanceResourceTiming`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
 -->
 
 * Extends: {PerformanceEntry}
@@ -749,7 +1002,14 @@ The constructor of this class is not exposed to users directly.
 ### `performanceResourceTiming.workerStart`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -761,7 +1021,14 @@ will always return 0.
 ### `performanceResourceTiming.redirectStart`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -772,7 +1039,14 @@ of the fetch which initiates the redirect.
 ### `performanceResourceTiming.redirectEnd`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -783,7 +1057,14 @@ receiving the last byte of the response of the last redirect.
 ### `performanceResourceTiming.fetchStart`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -794,7 +1075,14 @@ to fetch the resource.
 ### `performanceResourceTiming.domainLookupStart`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -805,7 +1093,14 @@ the domain name lookup for the resource.
 ### `performanceResourceTiming.domainLookupEnd`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -816,7 +1111,14 @@ after the Node.js finished the domain name lookup for the resource.
 ### `performanceResourceTiming.connectStart`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -828,7 +1130,14 @@ the resource.
 ### `performanceResourceTiming.connectEnd`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -840,7 +1149,14 @@ the resource.
 ### `performanceResourceTiming.secureConnectionStart`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -851,7 +1167,14 @@ before Node.js starts the handshake process to secure the current connection.
 ### `performanceResourceTiming.requestStart`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -862,7 +1185,14 @@ before Node.js receives the first byte of the response from the server.
 ### `performanceResourceTiming.responseEnd`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -874,7 +1204,14 @@ the transport connection is closed, whichever comes first.
 ### `performanceResourceTiming.transferSize`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -885,7 +1222,14 @@ includes the response header fields plus the response payload body.
 ### `performanceResourceTiming.encodedBodySize`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -897,7 +1241,14 @@ content-codings.
 ### `performanceResourceTiming.decodedBodySize`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This property getter must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 * {number}
@@ -909,13 +1260,20 @@ content-codings.
 ### `performanceResourceTiming.toJSON()`
 
 <!-- YAML
-added: v18.2.0
+added:
+  - v18.2.0
+  - v16.17.0
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44483
+    description: This method must be called with the
+                 `PerformanceResourceTiming` object as the receiver.
 -->
 
 Returns a `object` that is the JSON representation of the
 `PerformanceResourceTiming` object
 
-## Class: `perf_hooks.PerformanceObserver`
+## Class: `PerformanceObserver`
 
 <!-- YAML
 added: v8.5.0
@@ -950,7 +1308,22 @@ changes:
 `PerformanceObserver` objects provide notifications when new
 `PerformanceEntry` instances have been added to the Performance Timeline.
 
-```js
+```mjs
+import { performance, PerformanceObserver } from 'node:perf_hooks';
+
+const obs = new PerformanceObserver((list, observer) => {
+  console.log(list.getEntries());
+
+  performance.clearMarks();
+  performance.clearMeasures();
+  observer.disconnect();
+});
+obs.observe({ entryTypes: ['mark'], buffered: true });
+
+performance.mark('test');
+```
+
+```cjs
 const {
   performance,
   PerformanceObserver,
@@ -1016,7 +1389,19 @@ Subscribes the {PerformanceObserver} instance to notifications of new
 {PerformanceEntry} instances identified either by `options.entryTypes`
 or `options.type`:
 
-```js
+```mjs
+import { performance, PerformanceObserver } from 'node:perf_hooks';
+
+const obs = new PerformanceObserver((list, observer) => {
+  // Called once asynchronously. `list` contains three items.
+});
+obs.observe({ type: 'mark' });
+
+for (let n = 0; n < 3; n++)
+  performance.mark(`test${n}`);
+```
+
+```cjs
 const {
   performance,
   PerformanceObserver,
@@ -1030,6 +1415,14 @@ obs.observe({ type: 'mark' });
 for (let n = 0; n < 3; n++)
   performance.mark(`test${n}`);
 ```
+
+### `performanceObserver.takeRecords()`
+
+<!-- YAML
+added: v16.0.0
+-->
+
+* Returns: {PerformanceEntry\[]} Current list of entries stored in the performance observer, emptying it out.
 
 ## Class: `PerformanceObserverEntryList`
 
@@ -1052,7 +1445,41 @@ added: v8.5.0
 Returns a list of `PerformanceEntry` objects in chronological order
 with respect to `performanceEntry.startTime`.
 
-```js
+```mjs
+import { performance, PerformanceObserver } from 'node:perf_hooks';
+
+const obs = new PerformanceObserver((perfObserverList, observer) => {
+  console.log(perfObserverList.getEntries());
+  /**
+   * [
+   *   PerformanceEntry {
+   *     name: 'test',
+   *     entryType: 'mark',
+   *     startTime: 81.465639,
+   *     duration: 0,
+   *     detail: null
+   *   },
+   *   PerformanceEntry {
+   *     name: 'meow',
+   *     entryType: 'mark',
+   *     startTime: 81.860064,
+   *     duration: 0,
+   *     detail: null
+   *   }
+   * ]
+   */
+
+  performance.clearMarks();
+  performance.clearMeasures();
+  observer.disconnect();
+});
+obs.observe({ type: 'mark' });
+
+performance.mark('test');
+performance.mark('meow');
+```
+
+```cjs
 const {
   performance,
   PerformanceObserver,
@@ -1066,13 +1493,15 @@ const obs = new PerformanceObserver((perfObserverList, observer) => {
    *     name: 'test',
    *     entryType: 'mark',
    *     startTime: 81.465639,
-   *     duration: 0
+   *     duration: 0,
+   *     detail: null
    *   },
    *   PerformanceEntry {
    *     name: 'meow',
    *     entryType: 'mark',
    *     startTime: 81.860064,
-   *     duration: 0
+   *     duration: 0,
+   *     detail: null
    *   }
    * ]
    */
@@ -1102,7 +1531,49 @@ with respect to `performanceEntry.startTime` whose `performanceEntry.name` is
 equal to `name`, and optionally, whose `performanceEntry.entryType` is equal to
 `type`.
 
-```js
+```mjs
+import { performance, PerformanceObserver } from 'node:perf_hooks';
+
+const obs = new PerformanceObserver((perfObserverList, observer) => {
+  console.log(perfObserverList.getEntriesByName('meow'));
+  /**
+   * [
+   *   PerformanceEntry {
+   *     name: 'meow',
+   *     entryType: 'mark',
+   *     startTime: 98.545991,
+   *     duration: 0,
+   *     detail: null
+   *   }
+   * ]
+   */
+  console.log(perfObserverList.getEntriesByName('nope')); // []
+
+  console.log(perfObserverList.getEntriesByName('test', 'mark'));
+  /**
+   * [
+   *   PerformanceEntry {
+   *     name: 'test',
+   *     entryType: 'mark',
+   *     startTime: 63.518931,
+   *     duration: 0,
+   *     detail: null
+   *   }
+   * ]
+   */
+  console.log(perfObserverList.getEntriesByName('test', 'measure')); // []
+
+  performance.clearMarks();
+  performance.clearMeasures();
+  observer.disconnect();
+});
+obs.observe({ entryTypes: ['mark', 'measure'] });
+
+performance.mark('test');
+performance.mark('meow');
+```
+
+```cjs
 const {
   performance,
   PerformanceObserver,
@@ -1116,7 +1587,8 @@ const obs = new PerformanceObserver((perfObserverList, observer) => {
    *     name: 'meow',
    *     entryType: 'mark',
    *     startTime: 98.545991,
-   *     duration: 0
+   *     duration: 0,
+   *     detail: null
    *   }
    * ]
    */
@@ -1129,7 +1601,8 @@ const obs = new PerformanceObserver((perfObserverList, observer) => {
    *     name: 'test',
    *     entryType: 'mark',
    *     startTime: 63.518931,
-   *     duration: 0
+   *     duration: 0,
+   *     detail: null
    *   }
    * ]
    */
@@ -1158,7 +1631,40 @@ Returns a list of `PerformanceEntry` objects in chronological order
 with respect to `performanceEntry.startTime` whose `performanceEntry.entryType`
 is equal to `type`.
 
-```js
+```mjs
+import { performance, PerformanceObserver } from 'node:perf_hooks';
+
+const obs = new PerformanceObserver((perfObserverList, observer) => {
+  console.log(perfObserverList.getEntriesByType('mark'));
+  /**
+   * [
+   *   PerformanceEntry {
+   *     name: 'test',
+   *     entryType: 'mark',
+   *     startTime: 55.897834,
+   *     duration: 0,
+   *     detail: null
+   *   },
+   *   PerformanceEntry {
+   *     name: 'meow',
+   *     entryType: 'mark',
+   *     startTime: 56.350146,
+   *     duration: 0,
+   *     detail: null
+   *   }
+   * ]
+   */
+  performance.clearMarks();
+  performance.clearMeasures();
+  observer.disconnect();
+});
+obs.observe({ type: 'mark' });
+
+performance.mark('test');
+performance.mark('meow');
+```
+
+```cjs
 const {
   performance,
   PerformanceObserver,
@@ -1172,13 +1678,15 @@ const obs = new PerformanceObserver((perfObserverList, observer) => {
    *     name: 'test',
    *     entryType: 'mark',
    *     startTime: 55.897834,
-   *     duration: 0
+   *     duration: 0,
+   *     detail: null
    *   },
    *   PerformanceEntry {
    *     name: 'meow',
    *     entryType: 'mark',
    *     startTime: 56.350146,
-   *     duration: 0
+   *     duration: 0,
+   *     detail: null
    *   }
    * ]
    */
@@ -1208,7 +1716,7 @@ added:
     **Default:** `Number.MAX_SAFE_INTEGER`.
   * `figures` {number} The number of accuracy digits. Must be a number between
     `1` and `5`. **Default:** `3`.
-* Returns {RecordableHistogram}
+* Returns: {RecordableHistogram}
 
 Returns a {RecordableHistogram}.
 
@@ -1234,7 +1742,23 @@ event loop. That is, a delay in the loop will cause a delay in the execution
 of the timer, and those delays are specifically what this API is intended to
 detect.
 
-```js
+```mjs
+import { monitorEventLoopDelay } from 'node:perf_hooks';
+
+const h = monitorEventLoopDelay({ resolution: 20 });
+h.enable();
+// Do something.
+h.disable();
+console.log(h.min);
+console.log(h.max);
+console.log(h.mean);
+console.log(h.stddev);
+console.log(h.percentiles);
+console.log(h.percentile(50));
+console.log(h.percentile(99));
+```
+
+```cjs
 const { monitorEventLoopDelay } = require('node:perf_hooks');
 const h = monitorEventLoopDelay({ resolution: 20 });
 h.enable();
@@ -1502,7 +2026,42 @@ The following example uses the [Async Hooks][] and Performance APIs to measure
 the actual duration of a Timeout operation (including the amount of time it took
 to execute the callback).
 
-```js
+```mjs
+import { createHook } from 'node:async_hooks';
+import { performance, PerformanceObserver } from 'node:perf_hooks';
+
+const set = new Set();
+const hook = createHook({
+  init(id, type) {
+    if (type === 'Timeout') {
+      performance.mark(`Timeout-${id}-Init`);
+      set.add(id);
+    }
+  },
+  destroy(id) {
+    if (set.has(id)) {
+      set.delete(id);
+      performance.mark(`Timeout-${id}-Destroy`);
+      performance.measure(`Timeout-${id}`,
+                          `Timeout-${id}-Init`,
+                          `Timeout-${id}-Destroy`);
+    }
+  },
+});
+hook.enable();
+
+const obs = new PerformanceObserver((list, observer) => {
+  console.log(list.getEntries()[0]);
+  performance.clearMarks();
+  performance.clearMeasures();
+  observer.disconnect();
+});
+obs.observe({ entryTypes: ['measure'], buffered: true });
+
+setTimeout(() => {}, 1000);
+```
+
+```cjs
 'use strict';
 const async_hooks = require('node:async_hooks');
 const {
@@ -1536,7 +2095,7 @@ const obs = new PerformanceObserver((list, observer) => {
   performance.clearMeasures();
   observer.disconnect();
 });
-obs.observe({ entryTypes: ['measure'], buffered: true });
+obs.observe({ entryTypes: ['measure'] });
 
 setTimeout(() => {}, 1000);
 ```
@@ -1548,7 +2107,29 @@ dependencies:
 
 <!-- eslint-disable no-global-assign -->
 
-```js
+```mjs
+import { performance, PerformanceObserver } from 'node:perf_hooks';
+
+// Activate the observer
+const obs = new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  entries.forEach((entry) => {
+    console.log(`import('${entry[0]}')`, entry.duration);
+  });
+  performance.clearMarks();
+  performance.clearMeasures();
+  obs.disconnect();
+});
+obs.observe({ entryTypes: ['function'], buffered: true });
+
+const timedImport = performance.timerify(async (module) => {
+  return await import(module);
+});
+
+await timedImport('some-module');
+```
+
+```cjs
 'use strict';
 const {
   performance,
@@ -1571,7 +2152,7 @@ const obs = new PerformanceObserver((list) => {
   performance.clearMeasures();
   obs.disconnect();
 });
-obs.observe({ entryTypes: ['function'], buffered: true });
+obs.observe({ entryTypes: ['function'] });
 
 require('some-module');
 ```
@@ -1584,7 +2165,28 @@ it means the time interval between starting the request and receiving the
 response, and for HTTP request, it means the time interval between receiving
 the request and sending the response:
 
-```js
+```mjs
+import { PerformanceObserver } from 'node:perf_hooks';
+import { createServer, get } from 'node:http';
+
+const obs = new PerformanceObserver((items) => {
+  items.getEntries().forEach((item) => {
+    console.log(item);
+  });
+});
+
+obs.observe({ entryTypes: ['http'] });
+
+const PORT = 8080;
+
+createServer((req, res) => {
+  res.end('ok');
+}).listen(PORT, () => {
+  get(`http://127.0.0.1:${PORT}`);
+});
+```
+
+```cjs
 'use strict';
 const { PerformanceObserver } = require('node:perf_hooks');
 const http = require('node:http');
@@ -1608,7 +2210,25 @@ http.createServer((req, res) => {
 
 ### Measuring how long the `net.connect` (only for TCP) takes when the connection is successful
 
-```js
+```mjs
+import { PerformanceObserver } from 'node:perf_hooks';
+import { connect, createServer } from 'node:net';
+
+const obs = new PerformanceObserver((items) => {
+  items.getEntries().forEach((item) => {
+    console.log(item);
+  });
+});
+obs.observe({ entryTypes: ['net'] });
+const PORT = 8080;
+createServer((socket) => {
+  socket.destroy();
+}).listen(PORT, () => {
+  connect(PORT);
+});
+```
+
+```cjs
 'use strict';
 const { PerformanceObserver } = require('node:perf_hooks');
 const net = require('node:net');
@@ -1628,7 +2248,21 @@ net.createServer((socket) => {
 
 ### Measuring how long the DNS takes when the request is successful
 
-```js
+```mjs
+import { PerformanceObserver } from 'node:perf_hooks';
+import { lookup, promises } from 'node:dns';
+
+const obs = new PerformanceObserver((items) => {
+  items.getEntries().forEach((item) => {
+    console.log(item);
+  });
+});
+obs.observe({ entryTypes: ['dns'] });
+lookup('localhost', () => {});
+promises.resolve('localhost');
+```
+
+```cjs
 'use strict';
 const { PerformanceObserver } = require('node:perf_hooks');
 const dns = require('node:dns');
@@ -1643,6 +2277,7 @@ dns.promises.resolve('localhost');
 ```
 
 [Async Hooks]: async_hooks.md
+[Fetch Response Body Info]: https://fetch.spec.whatwg.org/#response-body-info
 [Fetch Timing Info]: https://fetch.spec.whatwg.org/#fetch-timing-info
 [High Resolution Time]: https://www.w3.org/TR/hr-time-2
 [Performance Timeline]: https://w3c.github.io/performance-timeline/
