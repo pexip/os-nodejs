@@ -7,10 +7,10 @@ Last-Update: 2021-03-03
 
 --- a/Makefile
 +++ b/Makefile
-@@ -635,11 +635,6 @@
+@@ -668,11 +668,6 @@
  
  .PHONY: test-doc
- test-doc: doc-only lint-md ## Builds, lints, and verifies the docs.
+ test-doc: doc-only lint-md ## Build, lint, and verify the docs.
 -	@if [ "$(shell $(node_use_openssl))" != "true" ]; then \
 -		echo "Skipping test-doc (no crypto)"; \
 -	else \
@@ -18,14 +18,14 @@ Last-Update: 2021-03-03
 -	fi
  
  .PHONY: test-doc-ci
- test-doc-ci: doc-only
-@@ -762,12 +757,12 @@
+ test-doc-ci: doc-only ## Build, lint, and verify the docs (CI).
+@@ -802,12 +797,12 @@
  	fi
  
  .PHONY: doc-only
 -doc-only: tools/doc/node_modules \
 +doc-only: \
- 	$(apidoc_dirs) $(apiassets)  ## Builds the docs with the local or the global Node.js binary.
+ 	$(apidoc_dirs) $(apiassets) ## Build the docs with the local or the global Node.js binary.
  	@if [ "$(shell $(node_use_openssl))" != "true" ]; then \
  		echo "Skipping doc-only (no crypto)"; \
  	else \
@@ -34,7 +34,7 @@ Last-Update: 2021-03-03
  	fi
  
  .PHONY: doc
-@@ -780,7 +775,9 @@
+@@ -821,7 +816,9 @@
  # Just copy everything under doc/api over.
  out/doc/api: doc/api
  	mkdir -p $@
@@ -45,7 +45,7 @@ Last-Update: 2021-03-03
  
  # If it's a source tarball, assets are already in doc/api/assets
  out/doc/api/assets:
-@@ -796,50 +793,50 @@
+@@ -837,50 +834,50 @@
  
  LINK_DATA = out/doc/apilinks.json
  VERSIONS_DATA = out/previous-doc-versions.json

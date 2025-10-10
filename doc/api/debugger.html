@@ -3,18 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <meta name="nodejs.org:node-version" content="v18.20.4">
-  <title>Debugger | Node.js v18.20.4 Documentation</title>
+  <meta name="nodejs.org:node-version" content="v22.18.0">
+  <title>Debugger | Node.js v22.18.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic&display=fallback">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/hljs.css">
   <link rel="canonical" href="https://nodejs.org/api/debugger.html">
   <script async defer src="assets/api.js" type="text/javascript"></script>
+  <script>
+      const storedTheme = localStorage.getItem('theme');
+
+      // Follow operating system theme preference
+      if (storedTheme === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if (mq.matches) {
+          document.documentElement.classList.add('dark-mode');
+        }
+      } else if (storedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+  </script>
   
 </head>
 <body class="alt apidoc" id="api-section-debugger">
+  <a href="#apicontent" class="skip-to-content">Skip to content</a>
   <div id="content" class="clearfix">
-    <div id="column2" class="interior">
+    <div role="navigation" id="column2" class="interior">
       <div id="intro" class="interior">
         <a href="/" title="Go back to the home page">
           Node.js
@@ -37,7 +51,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger active">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -57,6 +70,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -69,6 +83,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -96,7 +111,7 @@
     <div id="column1" data-id="debugger" class="interior">
       <header class="header">
         <div class="header-container">
-          <h1>Node.js v18.20.4 documentation</h1>
+          <h1>Node.js v22.18.0 documentation</h1>
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode/light mode" aria-label="Toggle dark mode/light mode" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon dark-icon" height="24" width="24">
               <path fill="none" d="M0 0h24v24H0z" />
@@ -111,15 +126,15 @@
         </div>
         <div id="gtoc">
           <ul>
-            <li class="pinned-header">Node.js v18.20.4</li>
+            <li class="pinned-header">Node.js v22.18.0</li>
             
     <li class="picker-header">
-      <a href="#">
-        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
+      <a href="#toc-picker" aria-controls="toc-picker">
+        <span class="picker-arrow"></span>
         Table of contents
       </a>
 
-      <div class="picker"><div class="toc"><ul>
+      <div class="picker" tabindex="-1"><div class="toc"><ul id="toc-picker">
 <li><span class="stability_2"><a href="#debugger">Debugger</a></span>
 <ul>
 <li><a href="#watchers">Watchers</a></li>
@@ -144,12 +159,12 @@
   
             
     <li class="picker-header">
-      <a href="#">
-        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
+      <a href="#gtoc-picker" aria-controls="gtoc-picker">
+        <span class="picker-arrow"></span>
         Index
       </a>
 
-      <div class="picker"><ul>
+      <div class="picker" tabindex="-1" id="gtoc-picker"><ul>
 <li><a href="documentation.html" class="nav-documentation">About this documentation</a></li>
 <li><a href="synopsis.html" class="nav-synopsis">Usage and example</a></li>
 
@@ -171,7 +186,6 @@
 <li><a href="cluster.html" class="nav-cluster">Cluster</a></li>
 <li><a href="cli.html" class="nav-cli">Command-line options</a></li>
 <li><a href="console.html" class="nav-console">Console</a></li>
-<li><a href="corepack.html" class="nav-corepack">Corepack</a></li>
 <li><a href="crypto.html" class="nav-crypto">Crypto</a></li>
 <li><a href="debugger.html" class="nav-debugger active">Debugger</a></li>
 <li><a href="deprecations.html" class="nav-deprecations">Deprecated APIs</a></li>
@@ -191,6 +205,7 @@
 <li><a href="esm.html" class="nav-esm">Modules: ECMAScript modules</a></li>
 <li><a href="module.html" class="nav-module">Modules: <code>node:module</code> API</a></li>
 <li><a href="packages.html" class="nav-packages">Modules: Packages</a></li>
+<li><a href="typescript.html" class="nav-typescript">Modules: TypeScript</a></li>
 <li><a href="net.html" class="nav-net">Net</a></li>
 <li><a href="os.html" class="nav-os">OS</a></li>
 <li><a href="path.html" class="nav-path">Path</a></li>
@@ -203,6 +218,7 @@
 <li><a href="repl.html" class="nav-repl">REPL</a></li>
 <li><a href="report.html" class="nav-report">Report</a></li>
 <li><a href="single-executable-applications.html" class="nav-single-executable-applications">Single executable applications</a></li>
+<li><a href="sqlite.html" class="nav-sqlite">SQLite</a></li>
 <li><a href="stream.html" class="nav-stream">Stream</a></li>
 <li><a href="string_decoder.html" class="nav-string_decoder">String decoder</a></li>
 <li><a href="test.html" class="nav-test">Test runner</a></li>
@@ -229,15 +245,17 @@
   
             
     <li class="picker-header">
-      <a href="#">
-        <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
+      <a href="#alt-docs" aria-controls="alt-docs">
+        <span class="picker-arrow"></span>
         Other versions
       </a>
-      <div class="picker"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v22.x/api/debugger.html">22.x</a></li>
+      <div class="picker" tabindex="-1"><ol id="alt-docs"><li><a href="https://nodejs.org/docs/latest-v24.x/api/debugger.html">24.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v23.x/api/debugger.html">23.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v22.x/api/debugger.html">22.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v21.x/api/debugger.html">21.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v20.x/api/debugger.html">20.x <b>LTS</b></a></li>
 <li><a href="https://nodejs.org/docs/latest-v19.x/api/debugger.html">19.x</a></li>
-<li><a href="https://nodejs.org/docs/latest-v18.x/api/debugger.html">18.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v18.x/api/debugger.html">18.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v17.x/api/debugger.html">17.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v16.x/api/debugger.html">16.x</a></li>
 <li><a href="https://nodejs.org/docs/latest-v15.x/api/debugger.html">15.x</a></li>
@@ -257,13 +275,13 @@
     </li>
   
             <li class="picker-header">
-              <a href="#">
-                <span class="collapsed-arrow">&#x25ba;</span><span class="expanded-arrow">&#x25bc;</span>
+              <a href="#options-picker" aria-controls="options-picker">
+                <span class="picker-arrow"></span>
                 Options
               </a>
         
-              <div class="picker">
-                <ul>
+              <div class="picker" tabindex="-1">
+                <ul id="options-picker">
                   <li>
                     <a href="all.html">View on single page</a>
                   </li>
@@ -279,7 +297,7 @@
         <hr>
       </header>
 
-      <details id="toc" open><summary>Table of contents</summary><ul>
+      <details role="navigation" id="toc" open><summary>Table of contents</summary><ul>
 <li><span class="stability_2"><a href="#debugger">Debugger</a></span>
 <ul>
 <li><a href="#watchers">Watchers</a></li>
@@ -301,7 +319,7 @@
 </li>
 </ul></details>
 
-      <div id="apicontent">
+      <div role="main" id="apicontent">
         <h2>Debugger<span><a class="mark" href="#debugger" id="debugger">#</a></span><a aria-hidden="true" class="legacy" id="debugger_debugger"></a></h2>
 
 <p></p><div class="api_stability api_stability_2"><a href="documentation.html#stability-index">Stability: 2</a> - Stable</div><p></p>
@@ -388,6 +406,7 @@ source code listing.</p>
 <code>watchers</code> will print the active watchers. To remove a watcher, type
 <code>unwatch('my_expression')</code>.</p>
 </section><section><h3>Command reference<span><a class="mark" href="#command-reference" id="command-reference">#</a></span><a aria-hidden="true" class="legacy" id="debugger_command_reference"></a></h3>
+<div>
 <h4>Stepping<span><a class="mark" href="#stepping" id="stepping">#</a></span><a aria-hidden="true" class="legacy" id="debugger_stepping"></a></h4>
 <ul>
 <li><code>cont</code>, <code>c</code>: Continue execution</li>
@@ -396,6 +415,7 @@ source code listing.</p>
 <li><code>out</code>, <code>o</code>: Step out</li>
 <li><code>pause</code>: Pause running code (like pause button in Developer Tools)</li>
 </ul>
+</div><div>
 <h4>Breakpoints<span><a class="mark" href="#breakpoints" id="breakpoints">#</a></span><a aria-hidden="true" class="legacy" id="debugger_breakpoints"></a></h4>
 <ul>
 <li><code>setBreakpoint()</code>, <code>sb()</code>: Set breakpoint on current line</li>
@@ -467,6 +487,7 @@ break in main.js:4
 <span class="hljs-meta prompt_">debug> </span><span class="language-bash"><span class="hljs-built_in">exec</span>(<span class="hljs-string">'num'</span>)</span>
 -1
 <span class="hljs-meta prompt_">debug></span></code> <button class="copy-button">copy</button></pre>
+</div><div>
 <h4>Information<span><a class="mark" href="#information" id="information">#</a></span><a aria-hidden="true" class="legacy" id="debugger_information"></a></h4>
 <ul>
 <li><code>backtrace</code>, <code>bt</code>: Print backtrace of current execution frame</li>
@@ -488,18 +509,22 @@ to disk as JSON</li>
 <li><code>takeHeapSnapshot(filepath = 'node.heapsnapshot')</code>: Take a heap snapshot
 and save to disk as JSON</li>
 </ul>
+</div><div>
 <h4>Execution control<span><a class="mark" href="#execution-control" id="execution-control">#</a></span><a aria-hidden="true" class="legacy" id="debugger_execution_control"></a></h4>
 <ul>
 <li><code>run</code>: Run script (automatically runs on debugger's start)</li>
 <li><code>restart</code>: Restart script</li>
 <li><code>kill</code>: Kill script</li>
 </ul>
+</div><div>
 <h4>Various<span><a class="mark" href="#various" id="various">#</a></span><a aria-hidden="true" class="legacy" id="debugger_various"></a></h4>
 <ul>
 <li><code>scripts</code>: List all loaded scripts</li>
 <li><code>version</code>: Display V8's version</li>
 </ul>
+</div>
 </section><section><h3>Advanced usage<span><a class="mark" href="#advanced-usage" id="advanced-usage">#</a></span><a aria-hidden="true" class="legacy" id="debugger_advanced_usage"></a></h3>
+<div>
 <h4>V8 inspector integration for Node.js<span><a class="mark" href="#v8-inspector-integration-for-nodejs" id="v8-inspector-integration-for-nodejs">#</a></span><a aria-hidden="true" class="legacy" id="debugger_v8_inspector_integration_for_node_js"></a></h4>
 <p>V8 Inspector integration allows attaching Chrome DevTools to Node.js
 instances for debugging and profiling. It uses the
@@ -507,8 +532,20 @@ instances for debugging and profiling. It uses the
 <p>V8 Inspector can be enabled by passing the <code>--inspect</code> flag when starting a
 Node.js application. It is also possible to supply a custom port with that flag,
 e.g. <code>--inspect=9222</code> will accept DevTools connections on port 9222.</p>
-<p>To break on the first line of the application code, pass the <code>--inspect-brk</code>
-flag instead of <code>--inspect</code>.</p>
+<p>Using the <code>--inspect</code> flag will execute the code immediately before debugger is connected.
+This means that the code will start running before you can start debugging, which might
+not be ideal if you want to debug from the very beginning.</p>
+<p>In such cases, you have two alternatives:</p>
+<ol>
+<li><code>--inspect-wait</code> flag: This flag will wait for debugger to be attached before executing the code.
+This allows you to start debugging right from the beginning of the execution.</li>
+<li><code>--inspect-brk</code> flag: Unlike <code>--inspect</code>, this flag will break on the first line of the code
+as soon as debugger is attached. This is useful when you want to debug the code step by step
+from the very beginning, without any code execution prior to debugging.</li>
+</ol>
+<p>So, when deciding between <code>--inspect</code>, <code>--inspect-wait</code>, and <code>--inspect-brk</code>, consider whether you want
+the code to start executing immediately, wait for debugger to be attached before execution,
+or break on the first line for step-by-step debugging.</p>
 <pre><code class="language-console"><span class="hljs-meta prompt_">$ </span><span class="language-bash">node --inspect index.js</span>
 Debugger listening on ws://127.0.0.1:9229/dc9010dd-f8b8-4ac5-a510-c1a114ec7d29
 For help, see: https://nodejs.org/en/docs/inspector</code> <button class="copy-button">copy</button></pre>
@@ -518,7 +555,7 @@ debugging sessions.)</p>
 <p>If the Chrome browser is older than 66.0.3345.0,
 use <code>inspector.html</code> instead of <code>js_app.html</code> in the above URL.</p>
 <p>Chrome DevTools doesn't support debugging <a href="worker_threads.html">worker threads</a> yet.
-<a href="https://github.com/GoogleChromeLabs/ndb/">ndb</a> can be used to debug them.</p></section>
+<a href="https://github.com/GoogleChromeLabs/ndb/">ndb</a> can be used to debug them.</p></div></section>
         <!-- API END -->
       </div>
     </div>
