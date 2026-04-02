@@ -1,3 +1,6 @@
+Remove OPENSSL_HAS_QUIC as we don't want it to avoid ngtcp2/openssl issues (and
+we don't use node in server mode anyways, just as a build tool for webapps)
+
 Index: nodejs/configure.py
 ===================================================================
 --- nodejs.orig/configure.py
